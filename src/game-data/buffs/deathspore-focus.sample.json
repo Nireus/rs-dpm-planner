@@ -1,0 +1,13 @@
+{
+  "id": "deathspore-focus",
+  "name": "Deathspore Focus",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 18,
+  "stackRules": {
+    "maxStacks": 1,
+    "refreshesDuration": true
+  },
+  "effectRefs": ["deathspore-progress"],
+  "displayPriority": 50
+}

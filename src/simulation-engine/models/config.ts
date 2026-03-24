@@ -1,0 +1,94 @@
+import type {
+  AbilityDefinition,
+  AmmoDefinition,
+  BuffDefinition,
+  EffectRef,
+  EntityId,
+  EquipmentSlot,
+  EofSpecDefinition,
+  ItemDefinition,
+  PerkDefinition,
+  RelicDefinition,
+} from '../../game-data/types';
+
+export interface ItemInstanceConfig {
+  instanceId: string;
+  definitionId: EntityId;
+  perkIds?: EntityId[];
+  configValues?: Record<string, boolean | number | string>;
+  effectRefs?: EffectRef[];
+}
+
+export interface PlayerStats {
+  rangedLevel: number;
+  prayerLevel?: number;
+  combatStats?: Record<string, number>;
+  toggles?: Record<string, boolean>;
+}
+
+export interface GearSetup {
+  equipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>>;
+  ammoSelection?: ItemInstanceConfig;
+}
+
+export interface InventoryState {
+  items: ItemInstanceConfig[];
+  enabledMechanicFlags?: Record<string, boolean>;
+}
+
+export interface PersistentBuffConfig {
+  prayerIds?: EntityId[];
+  potionIds?: EntityId[];
+  relicIds?: EntityId[];
+  buffIds?: EntityId[];
+  perkIds?: EntityId[];
+}
+
+export type RotationActionType =
+  | 'ability-use'
+  | 'ammo-swap'
+  | 'gear-swap'
+  | 'vulnerability-bomb'
+  | 'eof-special'
+  | 'other';
+
+export type RotationActionLane = 'non-gcd' | 'ability';
+
+export interface RotationAction {
+  id: string;
+  tick: number;
+  lane: RotationActionLane;
+  actionType: RotationActionType;
+  payload: Record<string, unknown>;
+}
+
+export interface RotationPlan {
+  startingAdrenaline: number;
+  tickCount: number;
+  nonGcdActions: RotationAction[];
+  abilityActions: RotationAction[];
+}
+
+export interface LoadedGameDataSnapshot {
+  items: Record<EntityId, ItemDefinition>;
+  ammo: Record<EntityId, AmmoDefinition>;
+  abilities: Record<EntityId, AbilityDefinition>;
+  buffs: Record<EntityId, BuffDefinition>;
+  perks: Record<EntityId, PerkDefinition>;
+  relics: Record<EntityId, RelicDefinition>;
+  eofSpecs: Record<EntityId, EofSpecDefinition>;
+}
+
+export interface SimulationModeFlags {
+  strictValidation: boolean;
+}
+
+export interface SimulationConfig {
+  playerStats: PlayerStats;
+  gearSetup: GearSetup;
+  inventory: InventoryState;
+  persistentBuffConfig: PersistentBuffConfig;
+  rotationPlan: RotationPlan;
+  gameData: LoadedGameDataSnapshot;
+  modeFlags: SimulationModeFlags;
+}

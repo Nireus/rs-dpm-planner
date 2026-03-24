@@ -1,0 +1,145 @@
+import type { AbilityDefinition, BuffDefinition, ItemDefinition } from '../types';
+
+export type GameDataValidationError = {
+  path: string;
+  message: string;
+};
+
+export type GameDataValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; errors: GameDataValidationError[] };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function pushError(
+  errors: GameDataValidationError[],
+  path: string,
+  message: string,
+): void {
+  errors.push({ path, message });
+}
+
+export function parseJsonDocument(raw: string): unknown {
+  return JSON.parse(raw) as unknown;
+}
+
+function validateDefinitionBase(
+  input: unknown,
+  kind: 'item' | 'ability' | 'buff',
+): GameDataValidationError[] {
+  const errors: GameDataValidationError[] = [];
+
+  if (!isRecord(input)) {
+    pushError(errors, '$', `${kind} definition must be an object.`);
+    return errors;
+  }
+
+  if (typeof input['id'] !== 'string') {
+    pushError(errors, 'id', 'Expected "id" to be a string.');
+  }
+
+  if (typeof input['name'] !== 'string') {
+    pushError(errors, 'name', 'Expected "name" to be a string.');
+  }
+
+  const effectRefs = input['effectRefs'];
+  if (effectRefs !== undefined && !isStringArray(effectRefs)) {
+    pushError(errors, 'effectRefs', 'Expected "effectRefs" to be an array of strings.');
+  }
+
+  return errors;
+}
+
+export function validateItemDefinition(input: unknown): GameDataValidationResult<ItemDefinition> {
+  const errors = validateDefinitionBase(input, 'item');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (typeof input['category'] !== 'string') {
+    pushError(errors, 'category', 'Expected "category" to be a string.');
+  }
+
+  const combatStyleTags = input['combatStyleTags'];
+  if (!isStringArray(combatStyleTags)) {
+    pushError(errors, 'combatStyleTags', 'Expected "combatStyleTags" to be an array of strings.');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as ItemDefinition };
+}
+
+export function validateAbilityDefinition(
+  input: unknown,
+): GameDataValidationResult<AbilityDefinition> {
+  const errors = validateDefinitionBase(input, 'ability');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (typeof input['style'] !== 'string') {
+    pushError(errors, 'style', 'Expected "style" to be a string.');
+  }
+
+  if (typeof input['subtype'] !== 'string') {
+    pushError(errors, 'subtype', 'Expected "subtype" to be a string.');
+  }
+
+  if (typeof input['cooldownTicks'] !== 'number') {
+    pushError(errors, 'cooldownTicks', 'Expected "cooldownTicks" to be a number.');
+  }
+
+  if (!Array.isArray(input['hitSchedule'])) {
+    pushError(errors, 'hitSchedule', 'Expected "hitSchedule" to be an array.');
+  }
+
+  if (!isRecord(input['baseDamage'])) {
+    pushError(errors, 'baseDamage', 'Expected "baseDamage" to be an object.');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as AbilityDefinition };
+}
+
+export function validateBuffDefinition(input: unknown): GameDataValidationResult<BuffDefinition> {
+  const errors = validateDefinitionBase(input, 'buff');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (typeof input['category'] !== 'string') {
+    pushError(errors, 'category', 'Expected "category" to be a string.');
+  }
+
+  if (typeof input['sourceType'] !== 'string') {
+    pushError(errors, 'sourceType', 'Expected "sourceType" to be a string.');
+  }
+
+  if (
+    input['durationTicks'] !== undefined &&
+    typeof input['durationTicks'] !== 'number'
+  ) {
+    pushError(errors, 'durationTicks', 'Expected "durationTicks" to be a number when present.');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as BuffDefinition };
+}

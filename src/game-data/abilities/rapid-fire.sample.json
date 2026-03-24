@@ -1,0 +1,45 @@
+{
+  "id": "rapid-fire",
+  "name": "Rapid Fire",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 17,
+  "adrenalineCost": 15,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 6,
+  "hitSchedule": [
+    {
+      "id": "rapid-fire-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 20,
+        "max": 40
+      }
+    },
+    {
+      "id": "rapid-fire-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 20,
+        "max": 40
+      }
+    },
+    {
+      "id": "rapid-fire-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 20,
+        "max": 40
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 60,
+    "max": 120
+  },
+  "effectRefs": ["rapid-fire-channel"],
+  "description": "Sample ranged channeled threshold ability for schema validation."
+}

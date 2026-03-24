@@ -1,0 +1,21 @@
+{
+  "id": "bolg",
+  "name": "Bow of the Last Guardian",
+  "category": "weapon",
+  "slot": "weapon",
+  "combatStyleTags": ["ranged"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 95
+    },
+    "requiredEquipmentTags": ["two-handed-bow"]
+  },
+  "effectRefs": ["bolg-passive"],
+  "configOptions": [],
+  "equipBehavior": "two-handed"
+}
