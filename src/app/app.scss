@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.landing-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.hero-card {
+  width: min(100%, 64rem);
+  padding: clamp(2rem, 4vw, 3.5rem);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.92)),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 30%);
+  box-shadow: 0 2rem 5rem rgba(2, 6, 23, 0.4);
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: #7dd3fc;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+}
+
+.summary {
+  max-width: 52rem;
+  margin: 1.25rem 0 0;
+  color: #cbd5e1;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin: 2rem 0 0;
+}
+
+.meta-grid div {
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.56);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+dt {
+  margin: 0 0 0.35rem;
+  color: #7dd3fc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}

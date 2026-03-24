@@ -1,59 +1,79 @@
-# RsDpmPlanner
+# RS DPM Planner
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.3.
+Desktop-first Angular application for planning manually defined RuneScape ranged
+rotations and simulating theoretical ideal-condition damage output.
 
-## Development server
+## Current Scope
 
-To start a local development server, run:
+- Ranged only
+- Single target only
+- No backend
+- Strict validation
+- Portable versioned import/export
+- Manual JSON game data stored in the repo
 
-```bash
-ng serve
-```
+## Tooling
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Angular 21
+- TypeScript
+- SCSS
+- Vitest via Angular's test builder
+- Playwright for E2E
+- ESLint + Prettier
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Available Scripts
 
 ```bash
-ng build
+npm run dev
+npm run build
+npm run test
+npm run test:watch
+npm run e2e
+npm run lint
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Local Development
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Start the development server:
 
 ```bash
-ng test
+npm run dev
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Build the app:
 
 ```bash
-ng e2e
+npm run build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Run unit tests:
 
-## Additional Resources
+```bash
+npm run test
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Run unit tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+Run E2E tests:
+
+```bash
+npm run e2e
+```
+
+Run lint checks:
+
+```bash
+npm run lint
+```
+
+## Playwright Browser Install
+
+If Playwright browsers are not installed yet, run:
+
+```bash
+npx playwright install
+```
