@@ -958,7 +958,35 @@ This is UI state, not simulation state.
 
 Do not serialize these into import/export config unless there is a clear product reason.
 
-## 16. Recommended Feature Boundaries in Angular
+## 16. UI / UX Visual Direction
+
+The MVP should use a dark forest visual direction rather than a neutral blue or generic sci-fi dark theme.
+
+Preferred palette:
+
+- Evergreen: `#002400`
+- Black Forest: `#273b09`
+- Olive Leaf: `#58641d`
+- Palm Leaf: `#7b904b`
+
+Recommended usage:
+
+- use `#002400` as the deepest application background
+- use `#273b09` for panels, sidebars, and raised surfaces
+- use `#58641d` for borders, muted accents, dividers, and secondary emphasis
+- use `#7b904b` for active navigation, highlights, and key interactive emphasis
+
+Supporting guidance:
+
+- keep text light and slightly warm rather than pure white
+- preserve strong contrast for planner readability
+- avoid neon green, saturated game-like fantasy gradients, or glowing effects
+- keep the UI grounded, calm, and utilitarian rather than flashy
+- desktop-first density is acceptable, but readability must remain high
+
+This palette should guide future feature work unless later product direction changes.
+
+## 17. Recommended Feature Boundaries in Angular
 
 Suggested Angular feature responsibilities:
 
@@ -1002,7 +1030,7 @@ Suggested Angular feature responsibilities:
 - import file
 - validation errors for import
 
-## 17. Testing Strategy
+## 18. Testing Strategy
 
 ### 17.1 Unit Tests
 
@@ -1050,7 +1078,7 @@ E2E should cover:
 - inspect result
 - export/import round trip
 
-## 18. Agent Guardrails
+## 19. Agent Guardrails
 
 These rules are especially important for Codex-like agents.
 
@@ -1074,7 +1102,7 @@ Do not build a full universal combat engine for all combat styles before the ran
 
 If a mid-channel swap optimization or obscure mechanic is not supported yet, fail clearly or flag it instead of silently simulating wrong behavior.
 
-## 19. Suggested Implementation Order for Mechanics
+## 20. Suggested Implementation Order for Mechanics
 
 A reasonable order:
 
@@ -1094,7 +1122,7 @@ A reasonable order:
 
 This order is intentionally infrastructure-first.
 
-## 20. Known Simplifications and Accepted Assumptions
+## 21. Known Simplifications and Accepted Assumptions
 
 These assumptions are acceptable in MVP unless changed later:
 
@@ -1109,7 +1137,7 @@ These assumptions are acceptable in MVP unless changed later:
 
 These assumptions should be visible in the code or documentation so users and future developers understand the model boundaries.
 
-## 21. Future Evolution Guidance
+## 22. Future Evolution Guidance
 
 The MVP should be built so that future expansion is possible without rewriting everything.
 
@@ -1132,7 +1160,7 @@ The best preparation for that future is not heavy abstraction. It is:
 - clear tests
 - readable models
 
-## 22. Final Recommendation
+## 23. Final Recommendation
 
 The project should be treated as:
 

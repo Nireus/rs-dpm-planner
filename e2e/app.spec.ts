@@ -4,7 +4,7 @@ test('renders the project foundation landing page', async ({ page }) => {
   await page.goto('/');
 
   await expect(
-    page.getByRole('heading', { name: 'RuneScape Ranged Rotation Planner' }),
+    page.getByRole('img', { name: 'RuneScape Ranged Rotation Planner logo' }),
   ).toBeVisible();
-  await expect(page.getByText('Phase 1 Foundation')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Gear' })).toBeVisible();
 });

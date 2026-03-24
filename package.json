@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
+    "dev:e2e": "ng serve --host 127.0.0.1 --port 4201",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",

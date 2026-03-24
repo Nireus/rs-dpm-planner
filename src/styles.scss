@@ -8,9 +8,24 @@
     Arial,
     sans-serif;
   background:
-    radial-gradient(circle at top, rgba(14, 116, 144, 0.18), transparent 30%),
-    linear-gradient(180deg, #020617 0%, #0f172a 100%);
-  color: #e2e8f0;
+    radial-gradient(circle at top, rgba(39, 59, 9, 0.05), transparent 20%),
+    radial-gradient(circle at 78% 12%, rgba(88, 100, 29, 0.035), transparent 16%),
+    linear-gradient(180deg, #010101 0%, #010101 42%, #020302 100%);
+  color: #eef2e8;
+  --forest-evergreen: #002400;
+  --forest-black: #273b09;
+  --forest-olive: #58641d;
+  --forest-palm: #7b904b;
+  --panel-surface:
+    linear-gradient(145deg, rgba(10, 17, 6, 0.98), rgba(15, 24, 8, 0.97));
+  --panel-surface-alt: rgba(14, 22, 8, 0.84);
+  --panel-border: rgba(88, 100, 29, 0.18);
+  --panel-shadow: 0 1.75rem 4rem rgba(0, 5, 0, 0.46);
+  --accent-primary: #718546;
+  --accent-secondary: #58641d;
+  --text-strong: #f6f8f1;
+  --text-muted: #d8decf;
+  --text-soft: #acb79a;
 }
 
 *,

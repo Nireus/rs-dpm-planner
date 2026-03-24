@@ -162,12 +162,18 @@ Adjust names if needed, but preserve the logical separation.
   - Import / Export
 - Add placeholder pages for each section.
 - Add simple dark theme tokens and reusable layout primitives.
+- Use a dark forest palette as the visual baseline:
+  - `#002400`
+  - `#273b09`
+  - `#58641d`
+  - `#7b904b`
 
 #### Acceptance Criteria
 
 - App has stable navigation.
 - Each section renders without errors.
 - Theme is readable and consistent.
+- The shell visually follows the dark forest palette direction.
 
 #### Manual Test Checklist
 

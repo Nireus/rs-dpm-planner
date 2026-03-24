@@ -1,31 +1,22 @@
-<main class="landing-shell">
-  <section class="hero-card" aria-labelledby="app-title">
-    <p class="eyebrow">Phase 1 Foundation</p>
-    <h1 id="app-title">{{ title() }}</h1>
-    <p class="summary">
-      Plan tick-based RuneScape ranged rotations, validate them strictly, and
-      simulate theoretical ideal-condition damage.
-    </p>
+<div class="app-shell">
+  <aside class="sidebar">
+    <img class="brand-logo" src="logo.png" alt="RuneScape Ranged Rotation Planner logo" />
 
-    <dl class="meta-grid">
-      <div>
-        <dt>Combat scope</dt>
-        <dd>Ranged, single target</dd>
-      </div>
-      <div>
-        <dt>Simulation style</dt>
-        <dd>Deterministic where required</dd>
-      </div>
-      <div>
-        <dt>Architecture</dt>
-        <dd>`game-data` / `simulation-engine` / `app/ui`</dd>
-      </div>
-      <div>
-        <dt>Current step</dt>
-        <dd>Phase 1.1 tooling baseline</dd>
-      </div>
-    </dl>
-  </section>
-</main>
+    <nav class="nav-panel" aria-label="Primary">
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </aside>
 
-<router-outlet />
+  <main class="content-shell">
+    <router-outlet />
+  </main>
+</div>
