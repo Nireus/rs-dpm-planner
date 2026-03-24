@@ -21,6 +21,9 @@ export interface ItemDefinition {
   name: string;
   category: ItemCategory;
   slot?: EquipmentSlot;
+  iconPath?: string;
+  hoverSummary?: string;
+  detailLines?: string[];
   combatStyleTags: CombatStyle[];
   tier?: number;
   offensiveStats?: StatModifierMap;

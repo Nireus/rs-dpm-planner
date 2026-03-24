@@ -1,0 +1,379 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { GearBuilderStore } from './gear-builder.store';
+import {
+  canDropIntoEquipmentSlot,
+  canDropIntoInventory,
+  formatEquipmentSlot,
+  type GearDragSource,
+} from './gear-builder.utils';
+
+@Component({
+  selector: 'app-gear-builder-page',
+  standalone: true,
+  imports: [FormsModule],
+  templateUrl: './gear-builder-page.component.html',
+  styleUrl: './gear-builder-page.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class GearBuilderPageComponent {
+  private readonly gameDataStore = inject(GameDataStoreService);
+  private readonly gearBuilderStore = inject(GearBuilderStore);
+
+  protected readonly query = signal('');
+  protected readonly dragSource = signal<GearDragSource | null>(null);
+  protected readonly hoveredSlot = signal<EquipmentSlot | null>(null);
+  protected readonly inventoryHovering = signal(false);
+  protected readonly dragHint = signal('Drag items into equipment slots or the backpack.');
+  protected readonly selectedItemId = signal<string | null>(null);
+  protected readonly selectedInstanceId = signal<string | null>(null);
+  protected readonly equipmentSlots = this.gearBuilderStore.equipmentSlots;
+  protected readonly equippedSlots = this.gearBuilderStore.equippedSlots;
+  protected readonly inventoryEntries = this.gearBuilderStore.inventoryEntries;
+  protected readonly storeSummary = this.gameDataStore.summary;
+  protected readonly itemDefinitions = computed(
+    () => this.gameDataStore.snapshot().catalog?.items ?? {},
+  );
+  protected readonly gearState = this.gearBuilderStore.snapshot;
+  protected readonly selectedItem = computed(() => {
+    const selectedId = this.selectedItemId();
+    if (!selectedId) {
+      return null;
+    }
+
+    return this.itemDefinitions()[selectedId] ?? null;
+  });
+  protected readonly selectedResolvedInstance = computed(() => {
+    const instanceId = this.selectedInstanceId();
+
+    if (!instanceId) {
+      return null;
+    }
+
+    return this.gearBuilderStore.resolveInstance(instanceId);
+  });
+  protected readonly equippedCount = computed(
+    () => this.equippedSlots().filter((entry) => entry.definition).length,
+  );
+  protected readonly filteredItems = computed(() => {
+    const normalizedQuery = this.query().trim().toLowerCase();
+    const items = this.gearBuilderStore.availableItems();
+
+    if (!normalizedQuery) {
+      return items;
+    }
+
+    return items.filter((item) => `${item.name} ${item.id}`.toLowerCase().includes(normalizedQuery));
+  });
+
+  protected openCatalogDetail(item: ItemDefinition | null): void {
+    this.selectedItemId.set(item?.id ?? null);
+    this.selectedInstanceId.set(null);
+  }
+
+  protected openEquippedDetail(slot: EquipmentSlot): void {
+    const entry = this.equippedSlots().find((candidate) => candidate.slot === slot);
+    this.selectedItemId.set(entry?.definition?.id ?? null);
+    this.selectedInstanceId.set(entry?.instance?.instanceId ?? null);
+  }
+
+  protected openInventoryDetail(instanceId: string): void {
+    const entry = this.inventoryEntries().find((candidate) => candidate.instance.instanceId === instanceId);
+    this.selectedItemId.set(entry?.definition?.id ?? null);
+    this.selectedInstanceId.set(entry?.instance.instanceId ?? null);
+  }
+
+  protected closeDetail(): void {
+    this.selectedItemId.set(null);
+    this.selectedInstanceId.set(null);
+  }
+
+  protected equipDefinition(item: ItemDefinition): void {
+    this.gearBuilderStore.equipDefinition(item.id);
+    this.selectedItemId.set(item.id);
+    this.selectedInstanceId.set(null);
+  }
+
+  protected addToInventory(item: ItemDefinition): void {
+    this.gearBuilderStore.addToInventory(item.id);
+    this.selectedItemId.set(item.id);
+    this.selectedInstanceId.set(null);
+  }
+
+  protected clearSlot(slot: EquipmentSlot): void {
+    this.gearBuilderStore.clearSlot(slot);
+  }
+
+  protected removeFromInventory(instanceId: string): void {
+    this.gearBuilderStore.removeFromInventory(instanceId);
+  }
+
+  protected equipInventoryItem(instanceId: string, slot: EquipmentSlot): void {
+    this.gearBuilderStore.equipInventoryItem(instanceId, slot);
+  }
+
+  protected formatSlot(slot: EquipmentSlot): string {
+    return formatEquipmentSlot(slot);
+  }
+
+  protected shortName(name: string): string {
+    if (name.length <= 16) {
+      return name;
+    }
+
+    return `${name.slice(0, 13)}...`;
+  }
+
+  protected compactMeta(item: ItemDefinition): string {
+    const parts = [item.slot ? this.formatSlot(item.slot) : null, item.tier ? `T${item.tier}` : null];
+    return parts.filter((part): part is string => Boolean(part)).join(' | ') || item.category;
+  }
+
+  protected initials(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+  }
+
+  protected hoverText(item: ItemDefinition): string {
+    return item.hoverSummary ?? `${item.name}${item.tier ? ` - tier ${item.tier}` : ''}`;
+  }
+
+  protected defaultSummary(item: ItemDefinition): string {
+    const parts = [
+      item.tier ? `Tier ${item.tier}` : null,
+      item.slot ? this.formatSlot(item.slot) : null,
+      item.category,
+    ];
+
+    return parts.filter((part): part is string => Boolean(part)).join(' | ');
+  }
+
+  protected detailLines(item: ItemDefinition): string[] {
+    if (item.detailLines?.length) {
+      return item.detailLines;
+    }
+
+    const lines: string[] = [];
+
+    if (item.requirements?.levelRequirements) {
+      const requirements = Object.entries(item.requirements.levelRequirements).map(
+        ([stat, value]) => `${stat} ${value}`,
+      );
+
+      if (requirements.length) {
+        lines.push(`Requirements: ${requirements.join(', ')}`);
+      }
+    }
+
+    if (item.effectRefs?.length) {
+      lines.push(`Effects: ${item.effectRefs.join(', ')}`);
+    }
+
+    if (item.inventoryOnlyBehavior) {
+      lines.push(item.inventoryOnlyBehavior);
+    }
+
+    return lines;
+  }
+
+  protected supportsPerks(item: ItemDefinition): boolean {
+    return item.category === 'weapon' || item.category === 'armor';
+  }
+
+  protected perkValue(index: number): string {
+    return this.selectedResolvedInstance()?.instance.perkIds?.[index] ?? '';
+  }
+
+  protected updatePerk(index: number, value: string): void {
+    const instanceId = this.selectedInstanceId();
+
+    if (!instanceId) {
+      return;
+    }
+
+    this.gearBuilderStore.updateInstancePerk(instanceId, index, value);
+  }
+
+  protected configValue(item: ItemDefinition, optionId: string): boolean | number | string {
+    const configuredValue = this.selectedResolvedInstance()?.instance.configValues?.[optionId];
+
+    if (configuredValue !== undefined) {
+      return configuredValue;
+    }
+
+    return item.configOptions?.find((option) => option.id === optionId)?.defaultValue ?? '';
+  }
+
+  protected updateBooleanConfig(optionId: string, checked: boolean): void {
+    const instanceId = this.selectedInstanceId();
+
+    if (!instanceId) {
+      return;
+    }
+
+    this.gearBuilderStore.updateInstanceConfigValue(instanceId, optionId, checked);
+  }
+
+  protected updateScalarConfig(optionId: string, value: string): void {
+    const instanceId = this.selectedInstanceId();
+
+    if (!instanceId) {
+      return;
+    }
+
+    this.gearBuilderStore.updateInstanceConfigValue(instanceId, optionId, value);
+  }
+
+  protected startCatalogDrag(event: DragEvent, item: ItemDefinition): void {
+    this.startDrag(event, { kind: 'catalog', definitionId: item.id }, `Dragging ${item.name}.`);
+  }
+
+  protected startInventoryDrag(event: DragEvent, instanceId: string): void {
+    const entry = this.inventoryEntries().find((candidate) => candidate.instance.instanceId === instanceId);
+    const label = entry?.definition?.name ?? entry?.instance.definitionId ?? 'item';
+    this.startDrag(event, { kind: 'inventory', instanceId }, `Dragging ${label} from backpack.`);
+  }
+
+  protected startEquippedDrag(event: DragEvent, slot: EquipmentSlot): void {
+    const entry = this.equippedSlots().find((candidate) => candidate.slot === slot);
+    const label = entry?.definition?.name ?? formatEquipmentSlot(slot);
+    this.startDrag(event, { kind: 'equipped', slot }, `Dragging ${label} from ${formatEquipmentSlot(slot)}.`);
+  }
+
+  protected finishDrag(): void {
+    this.dragSource.set(null);
+    this.hoveredSlot.set(null);
+    this.inventoryHovering.set(false);
+    this.dragHint.set('Drag items into equipment slots or the backpack.');
+  }
+
+  protected handleSlotDragOver(event: DragEvent, slot: EquipmentSlot): void {
+    if (this.canDropOnSlot(slot)) {
+      event.preventDefault();
+    }
+
+    this.inventoryHovering.set(false);
+    this.hoveredSlot.set(slot);
+  }
+
+  protected clearDropPreview(slot: EquipmentSlot): void {
+    if (this.hoveredSlot() === slot) {
+      this.hoveredSlot.set(null);
+    }
+  }
+
+  protected handleSlotDrop(event: DragEvent, slot: EquipmentSlot): void {
+    event.preventDefault();
+
+    const source = this.dragSource();
+    const dropped = source ? this.applyDropToSlot(source, slot) : false;
+
+    this.finishDrag();
+    this.dragHint.set(
+      dropped
+        ? `Placed item into ${formatEquipmentSlot(slot)}.`
+        : `That item cannot be dropped into ${formatEquipmentSlot(slot)}.`,
+    );
+  }
+
+  protected handleInventoryDragOver(event: DragEvent): void {
+    if (this.canDropOnInventory()) {
+      event.preventDefault();
+    }
+
+    this.hoveredSlot.set(null);
+    this.inventoryHovering.set(true);
+  }
+
+  protected clearInventoryDropPreview(): void {
+    this.inventoryHovering.set(false);
+  }
+
+  protected handleInventoryDrop(event: DragEvent): void {
+    event.preventDefault();
+
+    const source = this.dragSource();
+    const dropped = source ? this.applyDropToInventory(source) : false;
+
+    this.finishDrag();
+    this.dragHint.set(
+      dropped ? 'Moved item into the backpack.' : 'That drop target is not valid for this item.',
+    );
+  }
+
+  protected isSlotDropActive(slot: EquipmentSlot): boolean {
+    return this.hoveredSlot() === slot && this.canDropOnSlot(slot);
+  }
+
+  protected isSlotDropAvailable(slot: EquipmentSlot): boolean {
+    return this.dragSource() !== null && this.canDropOnSlot(slot);
+  }
+
+  protected isSlotDropBlocked(slot: EquipmentSlot): boolean {
+    return this.hoveredSlot() === slot && !this.canDropOnSlot(slot);
+  }
+
+  protected isInventoryDropActive(): boolean {
+    return this.inventoryHovering() && this.canDropOnInventory();
+  }
+
+  protected isInventoryDropAvailable(): boolean {
+    return this.dragSource() !== null && this.canDropOnInventory();
+  }
+
+  protected isInventoryDropBlocked(): boolean {
+    return this.inventoryHovering() && !this.canDropOnInventory();
+  }
+
+  private canDropOnSlot(slot: EquipmentSlot): boolean {
+    return canDropIntoEquipmentSlot(
+      this.dragSource(),
+      slot,
+      this.itemDefinitions(),
+      this.gearState(),
+    );
+  }
+
+  private canDropOnInventory(): boolean {
+    return canDropIntoInventory(this.dragSource(), this.gearState());
+  }
+
+  private applyDropToSlot(source: GearDragSource, slot: EquipmentSlot): boolean {
+    switch (source.kind) {
+      case 'catalog':
+        return this.gearBuilderStore.equipDefinition(source.definitionId, slot);
+      case 'inventory':
+        return this.gearBuilderStore.equipInventoryItem(source.instanceId, slot);
+      case 'equipped':
+        return this.gearBuilderStore.moveEquippedItem(source.slot, slot);
+    }
+  }
+
+  private applyDropToInventory(source: GearDragSource): boolean {
+    switch (source.kind) {
+      case 'catalog':
+        return this.gearBuilderStore.addToInventory(source.definitionId);
+      case 'inventory':
+        return false;
+      case 'equipped':
+        this.gearBuilderStore.clearSlot(source.slot);
+        return true;
+    }
+  }
+
+  private startDrag(event: DragEvent, source: GearDragSource, hint: string): void {
+    this.dragSource.set(source);
+    this.dragHint.set(hint);
+
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', JSON.stringify(source));
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+}

@@ -1,0 +1,120 @@
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.page-header,
+.toolbar,
+.panel,
+.card {
+  border: 1px solid var(--panel-border);
+  border-radius: 1.5rem;
+  background: var(--panel-surface);
+  box-shadow: var(--panel-shadow);
+}
+
+.page-header {
+  display: grid;
+  gap: 0.75rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  color: var(--text-strong);
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1;
+}
+
+.description,
+p,
+li {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.search-field {
+  display: grid;
+  gap: 0.45rem;
+  min-width: min(100%, 22rem);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.search-field input {
+  width: 100%;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: rgba(10, 16, 8, 0.88);
+  color: var(--text-strong);
+}
+
+.summary-chip {
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--text-soft);
+  background: rgba(12, 20, 8, 0.88);
+  font-size: 0.85rem;
+}
+
+.panel {
+  padding: 1.25rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.15rem 1.2rem;
+  background: var(--panel-surface-alt);
+}
+
+.card-header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+code {
+  color: var(--text-strong);
+  font-size: 0.85rem;
+}
+
+.effect-line span {
+  color: var(--text-soft);
+}
+
+.issue-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}

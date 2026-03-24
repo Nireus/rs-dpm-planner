@@ -1,0 +1,107 @@
+<section class="page">
+  <header class="page-header">
+    <p class="eyebrow">{{ eyebrow() }}</p>
+    <h1>{{ title() }}</h1>
+    <p class="description">{{ description() }}</p>
+  </header>
+
+  <section class="toolbar">
+    <label class="search-field">
+      <span>Search</span>
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        placeholder="Filter by name or id"
+      />
+    </label>
+
+    <div class="summary-chip">
+      @if (storeSummary().counts && definitionCount() !== null) {
+        Showing {{ filteredDefinitions().length }} of {{ definitionCount() }}
+      } @else {
+        Waiting for data
+      }
+    </div>
+  </section>
+
+  @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Loading curated JSON definitions from the repository...</p>
+    </article>
+  } @else if (storeSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <ul class="issue-list">
+        @for (issue of storeSummary().issues; track issue.path + issue.message) {
+          <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+        }
+      </ul>
+    </article>
+  } @else {
+    <section class="card-grid">
+      @for (definition of filteredDefinitions(); track definition.id) {
+        <article class="card">
+          <div class="card-header">
+            <h2>{{ definition.name }}</h2>
+            <code>{{ definition.id }}</code>
+          </div>
+
+          @switch (kind()) {
+            @case ('items') {
+              <p>
+                Category: <strong>{{ asItem(definition).category }}</strong>
+              </p>
+              <p>
+                Tier:
+                <strong>{{ asItem(definition).tier ?? 'n/a' }}</strong>
+              </p>
+              <p>
+                Styles:
+                <strong>{{ asItem(definition).combatStyleTags.join(', ') }}</strong>
+              </p>
+            }
+            @case ('abilities') {
+              <p>
+                Subtype: <strong>{{ asAbility(definition).subtype }}</strong>
+              </p>
+              <p>
+                Cooldown:
+                <strong>{{ asAbility(definition).cooldownTicks }} ticks</strong>
+              </p>
+              <p>
+                Hit schedule:
+                <strong>{{ asAbility(definition).hitSchedule.length }} hit(s)</strong>
+              </p>
+            }
+            @case ('buffs') {
+              <p>
+                Category: <strong>{{ asBuff(definition).category }}</strong>
+              </p>
+              <p>
+                Source:
+                <strong>{{ asBuff(definition).sourceType }}</strong>
+              </p>
+              <p>
+                Duration:
+                <strong>{{ asBuff(definition).durationTicks ?? 'permanent/derived' }}</strong>
+              </p>
+            }
+          }
+
+          @if (definition.effectRefs?.length) {
+            <p class="effect-line">
+              Effects: <span>{{ (definition.effectRefs ?? []).join(', ') }}</span>
+            </p>
+          }
+        </article>
+      } @empty {
+        <article class="panel">
+          <h2>No Matches</h2>
+          <p>No loaded definitions match the current search.</p>
+        </article>
+      }
+    </section>
+  }
+</section>

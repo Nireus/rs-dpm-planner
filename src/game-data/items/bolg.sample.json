@@ -3,6 +3,15 @@
   "name": "Bow of the Last Guardian",
   "category": "weapon",
   "slot": "weapon",
+  "iconPath": "https://runescape.wiki/images/Augmented_Bow_of_the_Last_Guardian.png",
+  "hoverSummary": "Tier 95 two-handed shortbow. 1368 ability damage, 2765 accuracy, 6-tick speed, range 9.",
+  "detailLines": [
+    "Requires level 95 Ranged to wield.",
+    "Uses arrows and attacks at 6 ticks.",
+    "Passive: Perfect Equilibrium.",
+    "Special attack: Balance by Force.",
+    "Examine: A beautiful bow, imbued with divine energy. Perfectly balanced, as all things should be."
+  ],
   "combatStyleTags": ["ranged"],
   "tier": 95,
   "offensiveStats": {
@@ -16,6 +25,13 @@
     "requiredEquipmentTags": ["two-handed-bow"]
   },
   "effectRefs": ["bolg-passive"],
-  "configOptions": [],
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
   "equipBehavior": "two-handed"
 }

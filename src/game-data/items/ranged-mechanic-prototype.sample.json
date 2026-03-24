@@ -1,0 +1,8 @@
+{
+  "id": "ranged-mechanic-prototype",
+  "name": "Ranged mechanic prototype",
+  "category": "other",
+  "combatStyleTags": ["ranged"],
+  "inventoryOnlyBehavior": "Backpack-only sample item used to exercise inventory-enabled mechanics in the MVP UI.",
+  "implementationNotes": "Intentionally non-equippable sample item for Phase 4 inventory wiring."
+}

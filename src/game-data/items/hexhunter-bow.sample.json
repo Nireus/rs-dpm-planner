@@ -1,0 +1,15 @@
+{
+  "id": "hexhunter-bow",
+  "name": "Hexhunter bow",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/images/Hexhunter_bow.png",
+  "hoverSummary": "Bow that is stronger against targets with magical powers.",
+  "detailLines": [
+    "Examine: It is stronger against targets with magical powers.",
+    "Classic ranged bow option for high-level target-specific setups."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 97,
+  "effectRefs": ["hexhunter-passive"]
+}

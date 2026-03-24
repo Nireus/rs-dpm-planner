@@ -1,0 +1,18 @@
+{
+  "id": "ful-arrows",
+  "name": "Ful arrows",
+  "category": "ammo",
+  "slot": "ammo",
+  "combatStyleTags": ["ranged"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 95
+    }
+  },
+  "effectRefs": ["ful-arrows-heat"],
+  "implementationNotes": "Sample MVP ammo definition for swap and backpack flows."
+}

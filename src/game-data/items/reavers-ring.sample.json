@@ -1,0 +1,15 @@
+{
+  "id": "reavers-ring",
+  "name": "Reaver's ring",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "https://runescape.wiki/images/Reaver%27s_ring.png",
+  "hoverSummary": "High-offense ring often used in PvM setups.",
+  "detailLines": [
+    "High-offense hybrid ring often favored in damage-focused setups.",
+    "Relevant comparison point against Stalker's ring and utility rings."
+  ],
+  "combatStyleTags": ["ranged"],
+  "effectRefs": ["reavers-ring-crit"],
+  "implementationNotes": "Sample ranged ring-slot item for gear builder MVP."
+}

@@ -1,0 +1,45 @@
+<section class="page">
+  <header class="page-header">
+    <p class="eyebrow">{{ eyebrow() }}</p>
+    <h1>{{ title() }}</h1>
+    <p class="description">{{ description() }}</p>
+  </header>
+
+  <div class="page-grid">
+    <article class="panel">
+      <h2>Current Purpose</h2>
+      <p>{{ purpose() }}</p>
+    </article>
+
+    <article class="panel">
+      <h2>Phase Status</h2>
+      <p>
+        This is a placeholder screen while the application shell and data plumbing are being built
+        out incrementally.
+      </p>
+    </article>
+
+    <article class="panel">
+      <h2>Loaded Sample Data</h2>
+
+      @if (gameDataSummary().status === 'loading' || gameDataSummary().status === 'idle') {
+        <p>Loading curated JSON data from the repository...</p>
+      } @else if (gameDataSummary().status === 'error') {
+        <p>Game-data loading failed.</p>
+        <ul class="issue-list">
+          @for (issue of gameDataSummary().issues; track issue.path + issue.message) {
+            <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+          }
+        </ul>
+      } @else if (gameDataSummary().counts; as counts) {
+        <ul class="count-list">
+          <li>Items: {{ counts.items }}</li>
+          <li>Abilities: {{ counts.abilities }}</li>
+          <li>Buffs: {{ counts.buffs }}</li>
+          <li>Perks: {{ counts.perks }}</li>
+          <li>Relics: {{ counts.relics }}</li>
+        </ul>
+      }
+    </article>
+  </div>
+</section>

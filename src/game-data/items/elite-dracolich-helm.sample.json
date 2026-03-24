@@ -1,0 +1,10 @@
+{
+  "id": "elite-dracolich-helm",
+  "name": "Elite dracolich helm",
+  "category": "armor",
+  "slot": "head",
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "effectRefs": ["elite-dracolich-set"],
+  "implementationNotes": "Sample ranged head-slot item for gear builder MVP."
+}

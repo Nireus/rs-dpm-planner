@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { DataExplorerPageComponent } from './features/data-explorer/data-explorer-page.component';
+import { GearBuilderPageComponent } from './features/gear/gear-builder-page.component';
 import { FeaturePlaceholderPageComponent } from './shared/feature-placeholder-page.component';
 
 export const routes: Routes = [
@@ -9,38 +11,28 @@ export const routes: Routes = [
   },
   {
     path: 'gear',
-    component: FeaturePlaceholderPageComponent,
-    data: {
-      eyebrow: 'Configuration',
-      title: 'Gear',
-      description:
-        'Equip ranged weapons, ammo, armor, and inventory items for the current setup.',
-      purpose:
-        'This area will eventually handle equipped slots, backpack state, and future gear configuration details.',
-    },
+    component: GearBuilderPageComponent,
   },
   {
     path: 'abilities',
-    component: FeaturePlaceholderPageComponent,
+    component: DataExplorerPageComponent,
     data: {
-      eyebrow: 'Reference',
+      explorerKind: 'abilities',
+      eyebrow: 'Explorer',
       title: 'Abilities',
       description:
-        'Inspect supported ranged abilities, cooldowns, costs, and summary details.',
-      purpose:
-        'This area will eventually surface availability rules and ability detail views without embedding combat logic in the UI.',
+        'Inspect supported ranged ability definitions, cooldowns, and hit schedule summaries.',
     },
   },
   {
     path: 'buffs',
-    component: FeaturePlaceholderPageComponent,
+    component: DataExplorerPageComponent,
     data: {
-      eyebrow: 'Modifiers',
+      explorerKind: 'buffs',
+      eyebrow: 'Explorer',
       title: 'Buffs',
       description:
-        'Configure the persistent modifiers that shape the simulated rotation scenario.',
-      purpose:
-        'This area will eventually manage prayers, potions, relics, perks, and other pre-fight selections.',
+        'Inspect currently loaded buff definitions and their basic metadata.',
     },
   },
   {

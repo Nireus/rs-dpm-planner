@@ -1,0 +1,15 @@
+{
+  "id": "tokhaar-kal-xil",
+  "name": "TokHaar-Kal-Xil",
+  "category": "armor",
+  "slot": "cape",
+  "iconPath": "https://runescape.wiki/images/TokHaar-Kal-Xil.png",
+  "hoverSummary": "Fight Kiln ranged cape. High-level ranged cape before the igneous upgrade.",
+  "detailLines": [
+    "Examine: A cape made of ancient, enchanted obsidian.",
+    "High-level ranged cape from Fight Kiln.",
+    "Can be combined with an igneous stone to make Igneous Kal-Xil."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 75
+}

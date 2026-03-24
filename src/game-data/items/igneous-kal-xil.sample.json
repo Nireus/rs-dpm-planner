@@ -1,0 +1,16 @@
+{
+  "id": "igneous-kal-xil",
+  "name": "Igneous Kal-Xil",
+  "category": "armor",
+  "slot": "cape",
+  "iconPath": "https://runescape.wiki/images/Igneous_Kal-Xil.png",
+  "hoverSummary": "Tier 85 ranged cape that upgrades Deadshot by reducing its adrenaline cost to 60%.",
+  "detailLines": [
+    "Examine: A cape made of ancient, enchanted obsidian, infused with igneous energy.",
+    "High-level ranged cape created by upgrading TokHaar-Kal-Xil with an igneous stone.",
+    "Deadshot is reduced from 100% to 60% adrenaline and gains stronger damage over time."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 85,
+  "effectRefs": ["igneous-kal-xil-passive"]
+}

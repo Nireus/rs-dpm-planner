@@ -1,0 +1,9 @@
+{
+  "id": "fleeting-boots",
+  "name": "Fleeting boots",
+  "category": "armor",
+  "slot": "feet",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "implementationNotes": "Sample ranged feet-slot item for gear builder MVP."
+}

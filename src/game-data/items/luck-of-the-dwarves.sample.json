@@ -1,0 +1,14 @@
+{
+  "id": "luck-of-the-dwarves",
+  "name": "Luck of the Dwarves",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "https://runescape.wiki/images/Luck_of_the_Dwarves.png",
+  "hoverSummary": "Luck ring focused on rare drop utility rather than raw ranged damage.",
+  "detailLines": [
+    "Examine: A ring that increases your chance of rare items from extremely dangerous monsters across Gielinor.",
+    "Included mainly as a setup comparison and utility option.",
+    "Not expected to be a DPS-best ring in the ranged simulator."
+  ],
+  "combatStyleTags": ["ranged"]
+}

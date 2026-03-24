@@ -1,0 +1,25 @@
+{
+  "id": "essence-of-finality",
+  "name": "Essence of Finality amulet",
+  "category": "jewellery",
+  "slot": "amulet",
+  "iconPath": "https://runescape.wiki/images/Essence_of_Finality_amulet.png",
+  "hoverSummary": "High-end amulet that stores a special attack and combines Reaper necklace and Amulet of souls effects.",
+  "detailLines": [
+    "Examine: An amulet fused with the power of a reaper necklace and amulet of souls. Stores a special attack which can then be harnessed as an ability.",
+    "Combines the effects of Reaper necklace and Amulet of souls.",
+    "Stores a special attack which can be used as an ability."
+  ],
+  "combatStyleTags": ["ranged"],
+  "effectRefs": ["eof-special-access"],
+  "configOptions": [
+    {
+      "id": "stored-special",
+      "label": "Stored special",
+      "type": "select",
+      "defaultValue": "dark-bow",
+      "options": ["dark-bow", "seren-godbow", "dragon-claws", "none"]
+    }
+  ],
+  "implementationNotes": "Sample amulet-slot item for gear builder MVP."
+}

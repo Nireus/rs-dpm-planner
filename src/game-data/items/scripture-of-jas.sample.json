@@ -1,0 +1,10 @@
+{
+  "id": "scripture-of-jas",
+  "name": "Scripture of Jas",
+  "category": "pocket",
+  "slot": "pocket",
+  "hoverSummary": "Pocket-slot god book aligned with Jas.",
+  "combatStyleTags": ["ranged"],
+  "effectRefs": ["scripture-of-jas"],
+  "implementationNotes": "Sample pocket-slot item for gear builder MVP."
+}

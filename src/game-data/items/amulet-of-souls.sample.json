@@ -1,0 +1,15 @@
+{
+  "id": "amulet-of-souls",
+  "name": "Amulet of souls",
+  "category": "jewellery",
+  "slot": "amulet",
+  "iconPath": "https://runescape.wiki/images/Amulet_of_souls.png",
+  "hoverSummary": "Hydrix amulet with Soul Split and protection prayer improvements.",
+  "detailLines": [
+    "Examine: With this amulet equipped, Soul Split has a chance to heal 25-50% more.",
+    "Core ingredient for the Essence of Finality amulet.",
+    "Useful as a baseline non-EOF amulet option."
+  ],
+  "combatStyleTags": ["ranged"],
+  "effectRefs": ["amulet-of-souls-passive"]
+}

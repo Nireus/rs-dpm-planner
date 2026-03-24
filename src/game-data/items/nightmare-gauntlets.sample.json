@@ -1,0 +1,9 @@
+{
+  "id": "nightmare-gauntlets",
+  "name": "Nightmare gauntlets",
+  "category": "armor",
+  "slot": "hands",
+  "combatStyleTags": ["ranged"],
+  "tier": 85,
+  "implementationNotes": "Sample ranged hand-slot item for gear builder MVP."
+}

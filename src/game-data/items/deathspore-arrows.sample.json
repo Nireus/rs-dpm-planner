@@ -1,0 +1,18 @@
+{
+  "id": "deathspore-arrows",
+  "name": "Deathspore arrows",
+  "category": "ammo",
+  "slot": "ammo",
+  "combatStyleTags": ["ranged"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 95
+    }
+  },
+  "effectRefs": ["deathspore-progress"],
+  "implementationNotes": "Sample MVP ammo definition for gear builder and later stateful ranged mechanics."
+}

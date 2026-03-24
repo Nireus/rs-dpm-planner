@@ -1,0 +1,16 @@
+{
+  "id": "igneous-kal-zuk",
+  "name": "Igneous Kal-Zuk",
+  "category": "armor",
+  "slot": "cape",
+  "iconPath": "https://runescape.wiki/images/Igneous_Kal-Zuk.png",
+  "hoverSummary": "Tier 100 hybrid Zuk cape carrying the ranged Deadshot upgrade among its combined passives.",
+  "detailLines": [
+    "Examine: A cape made of ancient, enchanted obsidian, infused with unmatched igneous energy.",
+    "Tier 100 hybrid cape created from the four igneous capes.",
+    "Includes the ranged Deadshot adrenaline reduction and damage upgrade."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 100,
+  "effectRefs": ["igneous-kal-zuk-passive"]
+}

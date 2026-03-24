@@ -1,0 +1,311 @@
+<section class="page">
+  <header class="page-header">
+    <p class="eyebrow">Builder</p>
+    <h1>Gear</h1>
+    <p class="description">Compact icon-first loadout builder. Hover for quick context, click for detail.</p>
+  </header>
+
+  @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Loading curated ranged gear definitions from the repository...</p>
+    </article>
+  } @else if (storeSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <ul class="issue-list">
+        @for (issue of storeSummary().issues; track issue.path + issue.message) {
+          <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+        }
+      </ul>
+    </article>
+  } @else {
+    <section class="layout">
+      <div class="main-column">
+        <article class="panel compact-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Equipped</h2>
+              <p>{{ equippedCount() }} / {{ equipmentSlots.length }}</p>
+            </div>
+            <div class="summary-chip">Drag to equip</div>
+          </div>
+
+          <div class="slot-grid">
+            @for (entry of equippedSlots(); track entry.slot) {
+              <button
+                type="button"
+                class="slot-card"
+                [class.drop-target-available]="isSlotDropAvailable(entry.slot)"
+                [class.drop-target-valid]="isSlotDropActive(entry.slot)"
+                [class.drop-target-invalid]="isSlotDropBlocked(entry.slot)"
+                [attr.title]="entry.definition ? hoverText(entry.definition) : 'Drop a compatible item here.'"
+                (click)="openEquippedDetail(entry.slot)"
+                (dragover)="handleSlotDragOver($event, entry.slot)"
+                (dragleave)="clearDropPreview(entry.slot)"
+                (drop)="handleSlotDrop($event, entry.slot)"
+              >
+                <span class="slot-label">{{ entry.label }}</span>
+
+                @if (entry.definition) {
+                  <div
+                    class="icon-tile draggable"
+                    draggable="true"
+                    (dragstart)="startEquippedDrag($event, entry.slot)"
+                    (dragend)="finishDrag()"
+                  >
+                    @if (entry.definition.iconPath) {
+                      <img class="item-icon" [src]="entry.definition.iconPath" [alt]="entry.definition.name" />
+                    } @else {
+                      <span class="fallback-icon">{{ initials(entry.definition.name) }}</span>
+                    }
+                  </div>
+                  <span class="item-name">{{ shortName(entry.definition.name) }}</span>
+                } @else {
+                  <div class="icon-tile empty-icon"><span>+</span></div>
+                  <span class="item-name empty-copy">Empty</span>
+                }
+              </button>
+            }
+          </div>
+        </article>
+
+        <article
+          class="panel compact-panel"
+          [class.drop-target-available]="isInventoryDropAvailable()"
+          [class.drop-target-valid]="isInventoryDropActive()"
+          [class.drop-target-invalid]="isInventoryDropBlocked()"
+          (dragover)="handleInventoryDragOver($event)"
+          (dragleave)="clearInventoryDropPreview()"
+          (drop)="handleInventoryDrop($event)"
+        >
+          <div class="panel-heading">
+            <div>
+              <h2>Backpack</h2>
+              <p>{{ inventoryEntries().length }} items</p>
+            </div>
+            <div class="summary-chip">Drop here</div>
+          </div>
+
+          @if (inventoryEntries().length) {
+            <div class="inventory-grid">
+              @for (entry of inventoryEntries(); track entry.instance.instanceId) {
+                <button
+                  type="button"
+                  class="inventory-tile draggable"
+                  [attr.title]="entry.definition ? hoverText(entry.definition) : entry.instance.definitionId"
+                  draggable="true"
+                  (click)="openInventoryDetail(entry.instance.instanceId)"
+                  (dragstart)="startInventoryDrag($event, entry.instance.instanceId)"
+                  (dragend)="finishDrag()"
+                >
+                  <div class="icon-tile compact-icon">
+                    @if (entry.definition?.iconPath) {
+                      <img class="item-icon" [src]="entry.definition?.iconPath" [alt]="entry.definition?.name" />
+                    } @else {
+                      <span class="fallback-icon">
+                        {{ initials(entry.definition?.name ?? entry.instance.definitionId) }}
+                      </span>
+                    }
+                  </div>
+                  <span class="inventory-name">{{ shortName(entry.definition?.name ?? entry.instance.definitionId) }}</span>
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="empty-copy">No backpack items yet.</p>
+          }
+        </article>
+      </div>
+
+      <article class="panel compact-panel catalog-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Catalog</h2>
+            <p>{{ filteredItems().length }} visible</p>
+          </div>
+
+          <label class="search-field">
+            <span>Search</span>
+            <input
+              type="search"
+              [ngModel]="query()"
+              (ngModelChange)="query.set($event)"
+              placeholder="Filter by name or id"
+            />
+          </label>
+        </div>
+
+        <div class="catalog-grid">
+          @for (item of filteredItems(); track item.id) {
+            <button
+              type="button"
+              class="catalog-tile draggable"
+              [class.selected]="selectedItem()?.id === item.id"
+              [attr.title]="hoverText(item)"
+              draggable="true"
+              (click)="openCatalogDetail(item)"
+              (dragstart)="startCatalogDrag($event, item)"
+              (dragend)="finishDrag()"
+            >
+              <div class="icon-tile">
+                @if (item.iconPath) {
+                  <img class="item-icon" [src]="item.iconPath" [alt]="item.name" />
+                } @else {
+                  <span class="fallback-icon">{{ initials(item.name) }}</span>
+                }
+              </div>
+              <span class="item-name">{{ shortName(item.name) }}</span>
+              <span class="item-meta">{{ compactMeta(item) }}</span>
+            </button>
+          } @empty {
+            <article class="empty-state">
+              <h3>No Matches</h3>
+              <p>No loaded item definitions match the current search.</p>
+            </article>
+          }
+        </div>
+      </article>
+    </section>
+
+    <p class="drag-hint">{{ dragHint() }}</p>
+
+    @if (selectedItem(); as item) {
+      <div class="dialog-backdrop" (click)="closeDetail()">
+        <section
+          class="detail-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gear-detail-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="dialog-header">
+            <div class="dialog-title-group">
+              <div class="icon-tile detail-icon">
+                @if (item.iconPath) {
+                  <img class="item-icon" [src]="item.iconPath" [alt]="item.name" />
+                } @else {
+                  <span class="fallback-icon">{{ initials(item.name) }}</span>
+                }
+              </div>
+
+              <div class="detail-copy">
+                <p class="eyebrow detail-eyebrow">{{ item.slot ? formatSlot(item.slot) : item.category }}</p>
+                <h2 id="gear-detail-title">{{ item.name }}</h2>
+                <p>{{ item.hoverSummary ?? defaultSummary(item) }}</p>
+              </div>
+            </div>
+
+            <button type="button" class="icon-button" (click)="closeDetail()" aria-label="Close detail dialog">
+              Close
+            </button>
+          </div>
+
+              <div class="detail-tags">
+                <span class="detail-tag">{{ item.category }}</span>
+                @if (item.slot) {
+                  <span class="detail-tag">{{ formatSlot(item.slot) }}</span>
+                }
+                @if (item.tier) {
+                  <span class="detail-tag">T{{ item.tier }}</span>
+                }
+                @if (selectedResolvedInstance(); as resolved) {
+                  <span class="detail-tag">{{ resolved.locationLabel }}</span>
+                }
+              </div>
+
+              @if (selectedResolvedInstance(); as resolved) {
+                <section class="config-panel">
+                  <div class="config-header">
+                    <h3>Configuration</h3>
+                    <p>These edits persist on the selected item instance.</p>
+                  </div>
+
+                  @if (supportsPerks(item)) {
+                    <div class="config-grid">
+                      <label class="config-field">
+                        <span>Perk 1</span>
+                        <input
+                          type="text"
+                          [ngModel]="perkValue(0)"
+                          (ngModelChange)="updatePerk(0, $event)"
+                          placeholder="e.g. aftershock-4"
+                        />
+                      </label>
+
+                      <label class="config-field">
+                        <span>Perk 2</span>
+                        <input
+                          type="text"
+                          [ngModel]="perkValue(1)"
+                          (ngModelChange)="updatePerk(1, $event)"
+                          placeholder="e.g. equilibrium-4"
+                        />
+                      </label>
+                    </div>
+                  }
+
+                  @if (item.configOptions?.length) {
+                    <div class="config-grid">
+                      @for (option of item.configOptions ?? []; track option.id) {
+                        <label class="config-field">
+                          <span>{{ option.label }}</span>
+
+                          @switch (option.type) {
+                            @case ('boolean') {
+                              <input
+                                type="checkbox"
+                                [ngModel]="configValue(item, option.id)"
+                                (ngModelChange)="updateBooleanConfig(option.id, $event)"
+                              />
+                            }
+                            @case ('number') {
+                              <input
+                                type="number"
+                                [ngModel]="configValue(item, option.id)"
+                                (ngModelChange)="updateScalarConfig(option.id, $event)"
+                              />
+                            }
+                            @case ('select') {
+                              <select
+                                [ngModel]="configValue(item, option.id)"
+                                (ngModelChange)="updateScalarConfig(option.id, $event)"
+                              >
+                                @for (choice of option.options ?? []; track choice) {
+                                  <option [value]="choice">{{ choice }}</option>
+                                }
+                              </select>
+                            }
+                          }
+                        </label>
+                      }
+                    </div>
+                  }
+                </section>
+              }
+
+              @if (detailLines(item).length) {
+                <ul class="detail-list">
+              @for (line of detailLines(item); track line) {
+                <li>{{ line }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-copy">No expanded details for this item yet.</p>
+          }
+
+          <div class="detail-actions">
+            @if (item.slot) {
+              <button type="button" class="primary-button" (click)="equipDefinition(item)">
+                Equip to {{ formatSlot(item.slot) }}
+              </button>
+            }
+            <button type="button" class="secondary-button" (click)="addToInventory(item)">
+              Add to backpack
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</section>

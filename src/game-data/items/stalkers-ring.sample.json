@@ -1,0 +1,15 @@
+{
+  "id": "stalkers-ring",
+  "name": "Stalker's ring",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "https://runescape.wiki/images/Stalker%27s_ring.png",
+  "hoverSummary": "Bow-focused ring with Shadow's Mercy for extra critical strike chance.",
+  "detailLines": [
+    "Examine: A fabled ring that burns with primeval venom. It can improve the wearer's skill with a bow.",
+    "Grants +3% critical strike chance when wielding a bow.",
+    "Strong future candidate for ranged crit modeling."
+  ],
+  "combatStyleTags": ["ranged"],
+  "effectRefs": ["stalkers-ring-crit"]
+}
