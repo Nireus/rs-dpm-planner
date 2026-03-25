@@ -2,7 +2,7 @@
   "id": "snap-shot",
   "name": "Snap Shot",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 0,
   "adrenalineCost": 25,
   "requires": {
@@ -32,5 +32,5 @@
     "min": 270,
     "max": 310
   },
-  "description": "Burst threshold with two quick hits."
+  "description": "Burst enhanced ability with two quick hits."
 }

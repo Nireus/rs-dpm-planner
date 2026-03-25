@@ -135,3 +135,7 @@ export function formatEquipmentSlot(slot: EquipmentSlot): string {
 export function isAugmentableSlot(slot: EquipmentSlot | undefined): boolean {
   return slot === 'weapon' || slot === 'body' || slot === 'legs';
 }
+
+export function requiresImmediateItemConfiguration(item: ItemDefinition): boolean {
+  return isAugmentableSlot(item.slot) || Boolean(item.configOptions?.length);
+}

@@ -3,6 +3,7 @@
   "name": "Elite dracolich hauberk",
   "category": "armor",
   "slot": "body",
+  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_hauberk.png?5e7d5",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "effectRefs": ["elite-dracolich-set"],

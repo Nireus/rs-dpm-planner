@@ -1,4 +1,11 @@
-import type { AbilityDefinition, BuffDefinition, ItemDefinition } from '../types';
+import type {
+  AbilityDefinition,
+  BuffDefinition,
+  EofSpecDefinition,
+  ItemDefinition,
+  PerkDefinition,
+  RelicDefinition,
+} from '../types';
 
 export type GameDataValidationError = {
   path: string;
@@ -17,6 +24,10 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
 
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return isRecord(value) && Object.values(value).every((entry) => typeof entry === 'string');
+}
+
 function pushError(
   errors: GameDataValidationError[],
   path: string,
@@ -31,7 +42,7 @@ export function parseJsonDocument(raw: string): unknown {
 
 function validateDefinitionBase(
   input: unknown,
-  kind: 'item' | 'ability' | 'buff',
+  kind: 'item' | 'ability' | 'buff' | 'eof spec' | 'perk' | 'relic',
 ): GameDataValidationError[] {
   const errors: GameDataValidationError[] = [];
 
@@ -70,6 +81,11 @@ export function validateItemDefinition(input: unknown): GameDataValidationResult
   const combatStyleTags = input['combatStyleTags'];
   if (!isStringArray(combatStyleTags)) {
     pushError(errors, 'combatStyleTags', 'Expected "combatStyleTags" to be an array of strings.');
+  }
+
+  const dyeVariantIconPaths = input['dyeVariantIconPaths'];
+  if (dyeVariantIconPaths !== undefined && !isStringRecord(dyeVariantIconPaths)) {
+    pushError(errors, 'dyeVariantIconPaths', 'Expected "dyeVariantIconPaths" to be an object of string values.');
   }
 
   if (errors.length > 0) {
@@ -130,6 +146,14 @@ export function validateBuffDefinition(input: unknown): GameDataValidationResult
     pushError(errors, 'sourceType', 'Expected "sourceType" to be a string.');
   }
 
+  if (input['iconPath'] !== undefined && typeof input['iconPath'] !== 'string') {
+    pushError(errors, 'iconPath', 'Expected "iconPath" to be a string when present.');
+  }
+
+  if (input['variantNames'] !== undefined && !isStringArray(input['variantNames'])) {
+    pushError(errors, 'variantNames', 'Expected "variantNames" to be an array of strings when present.');
+  }
+
   if (
     input['durationTicks'] !== undefined &&
     typeof input['durationTicks'] !== 'number'
@@ -142,4 +166,76 @@ export function validateBuffDefinition(input: unknown): GameDataValidationResult
   }
 
   return { success: true, data: input as unknown as BuffDefinition };
+}
+
+export function validatePerkDefinition(input: unknown): GameDataValidationResult<PerkDefinition> {
+  const errors = validateDefinitionBase(input, 'perk');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as PerkDefinition };
+}
+
+export function validateRelicDefinition(input: unknown): GameDataValidationResult<RelicDefinition> {
+  const errors = validateDefinitionBase(input, 'relic');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (input['iconPath'] !== undefined && typeof input['iconPath'] !== 'string') {
+    pushError(errors, 'iconPath', 'Expected "iconPath" to be a string when present.');
+  }
+
+  if (input['wikiUrl'] !== undefined && typeof input['wikiUrl'] !== 'string') {
+    pushError(errors, 'wikiUrl', 'Expected "wikiUrl" to be a string when present.');
+  }
+
+  if (input['monolithEnergy'] !== undefined && typeof input['monolithEnergy'] !== 'number') {
+    pushError(errors, 'monolithEnergy', 'Expected "monolithEnergy" to be a number when present.');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as RelicDefinition };
+}
+
+export function validateEofSpecDefinition(
+  input: unknown,
+): GameDataValidationResult<EofSpecDefinition> {
+  const errors = validateDefinitionBase(input, 'eof spec');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (typeof input['weaponOrigin'] !== 'string') {
+    pushError(errors, 'weaponOrigin', 'Expected "weaponOrigin" to be a string.');
+  }
+
+  if (typeof input['adrenalineCost'] !== 'number') {
+    pushError(errors, 'adrenalineCost', 'Expected "adrenalineCost" to be a number.');
+  }
+
+  if (!Array.isArray(input['hitSchedule'])) {
+    pushError(errors, 'hitSchedule', 'Expected "hitSchedule" to be an array.');
+  }
+
+  if (!isRecord(input['baseDamage'])) {
+    pushError(errors, 'baseDamage', 'Expected "baseDamage" to be an object.');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as EofSpecDefinition };
 }

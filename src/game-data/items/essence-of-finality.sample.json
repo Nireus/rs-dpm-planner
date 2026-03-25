@@ -4,21 +4,38 @@
   "category": "jewellery",
   "slot": "amulet",
   "iconPath": "https://runescape.wiki/images/Essence_of_Finality_amulet.png",
+  "dyeVariantIconPaths": {
+    "red": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(red).png",
+    "blue": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(blue).png",
+    "yellow": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(yellow).png",
+    "green": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(green).png",
+    "purple": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(purple).png",
+    "pink": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(pink).png",
+    "black": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(black).png"
+  },
   "hoverSummary": "High-end amulet that stores a special attack and combines Reaper necklace and Amulet of souls effects.",
   "detailLines": [
     "Examine: An amulet fused with the power of a reaper necklace and amulet of souls. Stores a special attack which can then be harnessed as an ability.",
     "Combines the effects of Reaper necklace and Amulet of souls.",
-    "Stores a special attack which can be used as an ability."
+    "Stores a special attack which can be used as an ability.",
+    "Can be dyed red, blue, yellow, green, purple, pink, or black to distinguish multiple amulets."
   ],
   "combatStyleTags": ["ranged"],
   "effectRefs": ["eof-special-access"],
   "configOptions": [
     {
+      "id": "applied-dye",
+      "label": "Dye",
+      "type": "select",
+      "defaultValue": "default",
+      "options": ["default", "red", "blue", "yellow", "green", "purple", "pink", "black"]
+    },
+    {
       "id": "stored-special",
       "label": "Stored special",
       "type": "select",
       "defaultValue": "dark-bow",
-      "options": ["dark-bow", "seren-godbow", "dragon-claws", "none"]
+      "options": ["dark-bow", "seren-godbow", "none"]
     }
   ],
   "implementationNotes": "Sample amulet-slot item for gear builder MVP."

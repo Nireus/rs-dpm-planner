@@ -182,7 +182,7 @@ li,
 .item-overlays {
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  z-index: 2;
 }
 
 .perk-badge-stack {
@@ -192,6 +192,7 @@ li,
   display: grid;
   gap: 0.18rem;
   max-width: calc(100% - 1.4rem);
+  pointer-events: auto;
 }
 
 .perk-badge {
@@ -211,23 +212,50 @@ li,
   white-space: nowrap;
 }
 
+.eof-badge {
+  border-color: rgba(216, 200, 155, 0.45);
+  color: #f0dfaf;
+}
+
 .status-icon {
   position: absolute;
   top: 0.2rem;
   right: 0.2rem;
   display: grid;
   place-items: center;
-  width: 1rem;
-  height: 1rem;
+  width: 1.08rem;
+  height: 1.08rem;
   border: 1px solid rgba(123, 144, 75, 0.45);
   border-radius: 999px;
   background: rgba(3, 8, 2, 0.92);
+  pointer-events: auto;
+  overflow: hidden;
 }
 
 .status-icon img {
-  width: 0.78rem;
-  height: 0.78rem;
+  width: 0.84rem;
+  height: 0.84rem;
   object-fit: contain;
+}
+
+.ammo-status {
+  top: auto;
+  bottom: 0.2rem;
+  right: 0.2rem;
+  border-color: rgba(140, 169, 82, 0.55);
+}
+
+.indicator-fallback-copy {
+  position: absolute;
+  inset: auto 0.05rem 0.03rem 0.05rem;
+  color: #f5f8ef;
+  font-size: 0.34rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
 .compact-icon {

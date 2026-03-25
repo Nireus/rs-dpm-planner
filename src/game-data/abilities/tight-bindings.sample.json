@@ -2,7 +2,7 @@
   "id": "tight-bindings",
   "name": "Tight Bindings",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 25,
   "adrenalineCost": 15,
   "requires": {

@@ -4,12 +4,37 @@
   "category": "armor",
   "slot": "ammo",
   "iconPath": "https://runescape.wiki/images/Pernix%27s_quiver.png",
+  "dyeVariantIconPaths": {
+    "red": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(red).png",
+    "orange": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(orange).png",
+    "yellow": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(yellow).png",
+    "green": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(green).png",
+    "blue": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(blue).png",
+    "purple": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(purple).png",
+    "black": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(black).png"
+  },
   "hoverSummary": "Ammunition-slot quiver once belonging to Pernix. High-end ranged support item.",
   "detailLines": [
     "A quiver that once belonged to Pernix, the only ranger to be given the rank of Praesul.",
     "Current simulator simplification: represented as an ammo-slot item.",
-    "Useful future candidate for quiver and ammo-subslot support."
+    "Allows choosing the loaded ammunition for planner state."
   ],
   "combatStyleTags": ["ranged"],
+  "configOptions": [
+    {
+      "id": "loaded-ammo",
+      "label": "Loaded ammo",
+      "type": "select",
+      "defaultValue": "deathspore-arrows",
+      "options": ["deathspore-arrows", "ful-arrows", "none"]
+    },
+    {
+      "id": "applied-dye",
+      "label": "Dye",
+      "type": "select",
+      "defaultValue": "default",
+      "options": ["default", "red", "orange", "yellow", "green", "blue", "purple", "black"]
+    }
+  ],
   "effectRefs": ["quiver-passive"]
 }

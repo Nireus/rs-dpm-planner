@@ -3,11 +3,15 @@ import {
   parseJsonDocument,
   validateAbilityDefinition,
   validateBuffDefinition,
+  validateEofSpecDefinition,
   validateItemDefinition,
+  validatePerkDefinition,
+  validateRelicDefinition,
 } from '../schemas';
 import type {
   AbilityDefinition,
   BuffDefinition,
+  EofSpecDefinition,
   EntityId,
   ItemDefinition,
   PerkDefinition,
@@ -22,7 +26,7 @@ export interface GameDataCatalog {
   buffs: Record<EntityId, BuffDefinition>;
   perks: Record<EntityId, PerkDefinition>;
   relics: Record<EntityId, RelicDefinition>;
-  eofSpecs: Record<EntityId, never>;
+  eofSpecs: Record<EntityId, EofSpecDefinition>;
 }
 
 export interface GameDataLoadIssue {
@@ -85,20 +89,29 @@ export async function loadSampleGameData(
   manifest: SampleGameDataManifest,
   loadText: TextFileLoader,
 ): Promise<GameDataLoadResult> {
-  const [itemLoad, abilityLoad, buffLoad] = await Promise.all([
+  const [itemLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad] = await Promise.all([
     loadDefinitions(manifest.items, loadText, validateItemDefinition),
     loadDefinitions(manifest.abilities, loadText, validateAbilityDefinition),
     loadDefinitions(manifest.buffs, loadText, validateBuffDefinition),
+    loadDefinitions(manifest.eofSpecs, loadText, validateEofSpecDefinition),
+    loadDefinitions(manifest.perks, loadText, validatePerkDefinition),
+    loadDefinitions(manifest.relics, loadText, validateRelicDefinition),
   ]);
 
   const itemNormalization = normalizeById(itemLoad.definitions);
   const abilityNormalization = normalizeById(abilityLoad.definitions);
   const buffNormalization = normalizeById(buffLoad.definitions);
+  const eofSpecNormalization = normalizeById(eofSpecLoad.definitions);
+  const perkNormalization = normalizeById(perkLoad.definitions);
+  const relicNormalization = normalizeById(relicLoad.definitions);
 
   const issues: GameDataLoadIssue[] = [
     ...itemLoad.issues,
     ...abilityLoad.issues,
     ...buffLoad.issues,
+    ...eofSpecLoad.issues,
+    ...perkLoad.issues,
+    ...relicLoad.issues,
     ...itemNormalization.issues.map((issue) => ({
       path: `items:${issue.id}`,
       message: issue.message,
@@ -109,6 +122,18 @@ export async function loadSampleGameData(
     })),
     ...buffNormalization.issues.map((issue) => ({
       path: `buffs:${issue.id}`,
+      message: issue.message,
+    })),
+    ...eofSpecNormalization.issues.map((issue) => ({
+      path: `eofSpecs:${issue.id}`,
+      message: issue.message,
+    })),
+    ...perkNormalization.issues.map((issue) => ({
+      path: `perks:${issue.id}`,
+      message: issue.message,
+    })),
+    ...relicNormalization.issues.map((issue) => ({
+      path: `relics:${issue.id}`,
       message: issue.message,
     })),
   ];
@@ -127,9 +152,9 @@ export async function loadSampleGameData(
       ammo: {},
       abilities: abilityNormalization.records,
       buffs: buffNormalization.records,
-      perks: {},
-      relics: {},
-      eofSpecs: {},
+      perks: perkNormalization.records,
+      relics: relicNormalization.records,
+      eofSpecs: eofSpecNormalization.records,
     },
     issues: [],
   };

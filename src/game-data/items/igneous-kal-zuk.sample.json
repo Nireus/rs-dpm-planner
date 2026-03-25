@@ -12,5 +12,5 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 100,
-  "effectRefs": ["igneous-kal-zuk-passive", "igneous-deadshot-upgrade"]
+  "effectRefs": ["igneous-kal-zuk-passive"]
 }

@@ -3,6 +3,7 @@
   "name": "Elite dracolich helm",
   "category": "armor",
   "slot": "head",
+  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_coif.png?2d88b",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "effectRefs": ["elite-dracolich-set"],

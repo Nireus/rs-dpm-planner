@@ -7,8 +7,9 @@ describe('loadSampleGameData', () => {
       items: ['/items/bolg.json'],
       abilities: ['/abilities/rapid-fire.json'],
       buffs: ['/buffs/deathspore-focus.json'],
-      perks: [],
-      relics: [],
+      eofSpecs: ['/eof-specs/dark-bow.json'],
+      perks: ['/perks/equilibrium.json'],
+      relics: ['/relics/fury-of-the-small.json'],
     };
 
     const documents: Record<string, string> = {
@@ -22,7 +23,7 @@ describe('loadSampleGameData', () => {
         id: 'rapid-fire',
         name: 'Rapid Fire',
         style: 'ranged',
-        subtype: 'threshold',
+        subtype: 'enhanced',
         cooldownTicks: 17,
         hitSchedule: [],
         baseDamage: {
@@ -36,6 +37,25 @@ describe('loadSampleGameData', () => {
         category: 'temporary',
         sourceType: 'item',
       }),
+      '/eof-specs/dark-bow.json': JSON.stringify({
+        id: 'dark-bow-eof',
+        name: 'Dark Bow (EOF)',
+        weaponOrigin: 'dark-bow',
+        adrenalineCost: 25,
+        hitSchedule: [],
+        baseDamage: {
+          min: 180,
+          max: 300,
+        },
+      }),
+      '/perks/equilibrium.json': JSON.stringify({
+        id: 'equilibrium',
+        name: 'Equilibrium',
+      }),
+      '/relics/fury-of-the-small.json': JSON.stringify({
+        id: 'fury-of-the-small',
+        name: 'Fury of the Small',
+      }),
     };
 
     const result = await loadSampleGameData(manifest, async (path) => documents[path] ?? '');
@@ -46,6 +66,9 @@ describe('loadSampleGameData', () => {
       expect(Object.keys(result.data.items)).toEqual(['bolg']);
       expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire']);
       expect(Object.keys(result.data.buffs)).toEqual(['deathspore-focus']);
+      expect(Object.keys(result.data.eofSpecs)).toEqual(['dark-bow-eof']);
+      expect(Object.keys(result.data.perks)).toEqual(['equilibrium']);
+      expect(Object.keys(result.data.relics)).toEqual(['fury-of-the-small']);
     }
   });
 
@@ -54,6 +77,7 @@ describe('loadSampleGameData', () => {
       items: ['/items/bad.json'],
       abilities: [],
       buffs: [],
+      eofSpecs: [],
       perks: [],
       relics: [],
     };

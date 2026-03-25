@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { ItemDefinition } from '../../../game-data/types';
 import type { CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
+import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import type { ResolvedItemInstanceViewModel } from './gear-builder.store';
 import { isAugmentableSlot } from './gear-builder.utils';
 
@@ -16,6 +17,16 @@ import { isAugmentableSlot } from './gear-builder.utils';
 export class GearItemConfigPanelComponent {
   private readonly genesisShardIconPath =
     'https://runescape.wiki/w/Special:FilePath/Shard_of_Genesis_Essence.png';
+  private readonly dyeIconPaths: Record<string, string> = {
+    red: 'https://runescape.wiki/w/Special:FilePath/Red_dye.png',
+    orange: 'https://runescape.wiki/w/Special:FilePath/Orange_dye.png',
+    yellow: 'https://runescape.wiki/w/Special:FilePath/Yellow_dye.png',
+    green: 'https://runescape.wiki/w/Special:FilePath/Green_dye.png',
+    blue: 'https://runescape.wiki/w/Special:FilePath/Blue_dye.png',
+    purple: 'https://runescape.wiki/w/Special:FilePath/Purple_dye.png',
+    black: 'https://runescape.wiki/w/Special:FilePath/Black_mushroom_ink.png',
+  };
+  private readonly gameDataStore = inject(GameDataStoreService);
   @Input({ required: true }) item!: ItemDefinition;
   @Input({ required: true }) perkOptions: CuratedPerkOption[] = [];
   @Input() resolvedInstance: ResolvedItemInstanceViewModel | null = null;
@@ -145,7 +156,45 @@ export class GearItemConfigPanelComponent {
     return optionId === 'genesis-enchanted';
   }
 
+  isDyeOption(optionId: string): boolean {
+    return optionId === 'applied-dye';
+  }
+
   genesisShardIcon(): string {
     return this.genesisShardIconPath;
+  }
+
+  displayConfigChoice(choice: string): string {
+    if (choice === 'none') {
+      return 'None';
+    }
+
+    const itemLabel = this.gameDataStore.snapshot().catalog?.items[choice]?.name;
+
+    if (itemLabel) {
+      return itemLabel;
+    }
+
+    return choice
+      .split('-')
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(' ');
+  }
+
+  selectedConfigChoice(optionId: string): string {
+    const value = this.configValue(optionId);
+    return typeof value === 'string' ? value : String(value);
+  }
+
+  configChoiceIcon(optionId: string, choice: string): string | null {
+    if (optionId === 'loaded-ammo') {
+      return this.gameDataStore.snapshot().catalog?.items[choice]?.iconPath ?? null;
+    }
+
+    if (optionId === 'applied-dye') {
+      return this.dyeIconPaths[choice] ?? null;
+    }
+
+    return null;
   }
 }

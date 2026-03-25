@@ -9,8 +9,8 @@
     <div class="dialog-header">
       <div class="dialog-title-group">
         <div class="icon-tile detail-icon">
-          @if (item.iconPath) {
-            <img class="item-icon" [src]="item.iconPath" [alt]="item.name" />
+          @if (resolvedIconPath ?? item.iconPath; as iconPath) {
+            <img class="item-icon" [src]="iconPath" [alt]="item.name" />
           } @else {
             <span class="fallback-icon">{{ initials(item.name) }}</span>
           }

@@ -2,7 +2,7 @@
   "id": "salt-the-wound",
   "name": "Salt the Wound",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 25,
   "adrenalineCost": 15,
   "requires": {

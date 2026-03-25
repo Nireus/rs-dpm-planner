@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
+import { AbilitiesPageComponent } from './features/abilities/abilities-page.component';
+import { BuffsPageComponent } from './features/buffs/buffs-page.component';
 import { DataExplorerPageComponent } from './features/data-explorer/data-explorer-page.component';
 import { GearBuilderPageComponent } from './features/gear/gear-builder-page.component';
+import { RotationPlannerPageComponent } from './features/rotation-planner/rotation-planner-page.component';
 import { FeaturePlaceholderPageComponent } from './shared/feature-placeholder-page.component';
 
 export const routes: Routes = [
@@ -15,37 +18,15 @@ export const routes: Routes = [
   },
   {
     path: 'abilities',
-    component: DataExplorerPageComponent,
-    data: {
-      explorerKind: 'abilities',
-      eyebrow: 'Explorer',
-      title: 'Abilities',
-      description:
-        'Inspect supported ranged ability definitions, cooldowns, and hit schedule summaries.',
-    },
+    component: AbilitiesPageComponent,
   },
   {
     path: 'buffs',
-    component: DataExplorerPageComponent,
-    data: {
-      explorerKind: 'buffs',
-      eyebrow: 'Explorer',
-      title: 'Buffs',
-      description:
-        'Inspect currently loaded buff definitions and their basic metadata.',
-    },
+    component: BuffsPageComponent,
   },
   {
     path: 'rotation-planner',
-    component: FeaturePlaceholderPageComponent,
-    data: {
-      eyebrow: 'Timeline',
-      title: 'Rotation Planner',
-      description:
-        'Build a manual tick-based ranged rotation with strict validation and clear state inspection.',
-      purpose:
-        'This area will eventually host the non-GCD lane, ability lane, derived buff lane, and tick inspection UX.',
-    },
+    component: RotationPlannerPageComponent,
   },
   {
     path: 'results',

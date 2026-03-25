@@ -22,6 +22,7 @@ export interface ItemDefinition {
   category: ItemCategory;
   slot?: EquipmentSlot;
   iconPath?: string;
+  dyeVariantIconPaths?: Partial<Record<string, string>>;
   hoverSummary?: string;
   detailLines?: string[];
   combatStyleTags: CombatStyle[];
@@ -48,6 +49,10 @@ export interface AmmoDefinition {
 export interface AbilityDefinition {
   id: EntityId;
   name: string;
+  iconPath?: string;
+  hoverSummary?: string;
+  detailLines?: string[];
+  wikiUrl?: string;
   style: CombatStyle;
   subtype: AbilitySubtype;
   cooldownTicks: number;
@@ -65,6 +70,9 @@ export interface AbilityDefinition {
 export interface BuffDefinition {
   id: EntityId;
   name: string;
+  iconPath?: string;
+  variantNames?: string[];
+  wikiUrl?: string;
   category: BuffCategory;
   sourceType: BuffSourceType;
   durationTicks?: number;
@@ -85,6 +93,9 @@ export interface PerkDefinition {
 export interface RelicDefinition {
   id: EntityId;
   name: string;
+  iconPath?: string;
+  wikiUrl?: string;
+  monolithEnergy?: number;
   effectRefs?: EffectRef[];
   description?: string;
 }
@@ -92,9 +103,15 @@ export interface RelicDefinition {
 export interface EofSpecDefinition {
   id: EntityId;
   name: string;
+  iconPath?: string;
+  hoverSummary?: string;
+  detailLines?: string[];
+  wikiUrl?: string;
   weaponOrigin: EntityId;
+  requires?: RequirementSet;
   adrenalineCost: number;
   hitSchedule: HitDefinition[];
   baseDamage: DamageRange;
   effectRefs?: EffectRef[];
+  description?: string;
 }

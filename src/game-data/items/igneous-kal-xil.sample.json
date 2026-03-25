@@ -12,5 +12,5 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 85,
-  "effectRefs": ["igneous-kal-xil-passive", "igneous-deadshot-upgrade"]
+  "effectRefs": ["igneous-kal-xil-passive"]
 }

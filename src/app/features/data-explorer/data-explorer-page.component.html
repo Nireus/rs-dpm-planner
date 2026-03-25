@@ -25,10 +25,6 @@
     </div>
   </section>
 
-  @if (showPlayerStatsPanel()) {
-    <app-player-stats-panel />
-  }
-
   @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
     <article class="panel">
       <h2>Loading</h2>
@@ -64,32 +60,6 @@
               <p>
                 Styles:
                 <strong>{{ asItem(definition).combatStyleTags.join(', ') }}</strong>
-              </p>
-            }
-            @case ('abilities') {
-              @if (abilityAvailability(definition); as availability) {
-                <p class="availability-line">
-                  Status:
-                  <strong [class.available]="availability.isAvailable" [class.unavailable]="!availability.isAvailable">
-                    {{ availability.isAvailable ? 'Available' : 'Unavailable' }}
-                  </strong>
-                </p>
-                @if (availability.issues.length) {
-                  <p class="availability-reason">
-                    {{ availability.issues[0]?.message }}
-                  </p>
-                }
-              }
-              <p>
-                Subtype: <strong>{{ asAbility(definition).subtype }}</strong>
-              </p>
-              <p>
-                Cooldown:
-                <strong>{{ asAbility(definition).cooldownTicks }} ticks</strong>
-              </p>
-              <p>
-                Hit schedule:
-                <strong>{{ asAbility(definition).hitSchedule.length }} hit(s)</strong>
               </p>
             }
             @case ('buffs') {

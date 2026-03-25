@@ -3,6 +3,7 @@
   "name": "Deathspore arrows",
   "category": "ammo",
   "slot": "ammo",
+  "iconPath": "https://runescape.wiki/images/Deathspore_arrows_5.png?cfd6d",
   "combatStyleTags": ["ranged"],
   "tier": 95,
   "offensiveStats": {

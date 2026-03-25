@@ -2,7 +2,7 @@
   "id": "snipe",
   "name": "Snipe",
   "style": "ranged",
-  "subtype": "basic",
+  "subtype": "enhanced",
   "cooldownTicks": 100,
   "requires": {
     "levelRequirements": {
@@ -10,11 +10,11 @@
     }
   },
   "isChanneled": true,
-  "channelDurationTicks": 4,
+  "channelDurationTicks": 3,
   "hitSchedule": [
     {
       "id": "snipe-hit",
-      "tickOffset": 4,
+      "tickOffset": 3,
       "damage": {
         "min": 300,
         "max": 360
@@ -25,5 +25,5 @@
     "min": 300,
     "max": 360
   },
-  "description": "Completion-style ranged basic that upgrades Lesser Snipe."
+  "description": "Enhanced channeled ranged shot that resolves after 1.8 seconds."
 }

@@ -11,6 +11,15 @@ const rangedWeapon: ItemDefinition = {
   combatStyleTags: ['ranged'],
 };
 
+const specialWeapon: ItemDefinition = {
+  id: 'special-bow',
+  name: 'Special Bow',
+  category: 'weapon',
+  slot: 'weapon',
+  combatStyleTags: ['ranged'],
+  effectRefs: ['weapon-special-access', 'weapon-special:sample'],
+};
+
 const eofAmulet: ItemDefinition = {
   id: 'essence-of-finality',
   name: 'Essence of Finality amulet',
@@ -39,7 +48,7 @@ describe('evaluateAbilityAvailability', () => {
       id: 'rapid-fire',
       name: 'Rapid Fire',
       style: 'ranged',
-      subtype: 'threshold',
+      subtype: 'enhanced',
       cooldownTicks: 17,
       hitSchedule: [],
       baseDamage: { min: 1, max: 2 },
@@ -118,15 +127,15 @@ describe('evaluateAbilityAvailability', () => {
 
   it('supports EOF stored special access tags', () => {
     const ability: AbilityDefinition = {
-      id: 'eof-seren-godbow',
-      name: 'EOF Seren Godbow',
-      style: 'ranged',
+      id: 'essence-of-finality',
+      name: 'Essence of Finality',
+      style: 'constitution',
       subtype: 'special',
-      cooldownTicks: 30,
+      cooldownTicks: 0,
       hitSchedule: [],
-      baseDamage: { min: 1, max: 2 },
+      baseDamage: { min: 0, max: 0 },
       requires: {
-        requiredEquipmentTags: ['eof-special:seren-godbow'],
+        requiredEquipmentTags: ['equipped-effect:eof-special-access', 'eof-stored-special-configured'],
       },
     };
 
@@ -153,6 +162,29 @@ describe('evaluateAbilityAvailability', () => {
         equippedItems: [eofAmulet],
         inventoryItems: [],
         equippedInstances: [eofInstance],
+      }).isAvailable,
+    ).toBe(true);
+  });
+
+  it('supports generic weapon special access tags', () => {
+    const ability: AbilityDefinition = {
+      id: 'weapon-special-attack',
+      name: 'Weapon Special Attack',
+      style: 'constitution',
+      subtype: 'special',
+      cooldownTicks: 0,
+      hitSchedule: [],
+      baseDamage: { min: 0, max: 0 },
+      requires: {
+        requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+      },
+    };
+
+    expect(
+      evaluateAbilityAvailability(ability, {
+        playerStats: baseStats,
+        equippedItems: [specialWeapon],
+        inventoryItems: [],
       }).isAvailable,
     ).toBe(true);
   });

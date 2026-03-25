@@ -34,6 +34,7 @@ export class GameDataStoreService {
             items: Object.keys(catalog.items).length,
             abilities: Object.keys(catalog.abilities).length,
             buffs: Object.keys(catalog.buffs).length,
+            eofSpecs: Object.keys(catalog.eofSpecs).length,
             perks: Object.keys(catalog.perks).length,
             relics: Object.keys(catalog.relics).length,
           }

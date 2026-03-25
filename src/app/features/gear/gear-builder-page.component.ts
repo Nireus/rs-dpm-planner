@@ -11,8 +11,11 @@ import {
   canDropIntoInventory,
   formatEquipmentSlot,
   isAugmentableSlot,
+  requiresImmediateItemConfiguration,
   type GearDragSource,
 } from './gear-builder.utils';
+
+type ConfiguredPerkSelectionLike = NonNullable<ItemInstanceConfig['configuredPerks']>[number];
 
 @Component({
   selector: 'app-gear-builder-page',
@@ -209,8 +212,125 @@ export class GearBuilderPageComponent {
       .filter(Boolean);
   }
 
+  protected perkSocketTooltips(instance: ItemInstanceConfig | null): string[] {
+    if (!instance?.configuredPerks?.length) {
+      return [];
+    }
+
+    return [0, 1]
+      .map((socketIndex) => this.perkSocketTooltip(instance.configuredPerks ?? [], socketIndex))
+      .filter(Boolean);
+  }
+
+  protected eofStoredSpecialBadge(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    const storedSpecial = this.resolveStringConfigValue(item, instance, 'stored-special');
+
+    if (!storedSpecial || storedSpecial === 'none') {
+      return null;
+    }
+
+    switch (storedSpecial) {
+      case 'dark-bow':
+        return 'DB';
+      case 'seren-godbow':
+        return 'SGB';
+      default:
+        return storedSpecial
+          .split('-')
+          .filter(Boolean)
+          .map((segment) => segment[0]?.toUpperCase() ?? '')
+          .join('')
+          .slice(0, 4);
+    }
+  }
+
+  protected eofStoredSpecialLabel(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    const storedSpecial = this.resolveStringConfigValue(item, instance, 'stored-special');
+
+    if (!storedSpecial || storedSpecial === 'none') {
+      return null;
+    }
+
+    return this.itemDefinitions()[storedSpecial]?.name ?? storedSpecial;
+  }
+
   protected hasGenesisEnchantment(instance: ItemInstanceConfig | null): boolean {
     return instance?.configValues?.['genesis-enchanted'] === true;
+  }
+
+  protected quiverAmmoIcon(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+
+    if (!ammoId || ammoId === 'none') {
+      return null;
+    }
+
+    return this.itemDefinitions()[ammoId]?.iconPath ?? null;
+  }
+
+  protected quiverAmmoLabel(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+
+    if (!ammoId || ammoId === 'none') {
+      return null;
+    }
+
+    return this.itemDefinitions()[ammoId]?.name ?? ammoId;
+  }
+
+  protected quiverAmmoShortLabel(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+
+    if (!ammoId || ammoId === 'none') {
+      return null;
+    }
+
+    switch (ammoId) {
+      case 'deathspore-arrows':
+        return 'DS';
+      case 'ful-arrows':
+        return 'FUL';
+      default:
+        return ammoId
+          .split('-')
+          .filter(Boolean)
+          .map((segment) => segment[0]?.toUpperCase() ?? '')
+          .join('')
+          .slice(0, 4);
+    }
+  }
+
+  protected itemIconPath(item: ItemDefinition | null, instance: ItemInstanceConfig | null = null): string | null {
+    if (!item) {
+      return null;
+    }
+
+    const appliedDye = this.resolveStringConfigValue(item, instance, 'applied-dye');
+
+    if (
+      appliedDye &&
+      appliedDye !== 'default' &&
+      item.dyeVariantIconPaths?.[appliedDye]
+    ) {
+      return item.dyeVariantIconPaths[appliedDye] ?? item.iconPath ?? null;
+    }
+
+    return item.iconPath ?? null;
   }
 
   protected genesisShardIcon(): string {
@@ -425,7 +545,7 @@ export class GearBuilderPageComponent {
   }
 
   private handleConfiguredPlacement(item: ItemDefinition, instanceId: string | null): void {
-    if (!this.supportsPerks(item)) {
+    if (!instanceId || !requiresImmediateItemConfiguration(item)) {
       this.selectedItemId.set(null);
       this.selectedInstanceId.set(null);
       return;
@@ -439,5 +559,42 @@ export class GearBuilderPageComponent {
     const perk = this.perkOptions.find((option) => option.id === perkId);
     const rankSuffix = rank ?? 1;
     return `${perk?.shortCode ?? perkId.slice(0, 2).toUpperCase()}${rankSuffix}`;
+  }
+
+  private perkSocketTooltip(
+    configuredPerks: ConfiguredPerkSelectionLike[],
+    socketIndex: number,
+  ): string {
+    const socketPerks = configuredPerks.filter((perk) => perk.socketIndex === socketIndex);
+
+    if (!socketPerks.length) {
+      return '';
+    }
+
+    const description = socketPerks
+      .map((perk) => {
+        const option = this.perkOptions.find((entry) => entry.id === perk.perkId);
+        const name = option?.label ?? perk.perkId;
+        const rank = perk.rank ?? 1;
+        return `${name} ${rank}`;
+      })
+      .join(', ');
+
+    return `Socket ${socketIndex + 1}: ${description}`;
+  }
+
+  private resolveStringConfigValue(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+    optionId: string,
+  ): string | null {
+    const configuredValue = instance?.configValues?.[optionId];
+
+    if (typeof configuredValue === 'string') {
+      return configuredValue;
+    }
+
+    const defaultValue = item?.configOptions?.find((option) => option.id === optionId)?.defaultValue;
+    return typeof defaultValue === 'string' ? defaultValue : null;
   }
 }

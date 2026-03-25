@@ -46,7 +46,13 @@ export interface PersistentBuffConfig {
   potionIds?: EntityId[];
   relicIds?: EntityId[];
   buffIds?: EntityId[];
-  perkIds?: EntityId[];
+  pocketEffectItemIds?: EntityId[];
+}
+
+export interface TimelineGeneratedBuffSource {
+  buffId: EntityId;
+  sourceType: 'ability' | 'item' | 'event';
+  sourceId?: EntityId;
 }
 
 export type RotationActionType =

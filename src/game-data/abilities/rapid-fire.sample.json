@@ -2,7 +2,7 @@
   "id": "rapid-fire",
   "name": "Rapid Fire",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 34,
   "adrenalineCost": 25,
   "requires": {
@@ -83,5 +83,5 @@
     "max": 680
   },
   "effectRefs": ["rapid-fire-channel"],
-  "description": "Threshold ranged channel that fires multiple hits over its channel window."
+  "description": "Enhanced ranged channel that fires multiple hits over its channel window."
 }

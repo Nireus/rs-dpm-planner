@@ -2,7 +2,7 @@
   "id": "bombardment",
   "name": "Bombardment",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 0,
   "adrenalineCost": 25,
   "requires": {

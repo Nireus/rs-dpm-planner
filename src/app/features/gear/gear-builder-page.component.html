@@ -54,12 +54,31 @@
                     (dragstart)="startEquippedDrag($event, entry.slot)"
                     (dragend)="finishDrag()"
                   >
-                    @if (perkSocketBadges(entry.instance).length || hasGenesisEnchantment(entry.instance)) {
+                    @if (
+                      eofStoredSpecialBadge(entry.definition, entry.instance) ||
+                      perkSocketBadges(entry.instance).length ||
+                      hasGenesisEnchantment(entry.instance) ||
+                      quiverAmmoIcon(entry.definition, entry.instance)
+                    ) {
                       <div class="item-overlays">
-                        @if (perkSocketBadges(entry.instance).length) {
+                        @if (
+                          eofStoredSpecialBadge(entry.definition, entry.instance) ||
+                          perkSocketBadges(entry.instance).length
+                        ) {
                           <div class="perk-badge-stack">
-                            @for (badge of perkSocketBadges(entry.instance); track badge) {
-                              <span class="perk-badge">{{ badge }}</span>
+                            @if (eofStoredSpecialBadge(entry.definition, entry.instance); as eofBadge) {
+                              <span
+                                class="perk-badge eof-badge"
+                                [attr.title]="eofStoredSpecialLabel(entry.definition, entry.instance) ?? 'Stored EOF special'"
+                              >
+                                {{ eofBadge }}
+                              </span>
+                            }
+
+                            @for (badge of perkSocketBadges(entry.instance); track badge; let badgeIndex = $index) {
+                              <span class="perk-badge" [attr.title]="perkSocketTooltips(entry.instance)[badgeIndex]">
+                                {{ badge }}
+                              </span>
                             }
                           </div>
                         }
@@ -69,11 +88,24 @@
                             <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
                           </span>
                         }
+
+                        @if (quiverAmmoIcon(entry.definition, entry.instance); as ammoIcon) {
+                          <span
+                            class="status-icon ammo-status"
+                            [attr.title]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'"
+                            [attr.aria-label]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'"
+                          >
+                            <img [src]="ammoIcon" [alt]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'" />
+                            @if (quiverAmmoShortLabel(entry.definition, entry.instance); as ammoBadge) {
+                              <span class="indicator-fallback-copy">{{ ammoBadge }}</span>
+                            }
+                          </span>
+                        }
                       </div>
                     }
 
-                    @if (entry.definition.iconPath) {
-                      <img class="item-icon" [src]="entry.definition.iconPath" [alt]="entry.definition.name" />
+                    @if (itemIconPath(entry.definition, entry.instance); as iconPath) {
+                      <img class="item-icon" [src]="iconPath" [alt]="entry.definition.name" />
                     } @else {
                       <span class="fallback-icon">{{ initials(entry.definition.name) }}</span>
                     }
@@ -118,12 +150,31 @@
                   (dragend)="finishDrag()"
                 >
                   <div class="icon-tile compact-icon">
-                    @if (perkSocketBadges(entry.instance).length || hasGenesisEnchantment(entry.instance)) {
+                    @if (
+                      eofStoredSpecialBadge(entry.definition, entry.instance) ||
+                      perkSocketBadges(entry.instance).length ||
+                      hasGenesisEnchantment(entry.instance) ||
+                      quiverAmmoIcon(entry.definition, entry.instance)
+                    ) {
                       <div class="item-overlays">
-                        @if (perkSocketBadges(entry.instance).length) {
+                        @if (
+                          eofStoredSpecialBadge(entry.definition, entry.instance) ||
+                          perkSocketBadges(entry.instance).length
+                        ) {
                           <div class="perk-badge-stack">
-                            @for (badge of perkSocketBadges(entry.instance); track badge) {
-                              <span class="perk-badge">{{ badge }}</span>
+                            @if (eofStoredSpecialBadge(entry.definition, entry.instance); as eofBadge) {
+                              <span
+                                class="perk-badge eof-badge"
+                                [attr.title]="eofStoredSpecialLabel(entry.definition, entry.instance) ?? 'Stored EOF special'"
+                              >
+                                {{ eofBadge }}
+                              </span>
+                            }
+
+                            @for (badge of perkSocketBadges(entry.instance); track badge; let badgeIndex = $index) {
+                              <span class="perk-badge" [attr.title]="perkSocketTooltips(entry.instance)[badgeIndex]">
+                                {{ badge }}
+                              </span>
                             }
                           </div>
                         }
@@ -133,11 +184,24 @@
                             <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
                           </span>
                         }
+
+                        @if (quiverAmmoIcon(entry.definition, entry.instance); as ammoIcon) {
+                          <span
+                            class="status-icon ammo-status"
+                            [attr.title]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'"
+                            [attr.aria-label]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'"
+                          >
+                            <img [src]="ammoIcon" [alt]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'" />
+                            @if (quiverAmmoShortLabel(entry.definition, entry.instance); as ammoBadge) {
+                              <span class="indicator-fallback-copy">{{ ammoBadge }}</span>
+                            }
+                          </span>
+                        }
                       </div>
                     }
 
-                    @if (entry.definition?.iconPath) {
-                      <img class="item-icon" [src]="entry.definition?.iconPath" [alt]="entry.definition?.name" />
+                    @if (itemIconPath(entry.definition, entry.instance); as iconPath) {
+                      <img class="item-icon" [src]="iconPath" [alt]="entry.definition?.name" />
                     } @else {
                       <span class="fallback-icon">
                         {{ initials(entry.definition?.name ?? entry.instance.definitionId) }}
@@ -212,6 +276,7 @@
         [resolvedInstance]="selectedResolvedInstance()"
         [perkOptions]="perkOptions"
         [detailLines]="detailLines(item)"
+        [resolvedIconPath]="itemIconPath(item, selectedResolvedInstance()?.instance ?? null)"
         [formatSlot]="formatSlot.bind(this)"
         [defaultSummary]="defaultSummary.bind(this)"
         [initials]="initials.bind(this)"

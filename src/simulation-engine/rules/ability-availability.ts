@@ -78,10 +78,12 @@ export function collectAvailabilityTags(context: AbilityAvailabilityContext): Se
     addDefinitionTags(tags, item, 'inventory');
   }
 
+  const eofItem = context.equippedItems.find((item) => item.id === 'essence-of-finality');
   const eofInstance = context.equippedInstances?.find((instance) => instance.definitionId === 'essence-of-finality');
-  const storedSpecial = eofInstance?.configValues?.['stored-special'];
+  const storedSpecial = resolveStringConfigValue(eofItem, eofInstance, 'stored-special');
 
-  if (typeof storedSpecial === 'string' && storedSpecial !== 'none') {
+  if (storedSpecial && storedSpecial !== 'none') {
+    tags.add('eof-stored-special-configured');
     tags.add(`eof-special:${storedSpecial}`);
   }
 
@@ -107,6 +109,7 @@ function addDefinitionTags(tags: Set<string>, item: ItemDefinition, source: 'equ
 
   for (const effectRef of item.effectRefs ?? []) {
     tags.add(effectRef);
+    tags.add(`${source}-effect:${effectRef}`);
   }
 
   if (item.category === 'weapon' && item.equipBehavior === 'two-handed') {
@@ -140,8 +143,16 @@ function formatRequiredTag(tag: string): string {
       return 'Requires a two-handed ranged weapon.';
     case 'ranged-dual-wield':
       return 'Requires dual-wield ranged weapons.';
-    case 'igneous-deadshot-upgrade':
-      return 'Requires Igneous Kal-Xil or Igneous Kal-Zuk.';
+    case 'equipped-effect:weapon-special-access':
+      return 'Requires an equipped weapon with a special attack.';
+    case 'equipped-effect:eof-special-access':
+      return 'Requires an equipped Essence of Finality amulet.';
+    case 'weapon-special-access':
+      return 'Requires an equipped weapon with a special attack.';
+    case 'eof-special-access':
+      return 'Requires an equipped Essence of Finality amulet.';
+    case 'eof-stored-special-configured':
+      return 'Requires a stored special attack in the equipped Essence of Finality.';
     default:
       if (tag.startsWith('eof-special:')) {
         const storedSpecial = tag.replace('eof-special:', '').replace(/-/g, ' ');
@@ -158,4 +169,19 @@ function formatBlockedTag(tag: string): string {
   }
 
   return tag.replace(/-/g, ' ');
+}
+
+function resolveStringConfigValue(
+  item: ItemDefinition | undefined,
+  instance: ItemInstanceConfig | undefined,
+  optionId: string,
+): string | null {
+  const explicitValue = instance?.configValues?.[optionId];
+
+  if (typeof explicitValue === 'string') {
+    return explicitValue;
+  }
+
+  const defaultValue = item?.configOptions?.find((option) => option.id === optionId)?.defaultValue;
+  return typeof defaultValue === 'string' ? defaultValue : null;
 }

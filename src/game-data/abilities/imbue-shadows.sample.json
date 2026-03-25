@@ -2,7 +2,7 @@
   "id": "imbue-shadows",
   "name": "Imbue: Shadows",
   "style": "ranged",
-  "subtype": "threshold",
+  "subtype": "enhanced",
   "cooldownTicks": 100,
   "adrenalineCost": 40,
   "requires": {

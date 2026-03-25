@@ -94,6 +94,10 @@
     <div class="config-grid">
       @for (option of item.configOptions ?? []; track option.id) {
         <label class="config-field">
+          @if (option.type !== 'boolean') {
+            <span>{{ option.label }}</span>
+          }
+
           @switch (option.type) {
             @case ('boolean') {
               @if (isGenesisOption(option.id)) {
@@ -129,7 +133,7 @@
                 (ngModelChange)="updateScalarConfig.emit({ optionId: option.id, value: $event })"
               >
                 @for (choice of option.options ?? []; track choice) {
-                  <option [value]="choice">{{ choice }}</option>
+                  <option [value]="choice">{{ displayConfigChoice(choice) }}</option>
                 }
               </select>
             }

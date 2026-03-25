@@ -4,6 +4,7 @@ import {
   canDropIntoInventory,
   canEquipItemInSlot,
   getAllowedEquipmentSlots,
+  requiresImmediateItemConfiguration,
   validateGearSetup,
 } from './gear-builder.utils';
 
@@ -30,6 +31,22 @@ describe('gear-builder utils', () => {
     category: 'jewellery',
     slot: 'ring',
     combatStyleTags: ['ranged'],
+  };
+
+  const configurableAmulet: ItemDefinition = {
+    id: 'essence-of-finality',
+    name: 'Essence of Finality',
+    category: 'jewellery',
+    slot: 'amulet',
+    combatStyleTags: ['ranged'],
+    configOptions: [
+      {
+        id: 'stored-special',
+        label: 'Stored special',
+        type: 'select',
+        options: ['dark-bow', 'none'],
+      },
+    ],
   };
 
   it('returns the supported slot for equippable items', () => {
@@ -126,5 +143,11 @@ describe('gear-builder utils', () => {
     expect(issues).toEqual([]);
     expect(configured.perkIds).toEqual(['aftershock-4', 'equilibrium-4']);
     expect(configured.configValues).toEqual({ enchanted: true });
+  });
+
+  it('opens immediate configuration for augmentable or configurable items', () => {
+    expect(requiresImmediateItemConfiguration(bow)).toBe(true);
+    expect(requiresImmediateItemConfiguration(configurableAmulet)).toBe(true);
+    expect(requiresImmediateItemConfiguration(ring)).toBe(false);
   });
 });

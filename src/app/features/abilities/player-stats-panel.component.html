@@ -1,19 +1,7 @@
 <article class="stats-panel">
-  <div class="stats-header">
-    <div>
-      <p class="eyebrow">Player Stats</p>
-      <h2>Availability Inputs</h2>
-      <p>These levels will drive ability availability checks and later damage scaling.</p>
-    </div>
-
-    <div class="summary-chip">
-      Ranged {{ stats().rangedLevel }} | Prayer {{ stats().prayerLevel ?? 'n/a' }}
-    </div>
-  </div>
-
   <div class="stats-grid">
     <label class="stat-field">
-      <span>Ranged level</span>
+      <span>Ranged</span>
       <input
         type="number"
         min="1"
@@ -24,7 +12,7 @@
     </label>
 
     <label class="stat-field">
-      <span>Prayer level</span>
+      <span>Prayer</span>
       <input
         type="number"
         min="1"

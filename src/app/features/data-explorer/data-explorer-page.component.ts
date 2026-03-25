@@ -1,18 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import type { AbilityDefinition, BuffDefinition, ItemDefinition } from '../../../game-data/types';
-import { PlayerStatsPanelComponent } from '../abilities/player-stats-panel.component';
-import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
+import type { BuffDefinition, ItemDefinition } from '../../../game-data/types';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 
-type ExplorerDefinition = ItemDefinition | AbilityDefinition | BuffDefinition;
-type ExplorerKind = 'items' | 'abilities' | 'buffs';
+type ExplorerDefinition = ItemDefinition | BuffDefinition;
+type ExplorerKind = 'items' | 'buffs';
 
 @Component({
   selector: 'app-data-explorer-page',
   standalone: true,
-  imports: [FormsModule, PlayerStatsPanelComponent],
+  imports: [FormsModule],
   templateUrl: './data-explorer-page.component.html',
   styleUrl: './data-explorer-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,12 +18,10 @@ type ExplorerKind = 'items' | 'abilities' | 'buffs';
 export class DataExplorerPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly gameDataStore = inject(GameDataStoreService);
-  private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
   private readonly routeData = computed(() => this.route.snapshot.data);
 
   protected readonly query = signal('');
   protected readonly storeSummary = this.gameDataStore.summary;
-  protected readonly abilityAvailabilityMap = this.abilityAvailabilityService.availabilityMap;
 
   protected readonly kind = computed(
     () => (this.routeData()['explorerKind'] as ExplorerKind | undefined) ?? 'items',
@@ -55,8 +51,6 @@ export class DataExplorerPageComponent {
     switch (this.kind()) {
       case 'items':
         return Object.values(catalog.items);
-      case 'abilities':
-        return Object.values(catalog.abilities);
       case 'buffs':
         return Object.values(catalog.buffs);
     }
@@ -81,19 +75,7 @@ export class DataExplorerPageComponent {
     return definition as ItemDefinition;
   }
 
-  protected asAbility(definition: ExplorerDefinition): AbilityDefinition {
-    return definition as AbilityDefinition;
-  }
-
   protected asBuff(definition: ExplorerDefinition): BuffDefinition {
     return definition as BuffDefinition;
-  }
-
-  protected showPlayerStatsPanel(): boolean {
-    return this.kind() === 'abilities';
-  }
-
-  protected abilityAvailability(definition: ExplorerDefinition) {
-    return this.abilityAvailabilityMap()[definition.id] ?? null;
   }
 }

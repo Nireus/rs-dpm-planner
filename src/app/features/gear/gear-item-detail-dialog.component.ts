@@ -15,6 +15,7 @@ import { GearItemConfigPanelComponent } from './gear-item-config-panel.component
 export class GearItemDetailDialogComponent {
   @Input({ required: true }) item!: ItemDefinition;
   @Input() resolvedInstance: ResolvedItemInstanceViewModel | null = null;
+  @Input() resolvedIconPath: string | null = null;
   @Input() perkOptions: CuratedPerkOption[] = [];
   @Input() detailLines: string[] = [];
   @Input({ required: true }) formatSlot!: (slot: EquipmentSlot) => string;

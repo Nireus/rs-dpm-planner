@@ -15,15 +15,23 @@ export class PlayerStatsPanelComponent {
   protected readonly stats = this.playerStatsStore.stats;
   protected readonly issues = this.playerStatsStore.issues;
 
-  protected updateRangedLevel(value: string): void {
+  protected updateRangedLevel(value: string | number | null): void {
     this.playerStatsStore.updateStat('rangedLevel', this.parseLevel(value));
   }
 
-  protected updatePrayerLevel(value: string): void {
+  protected updatePrayerLevel(value: string | number | null): void {
     this.playerStatsStore.updateStat('prayerLevel', this.parseLevel(value));
   }
 
-  private parseLevel(value: string): number | undefined {
+  private parseLevel(value: string | number | null): number | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : undefined;
+    }
+
     const trimmed = value.trim();
 
     if (!trimmed) {

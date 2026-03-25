@@ -2,7 +2,7 @@
   "id": "corruption-shot",
   "name": "Corruption Shot",
   "style": "ranged",
-  "subtype": "basic",
+  "subtype": "enhanced",
   "cooldownTicks": 25,
   "adrenalineCost": 20,
   "requires": {
@@ -57,5 +57,5 @@
     "max": 330
   },
   "effectRefs": ["corruption-shot"],
-  "description": "Corrupting ranged bleed."
+  "description": "Enhanced ranged bleed that corrupts the target and nearby enemies."
 }

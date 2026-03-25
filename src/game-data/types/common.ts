@@ -1,7 +1,7 @@
 export type EntityId = string;
 export type EffectRef = string;
 export type RequirementTag = string;
-export type CombatStyle = 'ranged';
+export type CombatStyle = 'ranged' | 'constitution';
 
 export type ItemCategory =
   | 'weapon'
@@ -25,7 +25,7 @@ export type EquipmentSlot =
   | 'cape'
   | 'pocket';
 
-export type AbilitySubtype = 'basic' | 'threshold' | 'ultimate' | 'special' | 'other';
+export type AbilitySubtype = 'basic' | 'enhanced' | 'ultimate' | 'special' | 'other';
 
 export type AmmoType = 'arrow';
 

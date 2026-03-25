@@ -1,4 +1,5 @@
 import type { EntityId, EquipmentSlot, HitDefinition } from '../../game-data/types';
+import type { TimelineGeneratedBuffSource } from './config';
 
 export type ValidationSeverity = 'info' | 'warning' | 'error';
 
@@ -40,6 +41,8 @@ export interface TickState {
   activeEquipmentState: Partial<Record<EquipmentSlot, string>>;
   activeAmmoState?: string;
   adrenaline: number;
+  activePersistentBuffIds: EntityId[];
+  activeTimelineBuffIds: EntityId[];
   activeBuffIds: EntityId[];
   cooldowns: Record<EntityId, number>;
   channelState?: {
@@ -75,6 +78,7 @@ export interface SimulationResult {
   damageByTick: Record<number, DamageSummary>;
   adrenalineTimeline: number[];
   buffTimeline: Record<number, EntityId[]>;
+  timelineGeneratedBuffSources: TimelineGeneratedBuffSource[];
   cooldownTimeline: Record<number, Record<EntityId, number>>;
   tickStates: TickState[];
   explainability: SimulationExplainabilityArtifacts;

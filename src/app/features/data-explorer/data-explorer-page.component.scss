@@ -114,15 +114,6 @@ code {
   color: var(--text-soft);
 }
 
-.availability-line strong.available {
-  color: #bcd68b;
-}
-
-.availability-line strong.unavailable,
-.availability-reason {
-  color: #d7b0a7;
-}
-
 .issue-list {
   margin: 0;
   padding-left: 1.2rem;

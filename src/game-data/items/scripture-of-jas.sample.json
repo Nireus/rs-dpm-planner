@@ -3,6 +3,7 @@
   "name": "Scripture of Jas",
   "category": "pocket",
   "slot": "pocket",
+  "iconPath": "https://runescape.wiki/images/Scripture_of_Jas.png?4a71a",
   "hoverSummary": "Pocket-slot god book aligned with Jas.",
   "combatStyleTags": ["ranged"],
   "effectRefs": ["scripture-of-jas"],
