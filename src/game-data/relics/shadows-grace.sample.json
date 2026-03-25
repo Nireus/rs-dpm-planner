@@ -1,0 +1,9 @@
+{
+  "id": "shadows-grace",
+  "name": "Shadow's Grace",
+  "iconPath": "https://runescape.wiki/images/thumb/Shadow%27s_Grace.png/40px-Shadow%27s_Grace.png?e1256",
+  "wikiUrl": "https://runescape.wiki/w/Shadow%27s_Grace",
+  "monolithEnergy": 50,
+  "effectRefs": ["shadows-grace"],
+  "description": "Reduces the cooldown of Surge, Escape, Bladed Dive and Barge by 50%, but these abilities no longer generate adrenaline."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "equilibrium",
+  "name": "Equilibrium",
+  "effectRefs": ["equilibrium"],
+  "description": "Increases minimum hit potential at the cost of maximum hit potential."
+}

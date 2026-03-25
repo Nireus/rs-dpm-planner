@@ -1,0 +1,14 @@
+{
+  "id": "elite-dracolich-boots",
+  "name": "Elite dracolich boots",
+  "category": "armor",
+  "slot": "feet",
+  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_boots.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 15
+  },
+  "effectRefs": ["elite-dracolich-set"],
+  "implementationNotes": "Curated elite dracolich foot-slot item for the MVP ranged dataset."
+}

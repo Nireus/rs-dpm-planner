@@ -1,0 +1,41 @@
+{
+  "id": "dark-bow-eof",
+  "name": "Dark Bow (EOF)",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Bow.png",
+  "hoverSummary": "EOF special | -25% adrenaline | 2 hits",
+  "detailLines": [
+    "Stored Dark Bow special attack for Essence of Finality.",
+    "Requires Essence of Finality storing Dark Bow.",
+    "Represented separately from the main ranged abilities list."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Dark_Bow",
+  "weaponOrigin": "dark-bow",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:dark-bow"]
+  },
+  "adrenalineCost": 25,
+  "hitSchedule": [
+    {
+      "id": "dark-bow-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 150
+      }
+    },
+    {
+      "id": "dark-bow-eof-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 150
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 180,
+    "max": 300
+  },
+  "effectRefs": ["eof-dark-bow-spec"],
+  "description": "Curated EOF special access entry for the Dark Bow special attack."
+}

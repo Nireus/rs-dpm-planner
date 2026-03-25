@@ -6,6 +6,9 @@
   "iconPath": "https://runescape.wiki/images/Elite_Dracolich_hauberk.png?5e7d5",
   "combatStyleTags": ["ranged"],
   "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 36
+  },
   "effectRefs": ["elite-dracolich-set"],
   "implementationNotes": "Sample ranged body-slot item for gear builder MVP."
 }

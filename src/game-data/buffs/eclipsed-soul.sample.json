@@ -1,0 +1,12 @@
+{
+  "id": "eclipsed-soul",
+  "name": "Eclipsed Soul",
+  "iconPath": "https://runescape.wiki/images/thumb/Eclipsed_Soul.png/30px-Eclipsed_Soul.png?a8742",
+  "wikiUrl": "https://runescape.wiki/w/Prayer",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["eclipsed-soul"],
+  "displayPriority": 20
+}

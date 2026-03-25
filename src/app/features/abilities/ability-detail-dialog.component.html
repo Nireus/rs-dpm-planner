@@ -1,0 +1,118 @@
+<div class="dialog-backdrop" (click)="close.emit()">
+  <section
+    class="detail-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ability-detail-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="dialog-header">
+      <div class="dialog-title-group">
+        <div class="icon-tile detail-icon">
+          @if (entry.iconPath) {
+            <img class="ability-icon" [src]="entry.iconPath" [alt]="entry.name" />
+          } @else {
+            <span class="fallback-icon">{{ initials(entry.name) }}</span>
+          }
+        </div>
+
+        <div class="detail-copy">
+          <p class="eyebrow">{{ subtypeLabel(entry.subtype) }}</p>
+          <h2 id="ability-detail-title">{{ entry.name }}</h2>
+          <p>{{ entry.hoverSummary ?? entry.description }}</p>
+        </div>
+      </div>
+
+      <button type="button" class="icon-button" (click)="close.emit()" aria-label="Close ability dialog">
+        Close
+      </button>
+    </div>
+
+    <div class="detail-tags">
+      <span class="detail-tag">{{ styleLabel(entry.style) }}</span>
+      <span class="detail-tag">{{ subtypeLabel(entry.subtype) }}</span>
+      @if (entry.cooldownTicks !== null && entry.cooldownTicks !== undefined) {
+        <span class="detail-tag">{{ entry.cooldownTicks }} ticks</span>
+      }
+      <span class="detail-tag">{{ entry.hitCount > 0 ? entry.hitCount + ' hit(s)' : 'Varies' }}</span>
+      @if (entry.adrenalineGain !== undefined) {
+        <span class="detail-tag">+{{ entry.adrenalineGain }}% adrenaline</span>
+      }
+      @if (entry.adrenalineCost !== undefined) {
+        <span class="detail-tag">-{{ entry.adrenalineCost }}% adrenaline</span>
+      }
+      @if (availability) {
+        <span class="detail-tag" [class.available]="availability.isAvailable" [class.unavailable]="!availability.isAvailable">
+          {{ availability.isAvailable ? 'Available' : 'Unavailable' }}
+        </span>
+      }
+    </div>
+
+    @if (entry.description) {
+      <p class="detail-description">{{ entry.description }}</p>
+    }
+
+    <div class="status-block">
+      <p class="status-label">Ability Details</p>
+      <dl class="detail-grid">
+        <div class="detail-row">
+          <dt>Style</dt>
+          <dd>{{ styleLabel(entry.style) }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Category</dt>
+          <dd>{{ subtypeLabel(entry.subtype) }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Cooldown</dt>
+          <dd>{{ cooldownLabel() }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Adrenaline</dt>
+          <dd>{{ adrenalineLabel() }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Damage range</dt>
+          <dd>{{ damageRangeLabel() }}</dd>
+        </div>
+        <div class="detail-row detail-row-wide">
+          <dt>Hit schedule</dt>
+          <dd>{{ hitScheduleSummary() }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    @if (availability?.issues?.length) {
+      <div class="status-block blocked">
+        <p class="status-label">Why unavailable</p>
+        <ul class="detail-list">
+          @for (issue of availability?.issues ?? []; track issue.message) {
+            <li>{{ issue.message }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (entry.detailLines.length) {
+      <div class="status-block">
+        <p class="status-label">Wiki details</p>
+        <ul class="detail-list">
+          @for (line of entry.detailLines; track line) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (entry.effectRefs?.length) {
+      <div class="status-block">
+        <p class="status-label">Effect refs</p>
+        <p class="effect-copy">{{ entry.effectRefs?.join(', ') }}</p>
+      </div>
+    }
+
+    @if (entry.wikiUrl) {
+      <a class="wiki-link" [href]="entry.wikiUrl" target="_blank" rel="noreferrer">Open RuneScape Wiki page</a>
+    }
+  </section>
+</div>

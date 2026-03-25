@@ -108,8 +108,7 @@ export class GearBuilderPageComponent {
 
   protected addToInventory(item: ItemDefinition): void {
     const instanceId = this.gearBuilderStore.addToInventory(item.id);
-    this.selectedItemId.set(item.id);
-    this.selectedInstanceId.set(instanceId);
+    this.handleConfiguredPlacement(item, instanceId);
   }
 
   protected clearSlot(slot: EquipmentSlot): void {
@@ -524,8 +523,16 @@ export class GearBuilderPageComponent {
 
   private applyDropToInventory(source: GearDragSource): boolean {
     switch (source.kind) {
-      case 'catalog':
-        return Boolean(this.gearBuilderStore.addToInventory(source.definitionId));
+      case 'catalog': {
+        const definition = this.itemDefinitions()[source.definitionId] ?? null;
+        const instanceId = this.gearBuilderStore.addToInventory(source.definitionId);
+
+        if (definition) {
+          this.handleConfiguredPlacement(definition, instanceId);
+        }
+
+        return Boolean(instanceId);
+      }
       case 'inventory':
         return false;
       case 'equipped':

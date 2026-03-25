@@ -4,6 +4,7 @@ import { BuffsPageComponent } from './features/buffs/buffs-page.component';
 import { DataExplorerPageComponent } from './features/data-explorer/data-explorer-page.component';
 import { GearBuilderPageComponent } from './features/gear/gear-builder-page.component';
 import { RotationPlannerPageComponent } from './features/rotation-planner/rotation-planner-page.component';
+import { ResultsPageComponent } from './features/results/results-page.component';
 import { FeaturePlaceholderPageComponent } from './shared/feature-placeholder-page.component';
 
 export const routes: Routes = [
@@ -30,15 +31,7 @@ export const routes: Routes = [
   },
   {
     path: 'results',
-    component: FeaturePlaceholderPageComponent,
-    data: {
-      eyebrow: 'Simulation',
-      title: 'Results',
-      description:
-        'Review total min, average, and max damage along with contribution breakdowns.',
-      purpose:
-        'This area will eventually display explainable simulation output driven by the pure TypeScript engine.',
-    },
+    component: ResultsPageComponent,
   },
   {
     path: 'import-export',

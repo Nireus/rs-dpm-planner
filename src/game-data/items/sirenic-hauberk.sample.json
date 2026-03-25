@@ -1,0 +1,14 @@
+{
+  "id": "sirenic-hauberk",
+  "name": "Sirenic hauberk",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "https://runescape.wiki/images/Sirenic_hauberk.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 34.8
+  },
+  "effectRefs": ["sirenic-set"],
+  "implementationNotes": "Curated t90 sirenic body-slot item for the MVP ranged dataset."
+}

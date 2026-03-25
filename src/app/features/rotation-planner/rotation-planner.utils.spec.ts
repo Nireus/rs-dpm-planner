@@ -1,0 +1,243 @@
+import { describe, expect, it } from 'vitest';
+
+import type { AbilityDefinition } from '../../../game-data/types';
+import type { RotationAction } from '../../../simulation-engine/models';
+import {
+  canPlaceAbilityAtTick,
+  getNonGcdActionsAtTick,
+  getAbilitySegment,
+  getAbilityTimelineSpan,
+  isAbilityPlacementTick,
+  previewAbilityActionsWithPlacement,
+  removeNonGcdAction,
+  removeAbilityAction,
+  type PlannerNonGcdTemplate,
+  snapTickToAbilityWindowStart,
+  upsertNonGcdAction,
+  upsertAbilityAction,
+} from './rotation-planner.utils';
+
+const BASIC_ABILITY: AbilityDefinition = {
+  id: 'rapid-fire',
+  name: 'Rapid Fire',
+  style: 'ranged',
+  subtype: 'enhanced',
+  cooldownTicks: 34,
+  adrenalineCost: 25,
+  hitSchedule: [],
+  baseDamage: {
+    min: 0,
+    max: 0,
+  },
+};
+
+const CHANNELED_ABILITY: AbilityDefinition = {
+  ...BASIC_ABILITY,
+  id: 'rapid-fire-channel',
+  name: 'Rapid Fire Channel',
+  isChanneled: true,
+  channelDurationTicks: 8,
+};
+
+const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
+  [BASIC_ABILITY.id]: BASIC_ABILITY,
+  [CHANNELED_ABILITY.id]: CHANNELED_ABILITY,
+};
+
+const NON_GCD_TEMPLATE: PlannerNonGcdTemplate = {
+  id: 'vulnerability-bomb',
+  label: 'Vulnerability Bomb',
+  shortLabel: 'Vuln',
+  actionType: 'vulnerability-bomb',
+};
+
+function createAbilityAction(id: string, tick: number, abilityId = 'rapid-fire'): RotationAction {
+  return {
+    id,
+    tick,
+    lane: 'ability',
+    actionType: 'ability-use',
+    payload: {
+      abilityId,
+    },
+  };
+}
+
+describe('rotation planner utils', () => {
+  it('recognizes GCD-aligned ability ticks', () => {
+    expect(isAbilityPlacementTick(0)).toBe(true);
+    expect(isAbilityPlacementTick(3)).toBe(true);
+    expect(isAbilityPlacementTick(4)).toBe(false);
+  });
+
+  it('snaps any tick inside a gcd window to that window start', () => {
+    expect(snapTickToAbilityWindowStart(0)).toBe(0);
+    expect(snapTickToAbilityWindowStart(1)).toBe(0);
+    expect(snapTickToAbilityWindowStart(2)).toBe(0);
+    expect(snapTickToAbilityWindowStart(5)).toBe(3);
+  });
+
+  it('blocks illegal ability placement on non-GCD ticks', () => {
+    expect(canPlaceAbilityAtTick([], ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 1)).toBe(true);
+    expect(canPlaceAbilityAtTick([], ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 2)).toBe(true);
+  });
+
+  it('blocks ability placement into occupied ticks', () => {
+    const actions = [createAbilityAction('existing', 6)];
+
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 6)).toBe(false);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 7)).toBe(false);
+  });
+
+  it('allows moving an existing action back onto its own tick', () => {
+    const actions = [createAbilityAction('existing', 6)];
+
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 6, 'existing')).toBe(true);
+  });
+
+  it('blocks placements whose occupied window would overlap another ability', () => {
+    const actions = [createAbilityAction('existing', 6, 'rapid-fire-channel')];
+
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 12)).toBe(false);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 15)).toBe(true);
+  });
+
+  it('blocks placements that would exceed timeline bounds', () => {
+    expect(canPlaceAbilityAtTick([], ABILITY_DEFINITIONS, 10, CHANNELED_ABILITY, 3)).toBe(false);
+  });
+
+  it('calculates timeline span from gcd or channel duration', () => {
+    expect(getAbilityTimelineSpan(BASIC_ABILITY)).toBe(3);
+    expect(getAbilityTimelineSpan(CHANNELED_ABILITY)).toBe(9);
+  });
+
+  it('returns ability segment positions for occupied ticks', () => {
+    const action = createAbilityAction('existing', 6, 'rapid-fire-channel');
+
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 6)).toBe('start');
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 9)).toBe('middle');
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 14)).toBe('end');
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 15)).toBeNull();
+  });
+
+  it('adds a new ability action for catalog drops', () => {
+    const actions = upsertAbilityAction([], {
+      sourceType: 'catalog',
+      abilityId: 'rapid-fire',
+    }, 9);
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({
+      tick: 9,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'rapid-fire',
+      },
+    });
+  });
+
+  it('moves an existing action for timeline drags', () => {
+    const actions = upsertAbilityAction(
+      [createAbilityAction('existing', 6)],
+      {
+        sourceType: 'timeline',
+        abilityId: 'rapid-fire',
+        actionId: 'existing',
+      },
+      12,
+    );
+
+    expect(actions).toEqual([createAbilityAction('existing', 12)]);
+  });
+
+  it('creates a preview action id for catalog placement validation', () => {
+    const preview = previewAbilityActionsWithPlacement(
+      [createAbilityAction('existing', 6)],
+      {
+        sourceType: 'catalog',
+        abilityId: 'rapid-fire',
+      },
+      12,
+    );
+
+    expect(preview.targetActionId).toBe('__planner-preview-placement__');
+    expect(preview.abilityActions).toContainEqual(
+      expect.objectContaining({
+        id: '__planner-preview-placement__',
+        tick: 12,
+      }),
+    );
+  });
+
+  it('allows stacking multiple non-gcd actions on the same tick', () => {
+    const first = upsertNonGcdAction([], NON_GCD_TEMPLATE, 6);
+    const second = upsertNonGcdAction(first, {
+      ...NON_GCD_TEMPLATE,
+      id: 'gear-swap',
+      label: 'Gear Swap',
+      shortLabel: 'Gear',
+      actionType: 'gear-swap',
+    }, 6);
+
+    expect(getNonGcdActionsAtTick(second, 6)).toHaveLength(2);
+  });
+
+  it('moves a non-gcd action to another tick', () => {
+    const actions = upsertNonGcdAction(
+      [
+        {
+          id: 'non-gcd-vulnerability-bomb-6-1',
+          tick: 6,
+          lane: 'non-gcd',
+          actionType: 'vulnerability-bomb',
+          payload: {
+            templateId: 'vulnerability-bomb',
+            label: 'Vulnerability Bomb',
+            shortLabel: 'Vuln',
+          },
+        },
+      ],
+      NON_GCD_TEMPLATE,
+      9,
+      {
+        sourceType: 'timeline',
+        templateId: 'vulnerability-bomb',
+        actionId: 'non-gcd-vulnerability-bomb-6-1',
+      },
+    );
+
+    expect(getNonGcdActionsAtTick(actions, 6)).toHaveLength(0);
+    expect(getNonGcdActionsAtTick(actions, 9)).toHaveLength(1);
+  });
+
+  it('removes non-gcd actions by id', () => {
+    const actions = removeNonGcdAction(
+      [
+        {
+          id: 'non-gcd-vulnerability-bomb-6-1',
+          tick: 6,
+          lane: 'non-gcd',
+          actionType: 'vulnerability-bomb',
+          payload: {
+            templateId: 'vulnerability-bomb',
+            label: 'Vulnerability Bomb',
+            shortLabel: 'Vuln',
+          },
+        },
+      ],
+      'non-gcd-vulnerability-bomb-6-1',
+    );
+
+    expect(actions).toHaveLength(0);
+  });
+
+  it('removes ability actions by id', () => {
+    const actions = removeAbilityAction(
+      [createAbilityAction('one', 3), createAbilityAction('two', 6, 'snipe')],
+      'one',
+    );
+
+    expect(actions).toEqual([createAbilityAction('two', 6, 'snipe')]);
+  });
+});

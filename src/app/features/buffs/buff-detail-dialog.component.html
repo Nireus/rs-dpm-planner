@@ -1,0 +1,67 @@
+<div class="dialog-backdrop" (click)="close.emit()">
+  <section
+    class="detail-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="buff-detail-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="dialog-header">
+      <div class="dialog-title-group">
+        <div class="icon-tile detail-icon">
+          @if (entry.iconPath) {
+            <img class="detail-image" [src]="entry.iconPath" [alt]="entry.name" />
+          } @else {
+            <span class="fallback-icon">{{ initials(entry.name) }}</span>
+          }
+        </div>
+
+        <div class="detail-copy">
+          <p class="eyebrow">{{ entry.categoryLabel }}</p>
+          <h2 id="buff-detail-title">{{ entry.name }}</h2>
+          <p>{{ entry.description }}</p>
+        </div>
+      </div>
+
+      <button type="button" class="icon-button" (click)="close.emit()" aria-label="Close buff dialog">Close</button>
+    </div>
+
+    <div class="detail-tags">
+      <span class="detail-tag">{{ entry.categoryLabel }}</span>
+      <span class="detail-tag" [class.available]="isActive">{{ statusLabel() }}</span>
+      @if (entry.effectRefs?.length) {
+        <span class="detail-tag">{{ entry.effectRefs!.length }} effect ref(s)</span>
+      }
+    </div>
+
+    @if (entry.detailLines?.length) {
+      <div class="status-block">
+        <p class="status-label">Details</p>
+        <ul class="detail-list">
+          @for (line of entry.detailLines ?? []; track line) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (entry.effectRefs?.length) {
+      <div class="status-block">
+        <p class="status-label">Effect refs</p>
+        <p class="effect-copy">{{ entry.effectRefs?.join(', ') }}</p>
+      </div>
+    }
+
+    <div class="dialog-actions">
+      @if (!isReadonly) {
+        <button type="button" class="toggle-button" [class.active]="isActive" (click)="toggle.emit()">
+          {{ isActive ? 'Deactivate' : 'Activate' }}
+        </button>
+      }
+
+      @if (entry.wikiUrl) {
+        <a class="wiki-link" [href]="entry.wikiUrl" target="_blank" rel="noreferrer">Open RuneScape Wiki page</a>
+      }
+    </div>
+  </section>
+</div>

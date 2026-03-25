@@ -1,0 +1,192 @@
+<section class="page">
+  <header class="toolbar">
+    <div class="title-row">
+      <div class="title-copy">
+        <h1>Buffs</h1>
+      </div>
+
+      <div class="toolbar-controls">
+        <label class="search-field">
+          <span>Search</span>
+          <input
+            type="search"
+            [ngModel]="query()"
+            (ngModelChange)="query.set($event)"
+            placeholder="Name, id, category, or effect"
+          />
+        </label>
+
+        <div class="summary-chip">
+          @if (storeSummary().counts) {
+            {{ activeOptions().length }} active
+          } @else {
+            Waiting for data
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Loading curated persistent modifiers from the repository...</p>
+    </article>
+  } @else if (storeSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <ul class="issue-list">
+        @for (issue of storeSummary().issues; track issue.path + issue.message) {
+          <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+        }
+      </ul>
+    </article>
+  } @else {
+    <section
+      class="active-panel"
+      [class.drop-target]="isActiveDropTarget()"
+      [class.drop-target-disabled]="!canDropToActive() && dragOptionId()"
+      (dragover)="allowDrop($event)"
+      (dragenter)="setDragTarget('active')"
+      (dragleave)="setDragTarget(null)"
+      (drop)="dropToActive($event)"
+    >
+      <div class="panel-heading">
+        <h2>Active</h2>
+        <div class="summary-chip">
+          {{ activeRelicEnergy() }}/650 relic power
+        </div>
+      </div>
+
+      @if (validationMessage()) {
+        <p class="validation-copy">{{ validationMessage() }}</p>
+      }
+
+      @if (activeOptions().length) {
+        <div class="active-chip-row">
+          @for (option of activeOptions(); track option.kind + ':' + option.id) {
+            @if (option.kind === 'equipped-perk') {
+              <div class="active-chip readonly-chip" [title]="summaryLine(option)">
+                @if (option.iconPath) {
+                  <img [src]="option.iconPath" alt="" class="chip-icon" />
+                }
+                <span>{{ option.name }}</span>
+              </div>
+            } @else {
+              <button
+                type="button"
+                class="active-chip"
+                [class.dragged]="isDragged(option)"
+                [title]="summaryLine(option)"
+                draggable="true"
+                (click)="openOptionDetail(option)"
+                (dragstart)="onDragStart(option, 'active', $event)"
+                (dragend)="onDragEnd()"
+              >
+                @if (option.iconPath) {
+                  <img [src]="option.iconPath" alt="" class="chip-icon" />
+                }
+                <span>{{ option.name }}</span>
+                <span class="chip-remove" (click)="toggleOption(option); $event.stopPropagation()" aria-hidden="true">x</span>
+              </button>
+            }
+          }
+        </div>
+      } @else {
+        <p>No persistent buffs selected yet.</p>
+      }
+    </section>
+
+    @for (group of filteredGroups(); track group.key) {
+      <section
+        class="group-panel"
+        [class.drop-target]="isGroupDropTarget(group.key) && canDropToGroup(group)"
+        [class.drop-target-disabled]="isGroupDropTarget(group.key) && !canDropToGroup(group)"
+        (dragover)="allowDrop($event)"
+        (dragenter)="setDragTarget(group.key)"
+        (dragleave)="setDragTarget(null)"
+        (drop)="dropToGroup(group, $event)"
+      >
+        <div class="panel-heading">
+          <h2>{{ group.label }}</h2>
+        </div>
+
+        <div class="option-grid">
+          @for (option of group.options; track option.kind + ':' + option.id) {
+            @if (option.kind === 'equipped-perk') {
+              <button type="button" class="option-card active readonly-card" [title]="summaryLine(option)" (click)="openOptionDetail(option)">
+                <div class="option-topline">
+                  @if (group.showCategoryLabel) {
+                    <span class="option-kind">{{ option.categoryLabel }}</span>
+                  }
+                  <span class="option-status">Derived</span>
+                </div>
+                <div class="option-main">
+                  <div class="icon-tile">
+                    @if (option.iconPath) {
+                      <img [src]="option.iconPath" alt="" class="option-icon" />
+                    } @else {
+                      <span class="fallback-icon">{{ initials(option.name) }}</span>
+                    }
+                  </div>
+                  <div class="option-copy">
+                    <span class="option-name">{{ option.name }}</span>
+                    <span class="option-summary">{{ tileSummary(option) }}</span>
+                  </div>
+                </div>
+              </button>
+            } @else {
+              <article class="option-card" [class.active]="isActive(option)" [class.dragged]="isDragged(option)" [title]="summaryLine(option)">
+                <button
+                  type="button"
+                  class="inspect-layer"
+                  draggable="true"
+                  (click)="openOptionDetail(option)"
+                  (dragstart)="onDragStart(option, 'catalog', $event)"
+                  (dragend)="onDragEnd()"
+                  aria-label="Open details for {{ option.name }}"
+                >
+                  <div class="option-topline">
+                    @if (group.showCategoryLabel) {
+                      <span class="option-kind">{{ option.categoryLabel }}</span>
+                    }
+                    <span class="option-status">{{ isActive(option) ? 'Active' : 'Inactive' }}</span>
+                  </div>
+                  <div class="option-main">
+                    <div class="icon-tile">
+                      @if (option.iconPath) {
+                        <img [src]="option.iconPath" alt="" class="option-icon" />
+                      } @else {
+                        <span class="fallback-icon">{{ initials(option.name) }}</span>
+                      }
+                    </div>
+                    <div class="option-copy">
+                      <span class="option-name">{{ option.name }}</span>
+                      <span class="option-summary">{{ tileSummary(option) }}</span>
+                    </div>
+                  </div>
+                </button>
+              </article>
+            }
+          }
+        </div>
+      </section>
+    } @empty {
+      <article class="panel">
+        <h2>No Matches</h2>
+        <p>No supported prayers, potions, relics, perks, passive buffs, or pocket effects match the current search.</p>
+      </article>
+    }
+  }
+
+  @if (selectedOption(); as detail) {
+    <app-buff-detail-dialog
+      [entry]="detail"
+      [isActive]="selectedOptionIsActive()"
+      [isReadonly]="selectedOption() ? isReadonly(selectedOption()!) : false"
+      [initials]="initials"
+      (close)="closeOptionDetail()"
+      (toggle)="toggleSelectedOption()"
+    />
+  }
+</section>

@@ -1,0 +1,14 @@
+{
+  "id": "sirenic-mask",
+  "name": "Sirenic mask",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "https://runescape.wiki/images/Sirenic_mask.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 23.2
+  },
+  "effectRefs": ["sirenic-set"],
+  "implementationNotes": "Curated t90 sirenic head-slot item for the MVP ranged dataset."
+}

@@ -1,0 +1,402 @@
+<section class="page">
+  <header class="toolbar">
+    <div class="title-copy">
+      <h1>Rotation Planner</h1>
+      <p>Manual tick timeline for ranged rotations under strict validation.</p>
+    </div>
+  </header>
+
+  <section class="planner-shell">
+    <div class="planner-header">
+      <div class="planner-meta">
+        <h2>Tick Grid</h2>
+        <p>Drag actions onto the ruler and inspect planner state tick by tick.</p>
+      </div>
+
+      <div class="planner-header-side">
+        <label class="control-field compact-field">
+          <span>Adren</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            [ngModel]="startingAdrenaline()"
+            (ngModelChange)="updateStartingAdrenaline($event)"
+          />
+        </label>
+
+        <label class="control-field compact-field">
+          <span>Ticks</span>
+          <input
+            type="number"
+            min="6"
+            max="200"
+            step="1"
+            [ngModel]="tickCount()"
+            (ngModelChange)="updateTickCount($event)"
+          />
+        </label>
+
+        <label class="tick-slider-field">
+          <span>Inspect</span>
+          <input
+            type="range"
+            min="0"
+            [max]="tickCount() - 1"
+            step="1"
+            [ngModel]="selectedTick()"
+            (ngModelChange)="updateSelectedTick($event)"
+          />
+          <span class="tick-slider-value">T{{ selectedTick() }}</span>
+        </label>
+
+        @if (validationIssues().length) {
+          <div class="validation-chip">{{ validationIssues().length }} issue(s)</div>
+        } @else {
+          <div class="validation-chip success-chip">Timeline bounds valid</div>
+        }
+      </div>
+    </div>
+
+    @if (plannerWarning(); as warning) {
+      <div class="planner-warning" role="status" aria-live="polite">
+        {{ warning }}
+      </div>
+    }
+
+    <div class="palette-row">
+      <section class="ability-palette half-palette">
+        <div class="palette-heading">
+          <h2>Abilities</h2>
+          <p>Drag a ready icon into a valid GCD window.</p>
+        </div>
+
+        <div class="palette-grid icon-palette-grid">
+          @for (entry of abilityPaletteEntries(); track entry.definition.id) {
+            <button
+              type="button"
+              class="ability-chip icon-only-chip"
+              [class.blocked-chip]="entry.availabilityIssue"
+              [title]="abilityPaletteEntryTitle(entry)"
+              [attr.draggable]="entry.availabilityIssue ? null : 'true'"
+              (dragstart)="onCatalogAbilityDragStart(entry)"
+              (dragend)="onAbilityDragEnd()"
+            >
+              @if (entry.definition.iconPath) {
+                <img
+                  class="ability-chip-icon"
+                  [src]="entry.definition.iconPath"
+                  [alt]="entry.definition.name"
+                />
+              } @else {
+                <span class="ability-chip-fallback">{{ abilityShortLabel(entry.definition) }}</span>
+              }
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="ability-palette half-palette">
+        <div class="palette-heading">
+          <h2>Non-GCD</h2>
+          <p>Drag swaps and utility into any tick.</p>
+        </div>
+
+        <div
+          class="palette-grid non-gcd-grid"
+          (dragover)="allowNonGcdRemoval($event)"
+          (drop)="removeDraggedNonGcdAction($event)"
+        >
+          @for (entry of nonGcdPaletteEntries; track entry.id) {
+            <button
+              type="button"
+              class="ability-chip non-gcd-chip"
+              [title]="entry.label"
+              draggable="true"
+              (dragstart)="onCatalogNonGcdDragStart(entry)"
+              (dragend)="onNonGcdDragEnd()"
+            >
+              <span class="ability-chip-main">
+                @if (entry.iconPath) {
+                  <img
+                    class="ability-chip-icon action-chip-icon"
+                    [src]="entry.iconPath"
+                    [alt]="entry.label"
+                  />
+                } @else {
+                  <span class="ability-chip-fallback non-gcd-fallback">{{ entry.shortLabel }}</span>
+                }
+
+                <span class="ability-chip-copy">
+                  <span class="ability-chip-name">{{ entry.label }}</span>
+                </span>
+              </span>
+            </button>
+          }
+        </div>
+      </section>
+    </div>
+
+    <div class="timeline-frame">
+      <div class="timeline-static-column">
+        <div class="corner-cell">Lane</div>
+
+        @for (lane of lanes; track lane.key) {
+          <div class="lane-info" [class.readonly-lane]="lane.readOnly">
+            <span class="lane-title">{{ lane.title }}</span>
+            <span class="lane-summary">{{ lane.summary }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="timeline-scroll">
+        <div class="timeline-grid" [style.--tick-count]="tickCount()">
+          @for (tickIndex of tickIndexes(); track tickIndex) {
+            <div
+              class="tick-header"
+              [class.major-tick]="isMajorTick(tickIndex)"
+              [class.selected-tick-header]="selectedTick() === tickIndex"
+            >
+              <button
+                type="button"
+                class="tick-select-button"
+                (click)="selectTick(tickIndex)"
+              >
+                <span class="tick-label">T{{ tickIndex }}</span>
+                <span class="tick-ruler-mark"></span>
+              </button>
+            </div>
+          }
+
+          @for (lane of lanes; track lane.key) {
+            @for (tickIndex of tickIndexes(); track tickIndex) {
+              <div
+                class="timeline-cell"
+                [class.buff-cell]="lane.key === 'buff'"
+                [class.ability-cell]="lane.key === 'ability'"
+                [class.non-gcd-cell]="lane.key === 'non-gcd'"
+                [class.major-tick-cell]="isMajorTick(tickIndex)"
+                [class.gcd-slot]="lane.key === 'ability' && isAbilityPlacementTick(tickIndex)"
+                [class.off-gcd-slot]="lane.key === 'ability' && !isAbilityPlacementTick(tickIndex)"
+                [class.drop-ready]="(lane.key === 'ability' && canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && canDropNonGcd(tickIndex))"
+                [class.drop-blocked]="(lane.key === 'ability' && draggedAbilityPayload && !canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && draggedNonGcdPayload && !canDropNonGcd(tickIndex))"
+                [class.occupied-window-cell]="lane.key === 'ability' && abilityOccupancyAtTick(tickIndex)"
+                [class.selected-tick-cell]="selectedTick() === tickIndex"
+                [attr.data-drop-id]="lane.key === 'ability' ? abilityDropListId(tickIndex) : lane.key === 'non-gcd' ? nonGcdDropListId(tickIndex) : null"
+                (dragover)="lane.key === 'ability' ? allowAbilityDrop($event, tickIndex) : lane.key === 'non-gcd' ? allowNonGcdDrop($event, tickIndex) : null"
+                (drop)="lane.key === 'ability' ? dropAbilityOnTick(tickIndex, $event) : lane.key === 'non-gcd' ? dropNonGcdOnTick(tickIndex, $event) : null"
+                (click)="selectTick(tickIndex)"
+              >
+                @if (lane.key === 'non-gcd' && nonGcdActionsAtTick(tickIndex).length) {
+                  <div class="non-gcd-stack">
+                    @for (action of nonGcdActionsAtTick(tickIndex); track action.id) {
+                      <div
+                        class="non-gcd-entry"
+                        [title]="nonGcdLabel(action)"
+                        draggable="true"
+                        (click)="openNonGcdActionConfig(action, $event)"
+                        (dragstart)="onTimelineNonGcdDragStart(action)"
+                        (dragend)="onNonGcdDragEnd()"
+                      >
+                        @if (nonGcdIconPath(action); as iconPath) {
+                          <img
+                            class="non-gcd-entry-icon"
+                            [src]="iconPath"
+                            [alt]="nonGcdLabel(action)"
+                          />
+                        }
+                        <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else if (lane.key === 'ability' && abilityOccupancyAtTick(tickIndex); as occupancy) {
+                  @if (occupancy.segment === 'start' || occupancy.segment === 'single') {
+                    <div
+                      class="placed-ability"
+                      [class]=" 'placed-ability ' + abilitySegmentClass(occupancy.segment)"
+                      [style.--occupied-span]="abilitySpan(occupancy.definition)"
+                      [title]="placedAbilityTitle(occupancy.action)"
+                      draggable="true"
+                      (dragstart)="onTimelineAbilityDragStart(occupancy.action)"
+                      (dragend)="onAbilityDragEnd()"
+                    >
+                      @if (occupancy.definition.iconPath) {
+                        <img
+                          class="placed-ability-icon"
+                          [src]="occupancy.definition.iconPath"
+                          [alt]="occupancy.definition.name"
+                        />
+                      } @else {
+                        <span class="placed-ability-fallback">
+                          {{ abilityShortLabel(occupancy.definition) }}
+                        </span>
+                      }
+
+                      <span class="placed-ability-copy">
+                        <span class="placed-ability-name">{{ occupancy.definition.name }}</span>
+                        <span class="placed-ability-meta">{{ occupancy.definition.subtype }}</span>
+                      </span>
+
+                      <button
+                        type="button"
+                        class="placed-ability-remove"
+                        (click)="removePlacedAbility(occupancy.action.id, $event)"
+                        aria-label="Remove {{ occupancy.definition.name }} from tick {{ tickIndex }}"
+                      >
+                        x
+                      </button>
+                    </div>
+                  }
+                } @else if (laneCellLabel(lane.key, tickIndex)) {
+                  <span class="cell-entry">{{ laneCellLabel(lane.key, tickIndex) }}</span>
+                } @else if (lane.key === 'buff') {
+                  <span class="cell-placeholder muted-placeholder"></span>
+                } @else if (lane.key === 'ability' && isAbilityPlacementTick(tickIndex)) {
+                  <span class="cell-placeholder">GCD</span>
+                } @else if (lane.key === 'ability') {
+                  <span class="cell-placeholder muted-placeholder"></span>
+                } @else {
+                  <span class="cell-placeholder">Tick</span>
+                }
+              </div>
+            }
+          }
+      </div>
+    </div>
+    </div>
+
+    @if (tickInspection(); as inspection) {
+      <section class="tick-inspector">
+        <div class="inspector-header">
+          <h2>Tick T{{ inspection.tick }}</h2>
+          <div class="inspector-chip">
+            Adrenaline {{ inspection.adrenaline.start }}% -> {{ inspection.adrenaline.end }}%
+          </div>
+        </div>
+
+        <div class="inspector-grid">
+          <article class="inspector-card">
+            <h3>Actions</h3>
+            @if (inspection.actionsStarting.length) {
+              <ul class="inspector-list">
+                @for (entry of inspection.actionsStarting; track entry) {
+                  <li>{{ entry }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="inspector-empty">No actions start on this tick.</p>
+            }
+          </article>
+
+          <article class="inspector-card">
+            <h3>Cooldowns</h3>
+            @if (inspection.cooldowns.length) {
+              <ul class="inspector-list">
+                @for (entry of inspection.cooldowns; track entry.abilityId) {
+                  <li>{{ entry.abilityName }}: {{ entry.remainingTicks }}t remaining</li>
+                }
+              </ul>
+            } @else {
+              <p class="inspector-empty">No active cooldowns at tick start.</p>
+            }
+          </article>
+
+          <article class="inspector-card">
+            <h3>Buffs</h3>
+            @if (inspection.activePersistentBuffs.length || inspection.activeTimelineBuffs.length) {
+              <ul class="inspector-list">
+                @for (entry of inspection.activePersistentBuffs; track entry) {
+                  <li>{{ entry }}</li>
+                }
+                @for (entry of inspection.activeTimelineBuffs; track entry) {
+                  <li>{{ entry }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="inspector-empty">No tracked buffs are active.</p>
+            }
+          </article>
+
+          <article class="inspector-card">
+            <h3>Gear / Ammo</h3>
+            <ul class="inspector-list">
+              @for (entry of inspection.equipmentState; track entry.slot) {
+                <li>{{ entry.slot }}: {{ entry.itemName }}</li>
+              }
+              <li>Ammo: {{ inspection.ammoState ?? 'None equipped' }}</li>
+            </ul>
+          </article>
+
+          <article class="inspector-card wide-card">
+            <h3>Validation / Hits</h3>
+            @if (inspection.validationIssues.length) {
+              <ul class="inspector-list">
+                @for (issue of inspection.validationIssues; track issue.code + issue.message) {
+                  <li>{{ issue.message }}</li>
+                }
+              </ul>
+            } @else if (inspection.hitsResolving.length) {
+              <ul class="inspector-list">
+                @for (entry of inspection.hitsResolving; track entry) {
+                  <li>{{ entry }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="inspector-empty">No hits or validation issues on this tick.</p>
+            }
+          </article>
+        </div>
+      </section>
+    }
+
+    @if (gearSwapDialogActionId(); as gearSwapActionId) {
+      <div class="planner-dialog-backdrop" (click)="closeGearSwapConfig(true)">
+        <section
+          class="planner-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gear-swap-dialog-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="planner-dialog-header">
+            <div>
+              <h2 id="gear-swap-dialog-title">Configure Gear Swap</h2>
+              <p>Choose which backpack item should be equipped from tick T{{ (activeGearSwapAction()?.tick ?? 0) + 1 }} onward.</p>
+            </div>
+          </div>
+
+          <label class="control-field dialog-field">
+            <span>Backpack item</span>
+            <select
+              [ngModel]="selectedGearSwapInstanceId()"
+              (ngModelChange)="updateSelectedGearSwapInstanceId($event)"
+            >
+              @for (option of gearSwapOptions(); track option.instanceId) {
+                <option [ngValue]="option.instanceId">
+                  {{ option.name }} - {{ option.slotLabel }}
+                </option>
+              }
+            </select>
+          </label>
+
+          <div class="planner-dialog-actions">
+            <button type="button" class="dialog-danger" (click)="removeGearSwapActionFromDialog()">Remove</button>
+            <button type="button" class="dialog-secondary" (click)="closeGearSwapConfig(true)">Cancel</button>
+            <button type="button" class="dialog-primary" (click)="confirmGearSwapConfig()">Apply</button>
+          </div>
+        </section>
+      </div>
+    }
+
+  </section>
+
+  <section class="lane-guide">
+    @for (lane of lanes; track lane.key) {
+      <article class="guide-card" [class.readonly-card]="lane.readOnly">
+        <h2>{{ lane.title }}</h2>
+        <p>{{ lane.summary }}</p>
+      </article>
+    }
+  </section>
+</section>

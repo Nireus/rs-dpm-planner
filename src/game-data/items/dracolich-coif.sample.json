@@ -1,0 +1,14 @@
+{
+  "id": "dracolich-coif",
+  "name": "Dracolich coif",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "https://runescape.wiki/images/Dracolich_coif.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 23.2
+  },
+  "effectRefs": ["dracolich-set"],
+  "implementationNotes": "Curated t90 dracolich head-slot item for the MVP ranged dataset."
+}

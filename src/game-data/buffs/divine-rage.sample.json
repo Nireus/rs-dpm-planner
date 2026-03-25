@@ -1,0 +1,12 @@
+{
+  "id": "divine-rage",
+  "name": "Divine Rage",
+  "iconPath": "https://runescape.wiki/images/thumb/Divine_Rage.png/30px-Divine_Rage.png?fe3bb",
+  "wikiUrl": "https://runescape.wiki/w/Prayer",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["divine-rage"],
+  "displayPriority": 21
+}

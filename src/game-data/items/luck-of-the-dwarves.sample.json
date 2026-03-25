@@ -10,5 +10,8 @@
     "Included mainly as a setup comparison and utility option.",
     "Not expected to be a DPS-best ring in the ranged simulator."
   ],
-  "combatStyleTags": ["ranged"]
+  "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 17.3
+  }
 }

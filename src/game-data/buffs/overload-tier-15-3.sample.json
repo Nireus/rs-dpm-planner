@@ -1,0 +1,20 @@
+{
+  "id": "overload-tier-15-3",
+  "name": "Overload variants",
+  "iconPath": "https://runescape.wiki/images/Overload_%284%29.png?fffe4",
+  "wikiUrl": "https://runescape.wiki/w/Overload#Comparison_of_overload_potions",
+  "variantNames": [
+    "Overload",
+    "Overload flask",
+    "Holy overload potion",
+    "Aggroverload",
+    "Searing overload potion",
+    "Holy aggroverload"
+  ],
+  "category": "potion",
+  "sourceType": "player-config",
+  "durationTicks": 180,
+  "isPermanent": true,
+  "effectRefs": ["overload-tier-15-3"],
+  "displayPriority": 20
+}

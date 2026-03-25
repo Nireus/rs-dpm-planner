@@ -23,6 +23,26 @@ describe('game-data sample JSON validation', () => {
     expect(result.success).toBe(true);
   });
 
+  it('parses and validates additional phase 11.1 item samples', () => {
+    const itemPaths = [
+      'src/game-data/items/masterwork-bow.sample.json',
+      'src/game-data/items/wen-arrows.sample.json',
+      'src/game-data/items/jas-dragonbane-arrows.sample.json',
+      'src/game-data/items/dracolich-hauberk.sample.json',
+      'src/game-data/items/dracolich-vambraces.sample.json',
+      'src/game-data/items/elite-dracolich-vambraces.sample.json',
+      'src/game-data/items/sirenic-hauberk.sample.json',
+      'src/game-data/items/elite-sirenic-hauberk.sample.json',
+    ];
+
+    for (const itemPath of itemPaths) {
+      const document = readJson(itemPath);
+      const result = validateItemDefinition(document);
+
+      expect(result.success, itemPath).toBe(true);
+    }
+  });
+
   it('parses and validates sample ability JSON', () => {
     const document = readJson('src/game-data/abilities/rapid-fire.sample.json');
     const result = validateAbilityDefinition(document);

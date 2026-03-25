@@ -1,0 +1,22 @@
+{
+  "id": "masterwork-bow",
+  "name": "Masterwork bow",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/images/Masterwork_bow.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 99,
+  "offensiveStats": {
+    "damageTier": 100,
+    "accuracyTier": 100
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 99
+    },
+    "requiredEquipmentTags": ["two-handed-bow"]
+  },
+  "effectRefs": ["weapon-special-access"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated masterwork bow entry for the MVP ranged dataset."
+}

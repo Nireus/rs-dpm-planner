@@ -1,0 +1,19 @@
+{
+  "id": "jas-dragonbane-arrows",
+  "name": "Jas dragonbane arrows",
+  "category": "ammo",
+  "slot": "ammo",
+  "iconPath": "https://runescape.wiki/images/Jas_dragonbane_arrow_4.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 95
+    }
+  },
+  "effectRefs": ["jas-dragonbane-arrows"],
+  "implementationNotes": "Curated MVP dragonbane arrow entry using the current Jas dragonbane arrow variant."
+}

@@ -10,6 +10,9 @@
     "Relevant comparison point against Stalker's ring and utility rings."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 27.7
+  },
   "effectRefs": ["reavers-ring-crit"],
   "implementationNotes": "Sample ranged ring-slot item for gear builder MVP."
 }

@@ -1,0 +1,14 @@
+{
+  "id": "elite-dracolich-vambraces",
+  "name": "Elite dracolich vambraces",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_vambraces.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 15
+  },
+  "effectRefs": ["elite-dracolich-set"],
+  "implementationNotes": "Curated elite dracolich hand-slot item for the MVP ranged dataset."
+}

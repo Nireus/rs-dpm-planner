@@ -6,5 +6,8 @@
   "iconPath": "https://runescape.wiki/images/Nightmare_gauntlets.png?abe64",
   "combatStyleTags": ["ranged"],
   "tier": 85,
+  "offensiveStats": {
+    "rangedBonus": 13.5
+  },
   "implementationNotes": "Sample ranged hand-slot item for gear builder MVP."
 }

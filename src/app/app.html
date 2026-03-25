@@ -13,6 +13,10 @@
           {{ item.label }}
         </a>
       }
+
+      <button type="button" class="clear-state-button" (click)="openClearStateDialog()">
+        Clear State
+      </button>
     </nav>
   </aside>
 
@@ -20,3 +24,25 @@
     <router-outlet />
   </main>
 </div>
+
+@if (clearStateDialogOpen()) {
+  <div class="app-dialog-backdrop" (click)="closeClearStateDialog()">
+    <section
+      class="app-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="clear-state-dialog-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="app-dialog-copy">
+        <h2 id="clear-state-dialog-title">Clear planner state?</h2>
+        <p>This will reset gear, buffs, player stats, and the full rotation planner back to defaults.</p>
+      </div>
+
+      <div class="app-dialog-actions">
+        <button type="button" class="dialog-secondary" (click)="closeClearStateDialog()">Cancel</button>
+        <button type="button" class="dialog-danger" (click)="confirmClearState()">Clear Everything</button>
+      </div>
+    </section>
+  </div>
+}

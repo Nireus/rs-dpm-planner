@@ -1,0 +1,28 @@
+{
+  "id": "ranged",
+  "name": "Ranged",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 3,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 1
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "ranged-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 110
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 90,
+    "max": 110
+  },
+  "description": "Attack the target with the default ranged basic attack."
+}

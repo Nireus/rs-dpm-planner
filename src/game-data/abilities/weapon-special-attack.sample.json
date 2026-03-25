@@ -1,0 +1,16 @@
+{
+  "id": "weapon-special-attack",
+  "name": "Weapon Special Attack",
+  "style": "constitution",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "requires": {
+    "requiredEquipmentTags": ["equipped-effect:weapon-special-access"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Constitution special ability that activates the special attack of the currently equipped weapon."
+}

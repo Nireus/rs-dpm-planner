@@ -6,6 +6,9 @@
   "iconPath": "https://runescape.wiki/images/Elite_Dracolich_chaps.png?11a80",
   "combatStyleTags": ["ranged"],
   "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 31
+  },
   "effectRefs": ["elite-dracolich-set"],
   "implementationNotes": "Sample ranged leg-slot item for gear builder MVP."
 }

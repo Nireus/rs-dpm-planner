@@ -36,6 +36,11 @@ export class PlayerStatsStoreService {
     );
   }
 
+  reset(): void {
+    this.stats.set(DEFAULT_PLAYER_STATS);
+    this.clearPersistedStats();
+  }
+
   private loadInitialStats(): PlayerStats {
     if (typeof window === 'undefined' || !window.localStorage) {
       return DEFAULT_PLAYER_STATS;
@@ -63,5 +68,13 @@ export class PlayerStatsStoreService {
     }
 
     window.localStorage.setItem(PLAYER_STATS_STORAGE_KEY, JSON.stringify(stats));
+  }
+
+  private clearPersistedStats(): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.removeItem(PLAYER_STATS_STORAGE_KEY);
   }
 }

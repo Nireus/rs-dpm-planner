@@ -11,5 +11,8 @@
     "Can be combined with an igneous stone to make Igneous Kal-Xil."
   ],
   "combatStyleTags": ["ranged"],
-  "tier": 75
+  "tier": 75,
+  "offensiveStats": {
+    "rangedBonus": 33.5
+  }
 }

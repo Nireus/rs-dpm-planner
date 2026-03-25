@@ -1173,6 +1173,111 @@ Add Playwright tests covering:
 
 - Not applicable.
 
+## Phase 15 - Additional Buff and Item Mechanics
+
+### Goal
+
+Add the remaining late-MVP or post-MVP mechanic work that extends the simulator with more complete passive effects, relic logic, ammo behavior, and item-specific combat rules without overloading the earlier foundation phases.
+
+### Step 15.1 - Complete Relic Mechanics
+
+#### Tasks
+
+- Implement the mechanical effects of all supported archaeology relics, not just their selection UI.
+- Support relic effects that modify:
+  - adrenaline costs
+  - adrenaline gains
+  - damage modifiers
+  - passive conditional state
+- Ensure relic interactions are represented in validation, simulation, and explainability output.
+
+#### Acceptance Criteria
+
+- Supported relics affect simulation results where applicable.
+- Relic behavior is visible in tick inspection and/or result breakdowns.
+
+#### Manual Test Checklist
+
+- Enable a relic that changes adrenaline or damage and confirm the result changes as expected.
+
+#### Unit Test Checklist
+
+- One scenario test per implemented relic family or rule type.
+
+### Step 15.2 - Add Remaining Passive Buff and Item Effects
+
+#### Tasks
+
+- Implement additional passive or inventory-enabled effects not completed in earlier phases.
+- Include mechanics such as:
+  - item passives
+  - ammo passives
+  - passive enabling items
+  - other supported effect hooks introduced through curated data
+- Add explicit support for effects like [Warped gem](https://runescape.wiki/w/Warped_gem) where relevant to MVP or later approved scope.
+
+#### Acceptance Criteria
+
+- Supported passive effects are resolved by the engine instead of existing only as metadata.
+- Unsupported passives still fail clearly or remain explicitly unimplemented.
+
+#### Manual Test Checklist
+
+- Equip or enable a passive effect item and confirm it changes simulation state or output.
+
+#### Unit Test Checklist
+
+- Passive effect scenario tests.
+
+### Step 15.3 - Add Remaining Ammo and Item-Specific Generated Mechanics
+
+#### Tasks
+
+- Implement stateful or generated mechanics that were intentionally deferred from earlier phases.
+- Examples may include:
+  - deathspore progression/building behavior
+  - generated temporary buff windows from ammo or items
+  - item/ammo interactions that modify later actions or hits
+- Ensure these mechanics feed both simulation state and future buff-lane visualization cleanly.
+
+#### Acceptance Criteria
+
+- Deferred stateful ammo/item mechanics are modeled in the engine where approved.
+- Generated states appear in explainability and buff inspection outputs.
+
+#### Manual Test Checklist
+
+- Reproduce at least one state-building mechanic and inspect the tick-by-tick result.
+
+#### Unit Test Checklist
+
+- Dedicated timeline/state progression tests.
+
+### Step 15.4 - Add Additional Conditional Combat Rule Modifiers
+
+#### Tasks
+
+- Implement the remaining conditional combat rule modifiers introduced by relics, items, ammo, or buffs.
+- Include effects such as:
+  - modified adrenaline cost for specific abilities
+  - modified adrenaline gain rules
+  - conditional ability enhancements
+  - passive buffs that alter later action resolution
+- Keep these mechanics modular and data-driven where practical.
+
+#### Acceptance Criteria
+
+- Conditional cost/gain/behavior modifiers affect the correct abilities at the correct times.
+- Results and breakdowns can explain why the modified behavior occurred.
+
+#### Manual Test Checklist
+
+- Enable a modifier such as a relic that changes an ultimate cost and verify the planner/simulation reflect it correctly.
+
+#### Unit Test Checklist
+
+- Focused rule tests for each modifier category.
+
 ## Optional Future Phases
 
 These are explicitly out of MVP unless requested later.
@@ -1241,6 +1346,7 @@ Codex should work phase by phase in this order:
 12. Phase 12
 13. Phase 13
 14. Phase 14
+15. Phase 15
 
 Do not skip ahead to advanced ranged mechanics before the engine skeleton and planner are already functioning.
 

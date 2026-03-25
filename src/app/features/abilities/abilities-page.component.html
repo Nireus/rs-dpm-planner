@@ -1,0 +1,112 @@
+<section class="page">
+  <header class="toolbar">
+    <div class="title-row">
+      <div class="title-cluster">
+        <div class="title-copy">
+          <p class="eyebrow">Explorer</p>
+          <h1>Abilities</h1>
+        </div>
+
+        <label class="search-field">
+          <span>Search abilities</span>
+          <input
+            type="search"
+            [ngModel]="query()"
+            (ngModelChange)="query.set($event)"
+            placeholder="Name, id, style, or category"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-meta">
+        <app-player-stats-panel />
+
+        <div class="summary-chip">
+          @if (storeSummary().counts) {
+            {{ filteredAbilities().length }} abilities
+          } @else {
+            Waiting for data
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Loading curated ranged ability definitions from the repository...</p>
+    </article>
+  } @else if (storeSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <ul class="issue-list">
+        @for (issue of storeSummary().issues; track issue.path + issue.message) {
+          <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+        }
+      </ul>
+    </article>
+  } @else {
+    @for (styleGroup of groupedAbilities(); track styleGroup.style) {
+      <section class="style-group">
+        <div class="section-heading">
+          <p class="eyebrow">{{ styleGroup.displayStyle }}</p>
+        </div>
+
+        @for (category of styleGroup.categories; track category.key) {
+          <section class="category-group">
+            <div class="category-header">
+              <h3>{{ category.label }}</h3>
+              <span class="category-count">{{ category.abilities.length }}</span>
+            </div>
+
+            <div class="ability-grid">
+              @for (ability of category.abilities; track ability.id) {
+                @if (abilityAvailability(ability); as availability) {
+                  <button
+                    type="button"
+                    class="ability-card"
+                    [class.ranged-card]="ability.style === 'ranged'"
+                    [class.constitution-card]="ability.style === 'constitution'"
+                    [class.available]="availability.isAvailable"
+                    [class.unavailable]="!availability.isAvailable"
+                    [title]="hoverText(ability)"
+                    (click)="openAbilityDetail(ability.id)"
+                  >
+                    <span class="card-corner">{{ displaySubtypeLabel(ability.subtype) }}</span>
+
+                    <span class="icon-tile">
+                      @if (ability.iconPath) {
+                        <img class="ability-icon" [src]="ability.iconPath" [alt]="ability.name" />
+                      } @else {
+                        <span class="fallback-icon">{{ initials(ability.name) }}</span>
+                      }
+                    </span>
+
+                    <span class="card-name">{{ ability.name }}</span>
+                    <span class="card-meta">{{ cardMeta(ability) }}</span>
+                    <span class="card-status">{{ availability.isAvailable ? 'Ready' : 'Blocked' }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </section>
+        }
+      </section>
+    } @empty {
+      <article class="panel">
+        <h2>No Matches</h2>
+        <p>No loaded abilities match the current search.</p>
+      </article>
+    }
+  }
+
+  @if (selectedEntry(); as entry) {
+    <app-ability-detail-dialog
+      [entry]="entry"
+      [availability]="abilityAvailability(entry)"
+      [initials]="initials"
+      (close)="closeAbilityDetail()"
+    />
+  }
+</section>

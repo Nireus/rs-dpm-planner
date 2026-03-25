@@ -11,5 +11,8 @@
     "Useful as a baseline non-EOF amulet option."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 46.3
+  },
   "effectRefs": ["amulet-of-souls-passive"]
 }

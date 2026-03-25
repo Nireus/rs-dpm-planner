@@ -11,5 +11,8 @@
     "Strong future candidate for ranged crit modeling."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 30.4
+  },
   "effectRefs": ["stalkers-ring-crit"]
 }

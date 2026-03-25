@@ -1,0 +1,9 @@
+{
+  "id": "heightened-senses",
+  "name": "Heightened Senses",
+  "iconPath": "https://runescape.wiki/images/thumb/Heightened_Senses.png/40px-Heightened_Senses.png?426d6",
+  "wikiUrl": "https://runescape.wiki/w/Heightened_Senses",
+  "monolithEnergy": 350,
+  "effectRefs": ["heightened-senses"],
+  "description": "Increase the player's maximum adrenaline by 10%."
+}

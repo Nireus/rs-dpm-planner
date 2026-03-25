@@ -1,0 +1,14 @@
+{
+  "id": "elite-sirenic-hauberk",
+  "name": "Elite sirenic hauberk",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "https://runescape.wiki/images/Elite_sirenic_hauberk.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 36
+  },
+  "effectRefs": ["elite-sirenic-set"],
+  "implementationNotes": "Curated t92 elite sirenic body-slot item for the MVP ranged dataset."
+}

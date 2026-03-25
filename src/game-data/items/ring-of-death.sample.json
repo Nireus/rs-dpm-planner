@@ -11,5 +11,8 @@
     "Not a core ranged DPS ring, but relevant for wider setup comparisons."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 25.2
+  },
   "effectRefs": ["ring-of-death-adrenaline"]
 }

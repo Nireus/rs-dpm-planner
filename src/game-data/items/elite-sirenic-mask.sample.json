@@ -1,0 +1,14 @@
+{
+  "id": "elite-sirenic-mask",
+  "name": "Elite sirenic mask",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "https://runescape.wiki/images/Elite_sirenic_mask.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "offensiveStats": {
+    "rangedBonus": 24
+  },
+  "effectRefs": ["elite-sirenic-set"],
+  "implementationNotes": "Curated t92 elite sirenic head-slot item for the MVP ranged dataset."
+}

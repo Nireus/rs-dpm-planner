@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
@@ -8,6 +8,17 @@ import {
   SUPPORTED_GEAR_SLOTS,
   type GearBuilderState,
 } from './gear-builder.utils';
+
+const GEAR_BUILDER_STORAGE_KEY = 'rs-dpm-planner.gear-builder.v1';
+const DEFAULT_GEAR_BUILDER_STATE: GearBuilderState = {
+  equipment: {},
+  inventory: [],
+};
+
+interface PersistedGearBuilderState {
+  state: GearBuilderState;
+  nextInstanceId: number;
+}
 
 export interface EquippedSlotViewModel {
   slot: EquipmentSlot;
@@ -34,12 +45,9 @@ export interface ResolvedItemInstanceViewModel {
 })
 export class GearBuilderStore {
   private readonly gameDataStore = inject(GameDataStoreService);
-  private readonly state = signal<GearBuilderState>({
-    equipment: {},
-    inventory: [],
-  });
-
-  private nextInstanceId = 1;
+  private readonly initialState = this.loadInitialState();
+  private readonly state = signal<GearBuilderState>(this.initialState.state);
+  private readonly nextInstanceIdValue = signal(this.initialState.nextInstanceId);
 
   readonly equipmentSlots = SUPPORTED_GEAR_SLOTS;
   readonly snapshot = this.state.asReadonly();
@@ -79,6 +87,15 @@ export class GearBuilderStore {
       };
     });
   });
+
+  constructor() {
+    effect(() => {
+      this.persistState({
+        state: this.state(),
+        nextInstanceId: this.nextInstanceIdValue(),
+      });
+    });
+  }
 
   equipDefinition(definitionId: string, slot?: EquipmentSlot): string | null {
     const definition = this.findDefinition(definitionId);
@@ -310,18 +327,78 @@ export class GearBuilderStore {
     }));
   }
 
+  reset(): void {
+    this.state.set(DEFAULT_GEAR_BUILDER_STATE);
+    this.nextInstanceIdValue.set(1);
+    this.clearPersistedState();
+  }
+
   private findDefinition(definitionId: string): ItemDefinition | null {
     return this.gameDataStore.snapshot().catalog?.items[definitionId] ?? null;
   }
 
   private createInstance(definition: ItemDefinition): ItemInstanceConfig {
-    const instanceNumber = this.nextInstanceId;
-    this.nextInstanceId += 1;
+    const instanceNumber = this.nextInstanceIdValue();
+    this.nextInstanceIdValue.set(instanceNumber + 1);
 
     return {
       instanceId: `gear-item-${instanceNumber}`,
       definitionId: definition.id,
     };
+  }
+
+  private loadInitialState(): PersistedGearBuilderState {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return {
+        state: DEFAULT_GEAR_BUILDER_STATE,
+        nextInstanceId: 1,
+      };
+    }
+
+    try {
+      const raw = window.localStorage.getItem(GEAR_BUILDER_STORAGE_KEY);
+
+      if (!raw) {
+        return {
+          state: DEFAULT_GEAR_BUILDER_STATE,
+          nextInstanceId: 1,
+        };
+      }
+
+      const parsed = JSON.parse(raw) as Partial<PersistedGearBuilderState>;
+      const equipment = sanitizeEquipment(parsed.state?.equipment);
+      const inventory = sanitizeInventory(parsed.state?.inventory);
+      const nextInstanceId = sanitizeNextInstanceId(parsed.nextInstanceId);
+
+      return {
+        state: {
+          equipment,
+          inventory,
+        },
+        nextInstanceId,
+      };
+    } catch {
+      return {
+        state: DEFAULT_GEAR_BUILDER_STATE,
+        nextInstanceId: 1,
+      };
+    }
+  }
+
+  private persistState(state: PersistedGearBuilderState): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.setItem(GEAR_BUILDER_STORAGE_KEY, JSON.stringify(state));
+  }
+
+  private clearPersistedState(): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.removeItem(GEAR_BUILDER_STORAGE_KEY);
   }
 
   private updateInstance(
@@ -362,4 +439,96 @@ export class GearBuilderStore {
       };
     });
   }
+}
+
+function sanitizeEquipment(
+  equipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>> | undefined,
+): Partial<Record<EquipmentSlot, ItemInstanceConfig>> {
+  if (!equipment || typeof equipment !== 'object') {
+    return {};
+  }
+
+  const sanitized: Partial<Record<EquipmentSlot, ItemInstanceConfig>> = {};
+
+  for (const slot of SUPPORTED_GEAR_SLOTS) {
+    const instance = equipment[slot];
+    const nextInstance = sanitizeItemInstance(instance);
+
+    if (nextInstance) {
+      sanitized[slot] = nextInstance;
+    }
+  }
+
+  return sanitized;
+}
+
+function sanitizeInventory(inventory: ItemInstanceConfig[] | undefined): ItemInstanceConfig[] {
+  if (!Array.isArray(inventory)) {
+    return [];
+  }
+
+  return inventory.map((entry) => sanitizeItemInstance(entry)).filter(isPresent);
+}
+
+function sanitizeItemInstance(instance: ItemInstanceConfig | undefined): ItemInstanceConfig | null {
+  if (!instance || typeof instance !== 'object') {
+    return null;
+  }
+
+  if (typeof instance.instanceId !== 'string' || typeof instance.definitionId !== 'string') {
+    return null;
+  }
+
+  return {
+    instanceId: instance.instanceId,
+    definitionId: instance.definitionId,
+    perkIds: Array.isArray(instance.perkIds) ? instance.perkIds.filter(isString) : undefined,
+    configuredPerks: Array.isArray(instance.configuredPerks)
+      ? instance.configuredPerks
+          .filter(
+            (entry) =>
+              typeof entry?.socketIndex === 'number' &&
+              typeof entry?.perkId === 'string' &&
+              (entry.rank === undefined || typeof entry.rank === 'number'),
+          )
+          .map((entry) => ({
+            socketIndex: Math.trunc(entry.socketIndex),
+            perkId: entry.perkId,
+            rank: typeof entry.rank === 'number' ? Math.trunc(entry.rank) : undefined,
+          }))
+      : undefined,
+    configValues: sanitizeConfigValues(instance.configValues),
+    effectRefs: Array.isArray(instance.effectRefs) ? instance.effectRefs.filter(isString) : undefined,
+  };
+}
+
+function sanitizeConfigValues(
+  configValues: Record<string, boolean | number | string> | undefined,
+): Record<string, boolean | number | string> | undefined {
+  if (!configValues || typeof configValues !== 'object') {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries(configValues).filter(
+      (entry): entry is [string, boolean | number | string] =>
+        typeof entry[1] === 'boolean' || typeof entry[1] === 'number' || typeof entry[1] === 'string',
+    ),
+  );
+}
+
+function sanitizeNextInstanceId(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 1;
+  }
+
+  return Math.max(1, Math.trunc(value));
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isPresent<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
 }

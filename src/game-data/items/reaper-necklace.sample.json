@@ -11,5 +11,8 @@
     "Important future comparison point for ranged amulet choices."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 36.8
+  },
   "effectRefs": ["reaper-necklace-passive"]
 }

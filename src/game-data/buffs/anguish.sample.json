@@ -1,0 +1,12 @@
+{
+  "id": "anguish",
+  "name": "Anguish",
+  "iconPath": "https://runescape.wiki/images/Anguish.png?b3cf2",
+  "wikiUrl": "https://runescape.wiki/w/Prayer",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["anguish"],
+  "displayPriority": 18
+}

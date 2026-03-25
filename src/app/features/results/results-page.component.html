@@ -1,0 +1,158 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Simulation</p>
+      <h1>Results</h1>
+      <p class="description">Read-only totals and first-pass explainability from the pure damage engine.</p>
+    </div>
+  </header>
+
+  @if (gameDataSummary().status === 'loading' || gameDataSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Waiting for curated game data before running the simulation.</p>
+    </article>
+  } @else if (gameDataSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <p>The simulator cannot run until game data loads successfully.</p>
+    </article>
+  } @else {
+    @if (simulationResult(); as result) {
+      <section class="summary-grid">
+        <article class="panel summary-panel">
+          <span class="summary-label">Min</span>
+          <strong>{{ result.totalDamage.min | number:'1.0-0' }}</strong>
+        </article>
+        <article class="panel summary-panel">
+          <span class="summary-label">Average</span>
+          <strong>{{ result.totalDamage.avg | number:'1.0-1' }}</strong>
+        </article>
+        <article class="panel summary-panel">
+          <span class="summary-label">Max</span>
+          <strong>{{ result.totalDamage.max | number:'1.0-0' }}</strong>
+        </article>
+        @if (resultMetrics(); as metrics) {
+          <article class="panel summary-panel">
+            <span class="summary-label">Avg DPM</span>
+            <strong>{{ metrics.avgDpm | number:'1.0-1' }}</strong>
+            <span class="summary-meta">{{ metrics.durationSeconds | number:'1.0-1' }}s timeline</span>
+          </article>
+        }
+      </section>
+
+      <section class="results-layout">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Ability Contribution</h2>
+              <p>{{ result.damageByAbility.length }} abilities contributed damage.</p>
+            </div>
+            @if (resultMetrics(); as metrics) {
+              <div class="summary-chip">Avg DPT {{ metrics.avgDpt | number:'1.0-1' }}</div>
+            }
+          </div>
+
+          <div class="ability-list">
+            @for (entry of result.damageByAbility; track entry.abilityId) {
+              <button
+                type="button"
+                class="ability-row"
+                [class.is-selected]="selectedAbilitySummary()?.abilityId === entry.abilityId"
+                (click)="selectAbility(entry.abilityId)"
+              >
+                <span class="ability-row-name">{{ entry.abilityId }}</span>
+                <span class="ability-row-damage">
+                  {{ entry.min | number:'1.0-0' }} / {{ entry.avg | number:'1.0-1' }} / {{ entry.max | number:'1.0-0' }}
+                </span>
+              </button>
+            }
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Selected Ability</h2>
+              <p>Per-hit damage breakdown for the current selection.</p>
+            </div>
+          </div>
+
+          @if (selectedAbilitySummary(); as selectedAbility) {
+            <div class="selected-summary">
+              <strong>{{ selectedAbility.abilityId }}</strong>
+              <span>{{ selectedAbility.min | number:'1.0-0' }} / {{ selectedAbility.avg | number:'1.0-1' }} / {{ selectedAbility.max | number:'1.0-0' }}</span>
+            </div>
+
+            <div class="breakdown-list">
+              @for (entry of selectedAbilityBreakdowns(); track entry.hitId) {
+                <article class="breakdown-row">
+                  <div>
+                    <strong>{{ entry.hitId }}</strong>
+                    <p>Base hit</p>
+                  </div>
+                  <span>
+                    {{ entry.finalDamage.min | number:'1.0-0' }} / {{ entry.finalDamage.avg | number:'1.0-1' }} / {{ entry.finalDamage.max | number:'1.0-0' }}
+                  </span>
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty-copy">Select an ability contribution to inspect its hit breakdown.</p>
+          }
+        </article>
+      </section>
+
+      <section class="results-layout lower-layout">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Top Damage Ticks</h2>
+              <p>Highest average-damage ticks from the current plan.</p>
+            </div>
+          </div>
+
+          @if (topDamageTicks().length) {
+            <div class="tick-list">
+              @for (entry of topDamageTicks(); track entry.tick) {
+                <div class="tick-row">
+                  <span>T{{ entry.tick }}</span>
+                  <span>{{ entry.min | number:'1.0-0' }} / {{ entry.avg | number:'1.0-1' }} / {{ entry.max | number:'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-copy">No hits are scheduled yet.</p>
+          }
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Validation</h2>
+              <p>Strict-mode issues reported by the current rotation.</p>
+            </div>
+          </div>
+
+          @if (result.validationIssues.length) {
+            <ul class="issue-list">
+              @for (issue of result.validationIssues; track issue.code + issue.message + issue.tick) {
+                <li>
+                  <strong>{{ issue.code }}</strong>
+                  <span>{{ issue.message }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-copy">No strict-mode issues in the current simulation.</p>
+          }
+        </article>
+      </section>
+        } @else {
+      <article class="panel">
+        <h2>No Result</h2>
+        <p>The simulation result is not available yet.</p>
+      </article>
+    }
+  }
+</section>

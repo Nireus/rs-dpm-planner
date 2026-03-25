@@ -1,0 +1,16 @@
+{
+  "id": "essence-of-finality",
+  "name": "Essence of Finality",
+  "style": "constitution",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "requires": {
+    "requiredEquipmentTags": ["equipped-effect:eof-special-access", "eof-stored-special-configured"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Constitution special ability that activates the stored special attack from an equipped Essence of Finality amulet."
+}

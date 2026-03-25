@@ -1,0 +1,9 @@
+{
+  "id": "death-ward",
+  "name": "Death Ward",
+  "iconPath": "https://runescape.wiki/images/thumb/Death_Ward.png/40px-Death_Ward.png?47966",
+  "wikiUrl": "https://runescape.wiki/w/Death_Ward",
+  "monolithEnergy": 150,
+  "effectRefs": ["death-ward"],
+  "description": "5% damage reduction when your life points are below 50%; 10% damage reduction when they are below 25%."
+}

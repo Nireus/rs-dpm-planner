@@ -1,0 +1,14 @@
+{
+  "id": "sirenic-chaps",
+  "name": "Sirenic chaps",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "https://runescape.wiki/images/Sirenic_chaps.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 29
+  },
+  "effectRefs": ["sirenic-set"],
+  "implementationNotes": "Curated t90 sirenic leg-slot item for the MVP ranged dataset."
+}

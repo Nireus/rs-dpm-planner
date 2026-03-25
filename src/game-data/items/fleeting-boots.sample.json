@@ -6,5 +6,8 @@
   "iconPath": "https://runescape.wiki/images/Fleeting_boots.png?7249d",
   "combatStyleTags": ["ranged"],
   "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 12.7
+  },
   "implementationNotes": "Sample ranged feet-slot item for gear builder MVP."
 }

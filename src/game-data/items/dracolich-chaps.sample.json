@@ -1,0 +1,14 @@
+{
+  "id": "dracolich-chaps",
+  "name": "Dracolich chaps",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "https://runescape.wiki/images/Dracolich_chaps.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "rangedBonus": 29
+  },
+  "effectRefs": ["dracolich-set"],
+  "implementationNotes": "Curated t90 dracolich leg-slot item for the MVP ranged dataset."
+}

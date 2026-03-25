@@ -12,5 +12,8 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 85,
+  "offensiveStats": {
+    "rangedBonus": 43
+  },
   "effectRefs": ["igneous-kal-xil-passive"]
 }

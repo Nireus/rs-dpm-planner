@@ -1,0 +1,41 @@
+{
+  "id": "seren-godbow-eof",
+  "name": "Seren Godbow (EOF)",
+  "iconPath": "https://runescape.wiki/images/Seren_godbow.png",
+  "hoverSummary": "EOF special | -30% adrenaline | 2 hits",
+  "detailLines": [
+    "Stored Seren godbow special attack for Essence of Finality.",
+    "Requires Essence of Finality storing Seren godbow.",
+    "Represented separately from the main ranged abilities list."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Seren_godbow",
+  "weaponOrigin": "seren-godbow",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:seren-godbow"]
+  },
+  "adrenalineCost": 30,
+  "hitSchedule": [
+    {
+      "id": "seren-godbow-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 320
+  },
+  "effectRefs": ["eof-seren-godbow-spec"],
+  "description": "Curated EOF special access entry for the Seren godbow special attack."
+}

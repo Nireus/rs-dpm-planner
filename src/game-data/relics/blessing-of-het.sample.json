@@ -1,0 +1,9 @@
+{
+  "id": "blessing-of-het",
+  "name": "Blessing of Het",
+  "iconPath": "https://runescape.wiki/images/thumb/Blessing_of_Het.png/40px-Blessing_of_Het.png?a0fa7",
+  "wikiUrl": "https://runescape.wiki/w/Blessing_of_Het",
+  "monolithEnergy": 100,
+  "effectRefs": ["blessing-of-het"],
+  "description": "Food and potions heal 10% more lifepoints."
+}

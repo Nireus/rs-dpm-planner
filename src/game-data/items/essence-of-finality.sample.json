@@ -21,6 +21,9 @@
     "Can be dyed red, blue, yellow, green, purple, pink, or black to distinguish multiple amulets."
   ],
   "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 56
+  },
   "effectRefs": ["eof-special-access"],
   "configOptions": [
     {

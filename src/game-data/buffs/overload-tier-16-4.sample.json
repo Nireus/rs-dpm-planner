@@ -1,0 +1,13 @@
+{
+  "id": "overload-tier-16-4",
+  "name": "Supreme overload variants",
+  "iconPath": "https://runescape.wiki/images/Supreme_overload_potion_%286%29.png?e52c7",
+  "wikiUrl": "https://runescape.wiki/w/Overload#Comparison_of_overload_potions",
+  "variantNames": ["Supreme overload potion", "Supreme overload salve"],
+  "category": "potion",
+  "sourceType": "player-config",
+  "durationTicks": 180,
+  "isPermanent": true,
+  "effectRefs": ["overload-tier-16-4"],
+  "displayPriority": 22
+}
