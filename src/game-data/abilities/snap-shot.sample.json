@@ -1,0 +1,36 @@
+{
+  "id": "snap-shot",
+  "name": "Snap Shot",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 0,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 2
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "snap-shot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 135,
+        "max": 155
+      }
+    },
+    {
+      "id": "snap-shot-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 135,
+        "max": 155
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 270,
+    "max": 310
+  },
+  "description": "Burst threshold with two quick hits."
+}

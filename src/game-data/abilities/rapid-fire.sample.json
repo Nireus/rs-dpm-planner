@@ -3,43 +3,85 @@
   "name": "Rapid Fire",
   "style": "ranged",
   "subtype": "threshold",
-  "cooldownTicks": 17,
-  "adrenalineCost": 15,
+  "cooldownTicks": 34,
+  "adrenalineCost": 25,
   "requires": {
-    "requiredEquipmentTags": ["ranged-weapon"]
+    "levelRequirements": {
+      "ranged": 62
+    }
   },
   "isChanneled": true,
-  "channelDurationTicks": 6,
+  "channelDurationTicks": 8,
   "hitSchedule": [
     {
       "id": "rapid-fire-hit-1",
       "tickOffset": 0,
       "damage": {
-        "min": 20,
-        "max": 40
+        "min": 75,
+        "max": 85
       }
     },
     {
       "id": "rapid-fire-hit-2",
-      "tickOffset": 2,
+      "tickOffset": 1,
       "damage": {
-        "min": 20,
-        "max": 40
+        "min": 75,
+        "max": 85
       }
     },
     {
       "id": "rapid-fire-hit-3",
+      "tickOffset": 2,
+      "damage": {
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-4",
+      "tickOffset": 3,
+      "damage": {
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-5",
       "tickOffset": 4,
       "damage": {
-        "min": 20,
-        "max": 40
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-6",
+      "tickOffset": 5,
+      "damage": {
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-7",
+      "tickOffset": 6,
+      "damage": {
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-8",
+      "tickOffset": 7,
+      "damage": {
+        "min": 75,
+        "max": 85
       }
     }
   ],
   "baseDamage": {
-    "min": 60,
-    "max": 120
+    "min": 600,
+    "max": 680
   },
   "effectRefs": ["rapid-fire-channel"],
-  "description": "Sample ranged channeled threshold ability for schema validation."
+  "description": "Threshold ranged channel that fires multiple hits over its channel window."
 }

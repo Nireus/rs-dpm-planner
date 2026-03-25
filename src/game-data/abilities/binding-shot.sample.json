@@ -1,0 +1,29 @@
+{
+  "id": "binding-shot",
+  "name": "Binding Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 31
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "binding-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 65,
+        "max": 75
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 65,
+    "max": 75
+  },
+  "effectRefs": ["binding-shot-bind"],
+  "description": "Fire a binding shot that stuns, binds, and can knock targets back with Scare Tactics."
+}

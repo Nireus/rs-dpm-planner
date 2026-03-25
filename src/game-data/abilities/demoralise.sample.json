@@ -1,0 +1,30 @@
+{
+  "id": "demoralise",
+  "name": "Demoralise",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 8,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 10
+    },
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "demoralise-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 65,
+        "max": 75
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 65,
+    "max": 75
+  },
+  "effectRefs": ["demoralise"],
+  "description": "Scare Tactics basic from the ranged book."
+}

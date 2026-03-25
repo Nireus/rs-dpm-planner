@@ -9,8 +9,7 @@
 .inventory-tile,
 .catalog-tile,
 .empty-state,
-.drag-hint,
-.detail-dialog {
+.drag-hint {
   border: 1px solid var(--panel-border);
   border-radius: 1.15rem;
   background: var(--panel-surface);
@@ -167,6 +166,7 @@ li,
 }
 
 .icon-tile {
+  position: relative;
   display: grid;
   place-items: center;
   width: 100%;
@@ -177,6 +177,57 @@ li,
     radial-gradient(circle at top, rgba(123, 144, 75, 0.16), transparent 55%),
     rgba(6, 10, 5, 0.92);
   overflow: hidden;
+}
+
+.item-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.perk-badge-stack {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  display: grid;
+  gap: 0.18rem;
+  max-width: calc(100% - 1.4rem);
+}
+
+.perk-badge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.1rem 0.32rem;
+  border: 1px solid rgba(123, 144, 75, 0.45);
+  border-radius: 0.45rem;
+  background: rgba(3, 8, 2, 0.92);
+  color: #f5f8ef;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-icon {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid rgba(123, 144, 75, 0.45);
+  border-radius: 999px;
+  background: rgba(3, 8, 2, 0.92);
+}
+
+.status-icon img {
+  width: 0.78rem;
+  height: 0.78rem;
+  object-fit: contain;
 }
 
 .compact-icon {
@@ -258,135 +309,6 @@ li,
   top: 1rem;
 }
 
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 1.25rem;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(4px);
-  z-index: 20;
-}
-
-.detail-dialog {
-  width: min(38rem, 100%);
-  max-height: min(80vh, 44rem);
-  display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
-  overflow: auto;
-  background: linear-gradient(180deg, rgba(13, 18, 10, 0.98), rgba(9, 13, 7, 0.98));
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.dialog-title-group {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.85rem;
-  align-items: start;
-}
-
-.detail-copy {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.detail-eyebrow {
-  margin: 0;
-}
-
-.detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.config-panel {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.8rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 0.9rem;
-  background: rgba(8, 12, 7, 0.8);
-}
-
-.config-header {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.config-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 0.65rem;
-}
-
-.config-field {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--text-soft);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.config-field input[type='text'],
-.config-field input[type='number'],
-.config-field select {
-  width: 100%;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 0.75rem;
-  background: rgba(10, 16, 8, 0.88);
-  color: var(--text-strong);
-}
-
-.config-field input[type='checkbox'] {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-}
-
-.detail-list {
-  display: grid;
-  gap: 0.4rem;
-  padding-left: 1rem;
-}
-
-.detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.primary-button,
-.secondary-button,
-.icon-button {
-  padding: 0.58rem 0.8rem;
-  border-radius: 0.78rem;
-  font: inherit;
-  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
-}
-
-.primary-button {
-  border: 1px solid rgba(123, 144, 75, 0.5);
-  background: rgba(123, 144, 75, 0.18);
-  color: var(--text-strong);
-}
-
-.secondary-button,
-.icon-button {
-  border: 1px solid var(--panel-border);
-  background: rgba(9, 14, 6, 0.88);
-  color: var(--text-soft);
-}
-
 .drag-hint {
   padding: 0.65rem 0.8rem;
   background: rgba(8, 14, 6, 0.92);
@@ -408,11 +330,5 @@ li,
 
   .catalog-grid {
     max-height: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .dialog-title-group {
-    grid-template-columns: 1fr;
   }
 }

@@ -1,0 +1,29 @@
+{
+  "id": "snipe",
+  "name": "Snipe",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 100,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 7
+    }
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 4,
+  "hitSchedule": [
+    {
+      "id": "snipe-hit",
+      "tickOffset": 4,
+      "damage": {
+        "min": 300,
+        "max": 360
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 300,
+    "max": 360
+  },
+  "description": "Completion-style ranged basic that upgrades Lesser Snipe."
+}

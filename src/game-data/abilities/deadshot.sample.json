@@ -1,0 +1,53 @@
+{
+  "id": "deadshot",
+  "name": "Deadshot",
+  "style": "ranged",
+  "subtype": "ultimate",
+  "cooldownTicks": 50,
+  "adrenalineCost": 60,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 21
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "deadshot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 105,
+        "max": 125
+      }
+    },
+    {
+      "id": "deadshot-hit-2",
+      "tickOffset": 1,
+      "damage": {
+        "min": 105,
+        "max": 125
+      }
+    },
+    {
+      "id": "deadshot-hit-3",
+      "tickOffset": 2,
+      "damage": {
+        "min": 105,
+        "max": 125
+      }
+    },
+    {
+      "id": "deadshot-hit-4",
+      "tickOffset": 3,
+      "damage": {
+        "min": 105,
+        "max": 125
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 420,
+    "max": 500
+  },
+  "effectRefs": ["deadshot-bleed"],
+  "description": "Ultimate ranged bleed."
+}

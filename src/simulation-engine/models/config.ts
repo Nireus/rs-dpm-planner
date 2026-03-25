@@ -15,6 +15,11 @@ export interface ItemInstanceConfig {
   instanceId: string;
   definitionId: EntityId;
   perkIds?: EntityId[];
+  configuredPerks?: Array<{
+    socketIndex: number;
+    perkId: EntityId;
+    rank?: number;
+  }>;
   configValues?: Record<string, boolean | number | string>;
   effectRefs?: EffectRef[];
 }

@@ -1,0 +1,61 @@
+{
+  "id": "corruption-shot",
+  "name": "Corruption Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineCost": 20,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 70
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "corruption-shot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 110
+      }
+    },
+    {
+      "id": "corruption-shot-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 72,
+        "max": 88
+      }
+    },
+    {
+      "id": "corruption-shot-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 54,
+        "max": 66
+      }
+    },
+    {
+      "id": "corruption-shot-hit-4",
+      "tickOffset": 6,
+      "damage": {
+        "min": 36,
+        "max": 44
+      }
+    },
+    {
+      "id": "corruption-shot-hit-5",
+      "tickOffset": 8,
+      "damage": {
+        "min": 18,
+        "max": 22
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 270,
+    "max": 330
+  },
+  "effectRefs": ["corruption-shot"],
+  "description": "Corrupting ranged bleed."
+}

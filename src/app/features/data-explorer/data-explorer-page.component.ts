@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import type { AbilityDefinition, BuffDefinition, ItemDefinition } from '../../../game-data/types';
+import { PlayerStatsPanelComponent } from '../abilities/player-stats-panel.component';
+import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 
 type ExplorerDefinition = ItemDefinition | AbilityDefinition | BuffDefinition;
@@ -10,7 +12,7 @@ type ExplorerKind = 'items' | 'abilities' | 'buffs';
 @Component({
   selector: 'app-data-explorer-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, PlayerStatsPanelComponent],
   templateUrl: './data-explorer-page.component.html',
   styleUrl: './data-explorer-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,10 +20,12 @@ type ExplorerKind = 'items' | 'abilities' | 'buffs';
 export class DataExplorerPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly gameDataStore = inject(GameDataStoreService);
+  private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
   private readonly routeData = computed(() => this.route.snapshot.data);
 
   protected readonly query = signal('');
   protected readonly storeSummary = this.gameDataStore.summary;
+  protected readonly abilityAvailabilityMap = this.abilityAvailabilityService.availabilityMap;
 
   protected readonly kind = computed(
     () => (this.routeData()['explorerKind'] as ExplorerKind | undefined) ?? 'items',
@@ -83,5 +87,13 @@ export class DataExplorerPageComponent {
 
   protected asBuff(definition: ExplorerDefinition): BuffDefinition {
     return definition as BuffDefinition;
+  }
+
+  protected showPlayerStatsPanel(): boolean {
+    return this.kind() === 'abilities';
+  }
+
+  protected abilityAvailability(definition: ExplorerDefinition) {
+    return this.abilityAvailabilityMap()[definition.id] ?? null;
   }
 }

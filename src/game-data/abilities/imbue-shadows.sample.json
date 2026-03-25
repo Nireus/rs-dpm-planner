@@ -1,0 +1,20 @@
+{
+  "id": "imbue-shadows",
+  "name": "Imbue: Shadows",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 100,
+  "adrenalineCost": 40,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 90
+    }
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "effectRefs": ["shadow-imbued"],
+  "description": "Apply Shadow Imbued to yourself, causing ranged attacks to generate extra adrenaline."
+}

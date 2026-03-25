@@ -11,5 +11,6 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 97,
+  "equipBehavior": "two-handed",
   "effectRefs": ["hexhunter-passive"]
 }

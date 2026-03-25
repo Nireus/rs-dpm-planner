@@ -1,0 +1,27 @@
+{
+  "id": "rout",
+  "name": "Rout",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 25,
+  "adrenalineCost": 15,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "rout-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 120,
+        "max": 140
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 140
+  },
+  "effectRefs": ["rout"],
+  "description": "Threshold Scare Tactics follow-up."
+}

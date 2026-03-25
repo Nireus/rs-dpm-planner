@@ -1,0 +1,30 @@
+{
+  "id": "needle-strike",
+  "name": "Needle Strike",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 8,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 12
+    },
+    "requiredEquipmentTags": ["ranged-dual-wield"]
+  },
+  "hitSchedule": [
+    {
+      "id": "needle-strike-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 95,
+        "max": 115
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 95,
+    "max": 115
+  },
+  "effectRefs": ["needle-strike-buff"],
+  "description": "Dual-wield ranged basic that buffs the next attack."
+}

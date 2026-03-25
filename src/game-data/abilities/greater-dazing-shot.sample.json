@@ -1,0 +1,30 @@
+{
+  "id": "greater-dazing-shot",
+  "name": "Greater Dazing Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 8,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 8
+    },
+    "requiredEquipmentTags": ["ranged-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-dazing-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 95,
+        "max": 115
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 95,
+    "max": 115
+  },
+  "effectRefs": ["greater-dazing-shot", "punctured"],
+  "description": "Upgraded dazing shot that supports puncture mechanics."
+}

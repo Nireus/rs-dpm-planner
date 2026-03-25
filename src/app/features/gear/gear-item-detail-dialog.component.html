@@ -1,0 +1,79 @@
+<div class="dialog-backdrop" (click)="close.emit()">
+  <section
+    class="detail-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="gear-detail-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="dialog-header">
+      <div class="dialog-title-group">
+        <div class="icon-tile detail-icon">
+          @if (item.iconPath) {
+            <img class="item-icon" [src]="item.iconPath" [alt]="item.name" />
+          } @else {
+            <span class="fallback-icon">{{ initials(item.name) }}</span>
+          }
+        </div>
+
+        <div class="detail-copy">
+          <p class="eyebrow detail-eyebrow">{{ item.slot ? formatSlot(item.slot) : item.category }}</p>
+          <h2 id="gear-detail-title">{{ item.name }}</h2>
+          <p>{{ item.hoverSummary ?? defaultSummary(item) }}</p>
+        </div>
+      </div>
+
+      <button type="button" class="icon-button" (click)="close.emit()" aria-label="Close detail dialog">
+        Close
+      </button>
+    </div>
+
+    <div class="detail-tags">
+      <span class="detail-tag">{{ item.category }}</span>
+      @if (item.slot) {
+        <span class="detail-tag">{{ formatSlot(item.slot) }}</span>
+      }
+      @if (item.tier) {
+        <span class="detail-tag">T{{ item.tier }}</span>
+      }
+      @if (resolvedInstance; as resolved) {
+        <span class="detail-tag">{{ resolved.locationLabel }}</span>
+      }
+    </div>
+
+    @if (resolvedInstance) {
+      <app-gear-item-config-panel
+        [item]="item"
+        [resolvedInstance]="resolvedInstance"
+        [perkOptions]="perkOptions"
+        (updateSocketPerks)="updateSocketPerks.emit($event)"
+        (updatePerkRank)="updatePerkRank.emit($event)"
+        (updateBooleanConfig)="updateBooleanConfig.emit($event)"
+        (updateScalarConfig)="updateScalarConfig.emit($event)"
+      />
+    }
+
+    @if (!resolvedInstance) {
+      @if (detailLines.length) {
+        <ul class="detail-list">
+          @for (line of detailLines; track line) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="empty-copy">No expanded details for this item yet.</p>
+      }
+
+      <div class="detail-actions">
+        @if (item.slot) {
+          <button type="button" class="primary-button" (click)="equip.emit()">
+            Equip to {{ formatSlot(item.slot) }}
+          </button>
+        }
+        <button type="button" class="secondary-button" (click)="addToInventory.emit()">
+          Add to backpack
+        </button>
+      </div>
+    }
+  </section>
+</div>

@@ -131,3 +131,7 @@ export function formatEquipmentSlot(slot: EquipmentSlot): string {
 
   return slot.charAt(0).toUpperCase() + slot.slice(1);
 }
+
+export function isAugmentableSlot(slot: EquipmentSlot | undefined): boolean {
+  return slot === 'weapon' || slot === 'body' || slot === 'legs';
+}

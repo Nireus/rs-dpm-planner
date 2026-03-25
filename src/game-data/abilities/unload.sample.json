@@ -1,0 +1,44 @@
+{
+  "id": "unload",
+  "name": "Unload",
+  "style": "ranged",
+  "subtype": "ultimate",
+  "cooldownTicks": 60,
+  "adrenalineCost": 100,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-dual-wield"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 6,
+  "hitSchedule": [
+    {
+      "id": "unload-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 40,
+        "max": 80
+      }
+    },
+    {
+      "id": "unload-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 40,
+        "max": 80
+      }
+    },
+    {
+      "id": "unload-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 40,
+        "max": 80
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 240
+  },
+  "description": "Dual-wield ranged ultimate channel."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "escape",
+  "name": "Escape",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 17,
+  "adrenalineGain": 0,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Ranged mobility ability with no direct damage."
+}

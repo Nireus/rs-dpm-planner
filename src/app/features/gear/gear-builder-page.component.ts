@@ -1,24 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import type { ItemInstanceConfig } from '../../../simulation-engine/models';
+import { CURATED_PERK_OPTIONS, type CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
 import {
   canDropIntoEquipmentSlot,
   canDropIntoInventory,
   formatEquipmentSlot,
+  isAugmentableSlot,
   type GearDragSource,
 } from './gear-builder.utils';
 
 @Component({
   selector: 'app-gear-builder-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, GearItemDetailDialogComponent],
   templateUrl: './gear-builder-page.component.html',
   styleUrl: './gear-builder-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GearBuilderPageComponent {
+  private readonly genesisShardIconPath =
+    'https://runescape.wiki/w/Special:FilePath/Shard_of_Genesis_Essence.png';
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
 
@@ -29,6 +35,8 @@ export class GearBuilderPageComponent {
   protected readonly dragHint = signal('Drag items into equipment slots or the backpack.');
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly selectedInstanceId = signal<string | null>(null);
+  protected readonly perkOptions = CURATED_PERK_OPTIONS;
+  protected readonly perkSocketIndexes = [0, 1];
   protected readonly equipmentSlots = this.gearBuilderStore.equipmentSlots;
   protected readonly equippedSlots = this.gearBuilderStore.equippedSlots;
   protected readonly inventoryEntries = this.gearBuilderStore.inventoryEntries;
@@ -91,15 +99,14 @@ export class GearBuilderPageComponent {
   }
 
   protected equipDefinition(item: ItemDefinition): void {
-    this.gearBuilderStore.equipDefinition(item.id);
-    this.selectedItemId.set(item.id);
-    this.selectedInstanceId.set(null);
+    const instanceId = this.gearBuilderStore.equipDefinition(item.id);
+    this.handleConfiguredPlacement(item, instanceId);
   }
 
   protected addToInventory(item: ItemDefinition): void {
-    this.gearBuilderStore.addToInventory(item.id);
+    const instanceId = this.gearBuilderStore.addToInventory(item.id);
     this.selectedItemId.set(item.id);
-    this.selectedInstanceId.set(null);
+    this.selectedInstanceId.set(instanceId);
   }
 
   protected clearSlot(slot: EquipmentSlot): void {
@@ -111,7 +118,12 @@ export class GearBuilderPageComponent {
   }
 
   protected equipInventoryItem(instanceId: string, slot: EquipmentSlot): void {
-    this.gearBuilderStore.equipInventoryItem(instanceId, slot);
+    const resolved = this.gearBuilderStore.resolveInstance(instanceId);
+    const movedInstanceId = this.gearBuilderStore.equipInventoryItem(instanceId, slot);
+
+    if (resolved?.definition) {
+      this.handleConfiguredPlacement(resolved.definition, movedInstanceId);
+    }
   }
 
   protected formatSlot(slot: EquipmentSlot): string {
@@ -182,32 +194,51 @@ export class GearBuilderPageComponent {
     return lines;
   }
 
+  protected perkSocketBadges(instance: ItemInstanceConfig | null): string[] {
+    if (!instance?.configuredPerks?.length) {
+      return [];
+    }
+
+    return [0, 1]
+      .map((socketIndex) =>
+        instance.configuredPerks
+          ?.filter((perk) => perk.socketIndex === socketIndex)
+          .map((perk) => this.perkBadgeLabel(perk.perkId, perk.rank))
+          .join('') ?? '',
+      )
+      .filter(Boolean);
+  }
+
+  protected hasGenesisEnchantment(instance: ItemInstanceConfig | null): boolean {
+    return instance?.configValues?.['genesis-enchanted'] === true;
+  }
+
+  protected genesisShardIcon(): string {
+    return this.genesisShardIconPath;
+  }
+
   protected supportsPerks(item: ItemDefinition): boolean {
-    return item.category === 'weapon' || item.category === 'armor';
+    return isAugmentableSlot(item.slot);
   }
 
-  protected perkValue(index: number): string {
-    return this.selectedResolvedInstance()?.instance.perkIds?.[index] ?? '';
-  }
-
-  protected updatePerk(index: number, value: string): void {
+  protected updateSocketPerks(socketIndex: number, perkIds: string[]): void {
     const instanceId = this.selectedInstanceId();
 
     if (!instanceId) {
       return;
     }
 
-    this.gearBuilderStore.updateInstancePerk(instanceId, index, value);
+    this.gearBuilderStore.updatePerkSocket(instanceId, socketIndex, perkIds);
   }
 
-  protected configValue(item: ItemDefinition, optionId: string): boolean | number | string {
-    const configuredValue = this.selectedResolvedInstance()?.instance.configValues?.[optionId];
+  protected updatePerkRank(socketIndex: number, perkId: string, rank: number): void {
+    const instanceId = this.selectedInstanceId();
 
-    if (configuredValue !== undefined) {
-      return configuredValue;
+    if (!instanceId) {
+      return;
     }
 
-    return item.configOptions?.find((option) => option.id === optionId)?.defaultValue ?? '';
+    this.gearBuilderStore.updatePerkRank(instanceId, socketIndex, perkId, rank);
   }
 
   protected updateBooleanConfig(optionId: string, checked: boolean): void {
@@ -346,19 +377,35 @@ export class GearBuilderPageComponent {
 
   private applyDropToSlot(source: GearDragSource, slot: EquipmentSlot): boolean {
     switch (source.kind) {
-      case 'catalog':
-        return this.gearBuilderStore.equipDefinition(source.definitionId, slot);
-      case 'inventory':
-        return this.gearBuilderStore.equipInventoryItem(source.instanceId, slot);
+      case 'catalog': {
+        const definition = this.itemDefinitions()[source.definitionId] ?? null;
+        const instanceId = this.gearBuilderStore.equipDefinition(source.definitionId, slot);
+
+        if (definition) {
+          this.handleConfiguredPlacement(definition, instanceId);
+        }
+
+        return Boolean(instanceId);
+      }
+      case 'inventory': {
+        const resolved = this.gearBuilderStore.resolveInstance(source.instanceId);
+        const instanceId = this.gearBuilderStore.equipInventoryItem(source.instanceId, slot);
+
+        if (resolved?.definition) {
+          this.handleConfiguredPlacement(resolved.definition, instanceId);
+        }
+
+        return Boolean(instanceId);
+      }
       case 'equipped':
-        return this.gearBuilderStore.moveEquippedItem(source.slot, slot);
+        return Boolean(this.gearBuilderStore.moveEquippedItem(source.slot, slot));
     }
   }
 
   private applyDropToInventory(source: GearDragSource): boolean {
     switch (source.kind) {
       case 'catalog':
-        return this.gearBuilderStore.addToInventory(source.definitionId);
+        return Boolean(this.gearBuilderStore.addToInventory(source.definitionId));
       case 'inventory':
         return false;
       case 'equipped':
@@ -375,5 +422,22 @@ export class GearBuilderPageComponent {
       event.dataTransfer.setData('text/plain', JSON.stringify(source));
       event.dataTransfer.effectAllowed = 'move';
     }
+  }
+
+  private handleConfiguredPlacement(item: ItemDefinition, instanceId: string | null): void {
+    if (!this.supportsPerks(item)) {
+      this.selectedItemId.set(null);
+      this.selectedInstanceId.set(null);
+      return;
+    }
+
+    this.selectedItemId.set(item.id);
+    this.selectedInstanceId.set(instanceId);
+  }
+
+  private perkBadgeLabel(perkId: string, rank: number | undefined): string {
+    const perk = this.perkOptions.find((option) => option.id === perkId);
+    const rankSuffix = rank ?? 1;
+    return `${perk?.shortCode ?? perkId.slice(0, 2).toUpperCase()}${rankSuffix}`;
   }
 }

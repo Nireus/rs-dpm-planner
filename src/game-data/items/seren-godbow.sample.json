@@ -13,5 +13,6 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 92,
+  "equipBehavior": "two-handed",
   "effectRefs": ["seren-godbow-spec"]
 }

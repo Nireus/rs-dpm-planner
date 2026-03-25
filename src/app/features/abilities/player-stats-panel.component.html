@@ -1,0 +1,45 @@
+<article class="stats-panel">
+  <div class="stats-header">
+    <div>
+      <p class="eyebrow">Player Stats</p>
+      <h2>Availability Inputs</h2>
+      <p>These levels will drive ability availability checks and later damage scaling.</p>
+    </div>
+
+    <div class="summary-chip">
+      Ranged {{ stats().rangedLevel }} | Prayer {{ stats().prayerLevel ?? 'n/a' }}
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <label class="stat-field">
+      <span>Ranged level</span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().rangedLevel"
+        (ngModelChange)="updateRangedLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
+      <span>Prayer level</span>
+      <input
+        type="number"
+        min="1"
+        max="99"
+        [ngModel]="stats().prayerLevel ?? ''"
+        (ngModelChange)="updatePrayerLevel($event)"
+      />
+    </label>
+  </div>
+
+  @if (issues().length) {
+    <ul class="issue-list">
+      @for (issue of issues(); track issue.field + issue.message) {
+        <li>{{ issue.message }}</li>
+      }
+    </ul>
+  }
+</article>

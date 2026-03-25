@@ -1,0 +1,62 @@
+{
+  "id": "fragmentation-shot",
+  "name": "Fragmentation Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 8,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 20
+    },
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "fragmentation-shot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "fragmentation-shot-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "fragmentation-shot-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "fragmentation-shot-hit-4",
+      "tickOffset": 6,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "fragmentation-shot-hit-5",
+      "tickOffset": 8,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 125,
+    "max": 155
+  },
+  "effectRefs": ["fragmentation-shot-bleed"],
+  "description": "Upgraded ranged bleed basic."
+}

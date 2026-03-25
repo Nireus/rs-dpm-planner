@@ -1,0 +1,35 @@
+{
+  "id": "seren-godbow-eof-spec",
+  "name": "Seren Godbow (EOF)",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 30,
+  "adrenalineCost": 30,
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:seren-godbow"]
+  },
+  "hitSchedule": [
+    {
+      "id": "seren-godbow-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 320
+  },
+  "effectRefs": ["seren-godbow-spec"],
+  "description": "Sample ranged EOF special access entry gated by the configured Essence of Finality stored special."
+}

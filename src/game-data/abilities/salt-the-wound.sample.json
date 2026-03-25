@@ -1,0 +1,27 @@
+{
+  "id": "salt-the-wound",
+  "name": "Salt the Wound",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 25,
+  "adrenalineCost": 15,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "salt-the-wound-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 220
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 100,
+    "max": 220
+  },
+  "effectRefs": ["salt-the-wound"],
+  "description": "Threshold payoff for puncture-style setup."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "shadow-tendrils",
+  "name": "Shadow Tendrils",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 75,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 75
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "shadow-tendrils-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 200,
+        "max": 240
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 240
+  },
+  "effectRefs": ["shadow-tendrils"],
+  "description": "High-risk ranged threshold."
+}

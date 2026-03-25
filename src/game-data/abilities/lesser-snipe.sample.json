@@ -1,0 +1,28 @@
+{
+  "id": "lesser-snipe",
+  "name": "Lesser Snipe",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 10,
+  "adrenalineGain": 8,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 4,
+  "hitSchedule": [
+    {
+      "id": "lesser-snipe-hit",
+      "tickOffset": 4,
+      "damage": {
+        "min": 145,
+        "max": 175
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 145,
+    "max": 175
+  },
+  "description": "Starter version of Snipe."
+}

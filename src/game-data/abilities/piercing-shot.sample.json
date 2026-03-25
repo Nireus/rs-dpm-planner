@@ -1,0 +1,37 @@
+{
+  "id": "piercing-shot",
+  "name": "Piercing Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 3,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 13
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "piercing-shot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 45,
+        "max": 55
+      }
+    },
+    {
+      "id": "piercing-shot-hit-2",
+      "tickOffset": 1,
+      "damage": {
+        "min": 45,
+        "max": 55
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 90,
+    "max": 110
+  },
+  "effectRefs": ["piercing-shot"],
+  "description": "Fire two piercing shots that help cycle Snipe sooner."
+}

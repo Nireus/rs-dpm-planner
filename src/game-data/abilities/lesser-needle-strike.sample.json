@@ -1,0 +1,26 @@
+{
+  "id": "lesser-needle-strike",
+  "name": "Lesser Needle Strike",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 8,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-dual-wield"]
+  },
+  "hitSchedule": [
+    {
+      "id": "lesser-needle-strike-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 85,
+        "max": 105
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 85,
+    "max": 105
+  },
+  "description": "Starter dual-wield ranged strike."
+}

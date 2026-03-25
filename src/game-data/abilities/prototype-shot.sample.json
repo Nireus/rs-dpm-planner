@@ -1,0 +1,26 @@
+{
+  "id": "prototype-shot",
+  "name": "Prototype Shot",
+  "style": "ranged",
+  "subtype": "other",
+  "cooldownTicks": 6,
+  "adrenalineGain": 0,
+  "requires": {
+    "requiredEquipmentTags": ["prototype-inventory-ability"]
+  },
+  "hitSchedule": [
+    {
+      "id": "prototype-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 40,
+        "max": 80
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 40,
+    "max": 80
+  },
+  "description": "Prototype-only sample ability used to verify inventory-enabled availability rules."
+}

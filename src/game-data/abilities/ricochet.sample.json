@@ -1,0 +1,28 @@
+{
+  "id": "ricochet",
+  "name": "Ricochet",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 17,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 67
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "ricochet-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 115,
+        "max": 115
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 115,
+    "max": 115
+  },
+  "description": "Fire a shot which ricochets off the target."
+}

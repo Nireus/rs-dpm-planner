@@ -1,0 +1,29 @@
+{
+  "id": "greater-ricochet",
+  "name": "Greater Ricochet",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 17,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 67
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-ricochet-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 135,
+        "max": 135
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 135,
+    "max": 135
+  },
+  "effectRefs": ["greater-ricochet"],
+  "description": "Upgraded Ricochet."
+}

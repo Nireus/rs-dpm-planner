@@ -1,0 +1,27 @@
+{
+  "id": "incendiary-shot",
+  "name": "Incendiary Shot",
+  "style": "ranged",
+  "subtype": "ultimate",
+  "cooldownTicks": 60,
+  "adrenalineCost": 100,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "incendiary-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 200
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 100,
+    "max": 200
+  },
+  "effectRefs": ["incendiary-shot"],
+  "description": "Legacy ranged ultimate entry still listed on the ranged-abilities page."
+}

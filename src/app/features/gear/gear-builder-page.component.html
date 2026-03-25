@@ -54,6 +54,24 @@
                     (dragstart)="startEquippedDrag($event, entry.slot)"
                     (dragend)="finishDrag()"
                   >
+                    @if (perkSocketBadges(entry.instance).length || hasGenesisEnchantment(entry.instance)) {
+                      <div class="item-overlays">
+                        @if (perkSocketBadges(entry.instance).length) {
+                          <div class="perk-badge-stack">
+                            @for (badge of perkSocketBadges(entry.instance); track badge) {
+                              <span class="perk-badge">{{ badge }}</span>
+                            }
+                          </div>
+                        }
+
+                        @if (hasGenesisEnchantment(entry.instance)) {
+                          <span class="status-icon genesis-status" title="Genesis enchanted">
+                            <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
+                          </span>
+                        }
+                      </div>
+                    }
+
                     @if (entry.definition.iconPath) {
                       <img class="item-icon" [src]="entry.definition.iconPath" [alt]="entry.definition.name" />
                     } @else {
@@ -100,6 +118,24 @@
                   (dragend)="finishDrag()"
                 >
                   <div class="icon-tile compact-icon">
+                    @if (perkSocketBadges(entry.instance).length || hasGenesisEnchantment(entry.instance)) {
+                      <div class="item-overlays">
+                        @if (perkSocketBadges(entry.instance).length) {
+                          <div class="perk-badge-stack">
+                            @for (badge of perkSocketBadges(entry.instance); track badge) {
+                              <span class="perk-badge">{{ badge }}</span>
+                            }
+                          </div>
+                        }
+
+                        @if (hasGenesisEnchantment(entry.instance)) {
+                          <span class="status-icon genesis-status" title="Genesis enchanted">
+                            <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
+                          </span>
+                        }
+                      </div>
+                    }
+
                     @if (entry.definition?.iconPath) {
                       <img class="item-icon" [src]="entry.definition?.iconPath" [alt]="entry.definition?.name" />
                     } @else {
@@ -171,141 +207,22 @@
     <p class="drag-hint">{{ dragHint() }}</p>
 
     @if (selectedItem(); as item) {
-      <div class="dialog-backdrop" (click)="closeDetail()">
-        <section
-          class="detail-dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="gear-detail-title"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="dialog-header">
-            <div class="dialog-title-group">
-              <div class="icon-tile detail-icon">
-                @if (item.iconPath) {
-                  <img class="item-icon" [src]="item.iconPath" [alt]="item.name" />
-                } @else {
-                  <span class="fallback-icon">{{ initials(item.name) }}</span>
-                }
-              </div>
-
-              <div class="detail-copy">
-                <p class="eyebrow detail-eyebrow">{{ item.slot ? formatSlot(item.slot) : item.category }}</p>
-                <h2 id="gear-detail-title">{{ item.name }}</h2>
-                <p>{{ item.hoverSummary ?? defaultSummary(item) }}</p>
-              </div>
-            </div>
-
-            <button type="button" class="icon-button" (click)="closeDetail()" aria-label="Close detail dialog">
-              Close
-            </button>
-          </div>
-
-              <div class="detail-tags">
-                <span class="detail-tag">{{ item.category }}</span>
-                @if (item.slot) {
-                  <span class="detail-tag">{{ formatSlot(item.slot) }}</span>
-                }
-                @if (item.tier) {
-                  <span class="detail-tag">T{{ item.tier }}</span>
-                }
-                @if (selectedResolvedInstance(); as resolved) {
-                  <span class="detail-tag">{{ resolved.locationLabel }}</span>
-                }
-              </div>
-
-              @if (selectedResolvedInstance(); as resolved) {
-                <section class="config-panel">
-                  <div class="config-header">
-                    <h3>Configuration</h3>
-                    <p>These edits persist on the selected item instance.</p>
-                  </div>
-
-                  @if (supportsPerks(item)) {
-                    <div class="config-grid">
-                      <label class="config-field">
-                        <span>Perk 1</span>
-                        <input
-                          type="text"
-                          [ngModel]="perkValue(0)"
-                          (ngModelChange)="updatePerk(0, $event)"
-                          placeholder="e.g. aftershock-4"
-                        />
-                      </label>
-
-                      <label class="config-field">
-                        <span>Perk 2</span>
-                        <input
-                          type="text"
-                          [ngModel]="perkValue(1)"
-                          (ngModelChange)="updatePerk(1, $event)"
-                          placeholder="e.g. equilibrium-4"
-                        />
-                      </label>
-                    </div>
-                  }
-
-                  @if (item.configOptions?.length) {
-                    <div class="config-grid">
-                      @for (option of item.configOptions ?? []; track option.id) {
-                        <label class="config-field">
-                          <span>{{ option.label }}</span>
-
-                          @switch (option.type) {
-                            @case ('boolean') {
-                              <input
-                                type="checkbox"
-                                [ngModel]="configValue(item, option.id)"
-                                (ngModelChange)="updateBooleanConfig(option.id, $event)"
-                              />
-                            }
-                            @case ('number') {
-                              <input
-                                type="number"
-                                [ngModel]="configValue(item, option.id)"
-                                (ngModelChange)="updateScalarConfig(option.id, $event)"
-                              />
-                            }
-                            @case ('select') {
-                              <select
-                                [ngModel]="configValue(item, option.id)"
-                                (ngModelChange)="updateScalarConfig(option.id, $event)"
-                              >
-                                @for (choice of option.options ?? []; track choice) {
-                                  <option [value]="choice">{{ choice }}</option>
-                                }
-                              </select>
-                            }
-                          }
-                        </label>
-                      }
-                    </div>
-                  }
-                </section>
-              }
-
-              @if (detailLines(item).length) {
-                <ul class="detail-list">
-              @for (line of detailLines(item); track line) {
-                <li>{{ line }}</li>
-              }
-            </ul>
-          } @else {
-            <p class="empty-copy">No expanded details for this item yet.</p>
-          }
-
-          <div class="detail-actions">
-            @if (item.slot) {
-              <button type="button" class="primary-button" (click)="equipDefinition(item)">
-                Equip to {{ formatSlot(item.slot) }}
-              </button>
-            }
-            <button type="button" class="secondary-button" (click)="addToInventory(item)">
-              Add to backpack
-            </button>
-          </div>
-        </section>
-      </div>
+      <app-gear-item-detail-dialog
+        [item]="item"
+        [resolvedInstance]="selectedResolvedInstance()"
+        [perkOptions]="perkOptions"
+        [detailLines]="detailLines(item)"
+        [formatSlot]="formatSlot.bind(this)"
+        [defaultSummary]="defaultSummary.bind(this)"
+        [initials]="initials.bind(this)"
+        (close)="closeDetail()"
+        (equip)="equipDefinition(item)"
+        (addToInventory)="addToInventory(item)"
+        (updateSocketPerks)="updateSocketPerks($event.socketIndex, $event.perkIds)"
+        (updatePerkRank)="updatePerkRank($event.socketIndex, $event.perkId, $event.rank)"
+        (updateBooleanConfig)="updateBooleanConfig($event.optionId, $event.checked)"
+        (updateScalarConfig)="updateScalarConfig($event.optionId, $event.value)"
+      />
     }
   }
 </section>

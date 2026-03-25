@@ -3,6 +3,7 @@
   "name": "Ranged mechanic prototype",
   "category": "other",
   "combatStyleTags": ["ranged"],
+  "effectRefs": ["prototype-inventory-ability"],
   "inventoryOnlyBehavior": "Backpack-only sample item used to exercise inventory-enabled mechanics in the MVP UI.",
   "implementationNotes": "Intentionally non-equippable sample item for Phase 4 inventory wiring."
 }

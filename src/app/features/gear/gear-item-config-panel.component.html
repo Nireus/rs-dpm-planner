@@ -1,0 +1,141 @@
+<section class="config-panel">
+  <div class="config-header">
+    <h3>Configuration</h3>
+    <p>These edits persist on the selected item instance.</p>
+  </div>
+
+  @if (supportsPerks()) {
+    <div class="socket-grid">
+      @for (socketIndex of perkSocketIndexes; track socketIndex) {
+        <section class="socket-panel">
+          <div class="socket-header">
+            <h4>Socket {{ socketIndex + 1 }}</h4>
+            <p>Select up to 2 perks.</p>
+          </div>
+
+          <div class="config-field">
+            <span>Perk list</span>
+            <div class="perk-dropdown">
+              <button
+                type="button"
+                class="perk-dropdown-trigger"
+                [class.open]="isSocketDropdownOpen(socketIndex)"
+                (click)="toggleSocketDropdown(socketIndex)"
+              >
+                <span class="perk-dropdown-label">{{ socketSelectionLabel(socketIndex) }}</span>
+                <span class="perk-dropdown-state">
+                  {{ isSocketDropdownOpen(socketIndex) ? 'Close' : 'Select' }}
+                </span>
+              </button>
+
+              @if (isSocketDropdownOpen(socketIndex)) {
+                <div class="perk-dropdown-panel" role="listbox" aria-multiselectable="true">
+                  <label class="perk-search-field">
+                    <span>Search perks</span>
+                    <input
+                      type="search"
+                      [ngModel]="perkSearchQuery(socketIndex)"
+                      (ngModelChange)="updatePerkSearchQuery(socketIndex, $event)"
+                      placeholder="Search by name or code"
+                    />
+                  </label>
+
+                  @for (perk of filteredPerkOptions(socketIndex); track perk.id) {
+                    <button
+                      type="button"
+                      class="perk-option"
+                      [class.selected]="isPerkSelected(socketIndex, perk.id)"
+                      [class.blocked]="isPerkOptionDisabled(socketIndex, perk.id)"
+                      [attr.aria-selected]="isPerkSelected(socketIndex, perk.id)"
+                      [disabled]="isPerkOptionDisabled(socketIndex, perk.id)"
+                      (click)="toggleSocketPerk(socketIndex, perk.id)"
+                    >
+                      <span>{{ perk.label }}</span>
+                      @if (isPerkSelected(socketIndex, perk.id)) {
+                        <span class="perk-option-state">Selected</span>
+                      }
+                    </button>
+                  } @empty {
+                    <div class="perk-empty-state">No perks match this search.</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="rank-list">
+            @for (selectionIndex of perkRankSlots; track selectionIndex) {
+              @if (selectedSocketPerkAt(socketIndex, selectionIndex); as perk) {
+                <label class="config-field rank-field">
+                  <span>{{ perk.label }} rank</span>
+                  <select
+                    [ngModel]="perkRank(socketIndex, perk.id)"
+                    (ngModelChange)="updatePerkRank.emit({ socketIndex, perkId: perk.id, rank: +$event })"
+                  >
+                    @for (rank of rankChoices(perk.id); track rank) {
+                      <option [value]="rank">{{ rank }}</option>
+                    }
+                  </select>
+                </label>
+              } @else {
+                <div class="rank-placeholder" aria-hidden="true">
+                  <span>Perk rank</span>
+                  <div class="rank-placeholder-control">Select a perk above</div>
+                </div>
+              }
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  @if (item.configOptions?.length) {
+    <div class="config-grid">
+      @for (option of item.configOptions ?? []; track option.id) {
+        <label class="config-field">
+          @switch (option.type) {
+            @case ('boolean') {
+              @if (isGenesisOption(option.id)) {
+                <label class="special-toggle-field">
+                  <span class="special-toggle-copy">
+                    <img class="special-toggle-icon" [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
+                    <span>{{ option.label }}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    [ngModel]="configValue(option.id)"
+                    (ngModelChange)="updateBooleanConfig.emit({ optionId: option.id, checked: $event })"
+                  />
+                </label>
+              } @else {
+                <input
+                  type="checkbox"
+                  [ngModel]="configValue(option.id)"
+                  (ngModelChange)="updateBooleanConfig.emit({ optionId: option.id, checked: $event })"
+                />
+              }
+            }
+            @case ('number') {
+              <input
+                type="number"
+                [ngModel]="configValue(option.id)"
+                (ngModelChange)="updateScalarConfig.emit({ optionId: option.id, value: $event })"
+              />
+            }
+            @case ('select') {
+              <select
+                [ngModel]="configValue(option.id)"
+                (ngModelChange)="updateScalarConfig.emit({ optionId: option.id, value: $event })"
+              >
+                @for (choice of option.options ?? []; track choice) {
+                  <option [value]="choice">{{ choice }}</option>
+                }
+              </select>
+            }
+          }
+        </label>
+      }
+    </div>
+  }
+</section>

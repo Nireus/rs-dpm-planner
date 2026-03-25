@@ -1,0 +1,26 @@
+{
+  "id": "lesser-dazing-shot",
+  "name": "Lesser Dazing Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 8,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "lesser-dazing-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 85,
+        "max": 105
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 85,
+    "max": 105
+  },
+  "description": "Starter two-handed dazing basic."
+}

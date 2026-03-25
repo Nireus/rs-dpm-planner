@@ -1,0 +1,30 @@
+{
+  "id": "dazing-shot",
+  "name": "Dazing Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 8,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 8
+    },
+    "requiredEquipmentTags": ["ranged-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "dazing-shot-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 95,
+        "max": 115
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 95,
+    "max": 115
+  },
+  "effectRefs": ["dazing-shot"],
+  "description": "Two-handed ranged basic from the dazing line."
+}

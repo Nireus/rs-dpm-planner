@@ -80,13 +80,15 @@ export class GearBuilderStore {
     });
   });
 
-  equipDefinition(definitionId: string, slot?: EquipmentSlot): boolean {
+  equipDefinition(definitionId: string, slot?: EquipmentSlot): string | null {
     const definition = this.findDefinition(definitionId);
     const targetSlot = slot ?? definition?.slot;
 
     if (!definition || !targetSlot || !canEquipItemInSlot(definition, targetSlot)) {
-      return false;
+      return null;
     }
+
+    const nextInstance = this.createInstance(definition);
 
     this.state.update((current) => {
       const previous = current.equipment[targetSlot];
@@ -95,13 +97,13 @@ export class GearBuilderStore {
       return {
         equipment: {
           ...current.equipment,
-          [targetSlot]: this.createInstance(definition),
+          [targetSlot]: nextInstance,
         },
         inventory,
       };
     });
 
-    return true;
+    return nextInstance.instanceId;
   }
 
   clearSlot(slot: EquipmentSlot): void {
@@ -122,19 +124,21 @@ export class GearBuilderStore {
     });
   }
 
-  addToInventory(definitionId: string): boolean {
+  addToInventory(definitionId: string): string | null {
     const definition = this.findDefinition(definitionId);
 
     if (!definition) {
-      return false;
+      return null;
     }
+
+    const nextInstance = this.createInstance(definition);
 
     this.state.update((current) => ({
       equipment: current.equipment,
-      inventory: [...current.inventory, this.createInstance(definition)],
+      inventory: [...current.inventory, nextInstance],
     }));
 
-    return true;
+    return nextInstance.instanceId;
   }
 
   removeFromInventory(instanceId: string): void {
@@ -144,18 +148,18 @@ export class GearBuilderStore {
     }));
   }
 
-  equipInventoryItem(instanceId: string, slot: EquipmentSlot): boolean {
+  equipInventoryItem(instanceId: string, slot: EquipmentSlot): string | null {
     const current = this.state();
     const instance = current.inventory.find((entry) => entry.instanceId === instanceId);
 
     if (!instance) {
-      return false;
+      return null;
     }
 
     const definition = this.findDefinition(instance.definitionId);
 
     if (!definition || !canEquipItemInSlot(definition, slot)) {
-      return false;
+      return null;
     }
 
     this.state.update((latest) => {
@@ -175,25 +179,25 @@ export class GearBuilderStore {
       };
     });
 
-    return true;
+    return instance.instanceId;
   }
 
-  moveEquippedItem(sourceSlot: EquipmentSlot, targetSlot: EquipmentSlot): boolean {
+  moveEquippedItem(sourceSlot: EquipmentSlot, targetSlot: EquipmentSlot): string | null {
     if (sourceSlot === targetSlot) {
-      return false;
+      return null;
     }
 
     const current = this.state();
     const sourceInstance = current.equipment[sourceSlot];
 
     if (!sourceInstance) {
-      return false;
+      return null;
     }
 
     const definition = this.findDefinition(sourceInstance.definitionId);
 
     if (!definition || !canEquipItemInSlot(definition, targetSlot)) {
-      return false;
+      return null;
     }
 
     this.state.update((latest) => {
@@ -215,7 +219,7 @@ export class GearBuilderStore {
       };
     });
 
-    return true;
+    return sourceInstance.instanceId;
   }
 
   resolveInstance(instanceId: string): ResolvedItemInstanceViewModel | null {
@@ -247,20 +251,47 @@ export class GearBuilderStore {
     };
   }
 
-  updateInstancePerk(instanceId: string, perkIndex: number, perkId: string): void {
+  updatePerkSocket(instanceId: string, socketIndex: number, perkIds: string[]): void {
     this.updateInstance(instanceId, (instance) => {
-      const nextPerks = [...(instance.perkIds ?? [])];
-      const normalizedPerk = perkId.trim();
-
-      if (normalizedPerk) {
-        nextPerks[perkIndex] = normalizedPerk;
-      } else {
-        nextPerks.splice(perkIndex, 1);
-      }
+      const preservedPerks = (instance.configuredPerks ?? []).filter(
+        (perk) => perk.socketIndex !== socketIndex,
+      );
+      const existingRanks = new Map(
+        (instance.configuredPerks ?? [])
+          .filter((perk) => perk.socketIndex === socketIndex)
+          .map((perk) => [perk.perkId, perk.rank]),
+      );
+      const nextConfigured = [
+        ...preservedPerks,
+        ...perkIds.slice(0, 2).map((perkId) => ({
+          socketIndex,
+          perkId,
+          rank: existingRanks.get(perkId),
+        })),
+      ];
 
       return {
         ...instance,
-        perkIds: nextPerks.filter(Boolean),
+        configuredPerks: nextConfigured,
+        perkIds: nextConfigured.map((perk) => perk.perkId),
+      };
+    });
+  }
+
+  updatePerkRank(instanceId: string, socketIndex: number, perkId: string, rank: number): void {
+    this.updateInstance(instanceId, (instance) => {
+      const nextConfigured = (instance.configuredPerks ?? []).map((perk) =>
+        perk.socketIndex === socketIndex && perk.perkId === perkId
+          ? {
+              ...perk,
+              rank,
+            }
+          : perk,
+      );
+
+      return {
+        ...instance,
+        configuredPerks: nextConfigured,
       };
     });
   }

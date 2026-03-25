@@ -1,0 +1,29 @@
+{
+  "id": "deaths-swiftness",
+  "name": "Death's Swiftness",
+  "style": "ranged",
+  "subtype": "ultimate",
+  "cooldownTicks": 100,
+  "adrenalineCost": 100,
+  "requires": {
+    "levelRequirements": {
+      "ranged": 76
+    }
+  },
+  "hitSchedule": [
+    {
+      "id": "deaths-swiftness-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 10,
+        "max": 20
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 10,
+    "max": 20
+  },
+  "effectRefs": ["deaths-swiftness"],
+  "description": "Create a shroud of death that massively amplifies ranged damage while active."
+}

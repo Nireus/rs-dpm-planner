@@ -1,0 +1,27 @@
+{
+  "id": "tight-bindings",
+  "name": "Tight Bindings",
+  "style": "ranged",
+  "subtype": "threshold",
+  "cooldownTicks": 25,
+  "adrenalineCost": 15,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "tight-bindings-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 120,
+        "max": 140
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 140
+  },
+  "effectRefs": ["tight-bindings"],
+  "description": "Threshold bind from the ranged book."
+}

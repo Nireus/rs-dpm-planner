@@ -1,0 +1,59 @@
+{
+  "id": "lesser-fragmentation-shot",
+  "name": "Lesser Fragmentation Shot",
+  "style": "ranged",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 8,
+  "requires": {
+    "requiredEquipmentTags": ["ranged-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "lesser-fragmentation-shot-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 21,
+        "max": 25
+      }
+    },
+    {
+      "id": "lesser-fragmentation-shot-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 21,
+        "max": 25
+      }
+    },
+    {
+      "id": "lesser-fragmentation-shot-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 21,
+        "max": 25
+      }
+    },
+    {
+      "id": "lesser-fragmentation-shot-hit-4",
+      "tickOffset": 6,
+      "damage": {
+        "min": 21,
+        "max": 25
+      }
+    },
+    {
+      "id": "lesser-fragmentation-shot-hit-5",
+      "tickOffset": 8,
+      "damage": {
+        "min": 21,
+        "max": 25
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 105,
+    "max": 125
+  },
+  "effectRefs": ["fragmentation-shot-bleed"],
+  "description": "Starter version of Fragmentation Shot."
+}
