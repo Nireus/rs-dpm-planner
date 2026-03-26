@@ -12,17 +12,65 @@
   },
   "hitSchedule": [
     {
-      "id": "greater-ricochet-hit",
+      "id": "greater-ricochet-hit-1",
       "tickOffset": 0,
       "damage": {
-        "min": 135,
-        "max": 135
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-2",
+      "tickOffset": 1,
+      "damage": {
+        "min": 15,
+        "max": 20
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-3",
+      "tickOffset": 1,
+      "damage": {
+        "min": 15,
+        "max": 20
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-4",
+      "tickOffset": 1,
+      "damage": {
+        "min": 4,
+        "max": 6
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-5",
+      "tickOffset": 1,
+      "damage": {
+        "min": 4,
+        "max": 6
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-6",
+      "tickOffset": 1,
+      "damage": {
+        "min": 4,
+        "max": 6
+      }
+    },
+    {
+      "id": "greater-ricochet-hit-7",
+      "tickOffset": 1,
+      "damage": {
+        "min": 4,
+        "max": 6
       }
     }
   ],
   "baseDamage": {
-    "min": 135,
-    "max": 135
+    "min": 121,
+    "max": 149
   },
   "effectRefs": ["greater-ricochet"],
   "description": "Upgraded Ricochet."

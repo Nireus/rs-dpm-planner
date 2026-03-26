@@ -1,6 +1,6 @@
 {
   "id": "weapon-special-attack",
-  "name": "Weapon Special Attack",
+  "name": "Special Attack",
   "style": "constitution",
   "subtype": "special",
   "cooldownTicks": 0,

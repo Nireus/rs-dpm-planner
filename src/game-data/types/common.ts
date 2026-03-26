@@ -34,6 +34,7 @@ export type BuffCategory =
   | 'potion'
   | 'temporary'
   | 'passive'
+  | 'miscellaneous'
   | 'set-effect'
   | 'other';
 

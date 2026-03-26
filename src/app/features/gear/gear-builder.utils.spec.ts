@@ -5,6 +5,7 @@ import {
   canEquipItemInSlot,
   getAllowedEquipmentSlots,
   requiresImmediateItemConfiguration,
+  sortGearCatalogItems,
   validateGearSetup,
 } from './gear-builder.utils';
 
@@ -47,6 +48,34 @@ describe('gear-builder utils', () => {
         options: ['dark-bow', 'none'],
       },
     ],
+  };
+
+  const quiver: ItemDefinition = {
+    id: 'pernixs-quiver',
+    name: "Pernix's quiver",
+    category: 'armor',
+    slot: 'ammo',
+    combatStyleTags: ['ranged'],
+    tier: 95,
+    effectRefs: ['quiver-passive'],
+  };
+
+  const highTierWeapon: ItemDefinition = {
+    id: 'masterwork-bow',
+    name: 'Masterwork bow',
+    category: 'weapon',
+    slot: 'weapon',
+    combatStyleTags: ['ranged'],
+    tier: 99,
+  };
+
+  const lowerTierArmor: ItemDefinition = {
+    id: 'nightmare-gauntlets',
+    name: 'Nightmare gauntlets',
+    category: 'armor',
+    slot: 'hands',
+    combatStyleTags: ['ranged'],
+    tier: 85,
   };
 
   it('returns the supported slot for equippable items', () => {
@@ -149,5 +178,23 @@ describe('gear-builder utils', () => {
     expect(requiresImmediateItemConfiguration(bow)).toBe(true);
     expect(requiresImmediateItemConfiguration(configurableAmulet)).toBe(true);
     expect(requiresImmediateItemConfiguration(ring)).toBe(false);
+  });
+
+  it('sorts the gear catalog with quivers first, jewellery second, then descending tier', () => {
+    const sorted = sortGearCatalogItems([
+      lowerTierArmor,
+      ring,
+      highTierWeapon,
+      configurableAmulet,
+      quiver,
+    ]);
+
+    expect(sorted.map((item) => item.id)).toEqual([
+      'pernixs-quiver',
+      'essence-of-finality',
+      'sample-ring',
+      'masterwork-bow',
+      'nightmare-gauntlets',
+    ]);
   });
 });

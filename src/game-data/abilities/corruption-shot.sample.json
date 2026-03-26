@@ -56,6 +56,6 @@
     "min": 270,
     "max": 330
   },
-  "effectRefs": ["corruption-shot"],
+  "effectRefs": ["damage-over-time", "corruption-shot"],
   "description": "Enhanced ranged bleed that corrupts the target and nearby enemies."
 }

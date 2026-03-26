@@ -220,11 +220,30 @@ export function getNonGcdActionsAtTick(
 }
 
 export function getAbilityTimelineSpan(abilityDefinition: AbilityDefinition): number {
-  const channelSpan = abilityDefinition.isChanneled
-    ? (abilityDefinition.channelDurationTicks ?? 0) + 1
-    : abilityDefinition.channelDurationTicks ?? 0;
+  const channelSpan = resolveChannelTimelineSpan(abilityDefinition);
 
   return Math.max(GCD_TICKS, channelSpan);
+}
+
+function resolveChannelTimelineSpan(abilityDefinition: AbilityDefinition): number {
+  if (!abilityDefinition.isChanneled) {
+    return abilityDefinition.channelDurationTicks ?? 0;
+  }
+
+  const channelDurationTicks = abilityDefinition.channelDurationTicks ?? 0;
+  const latestHitTick = abilityDefinition.hitSchedule.reduce(
+    (latest, hit) => Math.max(latest, hit.tickOffset),
+    0,
+  );
+
+  // Completion-only channels such as Snipe occupy the channel window itself,
+  // while channels that resolve hits during the channel keep the wider cast
+  // window used elsewhere in the planner.
+  if (latestHitTick >= channelDurationTicks) {
+    return channelDurationTicks;
+  }
+
+  return channelDurationTicks + 1;
 }
 
 export function getAbilitySegment(

@@ -11,6 +11,9 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 97,
+  "requirements": {
+    "requiredEquipmentTags": ["two-handed-bow"]
+  },
   "equipBehavior": "two-handed",
   "effectRefs": ["hexhunter-passive"]
 }

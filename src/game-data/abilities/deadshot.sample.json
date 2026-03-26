@@ -21,7 +21,7 @@
     },
     {
       "id": "deadshot-hit-2",
-      "tickOffset": 1,
+      "tickOffset": 0,
       "damage": {
         "min": 105,
         "max": 125
@@ -29,7 +29,7 @@
     },
     {
       "id": "deadshot-hit-3",
-      "tickOffset": 2,
+      "tickOffset": 0,
       "damage": {
         "min": 105,
         "max": 125
@@ -37,7 +37,7 @@
     },
     {
       "id": "deadshot-hit-4",
-      "tickOffset": 3,
+      "tickOffset": 0,
       "damage": {
         "min": 105,
         "max": 125
@@ -48,6 +48,5 @@
     "min": 420,
     "max": 500
   },
-  "effectRefs": ["deadshot-bleed"],
-  "description": "Ultimate ranged bleed."
+  "description": "Fire an enchanted shot at the target, striking them multiple times. Igneous capes change it into an 8-hit version with lower per-hit damage."
 }

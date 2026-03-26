@@ -14,5 +14,5 @@
   "offensiveStats": {
     "rangedBonus": 30.4
   },
-  "effectRefs": ["stalkers-ring-crit"]
+  "effectRefs": ["critical-strike-chance:+3%:bow-only"]
 }

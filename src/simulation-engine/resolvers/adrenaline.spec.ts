@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AbilityDefinition } from '../../game-data/types';
+import type { AbilityDefinition, ItemDefinition } from '../../game-data/types';
 import type { LoadedGameDataSnapshot, SimulationConfig } from '../models';
-import { MAX_ADRENALINE, resolveAdrenalineTimeline } from './adrenaline';
+import { HEIGHTENED_SENSES_MAX_ADRENALINE, MAX_ADRENALINE, resolveAdrenalineTimeline } from './adrenaline';
 
 function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefinition {
   return {
@@ -32,7 +32,35 @@ function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefin
 
 function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConfig {
   const gameData: LoadedGameDataSnapshot = {
-    items: {},
+    items: {
+      bolg: {
+        id: 'bolg',
+        name: 'Bow of the Last Guardian',
+        category: 'weapon',
+        slot: 'weapon',
+        combatStyleTags: ['ranged'],
+        effectRefs: ['bolg-passive', 'weapon-special-access', 'weapon-special:balance-by-force'],
+      } satisfies ItemDefinition,
+      'deathspore-arrows': {
+        id: 'deathspore-arrows',
+        name: 'Deathspore arrows',
+        category: 'ammo',
+        slot: 'ammo',
+        combatStyleTags: ['ranged'],
+        effectRefs: ['deathspore-progress'],
+      } satisfies ItemDefinition,
+      'ring-of-vigour': {
+        id: 'ring-of-vigour',
+        name: 'Ring of vigour',
+        category: 'jewellery',
+        slot: 'ring',
+        combatStyleTags: ['ranged'],
+        offensiveStats: {
+          rangedBonus: 16.8,
+        },
+        effectRefs: ['vigour-passive'],
+      } satisfies ItemDefinition,
+    },
     ammo: {},
     abilities: {
       'basic-shot': createAbility(),
@@ -48,10 +76,78 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         name: 'Huge Basic',
         adrenalineGain: 15,
       }),
+      'weapon-special-attack': createAbility({
+        id: 'weapon-special-attack',
+        name: 'Weapon Special Attack',
+        style: 'constitution',
+        subtype: 'special',
+        adrenalineGain: 0,
+        cooldownTicks: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+      }),
+      'stack-builder': createAbility({
+        id: 'stack-builder',
+        name: 'Stack Builder',
+        adrenalineGain: 0,
+        hitSchedule: Array.from({ length: 12 }, (_, index) => ({
+          id: `stack-${index + 1}`,
+          tickOffset: index,
+          damage: {
+            min: 10,
+            max: 10,
+          },
+        })),
+        baseDamage: {
+          min: 120,
+          max: 120,
+        },
+      }),
+      'imbue-shadows': createAbility({
+        id: 'imbue-shadows',
+        name: 'Imbue: Shadows',
+        subtype: 'enhanced',
+        cooldownTicks: 100,
+        adrenalineGain: 0,
+        adrenalineCost: 40,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+      }),
+      deadshot: createAbility({
+        id: 'deadshot',
+        name: 'Deadshot',
+        subtype: 'ultimate',
+        cooldownTicks: 50,
+        adrenalineGain: 0,
+        adrenalineCost: 60,
+        hitSchedule: [
+          { id: 'deadshot-hit-1', tickOffset: 0, damage: { min: 105, max: 125 } },
+          { id: 'deadshot-hit-2', tickOffset: 0, damage: { min: 105, max: 125 } },
+          { id: 'deadshot-hit-3', tickOffset: 0, damage: { min: 105, max: 125 } },
+          { id: 'deadshot-hit-4', tickOffset: 0, damage: { min: 105, max: 125 } },
+        ],
+        baseDamage: { min: 420, max: 500 },
+      }),
     },
     buffs: {},
     perks: {},
-    relics: {},
+    relics: {
+      'fury-of-the-small': {
+        id: 'fury-of-the-small',
+        name: 'Fury of the Small',
+        effectRefs: ['fury-of-the-small'],
+      },
+      'heightened-senses': {
+        id: 'heightened-senses',
+        name: 'Heightened Senses',
+        effectRefs: ['heightened-senses'],
+      },
+      'conservation-of-energy': {
+        id: 'conservation-of-energy',
+        name: 'Conservation of Energy',
+        effectRefs: ['conservation-of-energy'],
+      },
+    },
     eofSpecs: {},
   };
 
@@ -176,6 +272,34 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.validationIssues).toEqual([]);
   });
 
+  it('raises the adrenaline cap to 110 when Heightened Senses is active', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['heightened-senses'],
+      },
+      rotationPlan: {
+        startingAdrenaline: 109,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'basic-with-heightened-senses',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'basic-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.startingAdrenaline).toBe(109);
+    expect(result.adrenalineTimeline).toEqual([109, HEIGHTENED_SENSES_MAX_ADRENALINE, HEIGHTENED_SENSES_MAX_ADRENALINE]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
   it('clamps invalid starting adrenaline into the allowed range', () => {
     const config = createConfig({
       rotationPlan: {
@@ -195,5 +319,437 @@ describe('resolveAdrenalineTimeline', () => {
       code: 'adrenaline.starting_out_of_bounds',
       severity: 'warning',
     });
+  });
+
+  it('adds 1% adrenaline to basic abilities when Fury of the Small is active', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['fury-of-the-small'],
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'basic-with-fury',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'basic-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.adrenalineTimeline).toEqual([10, 10, 10]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
+  it('does not add adrenaline to non-basic abilities from Fury of the Small', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['fury-of-the-small'],
+      },
+      rotationPlan: {
+        startingAdrenaline: 30,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'enhanced-with-fury',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'enhanced-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.adrenalineTimeline).toEqual([5, 5, 5]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
+  it('refunds 10 adrenaline after ultimate abilities when Conservation of Energy is active', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['conservation-of-energy'],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'deadshot-with-coe',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'deadshot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([50, 50, 50]);
+  });
+
+  it('reduces ultimate cost by 10 with Ring of vigour', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          ring: {
+            instanceId: 'ring-1',
+            definitionId: 'ring-of-vigour',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'deadshot-with-vigour',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'deadshot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([50, 50, 50]);
+  });
+
+  it('reduces special attack costs by 10% with Warped gem', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        buffIds: ['warped-gem'],
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+        },
+      },
+      gameData: {
+        ...createConfig().gameData,
+        buffs: {
+          'warped-gem': {
+            id: 'warped-gem',
+            name: 'Warped gem',
+            category: 'miscellaneous',
+            sourceType: 'player-config',
+            effectRefs: ['vigour-passive'],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 30,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'bolg-special-with-warped-gem',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'weapon-special-attack' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([3, 3, 3]);
+  });
+
+  it('does not stack Ring of vigour with Warped gem', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        buffIds: ['warped-gem'],
+      },
+      gearSetup: {
+        equipment: {
+          ring: {
+            instanceId: 'ring-1',
+            definitionId: 'ring-of-vigour',
+          },
+        },
+      },
+      gameData: {
+        ...createConfig().gameData,
+        buffs: {
+          'warped-gem': {
+            id: 'warped-gem',
+            name: 'Warped gem',
+            category: 'miscellaneous',
+            sourceType: 'player-config',
+            effectRefs: ['vigour-passive'],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'deadshot-with-both',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'deadshot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([50, 50, 50]);
+  });
+
+  it('uses the equipped BoLG special adrenaline cost for Weapon Special Attack', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 20,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'bolg-special',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'weapon-special-attack' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.adrenalineTimeline).toEqual([20, 20, 20]);
+    expect(result.validationIssues[0]).toMatchObject({
+      code: 'ability.insufficient_adrenaline',
+      relatedActionId: 'bolg-special',
+    });
+  });
+
+  it('makes the next adrenaline-costing ability free after a Deathspore proc', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+          ammo: {
+            instanceId: 'ammo-1',
+            definitionId: 'deathspore-arrows',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 30,
+        tickCount: 20,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'stack-builder',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'stack-builder' },
+          },
+          {
+            id: 'bolg-special',
+            tick: 12,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'weapon-special-attack' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[11]).toBe(30);
+    expect(result.adrenalineTimeline[12]).toBe(30);
+  });
+
+  it('adds 5 adrenaline for each Deadshot hit while Shadow Imbued is active', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          'igneous-kal-xil': {
+            id: 'igneous-kal-xil',
+            name: 'Igneous Kal-Xil',
+            category: 'armor',
+            slot: 'cape',
+            combatStyleTags: ['ranged'],
+            effectRefs: ['igneous-kal-xil-passive'],
+          },
+        },
+        buffs: {
+          'shadow-imbued': {
+            id: 'shadow-imbued',
+            name: 'Shadow Imbued',
+            category: 'temporary',
+            sourceType: 'ability',
+            effectRefs: ['ranged-hit-adrenaline:+5%'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          cape: {
+            instanceId: 'cape-1',
+            definitionId: 'igneous-kal-xil',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 4,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'imbue-shadows-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'imbue-shadows' },
+          },
+          {
+            id: 'deadshot-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'deadshot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(60);
+    expect(result.adrenalineTimeline[1]).toBe(40);
+    expect(result.adrenalineTimeline[2]).toBe(40);
+    expect(result.adrenalineTimeline[3]).toBe(40);
+  });
+
+  it('counts Perfect Equilibrium as an extra Shadow Imbued adrenaline hit when it procs', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        abilities: {
+          ...createConfig().gameData.abilities,
+          'rapid-fire': createAbility({
+            id: 'rapid-fire',
+            name: 'Rapid Fire',
+            subtype: 'enhanced',
+            cooldownTicks: 34,
+            adrenalineGain: 0,
+            adrenalineCost: 25,
+            isChanneled: true,
+            channelDurationTicks: 8,
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `rapid-fire-hit-${index + 1}`,
+              tickOffset: index,
+              damage: { min: 75, max: 85 },
+            })),
+            baseDamage: { min: 600, max: 680 },
+          }),
+        },
+        buffs: {
+          'shadow-imbued': {
+            id: 'shadow-imbued',
+            name: 'Shadow Imbued',
+            category: 'temporary',
+            sourceType: 'ability',
+            effectRefs: ['ranged-hit-adrenaline:+5%'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 12,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'imbue-shadows-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'imbue-shadows' },
+          },
+          {
+            id: 'rapid-fire-1',
+            tick: 3,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'rapid-fire' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(60);
+    expect(result.adrenalineTimeline[1]).toBe(60);
+    expect(result.adrenalineTimeline[2]).toBe(60);
+    expect(result.adrenalineTimeline[3]).toBe(40);
+    expect(result.adrenalineTimeline[4]).toBe(45);
+    expect(result.adrenalineTimeline[5]).toBe(50);
+    expect(result.adrenalineTimeline[6]).toBe(55);
+    expect(result.adrenalineTimeline[7]).toBe(60);
+    expect(result.adrenalineTimeline[8]).toBe(65);
+    expect(result.adrenalineTimeline[9]).toBe(70);
+    expect(result.adrenalineTimeline[10]).toBe(80);
+    expect(result.adrenalineTimeline[11]).toBe(80);
   });
 });

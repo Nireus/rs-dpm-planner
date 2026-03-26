@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   activateExclusivePotion,
   buildBuffOptions,
+  buildMiscellaneousBuffOptions,
   buildTimelineGeneratedBuffOptions,
   calculateRelicEnergy,
   canActivateRelicWithinCap,
@@ -10,11 +11,28 @@ import {
 } from './buffs-selection.utils';
 
 describe('buffs-selection utils', () => {
-  it('treats only prayer, potion, and passive as configurable pre-fight buffs', () => {
+  it('treats prayer, potion, passive, and miscellaneous as configurable pre-fight buffs', () => {
     expect(isConfigurableBuffCategory('prayer')).toBe(true);
     expect(isConfigurableBuffCategory('potion')).toBe(true);
     expect(isConfigurableBuffCategory('passive')).toBe(true);
+    expect(isConfigurableBuffCategory('miscellaneous')).toBe(true);
     expect(isConfigurableBuffCategory('temporary')).toBe(false);
+  });
+
+  it('builds miscellaneous configurable buff options', () => {
+    const options = buildMiscellaneousBuffOptions([
+      {
+        id: 'warped-gem',
+        name: 'Warped gem',
+        category: 'miscellaneous',
+        sourceType: 'player-config',
+        effectRefs: ['vigour-passive'],
+      },
+    ]);
+
+    expect(options.map((option) => option.id)).toEqual(['warped-gem']);
+    expect(options[0]?.categoryLabel).toBe('Miscellaneous');
+    expect(options[0]?.description).toBe('Manual passive utility modifier.');
   });
 
   it('toggles ids in and out of the active selection', () => {
@@ -25,8 +43,8 @@ describe('buffs-selection utils', () => {
   it('filters out temporary buffs from configurable options', () => {
     const options = buildBuffOptions([
       {
-        id: 'deathspore-focus',
-        name: 'Deathspore Focus',
+        id: 'feasting-spores-ready',
+        name: 'Feasting Spores',
         category: 'temporary',
         sourceType: 'item',
       },
@@ -44,8 +62,8 @@ describe('buffs-selection utils', () => {
   it('separates timeline-generated buffs from pre-fight options', () => {
     const options = buildTimelineGeneratedBuffOptions([
       {
-        id: 'deathspore-focus',
-        name: 'Deathspore Focus',
+        id: 'feasting-spores-ready',
+        name: 'Feasting Spores',
         category: 'temporary',
         sourceType: 'item',
       },
@@ -57,7 +75,7 @@ describe('buffs-selection utils', () => {
       },
     ]);
 
-    expect(options.map((option) => option.id)).toEqual(['deathspore-focus']);
+    expect(options.map((option) => option.id)).toEqual(['feasting-spores-ready']);
     expect(options[0]?.kind).toBe('timeline-generated');
   });
 

@@ -78,6 +78,19 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
       isChanneled: true,
       channelDurationTicks: 4,
     }),
+    'weapon-special-attack': createAbility({
+      id: 'weapon-special-attack',
+      name: 'Weapon Special Attack',
+      style: 'constitution',
+      subtype: 'special',
+      cooldownTicks: 0,
+      adrenalineGain: 0,
+      hitSchedule: [],
+      baseDamage: { min: 0, max: 0 },
+      requires: {
+        requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+      },
+    }),
   };
 
   const gameData: LoadedGameDataSnapshot = {
@@ -151,29 +164,6 @@ describe('validateStrictRotationPlan', () => {
     const issues = validateStrictRotationPlan(config);
 
     expect(issues.some((issue) => issue.code === 'timeline.out_of_bounds')).toBe(true);
-  });
-
-  it('reports insufficient adrenaline', () => {
-    const config = createConfig({
-      rotationPlan: {
-        startingAdrenaline: 20,
-        tickCount: 20,
-        nonGcdActions: [],
-        abilityActions: [
-          {
-            id: 'costly-shot-action',
-            tick: 1,
-            lane: 'ability',
-            actionType: 'ability-use',
-            payload: { abilityId: 'costly-shot' },
-          },
-        ],
-      },
-    });
-
-    const issues = validateStrictRotationPlan(config);
-
-    expect(issues.some((issue) => issue.code === 'ability.insufficient_adrenaline')).toBe(true);
   });
 
   it('reports ability cooldown conflicts', () => {
@@ -286,5 +276,71 @@ describe('validateStrictRotationPlan', () => {
     const issues = validateStrictRotationPlan(config);
 
     expect(issues.some((issue) => issue.code === 'action.invalid_slot')).toBe(true);
+  });
+
+  it('resolves the equipped BoLG special without raising a stale strict-validation adrenaline issue', () => {
+    const config = createConfig({
+      gameData: {
+        items: {
+          'test-bow': createWeapon({
+            effectRefs: ['weapon-special-access', 'weapon-special:balance-by-force'],
+          }),
+          'test-body': createArmor(),
+        },
+        ammo: {},
+        abilities: {
+          'test-shot': createAbility(),
+          'costly-shot': createAbility({
+            id: 'costly-shot',
+            name: 'Costly Shot',
+            cooldownTicks: 0,
+            adrenalineGain: 0,
+            adrenalineCost: 60,
+          }),
+          'channel-shot': createAbility({
+            id: 'channel-shot',
+            name: 'Channel Shot',
+            cooldownTicks: 0,
+            isChanneled: true,
+            channelDurationTicks: 4,
+          }),
+          'weapon-special-attack': createAbility({
+            id: 'weapon-special-attack',
+            name: 'Weapon Special Attack',
+            style: 'constitution',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineGain: 0,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            requires: {
+              requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+            },
+          }),
+        },
+        buffs: {},
+        perks: {},
+        relics: {},
+        eofSpecs: {},
+      },
+      rotationPlan: {
+        startingAdrenaline: 20,
+        tickCount: 10,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'bolg-special',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'weapon-special-attack' },
+          },
+        ],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(issues.some((issue) => issue.code === 'ability.insufficient_adrenaline')).toBe(false);
   });
 });

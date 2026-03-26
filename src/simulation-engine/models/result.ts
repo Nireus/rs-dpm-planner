@@ -20,6 +20,7 @@ export interface DamageModifierContribution {
 export interface DamageBreakdown {
   abilityId: EntityId;
   hitId: string;
+  tick: number;
   baseDamage: {
     min: number;
     avg: number;
@@ -41,6 +42,7 @@ export interface TickState {
   activeEquipmentState: Partial<Record<EquipmentSlot, string>>;
   activeAmmoState?: string;
   adrenaline: number;
+  deathsporeStacks?: number;
   activePersistentBuffIds: EntityId[];
   activeTimelineBuffIds: EntityId[];
   activeBuffIds: EntityId[];

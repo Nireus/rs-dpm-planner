@@ -6,7 +6,7 @@ describe('loadSampleGameData', () => {
     const manifest: SampleGameDataManifest = {
       items: ['/items/bolg.json'],
       abilities: ['/abilities/rapid-fire.json'],
-      buffs: ['/buffs/deathspore-focus.json'],
+      buffs: ['/buffs/feasting-spores-ready.json'],
       eofSpecs: ['/eof-specs/dark-bow.json'],
       perks: ['/perks/equilibrium.json'],
       relics: ['/relics/fury-of-the-small.json'],
@@ -31,9 +31,9 @@ describe('loadSampleGameData', () => {
           max: 120,
         },
       }),
-      '/buffs/deathspore-focus.json': JSON.stringify({
-        id: 'deathspore-focus',
-        name: 'Deathspore Focus',
+      '/buffs/feasting-spores-ready.json': JSON.stringify({
+        id: 'feasting-spores-ready',
+        name: 'Feasting Spores',
         category: 'temporary',
         sourceType: 'item',
       }),
@@ -65,7 +65,7 @@ describe('loadSampleGameData', () => {
     if (result.success) {
       expect(Object.keys(result.data.items)).toEqual(['bolg']);
       expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire']);
-      expect(Object.keys(result.data.buffs)).toEqual(['deathspore-focus']);
+      expect(Object.keys(result.data.buffs)).toEqual(['feasting-spores-ready']);
       expect(Object.keys(result.data.eofSpecs)).toEqual(['dark-bow-eof']);
       expect(Object.keys(result.data.perks)).toEqual(['equilibrium']);
       expect(Object.keys(result.data.relics)).toEqual(['fury-of-the-small']);

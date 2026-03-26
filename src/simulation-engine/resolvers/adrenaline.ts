@@ -1,8 +1,15 @@
 import type { EntityId } from '../../game-data/types';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
+import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import { resolveDeathsporeTimeline } from './deathspore';
+import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
 
 export const MIN_ADRENALINE = 0;
 export const MAX_ADRENALINE = 100;
+export const HEIGHTENED_SENSES_MAX_ADRENALINE = 110;
+const FURY_OF_THE_SMALL_EFFECT_REF = 'fury-of-the-small';
+const HEIGHTENED_SENSES_EFFECT_REF = 'heightened-senses';
+const CONSERVATION_OF_ENERGY_EFFECT_REF = 'conservation-of-energy';
 
 export interface AdrenalineTickState {
   tick: number;
@@ -18,13 +25,22 @@ export interface AdrenalineTimelineResult {
   validationIssues: ValidationIssue[];
 }
 
-export function resolveAdrenalineTimeline(config: SimulationConfig): AdrenalineTimelineResult {
+export function resolveAdrenalineTimeline(
+  config: SimulationConfig,
+  blockedActionIds: ReadonlySet<string> = new Set(),
+): AdrenalineTimelineResult {
   const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
   const validationIssues: ValidationIssue[] = [];
   const tickStates: AdrenalineTickState[] = [];
   const adrenalineTimeline: number[] = [];
   const groupedActions = groupAbilityActionsByTick(abilityActions);
-  let currentAdrenaline = clampAdrenaline(config.rotationPlan.startingAdrenaline);
+  const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockedActionIds);
+  const deathsporeTimeline = resolveDeathsporeTimeline(
+    config,
+    blockedActionIds,
+    deterministicRangedTimeline.buffTimeline,
+  );
+  let currentAdrenaline = clampAdrenaline(config, config.rotationPlan.startingAdrenaline);
 
   if (currentAdrenaline !== config.rotationPlan.startingAdrenaline) {
     validationIssues.push({
@@ -41,7 +57,12 @@ export function resolveAdrenalineTimeline(config: SimulationConfig): AdrenalineT
     const actionsResolved: string[] = [];
 
     for (const action of actionsAtTick) {
-      const result = resolveAbilityActionAdrenaline(config, action, currentAdrenaline);
+      const result = resolveAbilityActionAdrenaline(
+        config,
+        action,
+        currentAdrenaline,
+        deathsporeTimeline.freeCastActionIds.has(action.id),
+      );
 
       if (result.issue) {
         validationIssues.push(result.issue);
@@ -52,6 +73,10 @@ export function resolveAdrenalineTimeline(config: SimulationConfig): AdrenalineT
       actionsResolved.push(action.id);
     }
 
+    currentAdrenaline = clampAdrenaline(
+      config,
+      currentAdrenaline + (deterministicRangedTimeline.adrenalineByTick[tick] ?? 0),
+    );
     adrenalineTimeline.push(currentAdrenaline);
     tickStates.push({
       tick,
@@ -62,7 +87,7 @@ export function resolveAdrenalineTimeline(config: SimulationConfig): AdrenalineT
   }
 
   return {
-    startingAdrenaline: currentAdrenalineForTimeline(config.rotationPlan.startingAdrenaline),
+    startingAdrenaline: currentAdrenalineForTimeline(config, config.rotationPlan.startingAdrenaline),
     adrenalineTimeline,
     tickStates,
     validationIssues,
@@ -78,35 +103,24 @@ function resolveAbilityActionAdrenaline(
   config: SimulationConfig,
   action: RotationAction,
   currentAdrenaline: number,
+  usesDeathsporeFreeCast: boolean,
 ): ResolveAbilityActionAdrenalineResult {
-  const abilityId = readAbilityId(action);
-
-  if (!abilityId) {
-    return {
-      nextAdrenaline: currentAdrenaline,
-      issue: createAdrenalineIssue(
-        action,
-        'ability.invalid_payload',
-        'Ability action is missing abilityId.',
-      ),
-    };
-  }
-
-  const ability = config.gameData.abilities[abilityId];
+  const ability = resolveEffectiveAbilityDefinition(config, action);
 
   if (!ability) {
     return {
       nextAdrenaline: currentAdrenaline,
       issue: createAdrenalineIssue(
         action,
-        'ability.missing_definition',
-        `Unknown ability "${abilityId}".`,
+        'ability.invalid_payload',
+        'Ability action is missing abilityId or references an unknown ability.',
       ),
     };
   }
 
   const adrenalineCost = Math.max(ability.adrenalineCost ?? 0, 0);
-  const adrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0);
+  const effectiveAdrenalineCost = usesDeathsporeFreeCast ? 0 : adrenalineCost;
+  const adrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0) + resolveAdrenalineGainBonus(config, ability);
 
   if (adrenalineCost > currentAdrenaline) {
     return {
@@ -120,8 +134,30 @@ function resolveAbilityActionAdrenaline(
   }
 
   return {
-    nextAdrenaline: clampAdrenaline(currentAdrenaline - adrenalineCost + adrenalineGain),
+    nextAdrenaline: clampAdrenaline(config, currentAdrenaline - effectiveAdrenalineCost + adrenalineGain),
   };
+}
+
+function resolveAdrenalineGainBonus(
+  config: SimulationConfig,
+  ability: { subtype: string },
+): number {
+  const activeRelicIds = config.persistentBuffConfig.relicIds ?? [];
+  const hasRelicEffect = (effectRef: string) => activeRelicIds.some((relicId) =>
+    config.gameData.relics[relicId]?.effectRefs?.includes(effectRef),
+  );
+
+  let bonus = 0;
+
+  if (ability.subtype === 'basic' && hasRelicEffect(FURY_OF_THE_SMALL_EFFECT_REF)) {
+    bonus += 1;
+  }
+
+  if (ability.subtype === 'ultimate' && hasRelicEffect(CONSERVATION_OF_ENERGY_EFFECT_REF)) {
+    bonus += 10;
+  }
+
+  return bonus;
 }
 
 function groupAbilityActionsByTick(actions: RotationAction[]): Map<number, RotationAction[]> {
@@ -139,17 +175,27 @@ function groupAbilityActionsByTick(actions: RotationAction[]): Map<number, Rotat
   return grouped;
 }
 
-function currentAdrenalineForTimeline(startingAdrenaline: number): number {
-  return clampAdrenaline(startingAdrenaline);
+function currentAdrenalineForTimeline(
+  config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>,
+  startingAdrenaline: number,
+): number {
+  return clampAdrenaline(config, startingAdrenaline);
 }
 
-function clampAdrenaline(value: number): number {
-  return Math.max(MIN_ADRENALINE, Math.min(MAX_ADRENALINE, value));
+export function resolveMaxAdrenaline(config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>): number {
+  const activeRelicIds = config.persistentBuffConfig.relicIds ?? [];
+  const hasHeightenedSenses = activeRelicIds.some((relicId) =>
+    config.gameData.relics[relicId]?.effectRefs?.includes(HEIGHTENED_SENSES_EFFECT_REF),
+  );
+
+  return hasHeightenedSenses ? HEIGHTENED_SENSES_MAX_ADRENALINE : MAX_ADRENALINE;
 }
 
-function readAbilityId(action: RotationAction): EntityId | null {
-  const abilityId = action.payload['abilityId'];
-  return typeof abilityId === 'string' && abilityId.length > 0 ? abilityId : null;
+function clampAdrenaline(
+  config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>,
+  value: number,
+): number {
+  return Math.max(MIN_ADRENALINE, Math.min(resolveMaxAdrenaline(config), value));
 }
 
 function createAdrenalineIssue(

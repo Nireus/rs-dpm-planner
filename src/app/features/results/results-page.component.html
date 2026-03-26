@@ -61,10 +61,11 @@
                 [class.is-selected]="selectedAbilitySummary()?.abilityId === entry.abilityId"
                 (click)="selectAbility(entry.abilityId)"
               >
-                <span class="ability-row-name">{{ entry.abilityId }}</span>
-                <span class="ability-row-damage">
-                  {{ entry.min | number:'1.0-0' }} / {{ entry.avg | number:'1.0-1' }} / {{ entry.max | number:'1.0-0' }}
+                <span class="ability-row-copy">
+                  <span class="ability-row-name">{{ abilityCatalog()[entry.abilityId]?.name ?? entry.abilityId }}</span>
+                  <span class="ability-row-meta">{{ entry.avg / result.totalDamage.avg | percent:'1.0-1' }} of rotation</span>
                 </span>
+                <span class="ability-row-damage">{{ entry.min | number:'1.0-0' }} / {{ entry.avg | number:'1.0-1' }} / {{ entry.max | number:'1.0-0' }}</span>
               </button>
             }
           </div>
@@ -80,23 +81,70 @@
 
           @if (selectedAbilitySummary(); as selectedAbility) {
             <div class="selected-summary">
-              <strong>{{ selectedAbility.abilityId }}</strong>
-              <span>{{ selectedAbility.min | number:'1.0-0' }} / {{ selectedAbility.avg | number:'1.0-1' }} / {{ selectedAbility.max | number:'1.0-0' }}</span>
+              <strong>{{ selectedAbility.name }}</strong>
+              <span>{{ selectedAbility.totalDamage.min | number:'1.0-0' }} / {{ selectedAbility.totalDamage.avg | number:'1.0-1' }} / {{ selectedAbility.totalDamage.max | number:'1.0-0' }}</span>
+              <span class="selected-summary-meta">{{ selectedAbility.percentageOfRotation | percent:'1.0-1' }} of total rotation damage</span>
             </div>
 
-            <div class="breakdown-list">
+            <div class="hit-selector-list">
               @for (entry of selectedAbilityBreakdowns(); track entry.hitId) {
-                <article class="breakdown-row">
-                  <div>
+                <button
+                  type="button"
+                  class="breakdown-row"
+                  [class.is-selected]="selectedHitBreakdown()?.hitId === entry.hitId"
+                  (click)="selectHit(entry.hitId)"
+                >
+                  <span class="breakdown-copy">
                     <strong>{{ entry.hitId }}</strong>
-                    <p>Base hit</p>
-                  </div>
-                  <span>
-                    {{ entry.finalDamage.min | number:'1.0-0' }} / {{ entry.finalDamage.avg | number:'1.0-1' }} / {{ entry.finalDamage.max | number:'1.0-0' }}
+                    <span class="breakdown-meta">{{ entry.percentageOfTotal ?? 0 | percent:'1.0-1' }} of rotation</span>
                   </span>
-                </article>
+                  <span>{{ entry.finalDamage.min | number:'1.0-0' }} / {{ entry.finalDamage.avg | number:'1.0-1' }} / {{ entry.finalDamage.max | number:'1.0-0' }}</span>
+                </button>
               }
             </div>
+
+            @if (selectedHitBreakdown(); as selectedHit) {
+              <section class="explanation-panel">
+                <div class="panel-heading explanation-heading">
+                  <div>
+                    <h3>{{ selectedHit.hitId }}</h3>
+                    <p>Detailed breakdown for the selected hit.</p>
+                  </div>
+                  @if (selectedHitContribution(); as contribution) {
+                    <div class="summary-chip">{{ contribution | percent:'1.0-1' }} of rotation</div>
+                  }
+                </div>
+
+                <div class="summary-row">
+                  <span>Final</span>
+                  <strong>{{ selectedHit.finalDamage.min | number:'1.0-0' }} / {{ selectedHit.finalDamage.avg | number:'1.0-1' }} / {{ selectedHit.finalDamage.max | number:'1.0-0' }}</strong>
+                </div>
+
+                <div class="modifier-grid">
+                  @for (group of selectedHitModifierGroups(); track group.title) {
+                    <article class="modifier-card">
+                      <div class="modifier-card-header">
+                        <strong>{{ group.title }}</strong>
+                        <span>{{ group.total | number:'1.0-2' }}</span>
+                      </div>
+
+                      @if (group.entries.length) {
+                        <ul class="modifier-list">
+                          @for (entry of group.entries; track entry.sourceId + entry.label) {
+                            <li>
+                              <span>{{ entry.label }}</span>
+                              <span>{{ entry.value | number:'1.0-2' }}</span>
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <p class="empty-copy compact-empty">No contributions in this bucket.</p>
+                      }
+                    </article>
+                  }
+                </div>
+              </section>
+            }
           } @else {
             <p class="empty-copy">Select an ability contribution to inspect its hit breakdown.</p>
           }

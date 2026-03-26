@@ -1,6 +1,7 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { PlayerStats, RotationPlan, SimulationConfig } from '../../../simulation-engine/models';
 import type { GearBuilderState } from '../gear/gear-builder.utils';
+import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 
 export interface PlannerBuffStateSnapshot {
   activeBuffIds: string[];
@@ -27,7 +28,7 @@ export function buildRotationPlannerSimulationConfig(input: {
     playerStats: input.playerStats,
     gearSetup: {
       equipment: input.gearState.equipment,
-      ammoSelection: input.gearState.equipment['ammo'],
+      ammoSelection: resolveEffectiveAmmoSelection(input.gearState, input.catalog),
     },
     inventory: {
       items: input.gearState.inventory,

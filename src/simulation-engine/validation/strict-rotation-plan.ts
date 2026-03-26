@@ -11,10 +11,9 @@ import type {
   SimulationConfig,
   ValidationIssue,
 } from '../models';
+import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { buildBaseTimeline } from '../timeline';
 import { evaluateAbilityAvailability } from '../rules/ability-availability';
-
-const MAX_ADRENALINE = 100;
 
 interface ValidationContext {
   config: SimulationConfig;
@@ -193,7 +192,6 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
   const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
   const nonGcdActions = [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick);
   const cooldownMap = new Map<EntityId, number>();
-  let adrenaline = config.rotationPlan.startingAdrenaline;
   let appliedSwapIndex = 0;
   let projectedGearState = createInitialProjectedGearState(config);
   let activeChannelUntilTickExclusive = -1;
@@ -201,18 +199,18 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
 
   for (const action of abilityActions) {
     const abilityId = readStringPayload(action, 'abilityId');
-
     if (!abilityId) {
       issues.push(createActionIssue(action, 'ability.invalid_payload', 'Ability action is missing abilityId.'));
       continue;
     }
 
-    const ability = config.gameData.abilities[abilityId];
-
-    if (!ability) {
+    const baseAbility = config.gameData.abilities[abilityId];
+    if (!baseAbility) {
       issues.push(createActionIssue(action, 'ability.missing_definition', `Unknown ability "${abilityId}".`));
       continue;
     }
+
+    const ability = resolveEffectiveAbilityDefinition(config, action) ?? baseAbility;
 
     while (
       appliedSwapIndex < nonGcdActions.length &&
@@ -232,7 +230,7 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
       );
     }
 
-    const availability = evaluateAbilityAvailability(ability, {
+    const availability = evaluateAbilityAvailability(baseAbility, {
       playerStats: config.playerStats,
       equippedItems: getEquippedDefinitions(projectedGearState, config),
       inventoryItems: context.inventoryDefinitions,
@@ -256,19 +254,6 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
           `Ability "${ability.name}" is on cooldown until tick ${nextAvailableTick}.`,
         ),
       );
-    }
-
-    const adrenalineCost = ability.adrenalineCost ?? 0;
-    if (adrenalineCost > adrenaline) {
-      issues.push(
-        createActionIssue(
-          action,
-          'ability.insufficient_adrenaline',
-          `Ability "${ability.name}" requires ${adrenalineCost}% adrenaline but only ${adrenaline}% is available.`,
-        ),
-      );
-    } else {
-      adrenaline = clampAdrenaline(adrenaline - adrenalineCost + (ability.adrenalineGain ?? 0));
     }
 
     cooldownMap.set(ability.id, action.tick + Math.max(ability.cooldownTicks, 0));
@@ -432,10 +417,6 @@ function isChannelSensitiveAction(action: RotationAction): boolean {
 
 function isWithinChannelWindow(tick: number, windows: ChannelWindow[]): boolean {
   return windows.some((window) => tick > window.startTick && tick < window.endTickExclusive);
-}
-
-function clampAdrenaline(value: number): number {
-  return Math.max(0, Math.min(MAX_ADRENALINE, value));
 }
 
 function readStringPayload(action: RotationAction, key: string): string | null {

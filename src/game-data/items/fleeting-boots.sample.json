@@ -9,5 +9,6 @@
   "offensiveStats": {
     "rangedBonus": 12.7
   },
+  "effectRefs": ["piercing-shot-snipe-reduction:+2ticks-per-hit"],
   "implementationNotes": "Sample ranged feet-slot item for gear builder MVP."
 }

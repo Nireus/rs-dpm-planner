@@ -1,8 +1,16 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { AbilityDefinition, EquipmentSlot, HitDefinition } from '../../../game-data/types';
+import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import type { GearBuilderState } from '../gear/gear-builder.utils';
 import { formatEquipmentSlot } from '../gear/gear-builder.utils';
-import type { PlayerStats, RotationAction, RotationPlan, ValidationIssue } from '../../../simulation-engine/models';
+import type {
+  PlayerStats,
+  RotationAction,
+  RotationPlan,
+  SimulationResult,
+  ValidationIssue,
+} from '../../../simulation-engine/models';
+import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
+import { simulateBaseDamage } from '../../../simulation-engine/calculators';
 import { resolveAdrenalineTimeline } from '../../../simulation-engine/resolvers/adrenaline';
 import { resolveCooldownTimeline } from '../../../simulation-engine/resolvers/cooldowns';
 import { buildBaseTimeline } from '../../../simulation-engine/timeline';
@@ -18,11 +26,13 @@ export interface RotationPlannerTickInspection {
     start: number;
     end: number;
   };
+  deathsporeStacks: number | null;
   activePersistentBuffs: string[];
-  activeTimelineBuffs: string[];
+  activeTemporaryBuffs: string[];
   equipmentState: Array<{
     slot: string;
     itemName: string;
+    details: string[];
   }>;
   ammoState: string | null;
   cooldowns: Array<{
@@ -43,6 +53,7 @@ export function inspectRotationPlannerTick(input: {
   gearState: GearBuilderState;
   buffState: PlannerBuffStateSnapshot;
   rotationPlan: RotationPlan;
+  simulationResult?: SimulationResult | null;
 }): RotationPlannerTickInspection {
   const simulationConfig = buildRotationPlannerSimulationConfig(input);
   const timelineResult = buildBaseTimeline({
@@ -50,11 +61,16 @@ export function inspectRotationPlannerTick(input: {
   });
   const adrenalineResult = resolveAdrenalineTimeline(simulationConfig);
   const cooldownResult = resolveCooldownTimeline(simulationConfig);
+  const simulationResult = input.simulationResult ?? simulateBaseDamage(simulationConfig);
   const clampedTick = Math.max(0, Math.min(input.tick, input.rotationPlan.tickCount - 1));
   const bucket = timelineResult.timeline.ticks[clampedTick];
   const adrenalineTickState = adrenalineResult.tickStates[clampedTick];
   const cooldownTickState = cooldownResult.tickStates[clampedTick];
-  const persistentBuffIds = collectPersistentBuffIds(input.buffState, input.catalog);
+  const simulatedTickState = simulationResult.tickStates[clampedTick];
+  const persistentBuffIds = simulatedTickState?.activePersistentBuffIds ?? collectPersistentBuffIds(input.buffState, input.catalog);
+  const temporaryBuffIds = (simulatedTickState?.activeTimelineBuffIds ?? []).filter(
+    (buffId) => !isCooldownLikeBuff(input.catalog.buffs[buffId]),
+  );
   const projectedGearState = projectGearStateAtTick(input.gearState, input.rotationPlan.nonGcdActions, clampedTick);
 
   return {
@@ -63,17 +79,18 @@ export function inspectRotationPlannerTick(input: {
       start: adrenalineTickState?.valueAtTickStart ?? input.rotationPlan.startingAdrenaline,
       end: adrenalineTickState?.valueAtTickEnd ?? input.rotationPlan.startingAdrenaline,
     },
+    deathsporeStacks:
+      typeof simulatedTickState?.deathsporeStacks === 'number' ? simulatedTickState.deathsporeStacks : null,
     activePersistentBuffs: persistentBuffIds.map(
       (buffId) => input.catalog.buffs[buffId]?.name ?? input.catalog.relics[buffId]?.name ?? buffId,
     ),
-    activeTimelineBuffs: bucket.derivedBuffEntries.map(
-      (entry) => input.catalog.buffs[entry.buffId]?.name ?? entry.buffId,
-    ),
+    activeTemporaryBuffs: temporaryBuffIds.map((buffId) => input.catalog.buffs[buffId]?.name ?? buffId),
     equipmentState: Object.entries(projectedGearState.equipment)
       .filter((entry) => Boolean(entry[1]))
       .map(([slot, instance]) => ({
         slot: formatEquipmentSlot(slot as Parameters<typeof formatEquipmentSlot>[0]),
         itemName: input.catalog.items[instance!.definitionId]?.name ?? instance!.definitionId,
+        details: buildEquipmentDetails(instance!, input.catalog),
       })),
     ammoState: resolveAmmoState(projectedGearState, input.catalog),
     cooldowns: Object.entries(cooldownTickState?.cooldownsAtTickStart ?? {}).map(([abilityId, readyAtTick]) => ({
@@ -91,13 +108,17 @@ export function inspectRotationPlannerTick(input: {
           : action.id;
       }),
     ],
-    hitsResolving: input.rotationPlan.abilityActions.flatMap((action) =>
-      collectHitsResolvingAtTick(action, clampedTick, input.catalog),
+    hitsResolving: collectResolvedHitLabelsAtTick(
+      simulationResult,
+      clampedTick,
+      input.catalog,
+      input.rotationPlan,
     ),
     validationIssues: [
       ...timelineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
       ...adrenalineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
       ...cooldownResult.validationIssues.filter((issue) => issue.tick === clampedTick),
+      ...simulationResult.validationIssues.filter((issue) => issue.tick === clampedTick),
     ],
   };
 }
@@ -106,12 +127,80 @@ function resolveAmmoState(
   gearState: GearBuilderState,
   catalog: GameDataCatalog,
 ): string | null {
-  const ammoInstance = gearState.equipment['ammo'];
+  const ammoInstance = resolveEffectiveAmmoSelection(gearState, catalog);
   if (!ammoInstance) {
     return null;
   }
 
-  return catalog.items[ammoInstance.definitionId]?.name ?? ammoInstance.definitionId;
+  return (
+    catalog.items[ammoInstance.definitionId]?.name ??
+    ammoInstance.definitionId
+  );
+}
+
+function buildEquipmentDetails(
+  instance: NonNullable<GearBuilderState['equipment'][EquipmentSlot]>,
+  catalog: GameDataCatalog,
+): string[] {
+  const details: string[] = [];
+
+  const configuredPerks = instance.configuredPerks ?? [];
+  if (configuredPerks.length) {
+    details.push(
+      `Perks: ${configuredPerks
+        .map((perk) => formatConfiguredPerk(perk.perkId, perk.rank, catalog))
+        .join(', ')}`,
+    );
+  }
+
+  if (instance.definitionId === 'essence-of-finality') {
+    const storedSpecial = resolveStringConfigValue(
+      catalog.items[instance.definitionId],
+      instance,
+      'stored-special',
+    );
+
+    if (storedSpecial && storedSpecial !== 'none') {
+      details.push(`Stored special: ${formatDefinitionLabel(storedSpecial, catalog)}`);
+    }
+  }
+
+  return details;
+}
+
+function formatConfiguredPerk(
+  perkId: string,
+  rank: number | undefined,
+  catalog: GameDataCatalog,
+): string {
+  const baseName = catalog.perks[perkId]?.name ?? perkId;
+  return typeof rank === 'number' ? `${baseName} ${rank}` : baseName;
+}
+
+function formatDefinitionLabel(
+  definitionId: string,
+  catalog: GameDataCatalog,
+): string {
+  return (
+    catalog.items[definitionId]?.name ??
+    catalog.eofSpecs[`${definitionId}-eof`]?.name ??
+    humanizeHitId(definitionId)
+  );
+}
+
+function resolveStringConfigValue(
+  item: GameDataCatalog['items'][string] | undefined,
+  instance: NonNullable<GearBuilderState['equipment'][EquipmentSlot]>,
+  optionId: string,
+): string | null {
+  const configuredValue = instance.configValues?.[optionId];
+
+  if (typeof configuredValue === 'string') {
+    return configuredValue;
+  }
+
+  const defaultValue = item?.configOptions?.find((option) => option.id === optionId)?.defaultValue;
+  return typeof defaultValue === 'string' ? defaultValue : null;
 }
 
 function projectGearStateAtTick(
@@ -174,40 +263,51 @@ function readPlannerActionLabel(action: RotationAction): string {
   return typeof label === 'string' && label ? label : action.actionType;
 }
 
-function collectHitsResolvingAtTick(
-  action: RotationAction,
+function collectResolvedHitLabelsAtTick(
+  simulationResult: SimulationResult,
   tick: number,
   catalog: GameDataCatalog,
+  rotationPlan: RotationPlan,
 ): string[] {
-  const abilityDefinition = resolveAbilityDefinition(action, catalog);
-  if (!abilityDefinition) {
-    return [];
-  }
-
-  return abilityDefinition.hitSchedule
-    .filter((hit) => action.tick + hit.tickOffset === tick)
-    .map((hit, index) => formatResolvingHitLabel(abilityDefinition, hit, index));
+  return simulationResult.explainability.damageBreakdowns
+    .filter((entry) => resolveDisplayedHitTick(entry, catalog, rotationPlan) === tick)
+    .map((entry) => {
+      const abilityName = catalog.abilities[entry.abilityId]?.name ?? humanizeHitId(entry.abilityId);
+      const hitLabel = humanizeHitId(entry.hitId.split(':').slice(1).join(':') || entry.hitId);
+      return `${abilityName}: ${hitLabel} (${entry.finalDamage.min}-${entry.finalDamage.max})`;
+    });
 }
 
-function resolveAbilityDefinition(
-  action: RotationAction,
+function resolveDisplayedHitTick(
+  entry: SimulationResult['explainability']['damageBreakdowns'][number],
   catalog: GameDataCatalog,
-): AbilityDefinition | null {
-  const abilityId = action.payload['abilityId'];
-  if (typeof abilityId !== 'string') {
-    return null;
+  rotationPlan: RotationPlan,
+): number {
+  const sourceActionId = entry.hitId.split(':')[0];
+  if (!sourceActionId) {
+    return entry.tick;
   }
 
-  return catalog.abilities[abilityId] ?? null;
-}
+  const sourceAction = rotationPlan.abilityActions.find((action) => action.id === sourceActionId);
+  if (!sourceAction) {
+    return entry.tick;
+  }
 
-function formatResolvingHitLabel(
-  definition: AbilityDefinition,
-  hit: HitDefinition,
-  index: number,
-): string {
-  const hitLabel = hit.id ? humanizeHitId(hit.id) : `Hit ${index + 1}`;
-  return `${definition.name}: ${hitLabel} (${hit.damage.min}-${hit.damage.max}%)`;
+  const abilityId = sourceAction.payload['abilityId'];
+  if (typeof abilityId !== 'string') {
+    return entry.tick;
+  }
+
+  const ability = catalog.abilities[abilityId];
+  if (!ability) {
+    return entry.tick;
+  }
+
+  if (shouldUseResolvedHitTickInPlanner(ability)) {
+    return entry.tick;
+  }
+
+  return sourceAction.tick;
 }
 
 function humanizeHitId(hitId: string): string {
@@ -219,4 +319,12 @@ function humanizeHitId(hitId: string): string {
 function readStringPayload(action: RotationAction, key: string): string | null {
   const value = action.payload[key];
   return typeof value === 'string' && value ? value : null;
+}
+
+function shouldUseResolvedHitTickInPlanner(ability: AbilityDefinition): boolean {
+  return ability.id === 'rapid-fire';
+}
+
+function isCooldownLikeBuff(definition: GameDataCatalog['buffs'][string] | undefined): boolean {
+  return definition?.effectRefs?.some((effectRef) => effectRef.endsWith('-cooldown')) ?? false;
 }

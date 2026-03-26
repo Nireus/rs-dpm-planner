@@ -139,3 +139,39 @@ export function isAugmentableSlot(slot: EquipmentSlot | undefined): boolean {
 export function requiresImmediateItemConfiguration(item: ItemDefinition): boolean {
   return isAugmentableSlot(item.slot) || Boolean(item.configOptions?.length);
 }
+
+export function sortGearCatalogItems(items: ItemDefinition[]): ItemDefinition[] {
+  return [...items].sort((left, right) => compareGearCatalogItems(left, right));
+}
+
+function compareGearCatalogItems(left: ItemDefinition, right: ItemDefinition): number {
+  const categoryOrderDifference = getCatalogPriority(left) - getCatalogPriority(right);
+
+  if (categoryOrderDifference !== 0) {
+    return categoryOrderDifference;
+  }
+
+  const tierDifference = (right.tier ?? 0) - (left.tier ?? 0);
+
+  if (tierDifference !== 0) {
+    return tierDifference;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function getCatalogPriority(item: ItemDefinition): number {
+  if (isQuiverItem(item)) {
+    return 0;
+  }
+
+  if (item.category === 'jewellery') {
+    return 1;
+  }
+
+  return 2;
+}
+
+function isQuiverItem(item: ItemDefinition): boolean {
+  return item.effectRefs?.includes('quiver-passive') ?? false;
+}

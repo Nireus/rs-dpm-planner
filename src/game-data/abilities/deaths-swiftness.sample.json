@@ -10,20 +10,11 @@
       "ranged": 76
     }
   },
-  "hitSchedule": [
-    {
-      "id": "deaths-swiftness-hit",
-      "tickOffset": 0,
-      "damage": {
-        "min": 10,
-        "max": 20
-      }
-    }
-  ],
+  "hitSchedule": [],
   "baseDamage": {
-    "min": 10,
-    "max": 20
+    "min": 0,
+    "max": 0
   },
   "effectRefs": ["deaths-swiftness"],
-  "description": "Create a shroud of death that massively amplifies ranged damage while active."
+  "description": "Create a shroud of death that amplifies ranged damage while active."
 }

@@ -5,6 +5,7 @@ import { GameDataStoreService } from '../../core/game-data/game-data-store.servi
 import {
   canEquipItemInSlot,
   formatEquipmentSlot,
+  sortGearCatalogItems,
   SUPPORTED_GEAR_SLOTS,
   type GearBuilderState,
 } from './gear-builder.utils';
@@ -52,9 +53,7 @@ export class GearBuilderStore {
   readonly equipmentSlots = SUPPORTED_GEAR_SLOTS;
   readonly snapshot = this.state.asReadonly();
   readonly availableItems = computed(() =>
-    Object.values(this.gameDataStore.snapshot().catalog?.items ?? {}).sort((left, right) =>
-      left.name.localeCompare(right.name),
-    ),
+    sortGearCatalogItems(Object.values(this.gameDataStore.snapshot().catalog?.items ?? {})),
   );
 
   readonly equippedSlots = computed<EquippedSlotViewModel[]>(() => {

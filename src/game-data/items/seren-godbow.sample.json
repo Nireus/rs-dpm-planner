@@ -13,6 +13,9 @@
   ],
   "combatStyleTags": ["ranged"],
   "tier": 92,
+  "requirements": {
+    "requiredEquipmentTags": ["two-handed-bow"]
+  },
   "equipBehavior": "two-handed",
   "effectRefs": ["weapon-special-access", "weapon-special:seren-godbow"]
 }

@@ -4,6 +4,7 @@ import type { PersistentBuffConfig, SimulationConfig } from '../../../simulation
 import type { BuffDefinition } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../game-data/game-data-store.service';
+import { resolveEffectiveAmmoSelection } from '../gear/effective-ammo-selection';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
 import { GearBuilderStore } from '../../features/gear/gear-builder.store';
 import { RotationPlannerStore } from '../../features/rotation-planner/rotation-planner.store';
@@ -30,7 +31,7 @@ export class ResultsSimulationService {
       playerStats: this.playerStatsStore.stats(),
       gearSetup: {
         equipment: gearState.equipment,
-        ammoSelection: gearState.equipment.ammo,
+        ammoSelection: resolveEffectiveAmmoSelection(gearState, catalog),
       },
       inventory: {
         items: gearState.inventory,

@@ -8,6 +8,7 @@ import { BuffDetailDialogComponent } from './buff-detail-dialog.component';
 import {
   activateExclusivePotion,
   buildBuffOptions,
+  buildMiscellaneousBuffOptions,
   calculateRelicEnergy,
   buildPotionOptions,
   buildPrayerOptions,
@@ -56,6 +57,9 @@ export class BuffsPageComponent {
   );
   protected readonly passiveBuffOptions = computed(() =>
     buildPassiveBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
+  );
+  protected readonly miscellaneousBuffOptions = computed(() =>
+    buildMiscellaneousBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
   );
   protected readonly relicOptions = computed(() =>
     buildRelicOptions(Object.values(this.gameDataStore.snapshot().catalog?.relics ?? {})),
@@ -108,6 +112,12 @@ export class BuffsPageComponent {
         key: 'passive-buffs',
         label: 'Passive Buffs',
         options: this.passiveBuffOptions(),
+        showCategoryLabel: false,
+      },
+      {
+        key: 'miscellaneous-buffs',
+        label: 'Miscellaneous',
+        options: this.miscellaneousBuffOptions(),
         showCategoryLabel: false,
       },
       {

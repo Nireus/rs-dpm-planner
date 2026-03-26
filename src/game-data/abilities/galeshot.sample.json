@@ -15,14 +15,14 @@
       "id": "galeshot-hit",
       "tickOffset": 0,
       "damage": {
-        "min": 100,
-        "max": 120
+        "min": 90,
+        "max": 110
       }
     }
   ],
   "baseDamage": {
-    "min": 100,
-    "max": 120
+    "min": 90,
+    "max": 110
   },
   "effectRefs": ["searing-winds"],
   "description": "Fire an infused shot that applies Searing Winds to the player."

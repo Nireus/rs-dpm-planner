@@ -21,7 +21,7 @@
     },
     {
       "id": "snap-shot-hit-2",
-      "tickOffset": 2,
+      "tickOffset": 0,
       "damage": {
         "min": 135,
         "max": 155

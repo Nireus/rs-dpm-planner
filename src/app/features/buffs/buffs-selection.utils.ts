@@ -16,7 +16,7 @@ export interface BuffSelectionOption {
   effectRefs?: string[];
 }
 
-const CONFIGURABLE_BUFF_CATEGORIES: BuffCategory[] = ['prayer', 'potion', 'passive'];
+const CONFIGURABLE_BUFF_CATEGORIES: BuffCategory[] = ['prayer', 'potion', 'passive', 'miscellaneous'];
 
 export function isConfigurableBuffCategory(category: BuffCategory): boolean {
   return CONFIGURABLE_BUFF_CATEGORIES.includes(category);
@@ -52,6 +52,10 @@ export function buildPotionOptions(buffDefinitions: readonly BuffDefinition[]): 
 
 export function buildPassiveBuffOptions(buffDefinitions: readonly BuffDefinition[]): BuffSelectionOption[] {
   return buildBuffOptions(buffDefinitions).filter((definition) => definition.categoryLabel === 'Passive');
+}
+
+export function buildMiscellaneousBuffOptions(buffDefinitions: readonly BuffDefinition[]): BuffSelectionOption[] {
+  return buildBuffOptions(buffDefinitions).filter((definition) => definition.categoryLabel === 'Miscellaneous');
 }
 
 export function buildRelicOptions(relicDefinitions: readonly RelicDefinition[]): BuffSelectionOption[] {
@@ -142,6 +146,8 @@ function formatBuffCategory(category: BuffCategory): string {
       return 'Potion';
     case 'passive':
       return 'Passive';
+    case 'miscellaneous':
+      return 'Miscellaneous';
     default:
       return category;
   }
@@ -159,6 +165,12 @@ function formatBuffSource(definition: BuffDefinition): string {
         : '';
 
     return `Pre-fight potion buff.${variantSummary}`;
+  }
+
+  if (definition.category === 'miscellaneous') {
+    return definition.sourceType === 'player-config'
+      ? 'Manual passive utility modifier.'
+      : 'Miscellaneous persistent modifier.';
   }
 
   return definition.sourceType === 'player-config'

@@ -39,9 +39,32 @@ const CHANNELED_ABILITY: AbilityDefinition = {
   channelDurationTicks: 8,
 };
 
+const COMPLETION_CHANNEL_ABILITY: AbilityDefinition = {
+  ...BASIC_ABILITY,
+  id: 'snipe',
+  name: 'Snipe',
+  isChanneled: true,
+  channelDurationTicks: 3,
+  hitSchedule: [
+    {
+      id: 'snipe-hit',
+      tickOffset: 3,
+      damage: {
+        min: 300,
+        max: 360,
+      },
+    },
+  ],
+  baseDamage: {
+    min: 300,
+    max: 360,
+  },
+};
+
 const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   [BASIC_ABILITY.id]: BASIC_ABILITY,
   [CHANNELED_ABILITY.id]: CHANNELED_ABILITY,
+  [COMPLETION_CHANNEL_ABILITY.id]: COMPLETION_CHANNEL_ABILITY,
 };
 
 const NON_GCD_TEMPLATE: PlannerNonGcdTemplate = {
@@ -109,6 +132,7 @@ describe('rotation planner utils', () => {
   it('calculates timeline span from gcd or channel duration', () => {
     expect(getAbilityTimelineSpan(BASIC_ABILITY)).toBe(3);
     expect(getAbilityTimelineSpan(CHANNELED_ABILITY)).toBe(9);
+    expect(getAbilityTimelineSpan(COMPLETION_CHANNEL_ABILITY)).toBe(3);
   });
 
   it('returns ability segment positions for occupied ticks', () => {

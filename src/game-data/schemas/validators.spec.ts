@@ -26,6 +26,8 @@ describe('game-data sample JSON validation', () => {
   it('parses and validates additional phase 11.1 item samples', () => {
     const itemPaths = [
       'src/game-data/items/masterwork-bow.sample.json',
+      'src/game-data/items/masterwork-ranged-cowl.sample.json',
+      'src/game-data/items/masterwork-ranged-body.sample.json',
       'src/game-data/items/wen-arrows.sample.json',
       'src/game-data/items/jas-dragonbane-arrows.sample.json',
       'src/game-data/items/dracolich-hauberk.sample.json',
@@ -51,7 +53,7 @@ describe('game-data sample JSON validation', () => {
   });
 
   it('parses and validates sample buff JSON', () => {
-    const document = readJson('src/game-data/buffs/deathspore-focus.sample.json');
+    const document = readJson('src/game-data/buffs/feasting-spores-ready.sample.json');
     const result = validateBuffDefinition(document);
 
     expect(result.success).toBe(true);

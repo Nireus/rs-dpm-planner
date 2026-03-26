@@ -12,17 +12,33 @@
   },
   "hitSchedule": [
     {
-      "id": "ricochet-hit",
+      "id": "ricochet-hit-1",
       "tickOffset": 0,
       "damage": {
-        "min": 115,
-        "max": 115
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "ricochet-hit-2",
+      "tickOffset": 1,
+      "damage": {
+        "min": 15,
+        "max": 20
+      }
+    },
+    {
+      "id": "ricochet-hit-3",
+      "tickOffset": 1,
+      "damage": {
+        "min": 15,
+        "max": 20
       }
     }
   ],
   "baseDamage": {
-    "min": 115,
-    "max": 115
+    "min": 105,
+    "max": 125
   },
   "description": "Fire a shot which ricochets off the target."
 }

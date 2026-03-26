@@ -2,6 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { ResultsSimulationService } from '../../core/results/results-simulation.service';
+import {
+  buildAbilityExplainabilitySummary,
+  buildDamageModifierGroupSummaries,
+  findSelectedHitBreakdown,
+  getDefaultSelectedHitId,
+} from './results-explainability.utils';
 
 @Component({
   selector: 'app-results-page',
@@ -19,7 +25,8 @@ export class ResultsPageComponent {
   protected readonly simulationResult = this.resultsSimulationService.simulationResult;
   protected readonly simulationConfig = this.resultsSimulationService.simulationConfig;
   protected readonly selectedAbilityId = signal<string | null>(null);
-  protected readonly selectedBreakdownAbilityId = signal<string | null>(null);
+  protected readonly selectedHitId = signal<string | null>(null);
+  protected readonly abilityCatalog = computed(() => this.gameDataStore.snapshot().catalog?.abilities ?? {});
   protected readonly resultMetrics = computed(() => {
     const config = this.simulationConfig();
     const result = this.simulationResult();
@@ -39,22 +46,26 @@ export class ResultsPageComponent {
   protected readonly selectedAbilitySummary = computed(() => {
     const abilityId = this.selectedAbilityId();
     const result = this.simulationResult();
+    const abilities = this.abilityCatalog();
 
     if (!abilityId || !result) {
       return null;
     }
 
-    return result.damageByAbility.find((entry) => entry.abilityId === abilityId) ?? null;
+    return buildAbilityExplainabilitySummary(abilityId, result, abilities);
   });
-  protected readonly selectedAbilityBreakdowns = computed(() => {
-    const abilityId = this.selectedBreakdownAbilityId() ?? this.selectedAbilityId();
-    const result = this.simulationResult();
-
-    if (!abilityId || !result) {
-      return [];
-    }
-
-    return result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === abilityId);
+  protected readonly selectedHitBreakdown = computed(() =>
+    findSelectedHitBreakdown(this.selectedAbilitySummary(), this.selectedHitId()),
+  );
+  protected readonly selectedHitModifierGroups = computed(() =>
+    buildDamageModifierGroupSummaries(this.selectedHitBreakdown()),
+  );
+  protected readonly selectedAbilityBreakdowns = computed(() =>
+    this.selectedAbilitySummary()?.hitBreakdowns ?? [],
+  );
+  protected readonly selectedHitContribution = computed(() => {
+    const breakdown = this.selectedHitBreakdown();
+    return breakdown?.percentageOfTotal ?? null;
   });
   protected readonly topDamageTicks = computed(() => {
     const result = this.simulationResult();
@@ -74,6 +85,14 @@ export class ResultsPageComponent {
 
   protected selectAbility(abilityId: string): void {
     this.selectedAbilityId.set(abilityId);
-    this.selectedBreakdownAbilityId.set(abilityId);
+    const result = this.simulationResult();
+    const summary = result
+      ? buildAbilityExplainabilitySummary(abilityId, result, this.abilityCatalog())
+      : null;
+    this.selectedHitId.set(getDefaultSelectedHitId(summary));
+  }
+
+  protected selectHit(hitId: string): void {
+    this.selectedHitId.set(hitId);
   }
 }

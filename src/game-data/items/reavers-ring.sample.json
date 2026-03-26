@@ -13,6 +13,6 @@
   "offensiveStats": {
     "rangedBonus": 27.7
   },
-  "effectRefs": ["reavers-ring-crit"],
+  "effectRefs": ["critical-strike-chance:+5%", "hit-chance:-5%"],
   "implementationNotes": "Sample ranged ring-slot item for gear builder MVP."
 }

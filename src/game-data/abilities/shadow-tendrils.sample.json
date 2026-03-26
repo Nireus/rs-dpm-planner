@@ -4,6 +4,7 @@
   "style": "ranged",
   "subtype": "enhanced",
   "cooldownTicks": 75,
+  "adrenalineCost": 15,
   "requires": {
     "levelRequirements": {
       "ranged": 75
@@ -15,14 +16,14 @@
       "tickOffset": 0,
       "damage": {
         "min": 200,
-        "max": 240
+        "max": 270
       }
     }
   ],
   "baseDamage": {
     "min": 200,
-    "max": 240
+    "max": 270
   },
-  "effectRefs": ["shadow-tendrils"],
-  "description": "High-risk ranged enhanced ability."
+  "effectRefs": ["critical-strike-chance:+100%", "shadow-tendrils"],
+  "description": "Guaranteed critical strike that damages the target and extends Shadow Imbued."
 }

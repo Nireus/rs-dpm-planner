@@ -7,6 +7,6 @@
   "sourceType": "player-config",
   "isPermanent": true,
   "durationTicks": 180,
-  "effectRefs": ["eclipsed-soul"],
+  "effectRefs": ["critical-strike-chance:+4%", "eclipsed-soul-heal"],
   "displayPriority": 20
 }

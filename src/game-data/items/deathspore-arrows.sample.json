@@ -15,5 +15,5 @@
     }
   },
   "effectRefs": ["deathspore-progress"],
-  "implementationNotes": "Sample MVP ammo definition for gear builder and later stateful ranged mechanics."
+  "implementationNotes": "On-hit ranged stack mechanic that grants Feasting Spores free-cast windows and cooldown state."
 }

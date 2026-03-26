@@ -14,6 +14,11 @@ export interface CooldownTimelineResult {
   validationIssues: ValidationIssue[];
 }
 
+interface CooldownAdjustment {
+  abilityId: EntityId;
+  reductionTicks: number;
+}
+
 export function resolveCooldownTimeline(config: SimulationConfig): CooldownTimelineResult {
   const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
   const groupedActions = groupAbilityActionsByTick(abilityActions);
@@ -21,6 +26,7 @@ export function resolveCooldownTimeline(config: SimulationConfig): CooldownTimel
   const cooldownTimeline: Record<number, Record<EntityId, number>> = {};
   const validationIssues: ValidationIssue[] = [];
   let activeCooldowns = new Map<EntityId, number>();
+  const pendingAdjustments = new Map<number, CooldownAdjustment[]>();
 
   for (let tick = 0; tick < config.rotationPlan.tickCount; tick += 1) {
     activeCooldowns = pruneExpiredCooldowns(activeCooldowns, tick);
@@ -39,6 +45,13 @@ export function resolveCooldownTimeline(config: SimulationConfig): CooldownTimel
 
       activeCooldowns = result.nextCooldowns;
       actionsResolved.push(action.id);
+      scheduleCooldownAdjustmentsForAction(config, result.resolvedAbilityId, action, pendingAdjustments);
+    }
+
+    const adjustmentsAtTick = pendingAdjustments.get(tick) ?? [];
+    if (adjustmentsAtTick.length > 0) {
+      activeCooldowns = applyCooldownAdjustments(activeCooldowns, adjustmentsAtTick, tick);
+      pendingAdjustments.delete(tick);
     }
 
     const cooldownsAtTickEnd = snapshotCooldownMap(activeCooldowns);
@@ -60,6 +73,7 @@ export function resolveCooldownTimeline(config: SimulationConfig): CooldownTimel
 
 interface ResolveAbilityActionCooldownResult {
   nextCooldowns: Map<EntityId, number>;
+  resolvedAbilityId?: EntityId;
   issue?: ValidationIssue;
 }
 
@@ -111,7 +125,78 @@ function resolveAbilityActionCooldown(
 
   return {
     nextCooldowns,
+    resolvedAbilityId: ability.id,
   };
+}
+
+function scheduleCooldownAdjustmentsForAction(
+  config: SimulationConfig,
+  resolvedAbilityId: EntityId | undefined,
+  action: RotationAction,
+  pendingAdjustments: Map<number, CooldownAdjustment[]>,
+): void {
+  if (resolvedAbilityId !== 'piercing-shot') {
+    return;
+  }
+
+  const ability = config.gameData.abilities[resolvedAbilityId];
+  if (!ability) {
+    return;
+  }
+
+  const reductionPerHit = getPiercingShotSnipeReductionPerHit(config);
+
+  for (const hit of ability.hitSchedule) {
+    const tick = action.tick + hit.tickOffset;
+    const adjustmentsAtTick = pendingAdjustments.get(tick) ?? [];
+    adjustmentsAtTick.push({
+      abilityId: 'snipe',
+      reductionTicks: reductionPerHit,
+    });
+    pendingAdjustments.set(tick, adjustmentsAtTick);
+  }
+}
+
+function applyCooldownAdjustments(
+  cooldowns: Map<EntityId, number>,
+  adjustments: CooldownAdjustment[],
+  currentTick: number,
+): Map<EntityId, number> {
+  const next = new Map(cooldowns);
+
+  for (const adjustment of adjustments) {
+    const currentEndTick = next.get(adjustment.abilityId);
+    if (currentEndTick === undefined) {
+      continue;
+    }
+
+    const reducedEndTick = Math.max(currentTick, currentEndTick - adjustment.reductionTicks);
+    if (reducedEndTick > currentTick) {
+      next.set(adjustment.abilityId, reducedEndTick);
+    } else {
+      next.delete(adjustment.abilityId);
+    }
+  }
+
+  return next;
+}
+
+function getPiercingShotSnipeReductionPerHit(config: SimulationConfig): number {
+  const baseReduction = 4;
+  const additionalReduction = Object.values(config.gearSetup.equipment)
+    .flatMap((item) => config.gameData.items[item?.definitionId ?? '']?.effectRefs ?? [])
+    .reduce((total, effectRef) => total + parsePiercingShotSnipeReduction(effectRef), 0);
+
+  return baseReduction + additionalReduction;
+}
+
+function parsePiercingShotSnipeReduction(effectRef: string): number {
+  const match = /^piercing-shot-snipe-reduction:\+(\d+)ticks-per-hit$/.exec(effectRef);
+  if (!match) {
+    return 0;
+  }
+
+  return Number.parseInt(match[1] ?? '0', 10);
 }
 
 function groupAbilityActionsByTick(actions: RotationAction[]): Map<number, RotationAction[]> {

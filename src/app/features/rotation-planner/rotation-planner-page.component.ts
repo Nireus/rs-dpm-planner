@@ -1,16 +1,28 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
+import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
+import { ResultsSimulationService } from '../../core/results/results-simulation.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
+import type { GearBuilderState } from '../gear/gear-builder.utils';
 import { formatEquipmentSlot } from '../gear/gear-builder.utils';
 import { RotationPlannerStore } from './rotation-planner.store';
 import type { RotationAction } from '../../../simulation-engine/models';
 import { PLANNER_NON_GCD_TEMPLATES } from './rotation-planner.non-gcd';
+import {
+  buildPlannerBuffLaneBars,
+  shortLabelForBuffBar,
+  type PlannerBuffLaneBar,
+} from './rotation-planner-buff-lane';
+import {
+  buildPlannerCooldownLaneBars,
+  type PlannerCooldownLaneBar,
+} from './rotation-planner-cooldown-lane';
 import { inspectRotationPlannerTick } from './rotation-planner-inspection';
 import {
   getAbilityTimelineSpan,
@@ -22,8 +34,11 @@ import {
   snapTickToAbilityWindowStart,
 } from './rotation-planner.utils';
 
+const PERFECT_EQUILIBRIUM_ICON_PATH =
+  'https://runescape.wiki/images/Perfect_Equilibrium_%28self_status%29.png';
+
 interface PlannerLaneViewModel {
-  key: 'non-gcd' | 'ability' | 'buff';
+  key: 'non-gcd' | 'ability' | 'buff' | 'cooldown';
   title: string;
   summary: string;
   readOnly?: boolean;
@@ -46,6 +61,13 @@ interface PlannerGearSwapOption {
   slot: EquipmentSlot;
   name: string;
   slotLabel: string;
+  detailsLabel: string;
+  optionLabel: string;
+}
+
+interface PlannerPerfectEquilibriumProcMarker {
+  tickOffset: number;
+  indexAtTick: number;
 }
 
 @Component({
@@ -57,15 +79,22 @@ interface PlannerGearSwapOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RotationPlannerPageComponent {
+  private static readonly HEADER_ROW_HEIGHT_REM = 2.7;
+  private static readonly DEFAULT_LANE_ROW_HEIGHT_REM = 2.96;
+  private static readonly STACK_LANE_BASE_HEIGHT_REM = 1.06;
+  private static readonly STACK_LANE_ROW_STEP_REM = 0.9;
+  private static readonly STACK_LANE_BOTTOM_PADDING_REM = 0.22;
   private warningTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly plannerStore = inject(RotationPlannerStore);
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
+  private readonly resultsSimulationService = inject(ResultsSimulationService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
 
   protected readonly startingAdrenaline = this.plannerStore.startingAdrenaline;
+  protected readonly maxStartingAdrenaline = this.plannerStore.maxStartingAdrenaline;
   protected readonly tickCount = this.plannerStore.tickCount;
   protected readonly timelineResult = this.plannerStore.timelineResult;
   protected readonly tickIndexes = this.plannerStore.tickIndexes;
@@ -85,7 +114,9 @@ export class RotationPlannerPageComponent {
     );
   });
   protected readonly validationIssues = computed(() => this.timelineResult().validationIssues);
+  protected readonly simulationResult = this.resultsSimulationService.simulationResult;
   protected readonly selectedTick = signal(0);
+  protected readonly showCooldownLane = signal(false);
   protected readonly plannerWarning = signal<string | null>(null);
   protected readonly gearSwapDialogActionId = signal<string | null>(null);
   protected readonly gearSwapDialogRemovesOnCancel = signal(false);
@@ -114,6 +145,7 @@ export class RotationPlannerPageComponent {
       gearState: this.gearBuilderStore.snapshot(),
       buffState: this.buffConfigurationStore.state(),
       rotationPlan: this.plannerStore.rotationPlan(),
+      simulationResult: this.simulationResult(),
     });
   });
   protected readonly abilityOccupancy = computed<Record<number, AbilityOccupancyEntry>>(() => {
@@ -153,8 +185,79 @@ export class RotationPlannerPageComponent {
       }))
       .sort((left, right) => left.definition.name.localeCompare(right.definition.name));
   });
+  protected readonly buffLaneBars = computed<PlannerBuffLaneBar[]>(() => {
+    const result = this.simulationResult();
+    const catalog = this.gameDataStore.snapshot().catalog;
+
+    if (!result || !catalog) {
+      return [];
+    }
+
+    return buildPlannerBuffLaneBars({
+      tickCount: this.tickCount(),
+      buffTimeline: result.buffTimeline,
+      buffDefinitions: catalog.buffs,
+    });
+  });
+  protected readonly cooldownLaneBars = computed<PlannerCooldownLaneBar[]>(() => {
+    const result = this.simulationResult();
+
+    if (!result) {
+      return [];
+    }
+
+    return buildPlannerCooldownLaneBars({
+      tickCount: this.tickCount(),
+      cooldownTimeline: result.cooldownTimeline,
+      abilityDefinitions: this.abilityCatalog(),
+    });
+  });
+  protected readonly perfectEquilibriumProcMarkersByAction = computed<
+    Record<string, PlannerPerfectEquilibriumProcMarker[]>
+  >(() => {
+    const result = this.simulationResult();
+    if (!result) {
+      return {};
+    }
+
+    return result.explainability.damageBreakdowns.reduce<
+      Record<string, PlannerPerfectEquilibriumProcMarker[]>
+    >((markersByAction, breakdown) => {
+      if (breakdown.abilityId !== 'perfect-equilibrium') {
+        return markersByAction;
+      }
+
+      const sourceActionId = breakdown.hitId.split(':')[0];
+      if (!sourceActionId) {
+        return markersByAction;
+      }
+
+      const sourceAction = this.abilityActions().find((action) => action.id === sourceActionId);
+      if (!sourceAction) {
+        return markersByAction;
+      }
+
+      const definition = this.abilityDefinitionForAction(sourceAction);
+      const displayedProcTick =
+        definition && shouldUseResolvedHitTickInPlanner(definition) ? breakdown.tick : sourceAction.tick;
+      const tickOffset = Math.max(0, displayedProcTick - sourceAction.tick);
+      const existingMarkers = markersByAction[sourceActionId] ?? [];
+      const indexAtTick = existingMarkers.filter((marker) => marker.tickOffset === tickOffset).length;
+
+      markersByAction[sourceActionId] = [
+        ...existingMarkers,
+        {
+          tickOffset,
+          indexAtTick,
+        },
+      ];
+
+      return markersByAction;
+    }, {});
+  });
+  protected readonly perfectEquilibriumIconPath = computed(() => PERFECT_EQUILIBRIUM_ICON_PATH);
   protected readonly nonGcdPaletteEntries = PLANNER_NON_GCD_TEMPLATES;
-  protected readonly lanes: PlannerLaneViewModel[] = [
+  private readonly baseLanes: PlannerLaneViewModel[] = [
     {
       key: 'non-gcd',
       title: 'Non-GCD',
@@ -172,6 +275,23 @@ export class RotationPlannerPageComponent {
       readOnly: true,
     },
   ];
+  private readonly cooldownLane: PlannerLaneViewModel = {
+    key: 'cooldown',
+    title: 'Cooldowns',
+    summary: 'Read-only lane for active cooldown windows.',
+    readOnly: true,
+  };
+  protected readonly lanes = computed<PlannerLaneViewModel[]>(() =>
+    this.showCooldownLane()
+      ? [...this.baseLanes, this.cooldownLane]
+      : this.baseLanes,
+  );
+  protected readonly timelineRowTemplate = computed(() => {
+    const rowHeights = this.lanes().map((lane) => this.laneHeightRem(lane.key));
+    return `${RotationPlannerPageComponent.HEADER_ROW_HEIGHT_REM}rem ${rowHeights
+      .map((height) => `${height}rem`)
+      .join(' ')}`;
+  });
   protected draggedNonGcdPayload: PlannerNonGcdDropPayload | null = null;
   protected draggedNonGcdAction: RotationAction | null = null;
   protected draggedAbilityPayload: PlannerAbilityDropPayload | null = null;
@@ -203,6 +323,10 @@ export class RotationPlannerPageComponent {
     this.selectedTick.set(Math.max(0, Math.min(tickIndex, this.tickCount() - 1)));
   }
 
+  protected toggleCooldownLane(value: boolean | string | null): void {
+    this.showCooldownLane.set(value === true || value === 'true');
+  }
+
   protected laneCellLabel(laneKey: PlannerLaneViewModel['key'], tickIndex: number): string {
     const bucket = this.timelineResult().timeline.ticks[tickIndex];
 
@@ -212,6 +336,10 @@ export class RotationPlannerPageComponent {
 
     if (laneKey === 'ability') {
       return bucket.abilityActions.length ? `${bucket.abilityActions.length} action(s)` : '';
+    }
+
+    if (laneKey === 'cooldown') {
+      return '';
     }
 
     return bucket.derivedBuffEntries.length ? `${bucket.derivedBuffEntries.length} buff event(s)` : '';
@@ -275,6 +403,57 @@ export class RotationPlannerPageComponent {
     return getNonGcdActionsAtTick(this.nonGcdActions(), tickIndex);
   }
 
+  protected buffBarsStartingAtTick(tickIndex: number): PlannerBuffLaneBar[] {
+    return this.buffLaneBars().filter((entry) => entry.startTick === tickIndex);
+  }
+
+  protected cooldownBarsStartingAtTick(tickIndex: number): PlannerCooldownLaneBar[] {
+    return this.cooldownLaneBars().filter((entry) => entry.startTick === tickIndex);
+  }
+
+  protected buffBarTitle(bar: PlannerBuffLaneBar): string {
+    const details = [
+      bar.name,
+      `Active T${bar.startTick}-T${bar.endTick}`,
+    ];
+
+    if (bar.stackPeak > 1) {
+      details.push(`Peak stack ${bar.stackPeak}`);
+    }
+
+    return details.join('\n');
+  }
+
+  protected buffBarShortLabel(bar: PlannerBuffLaneBar): string {
+    return shortLabelForBuffBar(bar.name);
+  }
+
+  protected cooldownBarTitle(bar: PlannerCooldownLaneBar): string {
+    return `${bar.name}\nCooldown T${bar.startTick}-T${bar.endTick}`;
+  }
+
+  protected cooldownBarShortLabel(bar: PlannerCooldownLaneBar): string {
+    return shortLabelForBuffBar(bar.name);
+  }
+
+  protected laneBarCopyMarkers(span: number): number[] {
+    const repeatEveryTicks = 12;
+    const count = Math.max(1, Math.ceil(span / repeatEveryTicks));
+    return Array.from({ length: count }, (_, index) => index);
+  }
+
+  protected laneBarCopyTemplate(span: number): string {
+    return `repeat(${this.laneBarCopyMarkers(span).length}, minmax(0, 1fr))`;
+  }
+
+  protected laneHeightStyle(laneKey: PlannerLaneViewModel['key']): string {
+    return `${this.laneHeightRem(laneKey)}rem`;
+  }
+
+  protected selectedTickOverlayLeft(): string {
+    return `calc(${this.selectedTick()} * (2.18rem + 0.42rem) - 0.16rem)`;
+  }
+
   protected abilityDefinitionForAction(action: RotationAction | null): AbilityDefinition | null {
     if (!action) {
       return null;
@@ -322,6 +501,22 @@ export class RotationPlannerPageComponent {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '')
       .join('');
+  }
+
+  protected perfectEquilibriumProcMarkers(
+    action: RotationAction,
+  ): PlannerPerfectEquilibriumProcMarker[] {
+    return this.perfectEquilibriumProcMarkersByAction()[action.id] ?? [];
+  }
+
+  protected perfectEquilibriumProcLeft(
+    action: RotationAction,
+    marker: PlannerPerfectEquilibriumProcMarker,
+  ): string {
+    const definition = this.abilityDefinitionForAction(action);
+    const span = definition ? this.abilitySpan(definition) : 1;
+    const clampedOffset = Math.max(0, Math.min(marker.tickOffset, Math.max(span - 1, 0)));
+    return `calc(${clampedOffset} * (2.18rem + 0.42rem) + 0.16rem + (${marker.indexAtTick} * 0.52rem))`;
   }
 
   protected nonGcdShortLabel(action: RotationAction): string {
@@ -451,7 +646,7 @@ export class RotationPlannerPageComponent {
     }
 
     if (template.id === 'gear-swap' && payload.sourceType === 'catalog' && !this.buildGearSwapOptions().length) {
-      this.showPlannerWarning('No equipable backpack items are available for a gear swap.');
+      this.showPlannerWarning('No equippable backpack items are available for a gear swap.');
       this.onNonGcdDragEnd();
       return;
     }
@@ -605,7 +800,7 @@ export class RotationPlannerPageComponent {
     const defaultInstanceId = currentInstanceId ?? options[0]?.instanceId ?? null;
 
     if (!options.length) {
-      this.showPlannerWarning('No equipable backpack items are available for a gear swap.');
+      this.showPlannerWarning('No equippable backpack items are available for a gear swap.');
 
       if (removesOnCancel) {
         this.plannerStore.removeNonGcdAction(actionId);
@@ -633,7 +828,7 @@ export class RotationPlannerPageComponent {
     for (const instance of inventory) {
       const definition = catalog.items[instance.definitionId] ?? null;
 
-      if (!definition || !definition.slot || definition.slot === 'ammo') {
+      if (!definition || !definition.slot) {
         continue;
       }
 
@@ -643,10 +838,38 @@ export class RotationPlannerPageComponent {
         slot: definition.slot,
         name: definition.name,
         slotLabel: formatEquipmentSlot(definition.slot),
+        detailsLabel: describeGearSwapOption(instance, definition, catalog),
+        optionLabel: formatGearSwapOptionLabel(
+          definition.name,
+          formatEquipmentSlot(definition.slot),
+          describeGearSwapOption(instance, definition, catalog),
+        ),
       });
     }
 
     return options.sort((left, right) => left.name.localeCompare(right.name));
+  }
+
+  private laneHeightRem(laneKey: PlannerLaneViewModel['key']): number {
+    if (laneKey === 'buff') {
+      return this.dynamicStackLaneHeightRem(this.buffLaneBars().map((bar) => bar.row));
+    }
+
+    if (laneKey === 'cooldown') {
+      return this.dynamicStackLaneHeightRem(this.cooldownLaneBars().map((bar) => bar.row));
+    }
+
+    return RotationPlannerPageComponent.DEFAULT_LANE_ROW_HEIGHT_REM;
+  }
+
+  private dynamicStackLaneHeightRem(rows: number[]): number {
+    const stackRows = rows.length ? Math.max(...rows) + 1 : 1;
+    const stackedHeight =
+      RotationPlannerPageComponent.STACK_LANE_BASE_HEIGHT_REM +
+      (stackRows - 1) * RotationPlannerPageComponent.STACK_LANE_ROW_STEP_REM +
+      RotationPlannerPageComponent.STACK_LANE_BOTTOM_PADDING_REM;
+
+    return Math.max(RotationPlannerPageComponent.DEFAULT_LANE_ROW_HEIGHT_REM, stackedHeight);
   }
 }
 
@@ -659,4 +882,76 @@ function shortLabelForGearSwap(option: PlannerGearSwapOption): string {
     .join('');
 
   return condensed || option.slotLabel.slice(0, 4).toUpperCase();
+}
+
+function shouldUseResolvedHitTickInPlanner(definition: AbilityDefinition): boolean {
+  return definition.id === 'rapid-fire';
+}
+
+function formatGearSwapOptionLabel(name: string, slotLabel: string, detailsLabel: string): string {
+  return detailsLabel ? `${name} - ${slotLabel} - ${detailsLabel}` : `${name} - ${slotLabel}`;
+}
+
+function describeGearSwapOption(
+  instance: GearBuilderState['inventory'][number],
+  definition: NonNullable<GameDataCatalog['items'][string]>,
+  catalog: GameDataCatalog,
+): string {
+  const details: string[] = [];
+
+  const configuredPerks = instance.configuredPerks ?? [];
+  if (configuredPerks.length) {
+    const perkLabel = configuredPerks
+      .map((perk) => {
+        const perkName = catalog.perks[perk.perkId]?.name ?? perk.perkId;
+        const shortName = perkName
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0]?.toUpperCase() ?? '')
+          .join('');
+        return typeof perk.rank === 'number' ? `${shortName}${perk.rank}` : shortName;
+      })
+      .join(', ');
+
+    if (perkLabel) {
+      details.push(`Perks ${perkLabel}`);
+    }
+  }
+
+  if (definition.id === 'pernixs-quiver') {
+    const loadedAmmo = resolveStringConfigOptionValue(definition, instance, 'loaded-ammo');
+    if (loadedAmmo) {
+      details.push(`Ammo ${catalog.items[loadedAmmo]?.name ?? loadedAmmo}`);
+    }
+  }
+
+  if (definition.id === 'essence-of-finality') {
+    const storedSpecial = resolveStringConfigOptionValue(definition, instance, 'stored-special');
+    if (storedSpecial && storedSpecial !== 'none') {
+      details.push(`Spec ${catalog.items[storedSpecial]?.name ?? humanizeStoredSpecialId(storedSpecial)}`);
+    }
+  }
+
+  return details.join(' | ');
+}
+
+function resolveStringConfigOptionValue(
+  definition: NonNullable<GameDataCatalog['items'][string]>,
+  instance: GearBuilderState['inventory'][number],
+  optionId: string,
+): string | null {
+  const configuredValue = instance.configValues?.[optionId];
+  if (typeof configuredValue === 'string' && configuredValue) {
+    return configuredValue;
+  }
+
+  const defaultValue = definition.configOptions?.find((option) => option.id === optionId)?.defaultValue;
+  return typeof defaultValue === 'string' ? defaultValue : null;
+}
+
+function humanizeStoredSpecialId(value: string): string {
+  return value
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 }

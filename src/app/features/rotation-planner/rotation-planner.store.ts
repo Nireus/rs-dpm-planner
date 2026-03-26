@@ -1,6 +1,7 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { AbilityDefinition } from '../../../game-data/types';
 import type { RotationAction, RotationPlan } from '../../../simulation-engine/models';
+import { MAX_ADRENALINE, resolveMaxAdrenaline } from '../../../simulation-engine/resolvers/adrenaline';
 import { buildBaseTimeline } from '../../../simulation-engine/timeline';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
@@ -55,6 +56,24 @@ export class RotationPlannerStore {
   readonly tickCount = this.tickCountValue.asReadonly();
   readonly nonGcdActions = this.nonGcdActionsValue.asReadonly();
   readonly abilityActions = this.abilityActionsValue.asReadonly();
+  readonly maxStartingAdrenaline = computed(() =>
+    resolveMaxAdrenaline({
+      persistentBuffConfig: {
+        buffIds: this.buffConfigurationStore.activeBuffIds(),
+        relicIds: this.buffConfigurationStore.activeRelicIds(),
+        pocketEffectItemIds: this.buffConfigurationStore.activePocketItemIds(),
+      },
+      gameData: this.gameDataStore.snapshot().catalog ?? {
+        items: {},
+        ammo: {},
+        abilities: {},
+        buffs: {},
+        perks: {},
+        relics: {},
+        eofSpecs: {},
+      },
+    }),
+  );
 
   readonly rotationPlan = computed<RotationPlan>(() => ({
     startingAdrenaline: this.startingAdrenaline(),
@@ -75,6 +94,13 @@ export class RotationPlannerStore {
 
   constructor() {
     effect(() => {
+      const maxAdrenaline = this.maxStartingAdrenaline();
+      if (this.startingAdrenaline() > maxAdrenaline) {
+        this.startingAdrenalineValue.set(maxAdrenaline);
+      }
+    });
+
+    effect(() => {
       this.persistState({
         startingAdrenaline: this.startingAdrenaline(),
         tickCount: this.tickCount(),
@@ -85,7 +111,7 @@ export class RotationPlannerStore {
   }
 
   updateStartingAdrenaline(value: number | string | null): void {
-    const parsedValue = normalizeIntegerInput(value, this.startingAdrenaline(), 0, 100);
+    const parsedValue = normalizeIntegerInput(value, this.startingAdrenaline(), 0, this.maxStartingAdrenaline());
     this.startingAdrenalineValue.set(parsedValue);
   }
 
@@ -235,7 +261,7 @@ export class RotationPlannerStore {
           parsed.startingAdrenaline ?? DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline,
           DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline,
           0,
-          100,
+          HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE,
         ),
         tickCount: normalizeIntegerInput(
           parsed.tickCount ?? DEFAULT_ROTATION_PLANNER_STATE.tickCount,
@@ -267,6 +293,8 @@ export class RotationPlannerStore {
     window.localStorage.removeItem(ROTATION_PLANNER_STORAGE_KEY);
   }
 }
+
+const HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE = MAX_ADRENALINE + 10;
 
 function normalizeIntegerInput(
   value: number | string | null,

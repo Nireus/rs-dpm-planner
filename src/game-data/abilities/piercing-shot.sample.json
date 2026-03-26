@@ -3,7 +3,7 @@
   "name": "Piercing Shot",
   "style": "ranged",
   "subtype": "basic",
-  "cooldownTicks": 3,
+  "cooldownTicks": 5,
   "adrenalineGain": 9,
   "requires": {
     "levelRequirements": {
@@ -33,5 +33,5 @@
     "max": 110
   },
   "effectRefs": ["piercing-shot"],
-  "description": "Fire two piercing shots that help cycle Snipe sooner."
+  "description": "Fire two piercing shots. Each hit reduces Snipe cooldown by 2.4 seconds."
 }

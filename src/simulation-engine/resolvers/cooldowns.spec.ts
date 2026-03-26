@@ -36,6 +36,34 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
     ammo: {},
     abilities: {
       'basic-shot': createAbility(),
+      snipe: createAbility({
+        id: 'snipe',
+        name: 'Snipe',
+        cooldownTicks: 100,
+      }),
+      'piercing-shot': createAbility({
+        id: 'piercing-shot',
+        name: 'Piercing Shot',
+        cooldownTicks: 5,
+        hitSchedule: [
+          {
+            id: 'piercing-shot-hit-1',
+            tickOffset: 0,
+            damage: {
+              min: 45,
+              max: 55,
+            },
+          },
+          {
+            id: 'piercing-shot-hit-2',
+            tickOffset: 1,
+            damage: {
+              min: 45,
+              max: 55,
+            },
+          },
+        ],
+      }),
       'zero-cd': createAbility({
         id: 'zero-cd',
         name: 'Zero Cooldown',
@@ -193,6 +221,144 @@ describe('resolveCooldownTimeline', () => {
       code: 'ability.missing_definition',
       tick: 1,
       relatedActionId: 'unknown',
+    });
+  });
+
+  it('reduces snipe cooldown by 2.4s per piercing shot hit', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 12,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'snipe-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'snipe' },
+          },
+          {
+            id: 'piercing-1',
+            tick: 10,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'piercing-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveCooldownTimeline(config);
+
+    expect(result.cooldownTimeline[9]).toEqual({
+      snipe: 100,
+    });
+    expect(result.cooldownTimeline[10]).toEqual({
+      'piercing-shot': 15,
+      snipe: 96,
+    });
+    expect(result.cooldownTimeline[11]).toEqual({
+      'piercing-shot': 15,
+      snipe: 92,
+    });
+  });
+
+  it('applies extra piercing shot snipe reduction when fleeting boots are equipped', () => {
+    const config = createConfig({
+      gameData: {
+        items: {
+          'fleeting-boots': {
+            id: 'fleeting-boots',
+            name: 'Fleeting boots',
+            category: 'armor',
+            slot: 'feet',
+            combatStyleTags: ['ranged'],
+            effectRefs: ['piercing-shot-snipe-reduction:+2ticks-per-hit'],
+          },
+        },
+        ammo: {},
+        abilities: {
+          'basic-shot': createAbility(),
+          snipe: createAbility({
+            id: 'snipe',
+            name: 'Snipe',
+            cooldownTicks: 100,
+          }),
+          'piercing-shot': createAbility({
+            id: 'piercing-shot',
+            name: 'Piercing Shot',
+            cooldownTicks: 5,
+            hitSchedule: [
+              {
+                id: 'piercing-shot-hit-1',
+                tickOffset: 0,
+                damage: {
+                  min: 45,
+                  max: 55,
+                },
+              },
+              {
+                id: 'piercing-shot-hit-2',
+                tickOffset: 1,
+                damage: {
+                  min: 45,
+                  max: 55,
+                },
+              },
+            ],
+          }),
+          'zero-cd': createAbility({
+            id: 'zero-cd',
+            name: 'Zero Cooldown',
+            cooldownTicks: 0,
+          }),
+        },
+        buffs: {},
+        perks: {},
+        relics: {},
+        eofSpecs: {},
+      },
+      gearSetup: {
+        equipment: {
+          feet: {
+            instanceId: 'fleeting-boots-1',
+            definitionId: 'fleeting-boots',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 12,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'snipe-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'snipe' },
+          },
+          {
+            id: 'piercing-1',
+            tick: 10,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'piercing-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveCooldownTimeline(config);
+
+    expect(result.cooldownTimeline[10]).toEqual({
+      'piercing-shot': 15,
+      snipe: 94,
+    });
+    expect(result.cooldownTimeline[11]).toEqual({
+      'piercing-shot': 15,
+      snipe: 88,
     });
   });
 });
