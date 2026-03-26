@@ -1,0 +1,13 @@
+{
+  "id": "feasting-spores-cooldown",
+  "name": "Feasting Spores cooldown",
+  "iconPath": "https://runescape.wiki/images/Deathspore_arrows_1.png?2a0e8",
+  "wikiUrl": "https://runescape.wiki/w/Deathspore_arrows",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 50,
+  "effectRefs": [
+    "deathspore-cooldown"
+  ],
+  "displayPriority": 57
+}

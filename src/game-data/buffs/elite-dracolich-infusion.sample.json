@@ -1,0 +1,9 @@
+{
+  "id": "elite-dracolich-infusion",
+  "name": "Elite Dracolich infusion",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Elite_Dracolich_hauberk.png",
+  "wikiUrl": "https://runescape.wiki/w/Elite_Dracolich_armour",
+  "category": "temporary",
+  "sourceType": "item",
+  "effectRefs": ["ranged-critical-strike-chance:+40%"]
+}

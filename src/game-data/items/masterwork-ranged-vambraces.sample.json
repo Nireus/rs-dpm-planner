@@ -1,0 +1,19 @@
+{
+  "id": "masterwork-ranged-vambraces",
+  "name": "Masterwork ranged vambraces",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_vambraces.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 100,
+  "offensiveStats": {
+    "rangedBonus": 15.6
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "effectRefs": ["masterwork-ranged-set"],
+  "implementationNotes": "Curated masterwork ranged hand-slot item from the live Masterwork ranged equipment page."
+}

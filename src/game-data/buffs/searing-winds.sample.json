@@ -1,0 +1,13 @@
+{
+  "id": "searing-winds",
+  "name": "Searing Winds",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Galeshot.png",
+  "wikiUrl": "https://runescape.wiki/w/Galeshot",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 10,
+  "effectRefs": [
+    "ranged-hit-flat-bonus-ability-damage:+20%:cast-snapshot"
+  ],
+  "displayPriority": 90
+}

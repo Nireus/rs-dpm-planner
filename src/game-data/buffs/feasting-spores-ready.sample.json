@@ -1,0 +1,13 @@
+{
+  "id": "feasting-spores-ready",
+  "name": "Feasting Spores",
+  "iconPath": "https://runescape.wiki/images/Deathspore_arrows_5.png?cfd6d",
+  "wikiUrl": "https://runescape.wiki/w/Deathspore_arrows",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 15,
+  "effectRefs": [
+    "deathspore-free-cast"
+  ],
+  "displayPriority": 58
+}

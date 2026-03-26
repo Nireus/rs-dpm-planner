@@ -1,0 +1,19 @@
+{
+  "id": "masterwork-ranged-chaps",
+  "name": "Masterwork ranged chaps",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_chaps.png",
+  "combatStyleTags": ["ranged"],
+  "tier": 100,
+  "offensiveStats": {
+    "rangedBonus": 31.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "effectRefs": ["masterwork-ranged-set"],
+  "implementationNotes": "Curated masterwork ranged leg-slot item from the live Masterwork ranged equipment page."
+}

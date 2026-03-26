@@ -1,0 +1,10 @@
+{
+  "id": "shadow-imbued",
+  "name": "Shadow Imbued",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Imbue-_Shadows.png",
+  "wikiUrl": "https://runescape.wiki/w/Imbue:_Shadows",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 50,
+  "effectRefs": ["ranged-hit-adrenaline:+5%"]
+}

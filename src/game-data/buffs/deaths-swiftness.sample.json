@@ -1,0 +1,13 @@
+{
+  "id": "deaths-swiftness-buff",
+  "name": "Death's Swiftness",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Death%27s%20Swiftness.png",
+  "wikiUrl": "https://runescape.wiki/w/Death%27s_Swiftness",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 63,
+  "effectRefs": [
+    "ranged-damage-multiplier:+50%"
+  ],
+  "displayPriority": 95
+}

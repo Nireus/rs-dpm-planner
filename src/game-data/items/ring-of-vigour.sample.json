@@ -1,0 +1,18 @@
+{
+  "id": "ring-of-vigour",
+  "name": "Ring of vigour",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "https://runescape.wiki/images/Ring_of_vigour.png",
+  "hoverSummary": "Utility ring that reduces ultimate and special attack adrenaline costs.",
+  "detailLines": [
+    "Retains 10% adrenaline after using an ultimate ability.",
+    "Weapon special attacks cost 90% of their normal adrenaline, including EOF specials.",
+    "Does not stack with the passive effect from Warped gem."
+  ],
+  "combatStyleTags": ["ranged"],
+  "offensiveStats": {
+    "rangedBonus": 16.8
+  },
+  "effectRefs": ["vigour-passive"]
+}
