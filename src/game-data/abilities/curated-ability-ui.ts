@@ -49,11 +49,11 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
   },
   'corruption-shot': {
     iconPath: 'https://runescape.wiki/w/Special:FilePath/Corruption_Shot.png',
-    hoverSummary: 'Enhanced | 25 ticks | 5 hits | -20% adrenaline',
+    hoverSummary: 'Basic | 25 ticks | 5 hits | +8% adrenaline',
     detailLines: [
-      '90%-110% ranged damage per hit every 1.2s.',
+      '60%-80% ranged damage, then 80%, 60%, 40%, and 20% of that hit every 1.2s.',
       'Hits the target and up to 5 nearby enemies.',
-      'Damage over time reduces by 20% of the initial damage each hit.',
+      'Damage over time effect that does not interact like a normal direct-hit ranged ability.',
     ],
     wikiUrl: 'https://runescape.wiki/w/Corruption_Shot',
   },

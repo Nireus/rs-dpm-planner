@@ -21,16 +21,22 @@
     @if (simulationResult(); as result) {
       <section class="summary-grid">
         <article class="panel summary-panel">
+          <div data-testid="results-total-min">
           <span class="summary-label">Min</span>
           <strong>{{ result.totalDamage.min | number:'1.0-0' }}</strong>
+          </div>
         </article>
         <article class="panel summary-panel">
+          <div data-testid="results-total-avg">
           <span class="summary-label">Average</span>
           <strong>{{ result.totalDamage.avg | number:'1.0-1' }}</strong>
+          </div>
         </article>
         <article class="panel summary-panel">
+          <div data-testid="results-total-max">
           <span class="summary-label">Max</span>
           <strong>{{ result.totalDamage.max | number:'1.0-0' }}</strong>
+          </div>
         </article>
         @if (resultMetrics(); as metrics) {
           <article class="panel summary-panel">

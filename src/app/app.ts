@@ -19,9 +19,10 @@ export class App {
 
   protected readonly clearStateDialogOpen = signal(false);
   protected readonly navItems = [
+    { label: 'Home', path: '/' },
     { label: 'Gear', path: '/gear' },
-    { label: 'Abilities', path: '/abilities' },
     { label: 'Buffs', path: '/buffs' },
+    { label: 'Abilities', path: '/abilities' },
     { label: 'Rotation Planner', path: '/rotation-planner' },
     { label: 'Results', path: '/results' },
     { label: 'Import / Export', path: '/import-export' },

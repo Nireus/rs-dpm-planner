@@ -58,6 +58,22 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
     ammo: {},
     abilities: {
       'stack-builder': createAbility(),
+      'corruption-shot': createAbility({
+        id: 'corruption-shot',
+        name: 'Corruption Shot',
+        subtype: 'basic',
+        adrenalineGain: 8,
+        cooldownTicks: 25,
+        hitSchedule: [
+          { id: 'corruption-shot-hit-1', tickOffset: 0, damage: { min: 60, max: 80 } },
+          { id: 'corruption-shot-hit-2', tickOffset: 2, damage: { min: 48, max: 64 } },
+          { id: 'corruption-shot-hit-3', tickOffset: 4, damage: { min: 36, max: 48 } },
+          { id: 'corruption-shot-hit-4', tickOffset: 6, damage: { min: 24, max: 32 } },
+          { id: 'corruption-shot-hit-5', tickOffset: 8, damage: { min: 12, max: 16 } },
+        ],
+        baseDamage: { min: 180, max: 240 },
+        effectRefs: ['damage-over-time', 'corruption-shot'],
+      }),
       'piercing-shot': createAbility({
         id: 'piercing-shot',
         name: 'Piercing Shot',
@@ -178,5 +194,36 @@ describe('resolveDeathsporeTimeline', () => {
     expect(result.buffTimeline[15]).toEqual(['feasting-spores-ready', 'feasting-spores-cooldown']);
     expect(result.stackTimeline[14]).toBe(11);
     expect(result.stackTimeline[15]).toBe(0);
+  });
+
+  it('does not let Corruption Shot build Deathspore stacks', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'plain-bow',
+          },
+          ammo: {
+            instanceId: 'ammo-1',
+            definitionId: 'deathspore-arrows',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 20,
+        nonGcdActions: [],
+        abilityActions: [
+          { id: 'corruption-1', tick: 0, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'corruption-shot' } },
+        ],
+      },
+    });
+
+    const result = resolveDeathsporeTimeline(config);
+
+    expect(result.stackTimeline[0]).toBe(0);
+    expect(result.stackTimeline[10]).toBe(0);
+    expect(result.buffTimeline[10]).toEqual([]);
   });
 });

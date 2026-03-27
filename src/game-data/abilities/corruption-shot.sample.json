@@ -2,9 +2,9 @@
   "id": "corruption-shot",
   "name": "Corruption Shot",
   "style": "ranged",
-  "subtype": "enhanced",
+  "subtype": "basic",
   "cooldownTicks": 25,
-  "adrenalineCost": 20,
+  "adrenalineGain": 8,
   "requires": {
     "levelRequirements": {
       "ranged": 70
@@ -15,47 +15,47 @@
       "id": "corruption-shot-hit-1",
       "tickOffset": 0,
       "damage": {
-        "min": 90,
-        "max": 110
+        "min": 60,
+        "max": 80
       }
     },
     {
       "id": "corruption-shot-hit-2",
       "tickOffset": 2,
       "damage": {
-        "min": 72,
-        "max": 88
+        "min": 48,
+        "max": 64
       }
     },
     {
       "id": "corruption-shot-hit-3",
       "tickOffset": 4,
       "damage": {
-        "min": 54,
-        "max": 66
+        "min": 36,
+        "max": 48
       }
     },
     {
       "id": "corruption-shot-hit-4",
       "tickOffset": 6,
       "damage": {
-        "min": 36,
-        "max": 44
+        "min": 24,
+        "max": 32
       }
     },
     {
       "id": "corruption-shot-hit-5",
       "tickOffset": 8,
       "damage": {
-        "min": 18,
-        "max": 22
+        "min": 12,
+        "max": 16
       }
     }
   ],
   "baseDamage": {
-    "min": 270,
-    "max": 330
+    "min": 180,
+    "max": 240
   },
   "effectRefs": ["damage-over-time", "corruption-shot"],
-  "description": "Enhanced ranged bleed that corrupts the target and nearby enemies."
+  "description": "Basic ranged damage-over-time ability that corrupts the target and spreads to nearby enemies."
 }

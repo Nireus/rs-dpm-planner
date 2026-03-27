@@ -15,6 +15,18 @@
 
       <div class="planner-header-side">
         <label class="control-field compact-field">
+          <span>Ranged</span>
+          <input
+            type="number"
+            min="1"
+            max="120"
+            step="1"
+            [ngModel]="playerStats().rangedLevel"
+            (ngModelChange)="updateRangedLevel($event)"
+          />
+        </label>
+
+        <label class="control-field compact-field">
           <span>Adren</span>
           <input
             type="number"
@@ -60,10 +72,10 @@
           <span>Cooldown lane</span>
         </label>
 
-        @if (validationIssues().length) {
-          <div class="validation-chip">{{ validationIssues().length }} issue(s)</div>
+        @if (plannerValidationIssues().length) {
+          <div class="validation-chip warning-chip">{{ plannerValidationIssues().length }} issue(s)</div>
         } @else {
-          <div class="validation-chip success-chip">Timeline bounds valid</div>
+          <div class="validation-chip success-chip">No current validation issues</div>
         }
       </div>
     </div>
@@ -86,6 +98,7 @@
             <button
               type="button"
               class="ability-chip icon-only-chip"
+              [attr.data-testid]="'ability-palette-' + entry.definition.id"
               [class.blocked-chip]="entry.availabilityIssue"
               [title]="abilityPaletteEntryTitle(entry)"
               [attr.draggable]="entry.availabilityIssue ? null : 'true'"
@@ -201,6 +214,7 @@
             @for (tickIndex of tickIndexes(); track tickIndex) {
               <div
                 class="timeline-cell"
+                [attr.data-testid]="'timeline-cell-' + lane.key + '-' + tickIndex"
                 [class.buff-cell]="lane.key === 'buff'"
                 [class.cooldown-cell]="lane.key === 'cooldown'"
                 [class.ability-cell]="lane.key === 'ability'"
@@ -221,6 +235,7 @@
                     @for (action of nonGcdActionsAtTick(tickIndex); track action.id) {
                       <div
                         class="non-gcd-entry"
+                        [class.invalid-action]="actionValidationSummary(action)"
                         [title]="nonGcdLabel(action)"
                         draggable="true"
                         (click)="openNonGcdActionConfig(action, $event)"
@@ -311,6 +326,7 @@
                     <div
                       class="placed-ability"
                       [class]=" 'placed-ability ' + abilitySegmentClass(occupancy.segment)"
+                      [class.invalid-action]="actionValidationSummary(occupancy.action)"
                       [style.--occupied-span]="abilitySpan(occupancy.definition)"
                       [title]="placedAbilityTitle(occupancy.action)"
                       draggable="true"
@@ -382,145 +398,41 @@
     </div>
     </div>
 
-    @if (tickInspection(); as inspection) {
-      <section class="tick-inspector">
-        <div class="inspector-header">
-          <h2>Tick T{{ inspection.tick }}</h2>
-          <div class="inspector-chip">
-            Adrenaline {{ inspection.adrenaline.start }}% -> {{ inspection.adrenaline.end }}%
-          </div>
+    @if (plannerValidationBannerEntries().length) {
+      <section class="validation-banner" role="status" aria-live="polite">
+        <div class="validation-banner-header">
+          <h2>Validation Warnings</h2>
+          <p>The planner still lets you sketch the rotation, but these actions currently fail validation.</p>
         </div>
 
-        <div class="inspector-grid">
-          <article class="inspector-card">
-            <h3>Actions</h3>
-            @if (inspection.actionsStarting.length) {
-              <h4>Starting</h4>
-              <ul class="inspector-list">
-                @for (entry of inspection.actionsStarting; track entry) {
-                  <li>{{ entry }}</li>
-                }
-              </ul>
-            } @else {
-              <p class="inspector-empty">No actions start on this tick.</p>
-            }
-
-            @if (inspection.hitsResolving.length) {
-              <h4>Hits</h4>
-              <ul class="inspector-list">
-                @for (entry of inspection.hitsResolving; track entry) {
-                  <li>{{ entry }}</li>
-                }
-              </ul>
-            }
-
-            @if (inspection.validationIssues.length) {
-              <h4>Validation</h4>
-              <ul class="inspector-list">
-                @for (issue of inspection.validationIssues; track issue.code + issue.message) {
-                  <li>{{ issue.message }}</li>
-                }
-              </ul>
-            }
-          </article>
-
-          <article class="inspector-card">
-            <h3>Cooldowns</h3>
-            @if (inspection.cooldowns.length) {
-              <ul class="inspector-list">
-                @for (entry of inspection.cooldowns; track entry.abilityId) {
-                  <li>{{ entry.abilityName }}: {{ entry.remainingTicks }}t remaining</li>
-                }
-              </ul>
-            } @else {
-              <p class="inspector-empty">No active cooldowns at tick start.</p>
-            }
-          </article>
-
-          <article class="inspector-card">
-            <h3>Buffs</h3>
-            @if (inspection.deathsporeStacks !== null) {
-              <div class="inspector-inline-stat">Deathspore {{ inspection.deathsporeStacks }}/12</div>
-            }
-            @if (inspection.activePersistentBuffs.length || inspection.activeTemporaryBuffs.length) {
-              @if (inspection.activeTemporaryBuffs.length) {
-                <h4>Temporary</h4>
-                <ul class="inspector-list">
-                  @for (entry of inspection.activeTemporaryBuffs; track 'temporary:' + entry) {
-                    <li>{{ entry }}</li>
-                  }
-                </ul>
-              }
-
-              @if (inspection.activePersistentBuffs.length) {
-                <h4>Permanent</h4>
-                <ul class="inspector-list">
-                  @for (entry of inspection.activePersistentBuffs; track 'persistent:' + entry) {
-                    <li>{{ entry }}</li>
-                  }
-                </ul>
-              }
-            } @else {
-              <p class="inspector-empty">No tracked buffs are active.</p>
-            }
-          </article>
-
-          <article class="inspector-card">
-            <h3>Gear / Ammo</h3>
-              <ul class="inspector-list">
-                @for (entry of inspection.equipmentState; track entry.slot) {
-                  <li>
-                    {{ entry.slot }}: {{ entry.itemName }}
-                    @for (detail of entry.details; track detail) {
-                      <div class="inspector-subdetail">{{ detail }}</div>
-                    }
-                  </li>
-                }
-                <li>Ammo: {{ inspection.ammoState ?? 'None equipped' }}</li>
-              </ul>
+        <div class="validation-banner-list">
+          @for (entry of plannerValidationBannerEntries(); track entry.issueKey) {
+            <article class="validation-banner-entry" [class.warning-entry]="entry.severity === 'warning'" [class.error-entry]="entry.severity === 'error'">
+              <span class="validation-banner-chip">{{ entry.tickLabel }}</span>
+              <div class="validation-banner-copy">
+                <strong>{{ entry.actionLabel }}</strong>
+                <span>{{ entry.message }}</span>
+              </div>
             </article>
-
+          }
         </div>
       </section>
     }
 
+    @if (tickInspection(); as inspection) {
+      <app-rotation-planner-tick-inspector [inspection]="inspection" />
+    }
+
     @if (gearSwapDialogActionId(); as gearSwapActionId) {
-      <div class="planner-dialog-backdrop" (click)="closeGearSwapConfig(true)">
-        <section
-          class="planner-dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="gear-swap-dialog-title"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="planner-dialog-header">
-            <div>
-              <h2 id="gear-swap-dialog-title">Configure Gear Swap</h2>
-              <p>Choose which backpack item should be equipped from tick T{{ (activeGearSwapAction()?.tick ?? 0) + 1 }} onward.</p>
-            </div>
-          </div>
-
-          <label class="control-field dialog-field">
-            <span>Backpack item</span>
-            <select
-              [ngModel]="selectedGearSwapInstanceId()"
-              (ngModelChange)="updateSelectedGearSwapInstanceId($event)"
-            >
-              @for (option of gearSwapOptions(); track option.instanceId) {
-                <option [ngValue]="option.instanceId" [title]="option.optionLabel">
-                  {{ option.optionLabel }}
-                </option>
-              }
-            </select>
-          </label>
-
-          <div class="planner-dialog-actions">
-            <button type="button" class="dialog-danger" (click)="removeGearSwapActionFromDialog()">Remove</button>
-            <button type="button" class="dialog-secondary" (click)="closeGearSwapConfig(true)">Cancel</button>
-            <button type="button" class="dialog-primary" (click)="confirmGearSwapConfig()">Apply</button>
-          </div>
-        </section>
-      </div>
+      <app-rotation-planner-gear-swap-dialog
+        [actionTick]="activeGearSwapAction()?.tick ?? 0"
+        [options]="gearSwapOptions()"
+        [selectedInstanceId]="selectedGearSwapInstanceId()"
+        (selectedInstanceIdChange)="updateSelectedGearSwapInstanceId($event)"
+        (cancel)="closeGearSwapConfig(true)"
+        (remove)="removeGearSwapActionFromDialog()"
+        (apply)="confirmGearSwapConfig()"
+      />
     }
 
   </section>

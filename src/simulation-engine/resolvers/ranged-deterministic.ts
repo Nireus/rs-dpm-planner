@@ -1,4 +1,5 @@
 import type { EntityId } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import {
   BALANCE_BY_FORCE_ABILITY_ID,
@@ -10,8 +11,8 @@ const GALESHOT_ABILITY_ID = 'galeshot';
 const DEATHS_SWIFTNESS_ABILITY_ID = 'deaths-swiftness';
 const BALANCE_BY_FORCE_BUFF_ID = 'balance-by-force-buff';
 const BALANCE_BY_FORCE_DURATION_TICKS = 50;
-const DRACOLICH_SET_EFFECT = 'dracolich-set';
-const ELITE_DRACOLICH_SET_EFFECT = 'elite-dracolich-set';
+const DRACOLICH_SET_EFFECT = EFFECT_REF_IDS.dracolichSet;
+const ELITE_DRACOLICH_SET_EFFECT = EFFECT_REF_IDS.eliteDracolichSet;
 const DRACOLICH_INFUSION_BUFF_ID = 'dracolich-infusion';
 const ELITE_DRACOLICH_INFUSION_BUFF_ID = 'elite-dracolich-infusion';
 const DEATHS_SWIFTNESS_BUFF_ID = 'deaths-swiftness-buff';
@@ -450,7 +451,7 @@ function applyTimelineHitAdrenaline(
     }
 
     const ability = resolveEffectiveAbilityDefinition(config, action);
-    if (!ability || ability.style !== 'ranged') {
+    if (!ability || ability.style !== 'ranged' || ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)) {
       continue;
     }
 
@@ -468,7 +469,7 @@ function applyTimelineHitAdrenaline(
       if (
         hasBolgPassive &&
         ability.style === 'ranged' &&
-        !ability.effectRefs?.includes('damage-over-time')
+        !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)
       ) {
         perfectEquilibriumStacks += 1;
         const perfectEquilibriumThreshold = (buffTimeline[hitTick] ?? []).includes(PERFECT_EQUILIBRIUM_THRESHOLD_BUFF_ID)
@@ -526,7 +527,7 @@ function hasBolgEquipped(config: SimulationConfig): boolean {
   }
 
   const definition = config.gameData.items[equippedWeapon.definitionId];
-  return definition?.effectRefs?.includes('bolg-passive') ?? false;
+  return definition?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
 }
 
 function readAbilityId(action: RotationAction): EntityId | null {

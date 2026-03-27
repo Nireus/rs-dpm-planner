@@ -1,0 +1,84 @@
+<section class="import-export-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Portability</p>
+      <h1>Import / Export</h1>
+      <p class="lead">
+        Save a portable snapshot of your current setup, or load one back into the planner.
+        Imports replace the current local workspace state.
+      </p>
+    </div>
+  </header>
+
+  <section class="grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="section-label">Export</p>
+          <h2>Current portable config</h2>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="secondary-button" data-testid="copy-export-json" (click)="copyExportJson()">Copy JSON</button>
+          <button type="button" class="primary-button" data-testid="download-export-json" (click)="downloadExportJson()">Download File</button>
+        </div>
+      </div>
+
+      <p class="panel-copy">
+        This document contains the portable simulation state: player stats, gear, inventory,
+        persistent buffs, and the rotation plan.
+      </p>
+
+      <textarea class="json-box" data-testid="export-json" [value]="exportText()" readonly spellcheck="false"></textarea>
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="section-label">Import</p>
+          <h2>Load a portable config</h2>
+        </div>
+
+        <label class="file-button">
+          <input type="file" accept=".json,application/json" (change)="loadImportFile($event)" />
+          Choose File
+        </label>
+      </div>
+
+      <p class="panel-copy">
+        Paste a previously exported config or load a JSON file. Validation runs before import and
+        schema issues are shown below.
+      </p>
+
+      <textarea
+        data-testid="import-json"
+        class="json-box"
+        [(ngModel)]="importText"
+        placeholder="Paste portable config JSON here..."
+        spellcheck="false"></textarea>
+
+      <div class="actions footer-actions">
+        <button type="button" class="secondary-button" data-testid="clear-import-json" (click)="clearImportText()">Clear</button>
+        <button type="button" class="secondary-button" data-testid="validate-import-json" (click)="validateImportText()">Validate</button>
+        <button type="button" class="primary-button" data-testid="apply-import-json" (click)="importConfig()">Import Config</button>
+      </div>
+
+      @if (importMessage()) {
+        <div class="status" data-testid="import-status" [class.success]="importSuccess()" [class.error]="!importSuccess()">
+          {{ importMessage() }}
+        </div>
+      }
+
+      @if (importErrors().length > 0) {
+        <div class="error-list">
+          <p class="section-label">Validation issues</p>
+          <ul>
+            @for (error of importErrors(); track error) {
+              <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </article>
+  </section>
+</section>

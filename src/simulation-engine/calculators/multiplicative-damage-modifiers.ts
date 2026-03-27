@@ -1,4 +1,5 @@
 import type { EffectRef, EntityId } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type {
   DamageModifierContribution,
   DamageSummary,
@@ -13,14 +14,15 @@ export interface MultiplicativeDamageComputation {
 
 export function applyMultiplicativeDamageModifiers(
   config: SimulationConfig,
-  ability: { effectRefs?: EffectRef[] },
+  ability: { id?: string; style?: string; effectRefs?: EffectRef[] },
+  hit: { id?: string },
   baseDamage: DamageSummary,
   hitTick: number,
   timelineBuffs: Record<number, EntityId[]>,
 ): MultiplicativeDamageComputation {
   const effectRefs = collectActiveEffectRefs(config, ability, hitTick, timelineBuffs);
   const modifiers = effectRefs
-    .map((effectRef) => parseMultiplicativeModifier(effectRef))
+    .map((effectRef) => parseMultiplicativeModifier(effectRef, ability, hit))
     .filter((entry): entry is DamageModifierContribution & { multiplier: number } => Boolean(entry));
 
   if (!modifiers.length) {
@@ -43,10 +45,31 @@ export function applyMultiplicativeDamageModifiers(
 
 function parseMultiplicativeModifier(
   effectRef: EffectRef,
+  ability: { id?: string; style?: string; effectRefs?: EffectRef[] },
+  hit: { id?: string },
 ): (DamageModifierContribution & { multiplier: number }) | null {
+  const isDamageOverTime = ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime) ?? false;
+
+  if (effectRef === EFFECT_REF_IDS.fulArrowsHeat) {
+    if (!shouldApplyFulArrowBonus(ability, hit)) {
+      return null;
+    }
+
+    return {
+      sourceId: effectRef,
+      label: 'Ful arrows x1.15',
+      value: 0,
+      multiplier: 1.15,
+    };
+  }
+
   const match = /^ranged-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
 
   if (!match) {
+    return null;
+  }
+
+  if (isDamageOverTime) {
     return null;
   }
 
@@ -59,6 +82,21 @@ function parseMultiplicativeModifier(
     value: 0,
     multiplier,
   };
+}
+
+function shouldApplyFulArrowBonus(
+  ability: { id?: string; style?: string; effectRefs?: EffectRef[] },
+  _hit: { id?: string },
+): boolean {
+  if (ability.style !== 'ranged') {
+    return false;
+  }
+
+  if (ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)) {
+    return false;
+  }
+
+  return true;
 }
 
 function scaleDamageSummary(baseDamage: DamageSummary, multiplier: number): DamageSummary {

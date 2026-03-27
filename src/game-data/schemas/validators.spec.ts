@@ -30,6 +30,7 @@ describe('game-data sample JSON validation', () => {
       'src/game-data/items/masterwork-ranged-body.sample.json',
       'src/game-data/items/wen-arrows.sample.json',
       'src/game-data/items/jas-dragonbane-arrows.sample.json',
+      'src/game-data/items/gloomfire-bow.sample.json',
       'src/game-data/items/dracolich-hauberk.sample.json',
       'src/game-data/items/dracolich-vambraces.sample.json',
       'src/game-data/items/elite-dracolich-vambraces.sample.json',
@@ -66,6 +67,13 @@ describe('game-data sample JSON validation', () => {
     expect(result.success).toBe(true);
   });
 
+  it('parses and validates additional EOF spec JSON', () => {
+    const document = readJson('src/game-data/eof-specs/gloomfire-bow-eof.sample.json');
+    const result = validateEofSpecDefinition(document);
+
+    expect(result.success).toBe(true);
+  });
+
   it('parses and validates sample perk JSON', () => {
     const document = readJson('src/game-data/perks/equilibrium.sample.json');
     const result = validatePerkDefinition(document);
@@ -76,6 +84,47 @@ describe('game-data sample JSON validation', () => {
   it('parses and validates sample relic JSON', () => {
     const document = readJson('src/game-data/relics/fury-of-the-small.sample.json');
     const result = validateRelicDefinition(document);
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown effect refs', () => {
+    const result = validateBuffDefinition({
+      id: 'bad-buff',
+      name: 'Bad Buff',
+      category: 'temporary',
+      sourceType: 'ability',
+      effectRefs: ['totally-unknown-effect'],
+    });
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'effectRefs[0]',
+          }),
+        ]),
+      );
+    }
+  });
+
+  it('accepts supported parameterized effect refs and requirement tags', () => {
+    const result = validateAbilityDefinition({
+      id: 'sample-ability',
+      name: 'Sample Ability',
+      style: 'ranged',
+      subtype: 'special',
+      cooldownTicks: 0,
+      baseDamage: {
+        min: 100,
+        max: 120,
+      },
+      hitSchedule: [],
+      effectRefs: ['weapon-special:sample-special', 'critical-strike-chance:+100%'],
+      requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+    });
 
     expect(result.success).toBe(true);
   });

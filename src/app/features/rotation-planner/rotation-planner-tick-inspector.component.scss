@@ -1,0 +1,128 @@
+.tick-inspector {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(88, 100, 29, 0.2);
+  border-radius: 1rem;
+  background: rgba(8, 13, 6, 0.55);
+}
+
+.inspector-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.inspector-chip {
+  padding: 0.32rem 0.58rem;
+  border: 1px solid rgba(88, 100, 29, 0.22);
+  border-radius: 999px;
+  background: rgba(12, 20, 8, 0.88);
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.inspector-card {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(88, 100, 29, 0.2);
+  border-radius: 0.95rem;
+  background: rgba(11, 17, 8, 0.9);
+}
+
+.inspector-card--wide {
+  grid-column: span 2;
+}
+
+.inspector-card h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+}
+
+.inspector-card h4 {
+  margin: 0;
+}
+
+.inspector-list {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.inspector-list--formula {
+  gap: 0.38rem;
+  padding-left: 1rem;
+}
+
+.damage-calculation-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.damage-calculation {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid rgba(88, 100, 29, 0.18);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 10, 0.72);
+}
+
+.damage-calculation h4 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.74rem;
+}
+
+.inspector-formula-line {
+  color: rgba(223, 236, 206, 0.82);
+  font-family: Consolas, 'SFMono-Regular', Monaco, monospace;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.inspector-subdetail {
+  margin-top: 0.15rem;
+  color: rgba(223, 236, 206, 0.76);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.inspector-empty {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 1100px) {
+  .inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inspector-card--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 900px) {
+  .inspector-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inspector-card--wide {
+    grid-column: span 1;
+  }
+}

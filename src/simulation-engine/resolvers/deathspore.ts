@@ -1,12 +1,13 @@
 import type { EntityId } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 
-const DEATHSPORE_EFFECT_REF = 'deathspore-progress';
+const DEATHSPORE_EFFECT_REF = EFFECT_REF_IDS.deathsporeProgress;
 const FEASTING_SPORES_READY_BUFF_ID = 'feasting-spores-ready';
 const FEASTING_SPORES_COOLDOWN_BUFF_ID = 'feasting-spores-cooldown';
 const BALANCE_BY_FORCE_BUFF_ID = 'balance-by-force-buff';
-const BOLG_PASSIVE_EFFECT_REF = 'bolg-passive';
+const BOLG_PASSIVE_EFFECT_REF = EFFECT_REF_IDS.bolgPassive;
 
 const FEASTING_SPORES_REQUIRED_STACKS = 12;
 const FEASTING_SPORES_READY_DURATION_TICKS = 15;
@@ -193,9 +194,11 @@ function buildRangedHitOccurrences(
       continue;
     }
 
-    const countsForDeathspore = ability.style === 'ranged';
+    const countsForDeathspore =
+      ability.style === 'ranged' &&
+      !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
     const contributesToPerfectEquilibrium =
-      countsForDeathspore && !ability.effectRefs?.includes('damage-over-time');
+      countsForDeathspore && !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
 
     for (const hit of ability.hitSchedule) {
       const tick = action.tick + hit.tickOffset;

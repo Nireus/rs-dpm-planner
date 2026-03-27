@@ -6,6 +6,7 @@ import type {
   PerkDefinition,
   RelicDefinition,
 } from '../types';
+import { isRecognizedEffectRef, isRecognizedRequirementTag } from '../conventions/mechanics';
 
 export type GameDataValidationError = {
   path: string;
@@ -62,6 +63,12 @@ function validateDefinitionBase(
   const effectRefs = input['effectRefs'];
   if (effectRefs !== undefined && !isStringArray(effectRefs)) {
     pushError(errors, 'effectRefs', 'Expected "effectRefs" to be an array of strings.');
+  } else if (Array.isArray(effectRefs)) {
+    effectRefs.forEach((effectRef, index) => {
+      if (!isRecognizedEffectRef(effectRef)) {
+        pushError(errors, `effectRefs[${index}]`, `Unrecognized effect ref "${effectRef}".`);
+      }
+    });
   }
 
   return errors;
@@ -122,6 +129,17 @@ export function validateAbilityDefinition(
 
   if (!isRecord(input['baseDamage'])) {
     pushError(errors, 'baseDamage', 'Expected "baseDamage" to be an object.');
+  }
+
+  const requiredEquipmentTags = input['requiredEquipmentTags'];
+  if (requiredEquipmentTags !== undefined && !isStringArray(requiredEquipmentTags)) {
+    pushError(errors, 'requiredEquipmentTags', 'Expected "requiredEquipmentTags" to be an array of strings.');
+  } else if (Array.isArray(requiredEquipmentTags)) {
+    requiredEquipmentTags.forEach((tag, index) => {
+      if (!isRecognizedRequirementTag(tag)) {
+        pushError(errors, `requiredEquipmentTags[${index}]`, `Unrecognized requirement tag "${tag}".`);
+      }
+    });
   }
 
   if (errors.length > 0) {

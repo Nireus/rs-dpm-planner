@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { ItemDefinition } from '../../../game-data/types';
-import type { GearBuilderState } from '../../features/gear/gear-builder.utils';
+import type { GearBuilderState } from './gear-state';
 import { resolveEffectiveAmmoSelection } from './effective-ammo-selection';
 
 const DEATHSPORE_ARROWS: ItemDefinition = {

@@ -1,6 +1,7 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
-import type { GearBuilderState } from '../gear/gear-builder.utils';
+import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
+import type { GearBuilderState } from '../../core/gear/gear-state';
 import { formatEquipmentSlot } from '../gear/gear-builder.utils';
 import type {
   PlayerStats,
@@ -43,6 +44,18 @@ export interface RotationPlannerTickInspection {
   }>;
   actionsStarting: string[];
   hitsResolving: string[];
+  damageCalculations: Array<{
+    abilityName: string;
+    hitName: string;
+    baseRange: string;
+    additiveStep: string;
+    multiplicativeStep: string;
+    expectedValueStep: string;
+    finalRange: string;
+    minFormula: string;
+    avgFormula: string;
+    maxFormula: string;
+  }>;
   validationIssues: ValidationIssue[];
 }
 
@@ -72,6 +85,7 @@ export function inspectRotationPlannerTick(input: {
     (buffId) => !isCooldownLikeBuff(input.catalog.buffs[buffId]),
   );
   const projectedGearState = projectGearStateAtTick(input.gearState, input.rotationPlan.nonGcdActions, clampedTick);
+  const deathsporeAmmoActive = hasDeathsporeAmmoEquipped(projectedGearState, input.catalog);
 
   return {
     tick: clampedTick,
@@ -80,7 +94,9 @@ export function inspectRotationPlannerTick(input: {
       end: adrenalineTickState?.valueAtTickEnd ?? input.rotationPlan.startingAdrenaline,
     },
     deathsporeStacks:
-      typeof simulatedTickState?.deathsporeStacks === 'number' ? simulatedTickState.deathsporeStacks : null,
+      deathsporeAmmoActive && typeof simulatedTickState?.deathsporeStacks === 'number'
+        ? simulatedTickState.deathsporeStacks
+        : null,
     activePersistentBuffs: persistentBuffIds.map(
       (buffId) => input.catalog.buffs[buffId]?.name ?? input.catalog.relics[buffId]?.name ?? buffId,
     ),
@@ -114,6 +130,12 @@ export function inspectRotationPlannerTick(input: {
       input.catalog,
       input.rotationPlan,
     ),
+    damageCalculations: collectDamageCalculationsAtTick(
+      simulationResult,
+      clampedTick,
+      input.catalog,
+      input.rotationPlan,
+    ),
     validationIssues: [
       ...timelineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
       ...adrenalineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
@@ -136,6 +158,23 @@ function resolveAmmoState(
     catalog.items[ammoInstance.definitionId]?.name ??
     ammoInstance.definitionId
   );
+}
+
+function hasDeathsporeAmmoEquipped(
+  gearState: GearBuilderState,
+  catalog: GameDataCatalog,
+): boolean {
+  const ammoInstance = resolveEffectiveAmmoSelection(gearState, catalog);
+  if (!ammoInstance) {
+    return false;
+  }
+
+  const effectRefs =
+    catalog.items[ammoInstance.definitionId]?.effectRefs ??
+    (catalog.ammo as Record<string, { effectRefs?: string[] }>)[ammoInstance.definitionId]?.effectRefs ??
+    [];
+
+  return effectRefs.includes(EFFECT_REF_IDS.deathsporeProgress);
 }
 
 function buildEquipmentDetails(
@@ -278,6 +317,83 @@ function collectResolvedHitLabelsAtTick(
     });
 }
 
+function collectDamageCalculationsAtTick(
+  simulationResult: SimulationResult,
+  tick: number,
+  catalog: GameDataCatalog,
+  rotationPlan: RotationPlan,
+): RotationPlannerTickInspection['damageCalculations'] {
+  return simulationResult.explainability.damageBreakdowns
+    .filter((entry) => resolveDisplayedHitTick(entry, catalog, rotationPlan) === tick)
+    .map((entry) => buildDamageCalculationEntry(entry, catalog));
+}
+
+function buildDamageCalculationEntry(
+  entry: SimulationResult['explainability']['damageBreakdowns'][number],
+  catalog: GameDataCatalog,
+): RotationPlannerTickInspection['damageCalculations'][number] {
+  const abilityName = catalog.abilities[entry.abilityId]?.name ?? humanizeHitId(entry.abilityId);
+  const hitName = humanizeHitId(entry.hitId.split(':').slice(1).join(':') || entry.hitId);
+  const inheritedTriggerDamage = entry.derivedParts?.inheritedTriggerDamage;
+  const ordinaryAdditiveModifiers = inheritedTriggerDamage
+    ? entry.additiveModifiers.filter((modifier) => modifier.sourceId !== 'perfect-equilibrium-trigger')
+    : entry.additiveModifiers;
+  const additiveTotal = sumModifierValues(ordinaryAdditiveModifiers);
+  const multiplicativeProduct = calculateMultiplierProduct(entry);
+  const afterMultiplicative = {
+    min: roundValue(entry.baseDamage.min * multiplicativeProduct),
+    avg: roundValue(entry.baseDamage.avg * multiplicativeProduct),
+    max: roundValue(entry.baseDamage.max * multiplicativeProduct),
+  };
+  const afterAdditive = {
+    min: roundValue(afterMultiplicative.min + additiveTotal),
+    avg: roundValue(afterMultiplicative.avg + additiveTotal),
+    max: roundValue(afterMultiplicative.max + additiveTotal),
+  };
+  const expectedValueTotal = sumModifierValues(entry.expectedValueModifiers);
+  const critAdjustedRange = inheritedTriggerDamage
+    ? {
+        min: roundValue(entry.finalDamage.min - inheritedTriggerDamage.min),
+        avg: roundValue(entry.finalDamage.avg - inheritedTriggerDamage.avg),
+        max: roundValue(entry.finalDamage.max - inheritedTriggerDamage.max),
+      }
+    : entry.finalDamage;
+  const critMinMultiplier = calculateCritMultiplier(afterAdditive.min, critAdjustedRange.min);
+  const critAvgMultiplier = calculateCritMultiplier(afterAdditive.avg, critAdjustedRange.avg);
+  const critMaxMultiplier = calculateCritMultiplier(afterAdditive.max, critAdjustedRange.max);
+  const inheritedStep = inheritedTriggerDamage
+    ? ` + inherited trigger ${formatDamageRange(inheritedTriggerDamage)}`
+    : '';
+  const finalMinFormula = inheritedTriggerDamage
+    ? `Min: (((${formatNumber(entry.baseDamage.min)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMinMultiplier)}${critAdjustedRange.min !== afterAdditive.min ? ' (crit)' : ''}) + ${formatNumber(inheritedTriggerDamage.min)} = ${formatNumber(entry.finalDamage.min)}`
+    : `Min: ((${formatNumber(entry.baseDamage.min)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMinMultiplier)}${entry.finalDamage.min !== afterAdditive.min ? ' (crit)' : ''} = ${formatNumber(entry.finalDamage.min)}`;
+  const finalAvgFormula = inheritedTriggerDamage
+    ? `Avg: (((${formatNumber(entry.baseDamage.avg)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critAvgMultiplier)} (crit)) + ${formatNumber(inheritedTriggerDamage.avg)} = ${formatNumber(entry.finalDamage.avg)}`
+    : `Avg: ((${formatNumber(entry.baseDamage.avg)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critAvgMultiplier)} (crit) = ${formatNumber(entry.finalDamage.avg)}`;
+  const finalMaxFormula = inheritedTriggerDamage
+    ? `Max: (((${formatNumber(entry.baseDamage.max)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMaxMultiplier)}${critAdjustedRange.max !== afterAdditive.max ? ' (crit)' : ''}) + ${formatNumber(inheritedTriggerDamage.max)} = ${formatNumber(entry.finalDamage.max)}`
+    : `Max: ((${formatNumber(entry.baseDamage.max)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMaxMultiplier)}${entry.finalDamage.max !== afterAdditive.max ? ' (crit)' : ''} = ${formatNumber(entry.finalDamage.max)}`;
+
+  return {
+    abilityName,
+    hitName,
+    baseRange: formatDamageRange(entry.baseDamage),
+    additiveStep: ordinaryAdditiveModifiers.length || inheritedTriggerDamage
+      ? `${ordinaryAdditiveModifiers.length ? `${formatSignedValue(additiveTotal)} from ${ordinaryAdditiveModifiers.map((modifier) => modifier.label).join(', ')}` : 'No flat added damage'}${inheritedStep}`
+      : 'No flat added damage',
+    multiplicativeStep: entry.multiplicativeModifiers.length
+      ? `${entry.multiplicativeModifiers.map((modifier) => extractMultiplierLabel(modifier.label)).join(' × ')} = x${formatNumber(multiplicativeProduct)}`
+      : 'No damage multipliers',
+    expectedValueStep: entry.expectedValueModifiers.length
+      ? `Min x${formatNumber(critMinMultiplier)}, Avg x${formatNumber(critAvgMultiplier)}, Max x${formatNumber(critMaxMultiplier)} (crit)`
+      : 'No crit multiplier',
+    finalRange: formatDamageRange(entry.finalDamage),
+    minFormula: finalMinFormula,
+    avgFormula: finalAvgFormula,
+    maxFormula: finalMaxFormula,
+  };
+}
+
 function resolveDisplayedHitTick(
   entry: SimulationResult['explainability']['damageBreakdowns'][number],
   catalog: GameDataCatalog,
@@ -314,6 +430,60 @@ function humanizeHitId(hitId: string): string {
   return hitId
     .replace(/[-_]+/g, ' ')
     .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function formatDamageRange(range: { min: number; avg: number; max: number }): string {
+  return `${formatNumber(range.min)} / ${formatNumber(range.avg)} / ${formatNumber(range.max)}`;
+}
+
+function sumModifierValues(
+  modifiers: Array<{ value: number }>,
+): number {
+  return roundValue(modifiers.reduce((sum, modifier) => sum + modifier.value, 0));
+}
+
+function calculateMultiplierProduct(
+  entry: SimulationResult['explainability']['damageBreakdowns'][number],
+): number {
+  if (!entry.multiplicativeModifiers.length) {
+    return 1;
+  }
+
+  return roundValue(
+    entry.multiplicativeModifiers.reduce((product, modifier) => {
+      const match = /\bx(\d+(?:\.\d+)?)\b/i.exec(modifier.label);
+      if (!match) {
+        return product;
+      }
+
+      return product * Number.parseFloat(match[1]);
+    }, 1),
+  );
+}
+
+function extractMultiplierLabel(label: string): string {
+  const match = /\bx(\d+(?:\.\d+)?)\b/i.exec(label);
+  return match ? `x${match[1]}` : label;
+}
+
+function formatSignedValue(value: number): string {
+  return `${value >= 0 ? '+' : ''}${formatNumber(value)}`;
+}
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? `${value}` : `${roundValue(value)}`;
+}
+
+function roundValue(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function calculateCritMultiplier(baseValue: number, finalValue: number): number {
+  if (baseValue <= 0) {
+    return 1;
+  }
+
+  return roundValue(finalValue / baseValue);
 }
 
 function readStringPayload(action: RotationAction, key: string): string | null {

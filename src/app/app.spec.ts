@@ -34,9 +34,10 @@ describe('App', () => {
     );
 
     expect(navLinks).toEqual([
+      'Home',
       'Gear',
-      'Abilities',
       'Buffs',
+      'Abilities',
       'Rotation Planner',
       'Results',
       'Import / Export',

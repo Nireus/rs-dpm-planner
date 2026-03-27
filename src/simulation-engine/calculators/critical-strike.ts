@@ -1,3 +1,4 @@
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { EffectRef, EntityId } from '../../game-data/types';
 import type {
   DamageModifierContribution,
@@ -7,7 +8,7 @@ import type {
 import { collectActiveEffectRefs } from './active-effect-refs';
 
 const BASE_CRIT_CHANCE = 0.1;
-const DOT_EFFECT_REF = 'damage-over-time';
+const DOT_EFFECT_REF = EFFECT_REF_IDS.damageOverTime;
 const BOW_TAG = 'two-handed-bow';
 
 export interface CriticalStrikeComputation {

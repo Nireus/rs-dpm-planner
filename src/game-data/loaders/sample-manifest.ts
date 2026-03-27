@@ -22,6 +22,7 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
     '/game-data/items/jas-dragonbane-arrows.sample.json',
     '/game-data/items/pernixs-quiver.sample.json',
     '/game-data/items/hexhunter-bow.sample.json',
+    '/game-data/items/gloomfire-bow.sample.json',
     '/game-data/items/seren-godbow.sample.json',
     '/game-data/items/dracolich-coif.sample.json',
     '/game-data/items/dracolich-hauberk.sample.json',
@@ -97,6 +98,7 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
   ],
   eofSpecs: [
     '/game-data/eof-specs/dark-bow-eof.sample.json',
+    '/game-data/eof-specs/gloomfire-bow-eof.sample.json',
     '/game-data/eof-specs/seren-godbow-eof.sample.json',
   ],
   perks: ['/game-data/perks/equilibrium.sample.json'],

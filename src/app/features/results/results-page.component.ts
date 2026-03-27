@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
-import { ResultsSimulationService } from '../../core/results/results-simulation.service';
+import { SimulationSessionService } from '../../core/simulation/simulation-session.service';
 import {
   buildAbilityExplainabilitySummary,
   buildDamageModifierGroupSummaries,
@@ -19,7 +19,7 @@ import {
 })
 export class ResultsPageComponent {
   private readonly gameDataStore = inject(GameDataStoreService);
-  private readonly resultsSimulationService = inject(ResultsSimulationService);
+  private readonly resultsSimulationService = inject(SimulationSessionService);
 
   protected readonly gameDataSummary = this.gameDataStore.summary;
   protected readonly simulationResult = this.resultsSimulationService.simulationResult;

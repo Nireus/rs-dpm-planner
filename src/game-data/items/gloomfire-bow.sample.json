@@ -1,0 +1,28 @@
+{
+  "id": "gloomfire-bow",
+  "name": "Gloomfire bow",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Gloomfire_bow.png",
+  "hoverSummary": "Tier 90 two-handed bow. 1296 ability damage, 2458 accuracy, range 9, 7.2s speed.",
+  "detailLines": [
+    "Requires level 90 Ranged to wield.",
+    "Tier 90 two-handed bow that uses arrows.",
+    "Passive: Darkfang changes the base Ranged basic into two 45%-55% hits.",
+    "Special attack: Shadowfall."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 90
+    },
+    "requiredEquipmentTags": ["two-handed-bow"]
+  },
+  "effectRefs": ["gloomfire-darkfang", "weapon-special-access", "weapon-special:shadowfall"],
+  "equipBehavior": "two-handed"
+}

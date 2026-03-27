@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition } from '../../../game-data/types';
-import type { GearBuilderState } from '../gear/gear-builder.utils';
+import type { GearBuilderState } from '../../core/gear/gear-state';
 import { evaluateAbilityPlacement } from './rotation-planner-placement';
 
 const BASIC_ABILITY: AbilityDefinition = {
@@ -52,7 +52,7 @@ const EMPTY_GEAR_STATE: GearBuilderState = {
 };
 
 describe('rotation planner placement', () => {
-  it('blocks placement when the target ability would be on cooldown', () => {
+  it('allows placement even when the target ability would later validate as on cooldown', () => {
     const result = evaluateAbilityPlacement({
       abilityActions: [
         {
@@ -87,11 +87,11 @@ describe('rotation planner placement', () => {
       },
     });
 
-    expect(result.isPlaceable).toBe(false);
-    expect(result.issue?.code).toBe('ability.cooldown_conflict');
+    expect(result.isPlaceable).toBe(true);
+    expect(result.issue).toBeUndefined();
   });
 
-  it('blocks placement when the target ability would not have enough adrenaline', () => {
+  it('allows placement even when the target ability would later validate as lacking adrenaline', () => {
     const result = evaluateAbilityPlacement({
       abilityActions: [],
       nonGcdActions: [],
@@ -116,8 +116,8 @@ describe('rotation planner placement', () => {
       },
     });
 
-    expect(result.isPlaceable).toBe(false);
-    expect(result.issue?.code).toBe('ability.insufficient_adrenaline');
+    expect(result.isPlaceable).toBe(true);
+    expect(result.issue).toBeUndefined();
   });
 
   it('allows placement when cooldown and adrenaline requirements are satisfied', () => {

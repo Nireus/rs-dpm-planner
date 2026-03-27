@@ -1,41 +1,38 @@
-import type { DamageRange, EntityId, EquipmentSlot, HitDefinition } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
+import type { EntityId, EquipmentSlot } from '../../game-data/types';
 import type {
   AbilityDamageSummary,
   DamageBreakdown,
   DamageSummary,
-  ItemInstanceConfig,
-  RotationAction,
   SimulationConfig,
   SimulationResult,
-  TickState,
   ValidationIssue,
 } from '../models';
 import { resolveAdrenalineTimeline, resolveChannelTimeline, resolveCooldownTimeline } from '../resolvers';
 import { resolveDeathsporeTimeline } from '../resolvers/deathspore';
 import { resolveDeterministicRangedTimeline } from '../resolvers/ranged-deterministic';
-import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { applyAdditiveDamageModifiers } from './additive-damage-modifiers';
 import { applyExpectedValueCriticalStrike } from './critical-strike';
+import {
+  addDamageSummary,
+  createDirectDamageSummary,
+  createEmptyDamageByTick,
+  createZeroDamageSummary,
+  scaleDamageRangeFromAbilityDamage,
+} from './damage-summary';
 import { applyMultiplicativeDamageModifiers } from './multiplicative-damage-modifiers';
+import {
+  buildSimulationHitEvents,
+  createPerfectEquilibriumHitEvent,
+  PERFECT_EQUILIBRIUM_ABILITY_ID,
+  type SimulationHitEvent,
+} from './simulation-hit-events';
+import { buildTickStates, mergeBuffTimelines } from './tick-state-builder';
 import { buildBaseTimeline } from '../timeline';
 import { validateStrictRotationPlan } from '../validation/strict-rotation-plan';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
-const BOLG_PASSIVE_EFFECT_REF = 'bolg-passive';
 const BALANCE_BY_FORCE_BUFF_ID = 'balance-by-force-buff';
-const PERFECT_EQUILIBRIUM_ABILITY_ID = 'perfect-equilibrium';
-
-interface SimulationHitEvent {
-  action: RotationAction;
-  ability: {
-    id: EntityId;
-    style?: string;
-    subtype?: string;
-    effectRefs?: string[];
-  };
-  hit: HitDefinition;
-  tick: number;
-  contributesToPerfectEquilibrium: boolean;
-}
 
 export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const timelineResult = buildBaseTimeline({ rotationPlan: config.rotationPlan });
@@ -71,21 +68,22 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const damageBreakdowns: DamageBreakdown[] = [];
   const damageByTick = createEmptyDamageByTick(config.rotationPlan.tickCount);
   const damageByAbilityMap = new Map<EntityId, DamageSummary>();
-  const abilityDamage = calculateRangedAbilityDamage(config);
   const hitEvents = buildSimulationHitEvents(config, blockingActionIds);
   const hasBolgEquipped = isBolgEquipped(config);
   let perfectEquilibriumStacks = 0;
 
   for (let index = 0; index < hitEvents.length; index += 1) {
     const event = hitEvents[index];
+    const projectedConfig = projectSimulationConfigAtTick(config, event.action.tick);
+    const actionAbilityDamage = calculateRangedAbilityDamage(projectedConfig);
     const breakdown = createDamageBreakdown(
       config,
       event.action,
       event.ability,
       event.hit,
-      abilityDamage,
       event.tick,
       mergedBuffTimeline,
+      event.derivedDamageParts,
     );
     damageBreakdowns.push(breakdown);
     addDamageSummary(damageByTick[event.tick], breakdown.finalDamage);
@@ -107,7 +105,17 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     }
 
     perfectEquilibriumStacks = 0;
-    hitEvents.splice(index + 1, 0, createPerfectEquilibriumHitEvent(event, breakdown.finalDamage, abilityDamage));
+    const multiplicativeAbilityDamageMultiplier = calculateBreakdownMultiplierProduct(breakdown);
+    hitEvents.splice(
+      index + 1,
+      0,
+      createPerfectEquilibriumHitEvent(
+        event,
+        breakdown.finalDamage,
+        actionAbilityDamage,
+        multiplicativeAbilityDamageMultiplier,
+      ),
+    );
   }
 
   const totalDamage = damageBreakdowns.reduce<DamageSummary>((summary, breakdown) => {
@@ -164,279 +172,80 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   };
 }
 
-function buildSimulationHitEvents(
-  config: SimulationConfig,
-  blockingActionIds: ReadonlySet<string>,
-): SimulationHitEvent[] {
-  const events: SimulationHitEvent[] = [];
-
-  for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockingActionIds.has(action.id)) {
-      continue;
-    }
-
-    const ability = resolveEffectiveAbilityDefinition(config, action);
-    if (!ability) {
-      continue;
-    }
-
-    const contributesToPerfectEquilibrium =
-      ability.style === 'ranged' &&
-      !ability.effectRefs?.includes('damage-over-time');
-
-    for (const hit of ability.hitSchedule) {
-      const tick = action.tick + hit.tickOffset;
-      if (tick < 0 || tick >= config.rotationPlan.tickCount) {
-        continue;
-      }
-
-      events.push({
-        action,
-        ability,
-        hit,
-        tick,
-        contributesToPerfectEquilibrium,
-      });
-    }
-  }
-
-  return events.sort((left, right) => {
-    if (left.tick !== right.tick) {
-      return left.tick - right.tick;
-    }
-
-    if (left.action.tick !== right.action.tick) {
-      return left.action.tick - right.action.tick;
-    }
-
-    return left.hit.tickOffset - right.hit.tickOffset;
-  });
-}
-
-function buildTickStates(
-  config: SimulationConfig,
-  tickIndexes: number[],
-  validationIssues: ValidationIssue[],
-  adrenalineResult: ReturnType<typeof resolveAdrenalineTimeline>,
-  channelResult: ReturnType<typeof resolveChannelTimeline>,
-  cooldownResult: ReturnType<typeof resolveCooldownTimeline>,
-  buffTimeline: Record<number, EntityId[]>,
-  deathsporeStackTimeline: Record<number, number>,
-  damageBreakdowns: DamageBreakdown[],
-): TickState[] {
-  const actionsByTick = groupActionsByTick(config.rotationPlan.abilityActions, config.rotationPlan.nonGcdActions);
-  const hitsByTick = groupHitsByTick(damageBreakdowns);
-  const issuesByTick = groupValidationIssuesByTick(validationIssues);
-  const activeEquipmentState = createActiveEquipmentState(config.gearSetup.equipment);
-
-  return tickIndexes.map((tickIndex) => ({
-    tickIndex,
-    activeEquipmentState,
-    activeAmmoState: config.gearSetup.ammoSelection?.definitionId,
-    adrenaline: adrenalineResult.adrenalineTimeline[tickIndex] ?? adrenalineResult.startingAdrenaline,
-    deathsporeStacks: deathsporeStackTimeline[tickIndex],
-    activePersistentBuffIds: [
-      ...(config.persistentBuffConfig.prayerIds ?? []),
-      ...(config.persistentBuffConfig.potionIds ?? []),
-      ...(config.persistentBuffConfig.relicIds ?? []),
-      ...(config.persistentBuffConfig.buffIds ?? []),
-      ...(config.persistentBuffConfig.pocketEffectItemIds ?? []),
-    ],
-    activeTimelineBuffIds: buffTimeline[tickIndex] ?? [],
-    activeBuffIds: [
-      ...(config.persistentBuffConfig.prayerIds ?? []),
-      ...(config.persistentBuffConfig.potionIds ?? []),
-      ...(config.persistentBuffConfig.relicIds ?? []),
-      ...(config.persistentBuffConfig.buffIds ?? []),
-      ...(config.persistentBuffConfig.pocketEffectItemIds ?? []),
-      ...(buffTimeline[tickIndex] ?? []),
-    ],
-    cooldowns: cooldownResult.cooldownTimeline[tickIndex] ?? {},
-    channelState: channelResult.tickStates[tickIndex]?.activeChannel,
-    actionsStartingThisTick: actionsByTick.get(tickIndex) ?? [],
-    hitsResolvingThisTick: hitsByTick.get(tickIndex) ?? [],
-    validationIssues: issuesByTick.get(tickIndex) ?? [],
-  }));
-}
-
 function createDamageBreakdown(
   config: SimulationConfig,
-  action: RotationAction,
+  action: SimulationHitEvent['action'],
   ability: { id: EntityId; style?: string; effectRefs?: string[] },
-  hit: HitDefinition,
-  abilityDamage: number,
+  hit: SimulationHitEvent['hit'],
   hitTick: number,
   buffTimeline: Record<number, EntityId[]>,
+  derivedDamageParts?: SimulationHitEvent['derivedDamageParts'],
 ): DamageBreakdown {
-  const baseDamage = hit.tags?.includes('direct-damage')
+  const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
+  const abilityDamage = calculateRangedAbilityDamage(projectedConfig);
+  const baseDamage = derivedDamageParts?.scaledAbilityDamage ?? (hit.tags?.includes('direct-damage')
     ? createDirectDamageSummary(hit.damage)
-    : scaleDamageRangeFromAbilityDamage(hit.damage, abilityDamage);
+    : scaleDamageRangeFromAbilityDamage(hit.damage, abilityDamage));
+  const multiplicativeResult = applyMultiplicativeDamageModifiers(
+    projectedConfig,
+    ability,
+    hit,
+    baseDamage,
+    hitTick,
+    buffTimeline,
+  );
   const additiveResult = applyAdditiveDamageModifiers(
-    config,
+    projectedConfig,
     action,
     ability,
-    baseDamage,
+    multiplicativeResult.finalDamage,
     abilityDamage,
     buffTimeline,
   );
-  const multiplicativeResult = applyMultiplicativeDamageModifiers(
-    config,
+  const postInheritedTriggerDamage = derivedDamageParts
+    ? {
+        additiveModifiers: [
+          ...additiveResult.additiveModifiers,
+          {
+            sourceId: 'perfect-equilibrium-trigger',
+            label: 'Inherited triggering hit contribution',
+            value: derivedDamageParts.inheritedTriggerDamage.avg,
+          },
+        ],
+      }
+    : {
+        additiveModifiers: additiveResult.additiveModifiers,
+      };
+  const criticalStrikeResult = applyExpectedValueCriticalStrike(
+    projectedConfig,
     ability,
     additiveResult.finalDamage,
     hitTick,
     buffTimeline,
   );
-  const criticalStrikeResult = applyExpectedValueCriticalStrike(
-    config,
-    ability,
-    multiplicativeResult.finalDamage,
-    hitTick,
-    buffTimeline,
-  );
+  const finalDamage = derivedDamageParts
+    ? {
+        min: roundDamageValue(criticalStrikeResult.finalDamage.min + derivedDamageParts.inheritedTriggerDamage.min),
+        avg: roundDamageValue(criticalStrikeResult.finalDamage.avg + derivedDamageParts.inheritedTriggerDamage.avg),
+        max: roundDamageValue(criticalStrikeResult.finalDamage.max + derivedDamageParts.inheritedTriggerDamage.max),
+      }
+    : criticalStrikeResult.finalDamage;
 
   return {
     abilityId: ability.id,
     hitId: `${action.id}:${hit.id}`,
     tick: hitTick,
     baseDamage,
-    additiveModifiers: additiveResult.additiveModifiers,
+    additiveModifiers: postInheritedTriggerDamage.additiveModifiers,
     multiplicativeModifiers: multiplicativeResult.multiplicativeModifiers,
     expectedValueModifiers: criticalStrikeResult.expectedValueModifiers,
-    finalDamage: criticalStrikeResult.finalDamage,
-  };
-}
-
-function scaleDamageRangeFromAbilityDamage(range: DamageRange, abilityDamage: number): DamageSummary {
-  const min = Math.floor((abilityDamage * range.min) / 100);
-  const max = Math.floor((abilityDamage * range.max) / 100);
-
-  return {
-    min,
-    avg: (min + max) / 2,
-    max,
-  };
-}
-
-function createDirectDamageSummary(range: DamageRange): DamageSummary {
-  const min = roundDamageValue(range.min);
-  const max = roundDamageValue(range.max);
-
-  return {
-    min,
-    avg: roundDamageValue((min + max) / 2),
-    max,
-  };
-}
-
-function createZeroDamageSummary(): DamageSummary {
-  return {
-    min: 0,
-    avg: 0,
-    max: 0,
-  };
-}
-
-function addDamageSummary(target: DamageSummary, value: DamageSummary): void {
-  target.min = roundDamageValue(target.min + value.min);
-  target.avg = roundDamageValue(target.avg + value.avg);
-  target.max = roundDamageValue(target.max + value.max);
-}
-
-function roundDamageValue(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
-function createEmptyDamageByTick(tickCount: number): Record<number, DamageSummary> {
-  return Object.fromEntries(
-    Array.from({ length: tickCount }, (_, tick) => [tick, createZeroDamageSummary()]),
-  );
-}
-
-function mergeBuffTimelines(
-  tickCount: number,
-  ...timelines: Array<Record<number, EntityId[]>>
-): Record<number, EntityId[]> {
-  return Object.fromEntries(
-    Array.from({ length: tickCount }, (_, tick) => {
-      const merged = new Set<EntityId>();
-      for (const timeline of timelines) {
-        for (const buffId of timeline[tick] ?? []) {
-          merged.add(buffId);
+    finalDamage,
+    derivedParts: derivedDamageParts
+      ? {
+          inheritedTriggerDamage: derivedDamageParts.inheritedTriggerDamage,
         }
-      }
-
-      return [tick, [...merged]];
-    }),
-  );
-}
-
-function readAbilityId(action: RotationAction): EntityId | null {
-  const abilityId = action.payload['abilityId'];
-  return typeof abilityId === 'string' && abilityId.length > 0 ? abilityId : null;
-}
-
-function groupActionsByTick(
-  abilityActions: RotationAction[],
-  nonGcdActions: RotationAction[],
-): Map<number, string[]> {
-  const grouped = new Map<number, string[]>();
-
-  for (const action of [...abilityActions, ...nonGcdActions]) {
-    const existing = grouped.get(action.tick) ?? [];
-    const label = action.actionType === 'ability-use'
-      ? action.payload['abilityId']
-      : action.payload['label'] ?? action.actionType;
-    existing.push(typeof label === 'string' ? label : action.id);
-    grouped.set(action.tick, existing);
-  }
-
-  return grouped;
-}
-
-function groupHitsByTick(damageBreakdowns: DamageBreakdown[]): Map<number, HitDefinition[]> {
-  const grouped = new Map<number, HitDefinition[]>();
-
-  for (const breakdown of damageBreakdowns) {
-    const bucket = grouped.get(breakdown.tick) ?? [];
-    bucket.push({
-      id: breakdown.hitId,
-      tickOffset: 0,
-      damage: {
-        min: breakdown.finalDamage.min,
-        max: breakdown.finalDamage.max,
-      },
-      tags: ['resolved-hit'],
-    });
-    grouped.set(breakdown.tick, bucket);
-  }
-
-  return grouped;
-}
-
-function groupValidationIssuesByTick(validationIssues: ValidationIssue[]): Map<number, ValidationIssue[]> {
-  const grouped = new Map<number, ValidationIssue[]>();
-
-  for (const issue of validationIssues) {
-    if (typeof issue.tick !== 'number') {
-      continue;
-    }
-
-    const bucket = grouped.get(issue.tick) ?? [];
-    bucket.push(issue);
-    grouped.set(issue.tick, bucket);
-  }
-
-  return grouped;
-}
-
-function createActiveEquipmentState(
-  equipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>>,
-): Partial<Record<EquipmentSlot, string>> {
-  return Object.fromEntries(
-    Object.entries(equipment)
-      .filter((entry): entry is [EquipmentSlot, ItemInstanceConfig] => Boolean(entry[1]))
-      .map(([slot, instance]) => [slot, instance.definitionId]),
-  );
+      : undefined,
+  };
 }
 
 function calculateRangedAbilityDamage(config: SimulationConfig): number {
@@ -510,46 +319,24 @@ function isBolgEquipped(config: SimulationConfig): boolean {
     return false;
   }
 
-  return config.gameData.items[weapon.definitionId]?.effectRefs?.includes(BOLG_PASSIVE_EFFECT_REF) ?? false;
+  return config.gameData.items[weapon.definitionId]?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
 }
 
-function createPerfectEquilibriumHitEvent(
-  sourceEvent: SimulationHitEvent,
-  triggeringDamage: DamageSummary,
-  abilityDamage: number,
-): SimulationHitEvent {
-  const inheritedEffectRefs = sourceEvent.ability.effectRefs?.includes('critical-strike-chance:+100%')
-    ? ['critical-strike-chance:+100%']
-    : undefined;
+function calculateBreakdownMultiplierProduct(breakdown: DamageBreakdown): number {
+  if (!breakdown.multiplicativeModifiers.length) {
+    return 1;
+  }
 
-  return {
-    action: sourceEvent.action,
-    ability: {
-      id: PERFECT_EQUILIBRIUM_ABILITY_ID,
-      style: 'ranged',
-      subtype: 'other',
-      effectRefs: inheritedEffectRefs,
-    },
-    hit: {
-      id: `perfect-equilibrium:${sourceEvent.hit.id}`,
-      tickOffset: 0,
-      damage: buildPerfectEquilibriumDamageRange(triggeringDamage, abilityDamage),
-      tags: ['derived-hit', 'direct-damage'],
-    },
-    tick: sourceEvent.tick,
-    contributesToPerfectEquilibrium: false,
-  };
+  return breakdown.multiplicativeModifiers.reduce((product, modifier) => {
+    const match = /\bx(\d+(?:\.\d+)?)\b/i.exec(modifier.label);
+    if (!match) {
+      return product;
+    }
+
+    return product * Number.parseFloat(match[1]);
+  }, 1);
 }
 
-function buildPerfectEquilibriumDamageRange(
-  triggeringDamage: DamageSummary,
-  abilityDamage: number,
-): DamageRange {
-  const min = roundDamageValue((12 / 100) * abilityDamage + (33 / 100) * triggeringDamage.min);
-  const max = roundDamageValue((16 / 100) * abilityDamage + (37 / 100) * triggeringDamage.max);
-
-  return {
-    min,
-    max,
-  };
+function roundDamageValue(value: number): number {
+  return Math.round(value * 100) / 100;
 }

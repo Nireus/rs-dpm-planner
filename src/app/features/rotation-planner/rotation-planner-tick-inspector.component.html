@@ -1,0 +1,123 @@
+<section class="tick-inspector">
+  <div class="inspector-header">
+    <h2>Tick T{{ inspection().tick }}</h2>
+    <div class="inspector-chip">
+      Adrenaline {{ inspection().adrenaline.start }}% -> {{ inspection().adrenaline.end }}%
+    </div>
+  </div>
+
+  <div class="inspector-grid">
+    <article class="inspector-card">
+      <h3>Actions</h3>
+      @if (inspection().actionsStarting.length) {
+        <h4>Starting</h4>
+        <ul class="inspector-list">
+          @for (entry of inspection().actionsStarting; track entry) {
+            <li>{{ entry }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="inspector-empty">No actions start on this tick.</p>
+      }
+
+      @if (inspection().hitsResolving.length) {
+        <h4>Hits</h4>
+        <ul class="inspector-list">
+          @for (entry of inspection().hitsResolving; track entry) {
+            <li>{{ entry }}</li>
+          }
+        </ul>
+      }
+
+      @if (inspection().validationIssues.length) {
+        <h4>Validation</h4>
+        <ul class="inspector-list">
+          @for (issue of inspection().validationIssues; track issue.code + issue.message) {
+            <li>{{ issue.message }}</li>
+          }
+        </ul>
+      }
+    </article>
+
+    <article class="inspector-card inspector-card--wide">
+      <h3>Damage Math</h3>
+      @if (inspection().damageCalculations.length) {
+        <div class="damage-calculation-list">
+          @for (entry of inspection().damageCalculations; track entry.abilityName + ':' + entry.hitName) {
+            <section class="damage-calculation">
+              <h4>{{ entry.abilityName }}: {{ entry.hitName }}</h4>
+              <ul class="inspector-list inspector-list--formula">
+                <li><strong>Base:</strong> {{ entry.baseRange }}</li>
+                <li><strong>Additive:</strong> {{ entry.additiveStep }}</li>
+                <li><strong>Multipliers:</strong> {{ entry.multiplicativeStep }}</li>
+                <li><strong>Crit EV:</strong> {{ entry.expectedValueStep }}</li>
+                <li><strong>Final:</strong> {{ entry.finalRange }}</li>
+                <li class="inspector-formula-line">{{ entry.minFormula }}</li>
+                <li class="inspector-formula-line">{{ entry.avgFormula }}</li>
+                <li class="inspector-formula-line">{{ entry.maxFormula }}</li>
+              </ul>
+            </section>
+          }
+        </div>
+      } @else {
+        <p class="inspector-empty">No damage resolves on this tick.</p>
+      }
+    </article>
+
+    <article class="inspector-card">
+      <h3>Cooldowns</h3>
+      @if (inspection().cooldowns.length) {
+        <ul class="inspector-list">
+          @for (entry of inspection().cooldowns; track entry.abilityId) {
+            <li>{{ entry.abilityName }}: {{ entry.remainingTicks }}t remaining</li>
+          }
+        </ul>
+      } @else {
+        <p class="inspector-empty">No active cooldowns at tick start.</p>
+      }
+    </article>
+
+    <article class="inspector-card">
+      <h3>Buffs</h3>
+      @if (inspection().deathsporeStacks !== null) {
+        <div class="inspector-inline-stat">Deathspore {{ inspection().deathsporeStacks }}/12</div>
+      }
+      @if (inspection().activePersistentBuffs.length || inspection().activeTemporaryBuffs.length) {
+        @if (inspection().activeTemporaryBuffs.length) {
+          <h4>Temporary</h4>
+          <ul class="inspector-list">
+            @for (entry of inspection().activeTemporaryBuffs; track 'temporary:' + entry) {
+              <li>{{ entry }}</li>
+            }
+          </ul>
+        }
+
+        @if (inspection().activePersistentBuffs.length) {
+          <h4>Permanent</h4>
+          <ul class="inspector-list">
+            @for (entry of inspection().activePersistentBuffs; track 'persistent:' + entry) {
+              <li>{{ entry }}</li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="inspector-empty">No tracked buffs are active.</p>
+      }
+    </article>
+
+    <article class="inspector-card">
+      <h3>Gear / Ammo</h3>
+      <ul class="inspector-list">
+        @for (entry of inspection().equipmentState; track entry.slot) {
+          <li>
+            {{ entry.slot }}: {{ entry.itemName }}
+            @for (detail of entry.details; track detail) {
+              <div class="inspector-subdetail">{{ detail }}</div>
+            }
+          </li>
+        }
+        <li>Ammo: {{ inspection().ammoState ?? 'None equipped' }}</li>
+      </ul>
+    </article>
+  </div>
+</section>

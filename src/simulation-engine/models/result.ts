@@ -34,6 +34,9 @@ export interface DamageBreakdown {
     avg: number;
     max: number;
   };
+  derivedParts?: {
+    inheritedTriggerDamage?: DamageSummary;
+  };
   percentageOfTotal?: number;
 }
 

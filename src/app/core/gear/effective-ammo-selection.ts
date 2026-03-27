@@ -1,7 +1,8 @@
+import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { ItemDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
-import type { GearBuilderState } from '../../features/gear/gear-builder.utils';
+import type { GearBuilderState } from './gear-state';
 
 export function resolveEffectiveAmmoSelection(
   gearState: GearBuilderState,
@@ -22,7 +23,11 @@ export function resolveEffectiveAmmoSelection(
     return equippedAmmo;
   }
 
-  const loadedAmmoId = resolveStringConfigValue(equippedDefinition, equippedAmmo, 'loaded-ammo');
+  const loadedAmmoId = resolveStringConfigValue(
+    equippedDefinition,
+    equippedAmmo,
+    CONFIG_OPTION_IDS.loadedAmmo,
+  );
   if (!loadedAmmoId || loadedAmmoId === 'none') {
     return undefined;
   }
@@ -33,13 +38,13 @@ export function resolveEffectiveAmmoSelection(
   }
 
   return {
-    instanceId: `${equippedAmmo.instanceId}:loaded-ammo:${loadedAmmoId}`,
+    instanceId: `${equippedAmmo.instanceId}:${CONFIG_OPTION_IDS.loadedAmmo}:${loadedAmmoId}`,
     definitionId: loadedAmmoId,
   };
 }
 
 function isQuiverDefinition(definition: ItemDefinition): boolean {
-  return definition.effectRefs?.includes('quiver-passive') ?? false;
+  return definition.effectRefs?.includes(EFFECT_REF_IDS.quiverPassive) ?? false;
 }
 
 function resolveStringConfigValue(

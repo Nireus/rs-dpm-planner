@@ -230,6 +230,30 @@ If a mechanic or edge case is not yet supported:
 
 ---
 
+## Architecture Guardrails
+
+- `app/core/**` must not import from `app/features/**`
+- shared helpers used by multiple features must live in `app/core/**`, `app/shared/**`, or `simulation-engine/**`
+- do not add direct `window.localStorage`, `sessionStorage`, or future HTTP persistence code in feature stores or components
+- all persistence must go through repository-style adapters in `app/core`
+- local persistence, import/export, and future backend save/share must all map from the same canonical workspace document
+- every new `effectRef`, requirement tag, and config option ID must be added to a central registry or conventions file
+- do not add ad-hoc regex effect parsing in unrelated modules; new effect families must use shared parsers or helpers
+- if a module mixes orchestration, view shaping, and domain logic, extract before adding more features
+- use `~300` TypeScript lines as a warning threshold and `~450` as a hard extraction threshold
+- every new combat mechanic must include:
+  - one scenario-style engine test
+  - one user-visible verification note
+- release priorities are architecture, persistence, import/export, tests, and build health first
+- third-party runtime assets should not be expanded casually, but existing ones are acceptable temporarily and are low-priority cleanup
+
+### Future Product Readiness
+
+- future backend save/share/user features must adapt from app-level persistence models
+- backend concerns must not leak into `simulation-engine`
+
+---
+
 ## Working approach for agents
 
 ### Before implementing

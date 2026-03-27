@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CURATED_PERK_OPTIONS } from '../../../game-data/perks/curated-perk-options';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import { BuffDetailDialogComponent } from './buff-detail-dialog.component';
 import {
@@ -39,6 +40,7 @@ export class BuffsPageComponent {
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
+  private readonly playerStatsStore = inject(PlayerStatsStoreService);
 
   protected readonly query = signal('');
   protected readonly selectedOption = signal<BuffSelectionOption | null>(null);
@@ -46,6 +48,7 @@ export class BuffsPageComponent {
   protected readonly dragSourceKind = signal<'active' | 'catalog' | null>(null);
   protected readonly dragTarget = signal<string | null>(null);
   protected readonly storeSummary = this.gameDataStore.summary;
+  protected readonly playerStats = this.playerStatsStore.stats;
   protected readonly buffOptions = computed(() =>
     buildBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
   );
@@ -363,6 +366,10 @@ export class BuffsPageComponent {
       .join('');
   }
 
+  protected updatePrayerLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('prayerLevel', this.parseLevel(value));
+  }
+
   private findOptionByDraggedId(): BuffSelectionOption | null {
     const draggedId = this.dragOptionId();
 
@@ -376,6 +383,24 @@ export class BuffsPageComponent {
     ];
 
     return allOptions.find((option) => option.id === draggedId) ?? null;
+  }
+
+  private parseLevel(value: string | number | null): number | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : undefined;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
 
   private replaceBuffSelections(nextBuffIds: string[]): void {

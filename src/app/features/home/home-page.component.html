@@ -1,0 +1,55 @@
+<section class="home-page">
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">RuneScape Ranged Rotation Planner</p>
+      <h1>Build sharper ranged rotations and see what the damage ceiling looks like.</h1>
+    </div>
+
+    <div class="hero-actions">
+      <a class="primary-link" routerLink="/gear">Start With Gear</a>
+      <a class="secondary-link" routerLink="/rotation-planner">Open Planner</a>
+      <a class="secondary-link" routerLink="/results">See Results</a>
+    </div>
+  </header>
+
+  <section class="info-grid">
+    <article class="panel quick-start">
+      <p class="section-label">Workflow</p>
+      <h2>Recommended order</h2>
+      <ol class="ordered-list">
+        <li>Build the loadout and backpack in <a routerLink="/gear">Gear</a>.</li>
+        <li>Enable persistent effects in <a routerLink="/buffs">Buffs</a>.</li>
+        <li>Review abilities if needed in <a routerLink="/abilities">Abilities</a>.</li>
+        <li>Place the rotation in <a routerLink="/rotation-planner">Rotation Planner</a>.</li>
+        <li>Inspect totals and hit breakdowns in <a routerLink="/results">Results</a>.</li>
+      </ol>
+    </article>
+
+    <article class="panel assumptions">
+      <p class="section-label">Assumptions</p>
+      <h2>How to read the numbers</h2>
+      <ul class="flat-list">
+        @for (assumption of assumptions; track assumption) {
+          <li>{{ assumption }}</li>
+        }
+      </ul>
+    </article>
+  </section>
+
+  <section class="screen-guide">
+    <div class="section-heading">
+      <p class="section-label">Screens</p>
+      <h2>What each area of the app does</h2>
+    </div>
+
+    <div class="screen-cards">
+      @for (screen of screens; track screen.path) {
+        <a class="screen-card" [routerLink]="screen.path">
+          <p class="screen-eyebrow">{{ screen.eyebrow }}</p>
+          <h3>{{ screen.title }}</h3>
+          <p>{{ screen.description }}</p>
+        </a>
+      }
+    </div>
+  </section>
+</section>

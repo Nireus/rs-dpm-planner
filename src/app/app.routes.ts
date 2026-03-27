@@ -3,15 +3,20 @@ import { AbilitiesPageComponent } from './features/abilities/abilities-page.comp
 import { BuffsPageComponent } from './features/buffs/buffs-page.component';
 import { DataExplorerPageComponent } from './features/data-explorer/data-explorer-page.component';
 import { GearBuilderPageComponent } from './features/gear/gear-builder-page.component';
+import { HomePageComponent } from './features/home/home-page.component';
+import { ImportExportPageComponent } from './features/import-export/import-export-page.component';
 import { RotationPlannerPageComponent } from './features/rotation-planner/rotation-planner-page.component';
 import { ResultsPageComponent } from './features/results/results-page.component';
-import { FeaturePlaceholderPageComponent } from './shared/feature-placeholder-page.component';
 
 export const routes: Routes = [
   {
     path: '',
+    component: HomePageComponent,
     pathMatch: 'full',
-    redirectTo: 'gear',
+  },
+  {
+    path: 'home',
+    component: HomePageComponent,
   },
   {
     path: 'gear',
@@ -35,14 +40,6 @@ export const routes: Routes = [
   },
   {
     path: 'import-export',
-    component: FeaturePlaceholderPageComponent,
-    data: {
-      eyebrow: 'Portability',
-      title: 'Import / Export',
-      description:
-        'Save and restore portable versioned planner configurations for local use and sharing.',
-      purpose:
-        'This area will eventually handle schema-validated import and export workflows for planner state.',
-    },
+    component: ImportExportPageComponent,
   },
 ];

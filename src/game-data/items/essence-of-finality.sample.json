@@ -38,7 +38,7 @@
       "label": "Stored special",
       "type": "select",
       "defaultValue": "dark-bow",
-      "options": ["dark-bow", "seren-godbow", "none"]
+      "options": ["dark-bow", "seren-godbow", "gloomfire-bow", "none"]
     }
   ],
   "implementationNotes": "Sample amulet-slot item for gear builder MVP."

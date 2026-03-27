@@ -1,5 +1,6 @@
 import type { EffectRef, EntityId } from '../../game-data/types';
 import type { SimulationConfig } from '../models';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 export function collectActiveEffectRefs(
   config: SimulationConfig,
@@ -7,30 +8,33 @@ export function collectActiveEffectRefs(
   hitTick: number,
   timelineBuffs: Record<number, EntityId[]>,
 ): EffectRef[] {
+  const projectedConfig = projectSimulationConfigAtTick(config, hitTick);
   const persistentBuffIds = [
-    ...(config.persistentBuffConfig.prayerIds ?? []),
-    ...(config.persistentBuffConfig.potionIds ?? []),
-    ...(config.persistentBuffConfig.relicIds ?? []),
-    ...(config.persistentBuffConfig.buffIds ?? []),
-    ...(config.persistentBuffConfig.pocketEffectItemIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.prayerIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.potionIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.relicIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.buffIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.pocketEffectItemIds ?? []),
   ];
 
   const activeBuffEffectRefs = [
-    ...persistentBuffIds.flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? []),
-    ...(timelineBuffs[hitTick] ?? []).flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? []),
+    ...persistentBuffIds.flatMap((buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? []),
+    ...(timelineBuffs[hitTick] ?? []).flatMap((buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? []),
   ];
 
-  const equippedItemEffectRefs = Object.entries(config.gearSetup.equipment).flatMap(([slot, instance]) => {
+  const equippedItemEffectRefs = Object.entries(projectedConfig.gearSetup.equipment).flatMap(([slot, instance]) => {
     if (!instance || slot === 'ammo') {
       return [];
     }
 
-    return config.gameData.items[instance.definitionId]?.effectRefs ?? [];
+    return projectedConfig.gameData.items[instance.definitionId]?.effectRefs ?? [];
   });
 
-  const ammoInstance = config.gearSetup.ammoSelection ?? config.gearSetup.equipment.ammo;
+  const ammoInstance = projectedConfig.gearSetup.ammoSelection ?? projectedConfig.gearSetup.equipment.ammo;
   const ammoEffectRefs = ammoInstance
-    ? (config.gameData.items[ammoInstance.definitionId]?.effectRefs ?? config.gameData.ammo[ammoInstance.definitionId]?.effectRefs ?? [])
+    ? (projectedConfig.gameData.items[ammoInstance.definitionId]?.effectRefs ??
+      projectedConfig.gameData.ammo[ammoInstance.definitionId]?.effectRefs ??
+      [])
     : [];
 
   return [

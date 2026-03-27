@@ -4,7 +4,6 @@ import type { AbilityDefinition } from '../../../game-data/types';
 import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
-import { PlayerStatsPanelComponent } from './player-stats-panel.component';
 import {
   AbilityDetailDialogComponent,
   type AbilityDetailEntry,
@@ -30,7 +29,7 @@ interface AbilityBrowserEntry extends AbilityDetailEntry {
 @Component({
   selector: 'app-abilities-page',
   standalone: true,
-  imports: [FormsModule, PlayerStatsPanelComponent, AbilityDetailDialogComponent],
+  imports: [FormsModule, AbilityDetailDialogComponent],
   templateUrl: './abilities-page.component.html',
   styleUrl: './abilities-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

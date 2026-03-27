@@ -36,6 +36,7 @@
               <button
                 type="button"
                 class="slot-card"
+                [attr.data-testid]="'gear-slot-' + entry.slot"
                 [class.drop-target-available]="isSlotDropAvailable(entry.slot)"
                 [class.drop-target-valid]="isSlotDropActive(entry.slot)"
                 [class.drop-target-invalid]="isSlotDropBlocked(entry.slot)"
@@ -241,6 +242,7 @@
             <button
               type="button"
               class="catalog-tile draggable"
+              [attr.data-testid]="'gear-catalog-' + item.id"
               [class.selected]="selectedItem()?.id === item.id"
               [attr.title]="hoverText(item)"
               draggable="true"

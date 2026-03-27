@@ -1,15 +1,9 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
-import { toggleSelectionId } from '../../features/buffs/buffs-selection.utils';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import type { BuffSelectionState } from './persistent-buff-config';
+import { GameDataStoreService } from '../game-data/game-data-store.service';
+import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 
-const BUFF_CONFIGURATION_STORAGE_KEY = 'rs-dpm-planner.buff-configuration.v1';
-
-interface BuffConfigurationState {
-  activeBuffIds: string[];
-  activeRelicIds: string[];
-  activePocketItemIds: string[];
-}
-
-const DEFAULT_STATE: BuffConfigurationState = {
+const DEFAULT_STATE: BuffSelectionState = {
   activeBuffIds: [],
   activeRelicIds: [],
   activePocketItemIds: [],
@@ -19,14 +13,21 @@ const DEFAULT_STATE: BuffConfigurationState = {
   providedIn: 'root',
 })
 export class BuffConfigurationStoreService {
-  readonly state = signal<BuffConfigurationState>(this.loadInitialState());
+  private readonly workspaceRepository = inject(WorkspaceRepositoryService);
+  private readonly gameDataStore = inject(GameDataStoreService);
+  readonly state = signal<BuffSelectionState>(this.workspaceRepository.readBuffSelectionState());
   readonly activeBuffIds = computed(() => this.state().activeBuffIds);
   readonly activeRelicIds = computed(() => this.state().activeRelicIds);
   readonly activePocketItemIds = computed(() => this.state().activePocketItemIds);
 
   constructor() {
     effect(() => {
-      this.persistState(this.state());
+      const buffDefinitions = this.gameDataStore.snapshot().catalog?.buffs;
+      if (!buffDefinitions) {
+        return;
+      }
+
+      this.workspaceRepository.updateBuffSelectionState(this.state(), buffDefinitions);
     });
   }
 
@@ -53,52 +54,21 @@ export class BuffConfigurationStoreService {
 
   reset(): void {
     this.state.set(DEFAULT_STATE);
-    this.clearPersistedState();
-  }
-
-  private loadInitialState(): BuffConfigurationState {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return DEFAULT_STATE;
-    }
-
-    try {
-      const raw = window.localStorage.getItem(BUFF_CONFIGURATION_STORAGE_KEY);
-
-      if (!raw) {
-        return DEFAULT_STATE;
-      }
-
-      const parsed = JSON.parse(raw) as Partial<BuffConfigurationState>;
-
-      return {
-        activeBuffIds: Array.isArray(parsed.activeBuffIds) ? parsed.activeBuffIds.filter(isString) : [],
-        activeRelicIds: Array.isArray(parsed.activeRelicIds) ? parsed.activeRelicIds.filter(isString) : [],
-        activePocketItemIds: Array.isArray(parsed.activePocketItemIds)
-          ? parsed.activePocketItemIds.filter(isString)
-          : [],
-      };
-    } catch {
-      return DEFAULT_STATE;
+    const buffDefinitions = this.gameDataStore.snapshot().catalog?.buffs;
+    if (buffDefinitions) {
+      this.workspaceRepository.updateBuffSelectionState(DEFAULT_STATE, buffDefinitions);
     }
   }
 
-  private persistState(state: BuffConfigurationState): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return;
-    }
-
-    window.localStorage.setItem(BUFF_CONFIGURATION_STORAGE_KEY, JSON.stringify(state));
-  }
-
-  private clearPersistedState(): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return;
-    }
-
-    window.localStorage.removeItem(BUFF_CONFIGURATION_STORAGE_KEY);
+  loadState(state: BuffSelectionState): void {
+    this.state.set({
+      activeBuffIds: [...state.activeBuffIds],
+      activeRelicIds: [...state.activeRelicIds],
+      activePocketItemIds: [...state.activePocketItemIds],
+    });
   }
 }
 
-function isString(value: unknown): value is string {
-  return typeof value === 'string';
+function toggleSelectionId(currentIds: readonly string[], id: string): string[] {
+  return currentIds.includes(id) ? currentIds.filter((entry) => entry !== id) : [...currentIds, id];
 }

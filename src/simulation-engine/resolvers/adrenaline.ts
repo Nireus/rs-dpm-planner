@@ -1,4 +1,5 @@
 import type { EntityId } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { resolveDeathsporeTimeline } from './deathspore';
@@ -7,9 +8,9 @@ import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
 export const MIN_ADRENALINE = 0;
 export const MAX_ADRENALINE = 100;
 export const HEIGHTENED_SENSES_MAX_ADRENALINE = 110;
-const FURY_OF_THE_SMALL_EFFECT_REF = 'fury-of-the-small';
-const HEIGHTENED_SENSES_EFFECT_REF = 'heightened-senses';
-const CONSERVATION_OF_ENERGY_EFFECT_REF = 'conservation-of-energy';
+const FURY_OF_THE_SMALL_EFFECT_REF = EFFECT_REF_IDS.furyOfTheSmall;
+const HEIGHTENED_SENSES_EFFECT_REF = EFFECT_REF_IDS.heightenedSenses;
+const CONSERVATION_OF_ENERGY_EFFECT_REF = EFFECT_REF_IDS.conservationOfEnergy;
 
 export interface AdrenalineTickState {
   tick: number;

@@ -10,6 +10,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "test:watch": "ng test --watch",
+    "check:boundaries": "node scripts/check-core-feature-boundary.mjs",
     "e2e": "playwright test",
     "lint": "eslint ."
   },

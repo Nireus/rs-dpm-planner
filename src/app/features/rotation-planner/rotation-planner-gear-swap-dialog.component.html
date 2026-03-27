@@ -1,0 +1,36 @@
+<div class="planner-dialog-backdrop" (click)="cancelDialog()">
+  <section
+    class="planner-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="gear-swap-dialog-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="planner-dialog-header">
+      <div>
+        <h2 id="gear-swap-dialog-title">Configure Gear Swap</h2>
+        <p>Choose which backpack item should be equipped from tick T{{ actionTick() + 1 }} onward.</p>
+      </div>
+    </div>
+
+    <label class="control-field dialog-field">
+      <span>Backpack item</span>
+      <select
+        [ngModel]="selectedInstanceId()"
+        (ngModelChange)="updateSelectedInstanceId($event)"
+      >
+        @for (option of options(); track option.instanceId) {
+          <option [ngValue]="option.instanceId" [title]="option.optionLabel">
+            {{ option.optionLabel }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <div class="planner-dialog-actions">
+      <button type="button" class="dialog-danger" (click)="removeAction()">Remove</button>
+      <button type="button" class="dialog-secondary" (click)="cancelDialog()">Cancel</button>
+      <button type="button" class="dialog-primary" (click)="applySelection()">Apply</button>
+    </div>
+  </section>
+</div>

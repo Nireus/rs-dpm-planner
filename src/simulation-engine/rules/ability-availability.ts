@@ -1,3 +1,4 @@
+import { CONFIG_OPTION_IDS, REQUIREMENT_TAGS } from '../../game-data/conventions/mechanics';
 import type { AbilityDefinition, ItemDefinition } from '../../game-data/types';
 import type { PlayerStats } from '../models';
 import type { ItemInstanceConfig } from '../models';
@@ -80,10 +81,14 @@ export function collectAvailabilityTags(context: AbilityAvailabilityContext): Se
 
   const eofItem = context.equippedItems.find((item) => item.id === 'essence-of-finality');
   const eofInstance = context.equippedInstances?.find((instance) => instance.definitionId === 'essence-of-finality');
-  const storedSpecial = resolveStringConfigValue(eofItem, eofInstance, 'stored-special');
+  const storedSpecial = resolveStringConfigValue(
+    eofItem,
+    eofInstance,
+    CONFIG_OPTION_IDS.storedSpecial,
+  );
 
   if (storedSpecial && storedSpecial !== 'none') {
-    tags.add('eof-stored-special-configured');
+    tags.add(REQUIREMENT_TAGS.eofStoredSpecialConfigured);
     tags.add(`eof-special:${storedSpecial}`);
   }
 
@@ -143,15 +148,15 @@ function formatRequiredTag(tag: string): string {
       return 'Requires a two-handed ranged weapon.';
     case 'ranged-dual-wield':
       return 'Requires dual-wield ranged weapons.';
-    case 'equipped-effect:weapon-special-access':
+    case REQUIREMENT_TAGS.equippedWeaponSpecialAccess:
       return 'Requires an equipped weapon with a special attack.';
-    case 'equipped-effect:eof-special-access':
+    case REQUIREMENT_TAGS.equippedEofSpecialAccess:
       return 'Requires an equipped Essence of Finality amulet.';
     case 'weapon-special-access':
       return 'Requires an equipped weapon with a special attack.';
     case 'eof-special-access':
       return 'Requires an equipped Essence of Finality amulet.';
-    case 'eof-stored-special-configured':
+    case REQUIREMENT_TAGS.eofStoredSpecialConfigured:
       return 'Requires a stored special attack in the equipped Essence of Finality.';
     default:
       if (tag.startsWith('eof-special:')) {

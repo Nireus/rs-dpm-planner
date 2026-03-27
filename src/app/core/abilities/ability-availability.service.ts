@@ -1,6 +1,6 @@
 import { computed, inject, Injectable } from '@angular/core';
 import { GameDataStoreService } from '../game-data/game-data-store.service';
-import { GearBuilderStore } from '../../features/gear/gear-builder.store';
+import { GearBuilderStore } from '../gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
 import { evaluateAbilityAvailability } from '../../../simulation-engine/rules/ability-availability';
 

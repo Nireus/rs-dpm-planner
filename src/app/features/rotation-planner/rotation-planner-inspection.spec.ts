@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, BuffDefinition, ItemDefinition, RelicDefinition } from '../../../game-data/types';
-import type { GearBuilderState } from '../gear/gear-builder.utils';
+import type { GearBuilderState } from '../../core/gear/gear-state';
 import type { RotationPlan, SimulationResult } from '../../../simulation-engine/models';
 import { inspectRotationPlannerTick } from './rotation-planner-inspection';
 
@@ -52,6 +52,14 @@ const DEATHSPORE_ARROWS: ItemDefinition = {
   slot: 'ammo',
   combatStyleTags: ['ranged'],
   effectRefs: ['deathspore-progress'],
+};
+
+const WEN_ARROWS: ItemDefinition = {
+  id: 'wen-arrows',
+  name: 'Wen arrows',
+  category: 'ammo',
+  slot: 'ammo',
+  combatStyleTags: ['ranged'],
 };
 
 const SEREN_GODBOW: ItemDefinition = {
@@ -119,6 +127,7 @@ const CATALOG: GameDataCatalog = {
   items: {
     [BOLG.id]: BOLG,
     [DEATHSPORE_ARROWS.id]: DEATHSPORE_ARROWS,
+    [WEN_ARROWS.id]: WEN_ARROWS,
     [SEREN_GODBOW.id]: SEREN_GODBOW,
     [PERNIXS_QUIVER.id]: PERNIXS_QUIVER,
     [ESSENCE_OF_FINALITY.id]: ESSENCE_OF_FINALITY,
@@ -219,6 +228,7 @@ describe('rotation planner inspection', () => {
     expect(inspection.ammoState).toBe('Deathspore arrows');
     expect(inspection.actionsStarting).toEqual([]);
     expect(inspection.hitsResolving).toEqual([]);
+    expect(inspection.damageCalculations).toEqual([]);
   });
 
   it('includes actions that start on the inspected tick and clamps out-of-range input', () => {
@@ -240,6 +250,7 @@ describe('rotation planner inspection', () => {
     expect(inspection.tick).toBe(11);
     expect(inspection.actionsStarting).toEqual([]);
     expect(inspection.hitsResolving).toEqual([]);
+    expect(inspection.damageCalculations).toEqual([]);
   });
 
   it('shows action labels when the inspected tick contains non-gcd and ability starts', () => {
@@ -262,6 +273,32 @@ describe('rotation planner inspection', () => {
     expect(inspection.hitsResolving).toEqual([
       'Piercing Shot: Piercing Shot Hit 1 (166-304.5)',
       'Piercing Shot: Piercing Shot Hit 2 (166-304.5)',
+    ]);
+    expect(inspection.damageCalculations).toEqual([
+      {
+        abilityName: 'Piercing Shot',
+        hitName: 'Piercing Shot Hit 1',
+        baseRange: '166 / 184.5 / 203',
+        additiveStep: 'No flat added damage',
+        multiplicativeStep: 'No damage multipliers',
+        expectedValueStep: 'Min x1, Avg x1.05, Max x1.5 (crit)',
+        finalRange: '166 / 193.73 / 304.5',
+        minFormula: 'Min: ((166 × 1) + 0) × 1 = 166',
+        avgFormula: 'Avg: ((184.5 × 1) + 0) × 1.05 (crit) = 193.73',
+        maxFormula: 'Max: ((203 × 1) + 0) × 1.5 (crit) = 304.5',
+      },
+      {
+        abilityName: 'Piercing Shot',
+        hitName: 'Piercing Shot Hit 2',
+        baseRange: '166 / 184.5 / 203',
+        additiveStep: 'No flat added damage',
+        multiplicativeStep: 'No damage multipliers',
+        expectedValueStep: 'Min x1, Avg x1.05, Max x1.5 (crit)',
+        finalRange: '166 / 193.73 / 304.5',
+        minFormula: 'Min: ((166 × 1) + 0) × 1 = 166',
+        avgFormula: 'Avg: ((184.5 × 1) + 0) × 1.05 (crit) = 193.73',
+        maxFormula: 'Max: ((203 × 1) + 0) × 1.5 (crit) = 304.5',
+      },
     ]);
   });
 
@@ -473,6 +510,70 @@ describe('rotation planner inspection', () => {
     expect(inspection.ammoState).toBe('Deathspore arrows');
   });
 
+  it('hides deathspore stacks when deathspore arrows are not effectively equipped', () => {
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: ROTATION_PLAN.tickCount }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        deathsporeStacks: 9,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: [],
+        activeBuffIds: [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 4,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: BOLG.id,
+          },
+          ammo: {
+            instanceId: 'quiver-1',
+            definitionId: PERNIXS_QUIVER.id,
+            configValues: {
+              'loaded-ammo': 'wen-arrows',
+            },
+          },
+        },
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: ROTATION_PLAN,
+      simulationResult,
+    });
+
+    expect(inspection.ammoState).toBe('Wen arrows');
+    expect(inspection.deathsporeStacks).toBeNull();
+  });
+
   it('shows equipped perks and EOF stored special in equipment details', () => {
     const inspection = inspectRotationPlannerTick({
       tick: 1,
@@ -521,5 +622,78 @@ describe('rotation planner inspection', () => {
       itemName: 'Essence of Finality amulet',
       details: ['Stored special: Dark Bow'],
     });
+  });
+
+  it('shows validation issues for the inspected tick', () => {
+    const simulationResult: SimulationResult = {
+      isValid: false,
+      validationIssues: [
+        {
+          code: 'ability.insufficient_adrenaline',
+          severity: 'error',
+          tick: 3,
+          relatedActionId: 'deadshot-1',
+          message: 'Deadshot requires more adrenaline at this tick.',
+        },
+      ],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: ROTATION_PLAN.tickCount }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: [],
+        activeBuffIds: [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 3,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        ...ROTATION_PLAN,
+        abilityActions: [
+          {
+            id: 'deadshot-1',
+            tick: 3,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'piercing-shot',
+            },
+          },
+        ],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.validationIssues).toEqual([
+      expect.objectContaining({
+        code: 'ability.insufficient_adrenaline',
+        message: 'Deadshot requires more adrenaline at this tick.',
+      }),
+    ]);
   });
 });

@@ -1,12 +1,11 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { PlayerStats } from '../../../simulation-engine/models';
 import {
   sanitizePlayerStats,
   validatePlayerStats,
   type PlayerStatsValidationIssue,
 } from '../../../simulation-engine/validation/player-stats';
-
-const PLAYER_STATS_STORAGE_KEY = 'rs-dpm-planner.player-stats.v1';
+import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 
 export const DEFAULT_PLAYER_STATS: PlayerStats = {
   rangedLevel: 99,
@@ -17,13 +16,14 @@ export const DEFAULT_PLAYER_STATS: PlayerStats = {
   providedIn: 'root',
 })
 export class PlayerStatsStoreService {
-  readonly stats = signal<PlayerStats>(this.loadInitialStats());
+  private readonly workspaceRepository = inject(WorkspaceRepositoryService);
+  readonly stats = signal<PlayerStats>(sanitizePlayerStats(this.workspaceRepository.readPlayerStats()));
   readonly issues = computed<PlayerStatsValidationIssue[]>(() => validatePlayerStats(this.stats()));
 
   constructor() {
     effect(() => {
       const stats = this.stats();
-      this.persistStats(stats);
+      this.workspaceRepository.updatePlayerStats(stats);
     });
   }
 
@@ -38,43 +38,10 @@ export class PlayerStatsStoreService {
 
   reset(): void {
     this.stats.set(DEFAULT_PLAYER_STATS);
-    this.clearPersistedStats();
+    this.workspaceRepository.updatePlayerStats(DEFAULT_PLAYER_STATS);
   }
 
-  private loadInitialStats(): PlayerStats {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return DEFAULT_PLAYER_STATS;
-    }
-
-    try {
-      const raw = window.localStorage.getItem(PLAYER_STATS_STORAGE_KEY);
-
-      if (!raw) {
-        return DEFAULT_PLAYER_STATS;
-      }
-
-      return sanitizePlayerStats({
-        ...DEFAULT_PLAYER_STATS,
-        ...(JSON.parse(raw) as Partial<PlayerStats>),
-      });
-    } catch {
-      return DEFAULT_PLAYER_STATS;
-    }
-  }
-
-  private persistStats(stats: PlayerStats): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return;
-    }
-
-    window.localStorage.setItem(PLAYER_STATS_STORAGE_KEY, JSON.stringify(stats));
-  }
-
-  private clearPersistedStats(): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return;
-    }
-
-    window.localStorage.removeItem(PLAYER_STATS_STORAGE_KEY);
+  loadStats(stats: PlayerStats): void {
+    this.stats.set(sanitizePlayerStats(stats));
   }
 }

@@ -1,10 +1,12 @@
 import type { EffectRef, EntityId } from '../../game-data/types';
+import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type {
   DamageModifierContribution,
   DamageSummary,
   RotationAction,
   SimulationConfig,
 } from '../models';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 export interface AdditiveDamageComputation {
   finalDamage: DamageSummary;
@@ -19,7 +21,7 @@ export function applyAdditiveDamageModifiers(
   abilityDamage: number,
   timelineBuffs: Record<number, EntityId[]>,
 ): AdditiveDamageComputation {
-  if (ability.style !== 'ranged') {
+  if (ability.style !== 'ranged' || ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)) {
     return {
       finalDamage: baseDamage,
       additiveModifiers: [],
@@ -64,32 +66,33 @@ function collectCastScopedEffectRefs(
   ability: { effectRefs?: EffectRef[] },
   timelineBuffs: Record<number, EntityId[]>,
 ): EffectRef[] {
+  const projectedConfig = projectSimulationConfigAtTick(config, castTick);
   const persistentBuffIds = [
-    ...(config.persistentBuffConfig.prayerIds ?? []),
-    ...(config.persistentBuffConfig.potionIds ?? []),
-    ...(config.persistentBuffConfig.relicIds ?? []),
-    ...(config.persistentBuffConfig.buffIds ?? []),
-    ...(config.persistentBuffConfig.pocketEffectItemIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.prayerIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.potionIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.relicIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.buffIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.pocketEffectItemIds ?? []),
   ];
 
   const persistentBuffEffectRefs = persistentBuffIds.flatMap(
-    (buffId) => config.gameData.buffs[buffId]?.effectRefs ?? [],
+    (buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? [],
   );
   const generatedBySameAbility = new Set(ability.effectRefs ?? []);
   const activeTimelineBuffEffectRefs = (timelineBuffs[castTick] ?? [])
     .filter((buffId) => !generatedBySameAbility.has(buffId))
-    .flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? []);
-  const equippedItemEffectRefs = Object.entries(config.gearSetup.equipment).flatMap(([slot, instance]) => {
+    .flatMap((buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? []);
+  const equippedItemEffectRefs = Object.entries(projectedConfig.gearSetup.equipment).flatMap(([slot, instance]) => {
     if (!instance || slot === 'ammo') {
       return [];
     }
 
-    return config.gameData.items[instance.definitionId]?.effectRefs ?? [];
+    return projectedConfig.gameData.items[instance.definitionId]?.effectRefs ?? [];
   });
-  const ammoInstance = config.gearSetup.ammoSelection ?? config.gearSetup.equipment.ammo;
+  const ammoInstance = projectedConfig.gearSetup.ammoSelection ?? projectedConfig.gearSetup.equipment.ammo;
   const ammoEffectRefs = ammoInstance
-    ? (config.gameData.items[ammoInstance.definitionId]?.effectRefs ??
-      config.gameData.ammo[ammoInstance.definitionId]?.effectRefs ??
+    ? (projectedConfig.gameData.items[ammoInstance.definitionId]?.effectRefs ??
+      projectedConfig.gameData.ammo[ammoInstance.definitionId]?.effectRefs ??
       [])
     : [];
 

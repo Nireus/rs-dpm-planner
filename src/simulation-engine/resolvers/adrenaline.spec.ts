@@ -128,6 +128,22 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         ],
         baseDamage: { min: 420, max: 500 },
       }),
+      'corruption-shot': createAbility({
+        id: 'corruption-shot',
+        name: 'Corruption Shot',
+        subtype: 'basic',
+        cooldownTicks: 25,
+        adrenalineGain: 8,
+        hitSchedule: [
+          { id: 'corruption-shot-hit-1', tickOffset: 0, damage: { min: 60, max: 80 } },
+          { id: 'corruption-shot-hit-2', tickOffset: 2, damage: { min: 48, max: 64 } },
+          { id: 'corruption-shot-hit-3', tickOffset: 4, damage: { min: 36, max: 48 } },
+          { id: 'corruption-shot-hit-4', tickOffset: 6, damage: { min: 24, max: 32 } },
+          { id: 'corruption-shot-hit-5', tickOffset: 8, damage: { min: 12, max: 16 } },
+        ],
+        baseDamage: { min: 180, max: 240 },
+        effectRefs: ['damage-over-time', 'corruption-shot'],
+      }),
     },
     buffs: {},
     perks: {},
@@ -751,5 +767,51 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.adrenalineTimeline[9]).toBe(70);
     expect(result.adrenalineTimeline[10]).toBe(80);
     expect(result.adrenalineTimeline[11]).toBe(80);
+  });
+
+  it('does not grant Shadow Imbued hit adrenaline from Corruption Shot ticks', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        buffs: {
+          'shadow-imbued': {
+            id: 'shadow-imbued',
+            name: 'Shadow Imbued',
+            category: 'temporary',
+            sourceType: 'ability',
+            effectRefs: ['ranged-hit-adrenaline:+5%'],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 12,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'imbue-shadows-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'imbue-shadows' },
+          },
+          {
+            id: 'corruption-shot-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'corruption-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(60);
+    expect(result.adrenalineTimeline[1]).toBe(68);
+    expect(result.adrenalineTimeline[2]).toBe(68);
+    expect(result.adrenalineTimeline[10]).toBe(68);
   });
 });
