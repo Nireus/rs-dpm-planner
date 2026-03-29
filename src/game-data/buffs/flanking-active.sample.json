@@ -1,0 +1,10 @@
+{
+  "id": "flanking-active",
+  "name": "Flanking active",
+  "iconPath": "https://runescape.wiki/images/thumb/Flanking.png/25px-Flanking.png?02b16",
+  "wikiUrl": "https://runescape.wiki/w/Flanking",
+  "category": "passive",
+  "sourceType": "perk",
+  "isPermanent": true,
+  "effectRefs": ["flanking-active"]
+}

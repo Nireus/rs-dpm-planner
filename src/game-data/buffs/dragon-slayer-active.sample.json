@@ -1,0 +1,10 @@
+{
+  "id": "dragon-slayer-active",
+  "name": "Dragon Slayer active",
+  "iconPath": "https://runescape.wiki/images/thumb/Dragon_Slayer_%28perk%29.png/25px-Dragon_Slayer_%28perk%29.png?473e2",
+  "wikiUrl": "https://runescape.wiki/w/Dragon_Slayer_(perk)",
+  "category": "passive",
+  "sourceType": "perk",
+  "isPermanent": true,
+  "effectRefs": ["dragon-slayer-active"]
+}

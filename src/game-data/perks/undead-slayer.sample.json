@@ -1,0 +1,8 @@
+{
+  "id": "undead-slayer",
+  "name": "Undead Slayer",
+  "iconPath": "https://runescape.wiki/images/thumb/Undead_Slayer.png/25px-Undead_Slayer.png?48365",
+  "wikiUrl": "https://runescape.wiki/w/Undead_Slayer",
+  "effectRefs": ["undead-slayer"],
+  "description": "Deal 7% additional damage to undead."
+}

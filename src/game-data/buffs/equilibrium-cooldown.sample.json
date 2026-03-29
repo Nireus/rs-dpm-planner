@@ -1,0 +1,10 @@
+{
+  "id": "equilibrium-cooldown",
+  "name": "Equilibrium cooldown",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Equilibrium.png",
+  "wikiUrl": "https://runescape.wiki/w/Equilibrium_cooldown",
+  "category": "temporary",
+  "sourceType": "perk",
+  "durationTicks": 50,
+  "effectRefs": ["equilibrium-lock"]
+}

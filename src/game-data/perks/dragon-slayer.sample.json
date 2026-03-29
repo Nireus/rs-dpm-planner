@@ -1,0 +1,8 @@
+{
+  "id": "dragon-slayer",
+  "name": "Dragon Slayer",
+  "iconPath": "https://runescape.wiki/images/thumb/Dragon_Slayer_%28perk%29.png/25px-Dragon_Slayer_%28perk%29.png?473e2",
+  "wikiUrl": "https://runescape.wiki/w/Dragon_Slayer_(perk)",
+  "effectRefs": ["dragon-slayer"],
+  "description": "Deal 7% additional damage to dragons."
+}

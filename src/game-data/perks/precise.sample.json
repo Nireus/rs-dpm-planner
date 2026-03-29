@@ -1,0 +1,8 @@
+{
+  "id": "precise",
+  "name": "Precise",
+  "iconPath": "https://runescape.wiki/images/thumb/Precise.png/25px-Precise.png?49d74",
+  "wikiUrl": "https://runescape.wiki/w/Precise",
+  "effectRefs": ["precise"],
+  "description": "Increases minimum damage by 1.5% per rank of maximum damage."
+}

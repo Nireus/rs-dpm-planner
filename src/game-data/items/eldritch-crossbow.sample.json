@@ -1,0 +1,27 @@
+{
+  "id": "eldritch-crossbow",
+  "name": "Eldritch crossbow",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Eldritch_crossbow.png",
+  "hoverSummary": "Tier 92 two-handed crossbow. 1324.8 ability damage, 2577 accuracy, range 9, speed 6.",
+  "detailLines": [
+    "Requires level 92 Ranged to wield.",
+    "Tier 92 two-handed crossbow that uses bolts.",
+    "Special attack: Split Soul.",
+    "Split Soul lasts 25 ticks, has no cooldown, and ends early if the weapon is changed."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 92
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:split-soul", "weapon-class:crossbow"],
+  "equipBehavior": "two-handed"
+}

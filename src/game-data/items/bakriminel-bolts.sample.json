@@ -1,0 +1,23 @@
+{
+  "id": "bakriminel-bolts",
+  "name": "Bakriminel bolts",
+  "category": "ammo",
+  "slot": "ammo",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Bakriminel_bolts_5.png",
+  "hoverSummary": "Level 80 bolt ammo for crossbows. Uses the bakriminel bolt family base damage profile.",
+  "detailLines": [
+    "Requires level 80 Ranged to use.",
+    "Base bakriminel bolt ammunition with no enchanted effect.",
+    "Used here as the default non-proc bolt option for crossbows like the Eldritch crossbow."
+  ],
+  "combatStyleTags": ["ranged"],
+  "tier": 75,
+  "offensiveStats": {
+    "damageTier": 80
+  },
+  "requirements": {
+    "levelRequirements": {
+      "ranged": 80
+    }
+  }
+}

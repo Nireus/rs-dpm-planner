@@ -1,0 +1,24 @@
+{
+  "id": "eldritch-crossbow-eof",
+  "name": "Eldritch Crossbow (EOF)",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Eldritch_crossbow.png",
+  "hoverSummary": "EOF special | -25% adrenaline | 25-tick Split Soul buff",
+  "detailLines": [
+    "Stored Eldritch crossbow special attack for Essence of Finality.",
+    "Applies Split Soul for 25 ticks with no direct hit on cast.",
+    "Split Soul damage lands one tick after each qualifying hit while the buff is active."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Eldritch_crossbow",
+  "weaponOrigin": "eldritch-crossbow",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:eldritch-crossbow"]
+  },
+  "adrenalineCost": 25,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "effectRefs": ["eof-eldritch-crossbow-spec"],
+  "description": "Curated EOF special access entry for the Eldritch crossbow special attack."
+}

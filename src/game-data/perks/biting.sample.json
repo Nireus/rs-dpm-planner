@@ -1,0 +1,8 @@
+{
+  "id": "biting",
+  "name": "Biting",
+  "iconPath": "https://runescape.wiki/images/thumb/Biting.png/25px-Biting.png?2a411",
+  "wikiUrl": "https://runescape.wiki/w/Biting",
+  "effectRefs": ["biting"],
+  "description": "Increases critical strike chance by 2% per rank."
+}
