@@ -12,7 +12,7 @@ export function applyAdrenalineCostModifiers(
   }
 
   if (ability.subtype === 'ultimate') {
-    if (!hasVigourLikePassive(config)) {
+    if (!hasUltimateCostReductionPassive(config)) {
       return ability;
     }
 
@@ -22,7 +22,7 @@ export function applyAdrenalineCostModifiers(
     };
   }
 
-  if (ability.subtype === 'special' && hasVigourLikePassive(config)) {
+  if (ability.subtype === 'special' && hasSpecialCostReductionPassive(config)) {
     return {
       ...ability,
       adrenalineCost: Math.round(adrenalineCost * 90 * 100) / 10000,
@@ -32,14 +32,19 @@ export function applyAdrenalineCostModifiers(
   return ability;
 }
 
-function hasVigourLikePassive(config: SimulationConfig): boolean {
+function hasUltimateCostReductionPassive(config: SimulationConfig): boolean {
   const ringInstance = config.gearSetup.equipment.ring;
   const ringDefinition = ringInstance ? config.gameData.items[ringInstance.definitionId] : null;
-  const ringProvidesPassive =
-    ringDefinition?.effectRefs?.includes(EFFECT_REF_IDS.vigourPassive) ?? false;
+  return ringDefinition?.effectRefs?.includes(EFFECT_REF_IDS.vigourPassive) ?? false;
+}
+
+function hasSpecialCostReductionPassive(config: SimulationConfig): boolean {
+  const ringInstance = config.gearSetup.equipment.ring;
+  const ringDefinition = ringInstance ? config.gameData.items[ringInstance.definitionId] : null;
+  const ringProvidesPassive = ringDefinition?.effectRefs?.includes(EFFECT_REF_IDS.vigourPassive) ?? false;
   const activeBuffIds = config.persistentBuffConfig.buffIds ?? [];
   const buffProvidesPassive = activeBuffIds.some((buffId) =>
-    config.gameData.buffs[buffId]?.effectRefs?.includes(EFFECT_REF_IDS.vigourPassive),
+    config.gameData.buffs[buffId]?.effectRefs?.includes(EFFECT_REF_IDS.warpedGemSpecialCostReduction),
   );
 
   return ringProvidesPassive || buffProvidesPassive;

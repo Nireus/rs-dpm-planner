@@ -26,7 +26,7 @@ describe('buffs-selection utils', () => {
         name: 'Warped gem',
         category: 'miscellaneous',
         sourceType: 'player-config',
-        effectRefs: ['vigour-passive'],
+        effectRefs: ['warped-gem-special-cost-reduction'],
       },
     ]);
 

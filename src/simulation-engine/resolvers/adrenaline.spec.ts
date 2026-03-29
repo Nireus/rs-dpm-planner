@@ -471,7 +471,7 @@ describe('resolveAdrenalineTimeline', () => {
             name: 'Warped gem',
             category: 'miscellaneous',
             sourceType: 'player-config',
-            effectRefs: ['vigour-passive'],
+            effectRefs: ['warped-gem-special-cost-reduction'],
           },
         },
       },
@@ -518,7 +518,7 @@ describe('resolveAdrenalineTimeline', () => {
             name: 'Warped gem',
             category: 'miscellaneous',
             sourceType: 'player-config',
-            effectRefs: ['vigour-passive'],
+            effectRefs: ['warped-gem-special-cost-reduction'],
           },
         },
       },
@@ -542,6 +542,64 @@ describe('resolveAdrenalineTimeline', () => {
 
     expect(result.validationIssues).toEqual([]);
     expect(result.adrenalineTimeline).toEqual([50, 50, 50]);
+  });
+
+  it("does not reduce Death's Swiftness cost with Warped gem alone", () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        buffIds: ['warped-gem'],
+      },
+      gameData: {
+        ...createConfig().gameData,
+        abilities: {
+          ...createConfig().gameData.abilities,
+          'deaths-swiftness': createAbility({
+            id: 'deaths-swiftness',
+            name: "Death's Swiftness",
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineGain: 0,
+            adrenalineCost: 100,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+          }),
+        },
+        buffs: {
+          'warped-gem': {
+            id: 'warped-gem',
+            name: 'Warped gem',
+            category: 'miscellaneous',
+            sourceType: 'player-config',
+            effectRefs: ['warped-gem-special-cost-reduction'],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 93,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'swiftness-at-93',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'deaths-swiftness' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.adrenalineTimeline).toEqual([93, 93, 93]);
+    expect(result.validationIssues).toContainEqual(
+      expect.objectContaining({
+        code: 'ability.insufficient_adrenaline',
+        tick: 0,
+        relatedActionId: 'swiftness-at-93',
+      }),
+    );
   });
 
   it('uses the equipped BoLG special adrenaline cost for Weapon Special Attack', () => {

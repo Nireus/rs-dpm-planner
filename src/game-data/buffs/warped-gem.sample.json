@@ -6,5 +6,5 @@
   "category": "miscellaneous",
   "sourceType": "player-config",
   "isPermanent": true,
-  "effectRefs": ["vigour-passive"]
+  "effectRefs": ["warped-gem-special-cost-reduction"]
 }

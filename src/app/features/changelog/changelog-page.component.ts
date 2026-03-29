@@ -12,6 +12,11 @@ export class ChangelogPageComponent {
     {
       date: '29.03.2026',
       change:
+        "Fixed a validation bug where Warped gem could incorrectly let Death's Swiftness be used below 100% adrenaline. Warped gem now only applies its special-attack discount instead of behaving like a full Ring of Vigour passive.",
+    },
+    {
+      date: '29.03.2026',
+      change:
         'Added a second project-links nav section, a reporting guide page, and a changelog page, while tightening the sidebar layout for better 1080p desktop fit. Rotation Planner configuration also now supports starting stack values for BoLG and Deathspore when those mechanics are equipped at fight start.',
     },
     {
