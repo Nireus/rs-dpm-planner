@@ -193,6 +193,14 @@ export function validatePerkDefinition(input: unknown): GameDataValidationResult
     return { success: false, errors };
   }
 
+  if (input['iconPath'] !== undefined && typeof input['iconPath'] !== 'string') {
+    pushError(errors, 'iconPath', 'Expected "iconPath" to be a string when present.');
+  }
+
+  if (input['wikiUrl'] !== undefined && typeof input['wikiUrl'] !== 'string') {
+    pushError(errors, 'wikiUrl', 'Expected "wikiUrl" to be a string when present.');
+  }
+
   if (errors.length > 0) {
     return { success: false, errors };
   }

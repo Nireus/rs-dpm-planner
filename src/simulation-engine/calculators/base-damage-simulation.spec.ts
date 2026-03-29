@@ -29,10 +29,10 @@ describe('simulateBaseDamage', () => {
           cooldownTicks: 34,
           adrenalineCost: 25,
           isChanneled: true,
-          channelDurationTicks: 8,
+          channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index,
+            tickOffset: index + 1,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -277,10 +277,10 @@ describe('simulateBaseDamage', () => {
           cooldownTicks: 34,
           adrenalineCost: 25,
           isChanneled: true,
-          channelDurationTicks: 8,
+          channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index,
+            tickOffset: index + 1,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -530,7 +530,7 @@ describe('simulateBaseDamage', () => {
           name: 'Shadow Tendrils',
           subtype: 'enhanced',
           cooldownTicks: 75,
-          adrenalineCost: 15,
+          adrenalineCost: 0,
           hitSchedule: [
             { id: 'shadow-tendrils-hit', tickOffset: 0, damage: { min: 200, max: 270 } },
           ],
@@ -1134,14 +1134,681 @@ describe('simulateBaseDamage', () => {
     expect(swiftnessPassive!.multiplicativeModifiers.map((entry) => entry.sourceId)).toContain('ranged-damage-multiplier:+50%');
     expect(swiftnessPassive!.finalDamage.avg).toBeCloseTo(baselinePassive!.finalDamage.avg * 1.5, 1);
   });
+
+  it('applies Precise to the base damage range before later modifiers', () => {
+    const baselineConfig = createConfig({
+      abilities: {
+        ranged: createAbilityDefinition({
+          id: 'ranged',
+          name: 'Ranged',
+          cooldownTicks: 0,
+          adrenalineGain: 8,
+          hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+          baseDamage: { min: 95, max: 105 },
+        }),
+      },
+      abilityActions: [createAbilityAction('action-ranged', 0, 'ranged')],
+      startingAdrenaline: 0,
+      tickCount: 3,
+    });
+    const preciseConfig = createConfig({
+      abilities: baselineConfig.gameData.abilities,
+      abilityActions: baselineConfig.rotationPlan.abilityActions,
+      startingAdrenaline: 0,
+      tickCount: 3,
+      perks: {
+        precise: {
+          id: 'precise',
+          name: 'Precise',
+          effectRefs: ['precise'],
+        },
+      },
+      weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'precise', rank: 6 }],
+    });
+
+    const baselineResult = simulateBaseDamage(baselineConfig);
+    const preciseResult = simulateBaseDamage(preciseConfig);
+    const baselineHit = baselineResult.explainability.damageBreakdowns[0];
+    const preciseHit = preciseResult.explainability.damageBreakdowns[0];
+
+    expect(preciseHit.baseDamage.max).toBe(baselineHit.baseDamage.max);
+    expect(preciseHit.baseDamage.min).toBeGreaterThan(baselineHit.baseDamage.min);
+    expect(preciseHit.finalDamage.avg).toBeGreaterThan(baselineHit.finalDamage.avg);
+  });
+
+  it('applies Dragon Slayer only when the matching conditional buff is active', () => {
+    const createSlayerConfig = (active: boolean) =>
+      createConfig({
+        abilities: {
+          ranged: createAbilityDefinition({
+            id: 'ranged',
+            name: 'Ranged',
+            cooldownTicks: 0,
+            adrenalineGain: 8,
+            hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+            baseDamage: { min: 95, max: 105 },
+          }),
+        },
+        buffs: active
+          ? {
+              'dragon-slayer-active': {
+                id: 'dragon-slayer-active',
+                name: 'Dragon Slayer active',
+                category: 'passive',
+                sourceType: 'perk',
+                isPermanent: true,
+                effectRefs: ['dragon-slayer-active'],
+              },
+            }
+          : {},
+        abilityActions: [createAbilityAction('action-ranged', 0, 'ranged')],
+        startingAdrenaline: 0,
+        tickCount: 3,
+        activeBuffIds: active ? ['dragon-slayer-active'] : [],
+        perks: {
+          'dragon-slayer': {
+            id: 'dragon-slayer',
+            name: 'Dragon Slayer',
+            effectRefs: ['dragon-slayer'],
+          },
+        },
+        weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'dragon-slayer', rank: 1 }],
+      });
+
+    const inactiveResult = simulateBaseDamage(createSlayerConfig(false));
+    const activeResult = simulateBaseDamage(createSlayerConfig(true));
+
+    expect(activeResult.totalDamage.avg).toBeCloseTo(inactiveResult.totalDamage.avg * 1.07, 2);
+  });
+
+  it('applies Ultimatums as a multiplicative damage increase to ultimate abilities', () => {
+    const createUltimatumsConfig = (withPerk: boolean) =>
+      createConfig({
+        abilities: {
+          unload: createAbilityDefinition({
+            id: 'unload',
+            name: 'Unload',
+            subtype: 'ultimate',
+            cooldownTicks: 60,
+            adrenalineCost: 100,
+            hitSchedule: [{ id: 'unload-hit', tickOffset: 0, damage: { min: 120, max: 240 } }],
+            baseDamage: { min: 120, max: 240 },
+          }),
+        },
+        abilityActions: [createAbilityAction('action-unload', 0, 'unload')],
+        startingAdrenaline: 100,
+        tickCount: 4,
+        perks: withPerk
+          ? {
+              ultimatums: {
+                id: 'ultimatums',
+                name: 'Ultimatums',
+                effectRefs: [EFFECT_REF_IDS.ultimatums],
+              },
+            }
+          : {},
+        weaponConfiguredPerks: withPerk
+          ? [{ socketIndex: 0, perkId: 'ultimatums', rank: 4 }]
+          : undefined,
+      });
+
+    const baselineResult = simulateBaseDamage(createUltimatumsConfig(false));
+    const perkResult = simulateBaseDamage(createUltimatumsConfig(true));
+    const perkBreakdown = perkResult.explainability.damageBreakdowns[0];
+
+    expect(perkBreakdown?.multiplicativeModifiers.map((entry) => entry.sourceId)).toContain(
+      EFFECT_REF_IDS.ultimatums,
+    );
+    expect(perkResult.totalDamage.avg).toBeCloseTo(baselineResult.totalDamage.avg * 1.07, 2);
+  });
+
+  it('applies Equilibrium damage while equipped and prevents crits completely', () => {
+    const createEquilibriumConfig = (withPerk: boolean) =>
+      createConfig({
+        abilities: {
+          ranged: createAbilityDefinition({
+            id: 'ranged',
+            name: 'Ranged',
+            cooldownTicks: 0,
+            adrenalineGain: 8,
+            hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+            baseDamage: { min: 100, max: 100 },
+            effectRefs: ['critical-strike-chance:+100%'],
+          }),
+        },
+        abilityActions: [createAbilityAction('action-ranged', 0, 'ranged')],
+        startingAdrenaline: 0,
+        tickCount: 3,
+        perks: withPerk
+          ? {
+              equilibrium: {
+                id: 'equilibrium',
+                name: 'Equilibrium',
+                effectRefs: [EFFECT_REF_IDS.equilibrium],
+              },
+            }
+          : {},
+        weaponConfiguredPerks: withPerk
+          ? [{ socketIndex: 0, perkId: 'equilibrium', rank: 4 }]
+          : undefined,
+      });
+
+    const baselineResult = simulateBaseDamage(createEquilibriumConfig(false));
+    const perkResult = simulateBaseDamage(createEquilibriumConfig(true));
+    const perkBreakdown = perkResult.explainability.damageBreakdowns[0];
+
+    expect(perkBreakdown?.multiplicativeModifiers.map((entry) => entry.sourceId)).toContain(
+      EFFECT_REF_IDS.equilibrium,
+    );
+    expect(perkBreakdown?.expectedValueModifiers).toEqual([]);
+    expect(perkResult.totalDamage.avg).toBeLessThan(baselineResult.totalDamage.avg);
+    expect(perkBreakdown?.finalDamage.avg).toBeCloseTo((perkBreakdown?.baseDamage.avg ?? 0) * 1.14, 2);
+  });
+
+  it('keeps the Equilibrium anti-crit cooldown after a gear swap removes the perk', () => {
+    const config = createConfig({
+      abilities: {
+        ranged: createAbilityDefinition({
+          id: 'ranged',
+          name: 'Ranged',
+          cooldownTicks: 0,
+          adrenalineGain: 8,
+          hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+          effectRefs: ['critical-strike-chance:+100%'],
+        }),
+      },
+      buffs: {
+        'equilibrium-cooldown': {
+          id: 'equilibrium-cooldown',
+          name: 'Equilibrium cooldown',
+          category: 'temporary',
+          sourceType: 'perk',
+          effectRefs: [EFFECT_REF_IDS.equilibriumCooldown],
+        },
+      },
+      abilityActions: [createAbilityAction('action-ranged', 1, 'ranged')],
+      startingAdrenaline: 0,
+      tickCount: 6,
+      perks: {
+        equilibrium: {
+          id: 'equilibrium',
+          name: 'Equilibrium',
+          effectRefs: [EFFECT_REF_IDS.equilibrium],
+        },
+      },
+      weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'equilibrium', rank: 4 }],
+    });
+
+    config.inventory.items = [
+      {
+        instanceId: 'weapon-2',
+        definitionId: 'bolg',
+      },
+    ];
+    config.rotationPlan.nonGcdActions = [
+      {
+        id: 'swap-weapon',
+        tick: 0,
+        lane: 'non-gcd',
+        actionType: 'gear-swap',
+        payload: {
+          instanceId: 'weapon-2',
+          slot: 'weapon',
+        },
+      },
+    ];
+
+    const result = simulateBaseDamage(config);
+    const breakdown = result.explainability.damageBreakdowns[0];
+
+    expect(result.buffTimeline[1]).toContain('equilibrium-cooldown');
+    expect(breakdown?.multiplicativeModifiers.map((entry) => entry.sourceId)).not.toContain(
+      EFFECT_REF_IDS.equilibrium,
+    );
+    expect(breakdown?.expectedValueModifiers).toEqual([]);
+    expect(result.totalDamage.avg).toBe(breakdown?.baseDamage.avg);
+  });
+
+  it('triggers Aftershock after 50,000 qualifying weapon damage with no carry-over', () => {
+    const config = createConfig({
+      abilities: {
+        ranged: createAbilityDefinition({
+          id: 'ranged',
+          name: 'Ranged',
+          cooldownTicks: 0,
+          adrenalineGain: 8,
+          hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 1000, max: 1000 } }],
+          baseDamage: { min: 1000, max: 1000 },
+        }),
+      },
+      abilityActions: [
+        createAbilityAction('action-ranged-1', 0, 'ranged'),
+        createAbilityAction('action-ranged-2', 3, 'ranged'),
+        createAbilityAction('action-ranged-3', 6, 'ranged'),
+      ],
+      startingAdrenaline: 0,
+      tickCount: 10,
+      perks: {
+        aftershock: {
+          id: 'aftershock',
+          name: 'Aftershock',
+          effectRefs: [EFFECT_REF_IDS.aftershock],
+        },
+      },
+      weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'aftershock', rank: 4 }],
+    });
+
+    const result = simulateBaseDamage(config);
+    const aftershockHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'aftershock');
+
+    expect(aftershockHits).toHaveLength(1);
+    expect(aftershockHits[0]?.tick).toBe(6);
+    expect(aftershockHits[0]?.expectedValueModifiers).toEqual([]);
+    expect(aftershockHits[0]?.baseDamage).toEqual({
+      min: 1668.48,
+      avg: 2210.73,
+      max: 2752.99,
+    });
+  });
+
+  it('lets Perfect Equilibrium contribute to Aftershock charge but excludes Crackling', () => {
+    const config = createConfig({
+      abilities: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 8,
+          hitSchedule: [
+            { id: 'hit-1', tickOffset: 0, damage: { min: 390, max: 390 } },
+            { id: 'hit-2', tickOffset: 1, damage: { min: 390, max: 390 } },
+          ],
+          baseDamage: { min: 780, max: 780 },
+        }),
+      },
+      abilityActions: [
+        createAbilityAction('action-ranged-1', 0, 'piercing-shot'),
+        createAbilityAction('action-ranged-2', 3, 'piercing-shot'),
+        createAbilityAction('action-ranged-3', 6, 'piercing-shot'),
+        createAbilityAction('action-ranged-4', 9, 'piercing-shot'),
+      ],
+      startingAdrenaline: 0,
+      tickCount: 14,
+      perks: {
+        aftershock: {
+          id: 'aftershock',
+          name: 'Aftershock',
+          effectRefs: [EFFECT_REF_IDS.aftershock],
+        },
+        crackling: {
+          id: 'crackling',
+          name: 'Crackling',
+          effectRefs: [EFFECT_REF_IDS.crackling],
+        },
+      },
+      weaponConfiguredPerks: [
+        { socketIndex: 0, perkId: 'aftershock', rank: 4 },
+        { socketIndex: 1, perkId: 'crackling', rank: 4 },
+      ],
+    });
+    config.gameData.items['bolg'] = {
+      ...config.gameData.items['bolg'],
+      effectRefs: [EFFECT_REF_IDS.bolgPassive],
+    };
+
+    const result = simulateBaseDamage(config);
+    const aftershockHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'aftershock');
+    const cracklingHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'crackling');
+    const perfectEquilibriumHit = result.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'perfect-equilibrium',
+    );
+
+    expect(perfectEquilibriumHit).toBeTruthy();
+    expect(cracklingHits).toHaveLength(1);
+    expect(aftershockHits).toHaveLength(1);
+    expect(aftershockHits[0]?.tick).toBe(10);
+  });
+
+  it('resets Aftershock stored damage when swapping to a weapon without the perk', () => {
+    const config = createConfig({
+      abilities: {
+        ranged: createAbilityDefinition({
+          id: 'ranged',
+          name: 'Ranged',
+          cooldownTicks: 0,
+          adrenalineGain: 8,
+          hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      abilityActions: [
+        createAbilityAction('action-ranged-1', 0, 'ranged'),
+        createAbilityAction('action-ranged-2', 3, 'ranged'),
+        createAbilityAction('action-ranged-3', 6, 'ranged'),
+      ],
+      startingAdrenaline: 0,
+      tickCount: 10,
+      perks: {
+        aftershock: {
+          id: 'aftershock',
+          name: 'Aftershock',
+          effectRefs: [EFFECT_REF_IDS.aftershock],
+        },
+      },
+      weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'aftershock', rank: 4 }],
+    });
+    config.inventory.items = [
+      {
+        instanceId: 'weapon-2',
+        definitionId: 'bolg',
+      },
+    ];
+    config.rotationPlan.nonGcdActions = [
+      {
+        id: 'swap-weapon',
+        tick: 1,
+        lane: 'non-gcd',
+        actionType: 'gear-swap',
+        payload: {
+          instanceId: 'weapon-2',
+          slot: 'weapon',
+        },
+      },
+    ];
+
+    const result = simulateBaseDamage(config);
+    const aftershockHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'aftershock');
+
+    expect(aftershockHits).toHaveLength(0);
+  });
+
+  it('triggers Crackling on the next qualifying hit and respects its cooldown', () => {
+    const config = createConfig({
+      abilities: {
+        ranged: createAbilityDefinition({
+          id: 'ranged',
+          name: 'Ranged',
+          cooldownTicks: 0,
+          adrenalineGain: 8,
+          hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+          baseDamage: { min: 95, max: 105 },
+        }),
+      },
+      abilityActions: [
+        createAbilityAction('action-ranged-1', 0, 'ranged'),
+        createAbilityAction('action-ranged-2', 3, 'ranged'),
+      ],
+      startingAdrenaline: 0,
+      tickCount: 8,
+      perks: {
+        crackling: {
+          id: 'crackling',
+          name: 'Crackling',
+          effectRefs: ['crackling'],
+        },
+      },
+      weaponConfiguredPerks: [{ socketIndex: 0, perkId: 'crackling', rank: 4 }],
+    });
+
+    const result = simulateBaseDamage(config);
+    const cracklingHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'crackling');
+
+    expect(cracklingHits).toHaveLength(1);
+    expect(cracklingHits[0]?.tick).toBe(0);
+  });
+
+  it('applies Vulnerability Bomb only after the delayed area appears', () => {
+    const createVulnerabilityConfig = (withBomb: boolean) =>
+      createConfig({
+        abilities: {
+          'piercing-shot': createAbilityDefinition({
+            id: 'piercing-shot',
+            name: 'Piercing Shot',
+            cooldownTicks: 3,
+            adrenalineGain: 9,
+            hitSchedule: [{ id: 'hit-1', tickOffset: 0, damage: { min: 100, max: 100 } }],
+            baseDamage: { min: 100, max: 100 },
+          }),
+        },
+        buffs: {
+          'vulnerability-bomb-area': {
+            id: 'vulnerability-bomb-area',
+            name: 'Area',
+            category: 'temporary',
+            sourceType: 'item',
+            effectRefs: [],
+          },
+          vulnerability: {
+            id: 'vulnerability',
+            name: 'Debuff',
+            category: 'temporary',
+            sourceType: 'item',
+            effectRefs: ['target-damage-taken:+10%'],
+          },
+        },
+        abilityActions: [createAbilityAction('action-piercing', 4, 'piercing-shot')],
+        startingAdrenaline: 100,
+        tickCount: 12,
+      });
+
+    const baselineConfig = createVulnerabilityConfig(false);
+    const bombConfig = createVulnerabilityConfig(true);
+    bombConfig.rotationPlan.nonGcdActions = [
+      {
+        id: 'bomb-1',
+        tick: 0,
+        lane: 'non-gcd',
+        actionType: 'vulnerability-bomb',
+        payload: {
+          label: 'Vulnerability Bomb',
+        },
+      },
+    ];
+
+    const baselineResult = simulateBaseDamage(baselineConfig);
+    const bombResult = simulateBaseDamage(bombConfig);
+
+    expect(bombResult.totalDamage.avg).toBeCloseTo(baselineResult.totalDamage.avg * 1.1, 2);
+    expect(bombResult.buffTimeline[4]).toContain('vulnerability');
+    expect(bombResult.buffTimeline[4]).toContain('vulnerability-bomb-area');
+  });
+
+  it('adds Split Soul damage on the same tick as the source hit', () => {
+    const config = createConfig({
+      items: {
+        'eldritch-crossbow': {
+          id: 'eldritch-crossbow',
+          name: 'Eldritch crossbow',
+          category: 'weapon',
+          slot: 'weapon',
+          combatStyleTags: ['ranged'],
+          tier: 92,
+          offensiveStats: {
+            damageTier: 92,
+          },
+          effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
+        },
+      },
+      equipment: {
+        weapon: {
+          instanceId: 'ecb-1',
+          definitionId: 'eldritch-crossbow',
+        },
+      },
+      abilities: {
+        'weapon-special-attack': createAbilityDefinition({
+          id: 'weapon-special-attack',
+          name: 'Special Attack',
+          style: 'constitution',
+          subtype: 'special',
+          cooldownTicks: 0,
+          adrenalineCost: 25,
+          hitSchedule: [],
+          baseDamage: { min: 0, max: 0 },
+        }),
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [
+            { id: 'hit-1', tickOffset: 0, damage: { min: 100, max: 100 } },
+          ],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      buffs: {
+        'split-soul': {
+          id: 'split-soul',
+          name: 'Split Soul',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 25,
+        },
+      },
+      abilityActions: [
+        createAbilityAction('ecb-spec', 0, 'weapon-special-attack'),
+        createAbilityAction('piercing-1', 1, 'piercing-shot'),
+      ],
+      startingAdrenaline: 100,
+      tickCount: 8,
+    });
+
+    const result = simulateBaseDamage(config);
+    const splitSoulBreakdown = result.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'split-soul',
+    );
+    const piercingBreakdown = result.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'piercing-shot',
+    );
+
+    expect(piercingBreakdown?.tick).toBe(1);
+    expect(splitSoulBreakdown?.tick).toBe(1);
+    expect(splitSoulBreakdown?.finalDamage.min).toBeCloseTo(
+      calculateExpectedSplitSoulDamage(piercingBreakdown?.finalDamage.min ?? 0),
+      2,
+    );
+    expect(splitSoulBreakdown?.finalDamage.avg).toBeCloseTo(
+      calculateExpectedSplitSoulDamage(piercingBreakdown?.finalDamage.avg ?? 0),
+      2,
+    );
+    expect(splitSoulBreakdown?.finalDamage.max).toBeCloseTo(
+      calculateExpectedSplitSoulDamage(piercingBreakdown?.finalDamage.max ?? 0),
+      2,
+    );
+  });
+
+  it('applies the average Amulet of Souls boost to Split Soul damage', () => {
+    const createSplitSoulConfig = (definitionId?: string) =>
+      createConfig({
+        items: {
+          'eldritch-crossbow': {
+            id: 'eldritch-crossbow',
+            name: 'Eldritch crossbow',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['ranged'],
+            tier: 92,
+            offensiveStats: {
+              damageTier: 92,
+            },
+            effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
+          },
+          'amulet-of-souls': {
+            id: 'amulet-of-souls',
+            name: 'Amulet of souls',
+            category: 'jewellery',
+            slot: 'amulet',
+            combatStyleTags: ['ranged'],
+            effectRefs: ['amulet-of-souls-passive'],
+          },
+          'essence-of-finality': {
+            id: 'essence-of-finality',
+            name: 'Essence of Finality amulet',
+            category: 'jewellery',
+            slot: 'amulet',
+            combatStyleTags: ['ranged'],
+            effectRefs: ['amulet-of-souls-passive', 'eof-special-access'],
+          },
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'ecb-1',
+            definitionId: 'eldritch-crossbow',
+          },
+          ...(definitionId
+            ? {
+                amulet: {
+                  instanceId: 'amulet-1',
+                  definitionId,
+                },
+              }
+            : {}),
+        },
+        abilities: {
+          'weapon-special-attack': createAbilityDefinition({
+            id: 'weapon-special-attack',
+            name: 'Special Attack',
+            style: 'constitution',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineCost: 25,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+          }),
+          ranged: createAbilityDefinition({
+            id: 'ranged',
+            name: 'Ranged',
+            cooldownTicks: 3,
+            adrenalineGain: 9,
+            hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+            baseDamage: { min: 100, max: 100 },
+          }),
+        },
+        buffs: {
+          'split-soul': {
+            id: 'split-soul',
+            name: 'Split Soul',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 25,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('ecb-spec', 0, 'weapon-special-attack'),
+          createAbilityAction('ranged-1', 1, 'ranged'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 8,
+      });
+
+    const baseline = simulateBaseDamage(createSplitSoulConfig());
+    const withAos = simulateBaseDamage(createSplitSoulConfig('amulet-of-souls'));
+    const withEof = simulateBaseDamage(createSplitSoulConfig('essence-of-finality'));
+
+    const baselineSplitSoul = baseline.damageByAbility.find((entry) => entry.abilityId === 'split-soul');
+    const aosSplitSoul = withAos.damageByAbility.find((entry) => entry.abilityId === 'split-soul');
+    const eofSplitSoul = withEof.damageByAbility.find((entry) => entry.abilityId === 'split-soul');
+
+    expect(aosSplitSoul?.avg).toBeCloseTo((baselineSplitSoul?.avg ?? 0) * 1.1875, 2);
+    expect(eofSplitSoul?.avg).toBeCloseTo((baselineSplitSoul?.avg ?? 0) * 1.1875, 2);
+  });
 });
 
 function createConfig(input: {
   abilities: Record<string, AbilityDefinition>;
   buffs?: Record<string, BuffDefinition>;
+  items?: SimulationConfig['gameData']['items'];
+  perks?: SimulationConfig['gameData']['perks'];
   abilityActions: SimulationConfig['rotationPlan']['abilityActions'];
+  nonGcdActions?: SimulationConfig['rotationPlan']['nonGcdActions'];
+  activeBuffIds?: string[];
   startingAdrenaline: number;
   tickCount: number;
+  weaponConfiguredPerks?: NonNullable<SimulationConfig['gearSetup']['equipment']['weapon']>['configuredPerks'];
+  equipment?: SimulationConfig['gearSetup']['equipment'];
+  inventoryItems?: SimulationConfig['inventory']['items'];
 }): SimulationConfig {
   return {
     playerStats: {
@@ -1149,21 +1816,24 @@ function createConfig(input: {
       prayerLevel: 99,
     },
     gearSetup: {
-      equipment: {
+      equipment: input.equipment ?? {
         weapon: {
           instanceId: 'weapon-1',
           definitionId: 'bolg',
+          configuredPerks: input.weaponConfiguredPerks,
         },
       },
     },
     inventory: {
-      items: [],
+      items: input.inventoryItems ?? [],
     },
-    persistentBuffConfig: {},
+    persistentBuffConfig: {
+      buffIds: input.activeBuffIds ?? [],
+    },
     rotationPlan: {
       startingAdrenaline: input.startingAdrenaline,
       tickCount: input.tickCount,
-      nonGcdActions: [],
+      nonGcdActions: input.nonGcdActions ?? [],
       abilityActions: input.abilityActions,
     },
     gameData: {
@@ -1179,11 +1849,12 @@ function createConfig(input: {
             damageTier: 95,
           },
         },
+        ...(input.items ?? {}),
       },
       ammo: {},
       abilities: input.abilities,
       buffs: input.buffs ?? {},
-      perks: {},
+      perks: input.perks ?? {},
       relics: {},
       eofSpecs: {},
     },
@@ -1213,4 +1884,12 @@ function createAbilityDefinition(
     subtype: 'basic',
     ...input,
   };
+}
+
+function calculateExpectedSplitSoulDamage(sourceDamage: number): number {
+  const firstBracket = Math.min(sourceDamage, 2000) * 0.1;
+  const secondBracket = Math.min(Math.max(sourceDamage - 2000, 0), 2000) * 0.05;
+  const thirdBracket = Math.max(sourceDamage - 4000, 0) * 0.0125;
+
+  return Math.round((firstBracket + secondBracket + thirdBracket) * 4 * 100) / 100;
 }

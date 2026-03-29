@@ -6,6 +6,7 @@ import type {
   RotationAction,
   SimulationConfig,
 } from '../models';
+import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 export interface AdditiveDamageComputation {
@@ -33,9 +34,14 @@ export function applyAdditiveDamageModifiers(
     .map((effectRef) => parseAdditiveModifier(effectRef, abilityDamage))
     .filter((entry): entry is DamageModifierContribution & { bonusDamage: number } => Boolean(entry));
   const caromingModifier = parseCaromingModifier(config, ability.id, abilityDamage);
+  const flankingModifier = parseFlankingModifier(config, ability.id, timelineBuffs[action.tick], abilityDamage);
 
   if (caromingModifier) {
     modifiers.push(caromingModifier);
+  }
+
+  if (flankingModifier) {
+    modifiers.push(flankingModifier);
   }
 
   if (!modifiers.length) {
@@ -96,13 +102,13 @@ function collectCastScopedEffectRefs(
       [])
     : [];
 
-  return [
+  return [...new Set([
     ...(ability.effectRefs ?? []),
     ...persistentBuffEffectRefs,
     ...activeTimelineBuffEffectRefs,
     ...equippedItemEffectRefs,
     ...ammoEffectRefs,
-  ];
+  ])];
 }
 
 function parseAdditiveModifier(
@@ -150,27 +156,30 @@ function parseCaromingModifier(
   };
 }
 
-function collectHighestEquippedPerkRank(
+function parseFlankingModifier(
   config: SimulationConfig,
-  perkId: string,
-): number {
-  let highestRank = 0;
-
-  for (const instance of Object.values(config.gearSetup.equipment)) {
-    if (!instance?.configuredPerks?.length) {
-      continue;
-    }
-
-    for (const perk of instance.configuredPerks) {
-      if (perk.perkId !== perkId) {
-        continue;
-      }
-
-      highestRank = Math.max(highestRank, perk.rank ?? 1);
-    }
+  abilityId: string | undefined,
+  activeBuffIds: EntityId[] | undefined,
+  abilityDamage: number,
+): (DamageModifierContribution & { bonusDamage: number }) | null {
+  if (abilityId !== 'binding-shot' || !(activeBuffIds ?? []).includes('flanking-active')) {
+    return null;
   }
 
-  return highestRank;
+  const flankingRank = collectHighestEquippedPerkRank(config, 'flanking');
+  if (flankingRank <= 0) {
+    return null;
+  }
+
+  const percent = flankingRank * 40;
+  const bonusDamage = roundDamageValue((abilityDamage * percent) / 100);
+
+  return {
+    sourceId: `perk:flanking:${flankingRank}`,
+    label: `Flanking ${flankingRank} +${percent}% ability damage`,
+    value: 0,
+    bonusDamage,
+  };
 }
 
 function roundDamageValue(value: number): number {

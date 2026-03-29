@@ -11,18 +11,10 @@
     }
   },
   "isChanneled": true,
-  "channelDurationTicks": 8,
+  "channelDurationTicks": 9,
   "hitSchedule": [
     {
       "id": "rapid-fire-hit-1",
-      "tickOffset": 0,
-      "damage": {
-        "min": 75,
-        "max": 85
-      }
-    },
-    {
-      "id": "rapid-fire-hit-2",
       "tickOffset": 1,
       "damage": {
         "min": 75,
@@ -30,7 +22,7 @@
       }
     },
     {
-      "id": "rapid-fire-hit-3",
+      "id": "rapid-fire-hit-2",
       "tickOffset": 2,
       "damage": {
         "min": 75,
@@ -38,7 +30,7 @@
       }
     },
     {
-      "id": "rapid-fire-hit-4",
+      "id": "rapid-fire-hit-3",
       "tickOffset": 3,
       "damage": {
         "min": 75,
@@ -46,7 +38,7 @@
       }
     },
     {
-      "id": "rapid-fire-hit-5",
+      "id": "rapid-fire-hit-4",
       "tickOffset": 4,
       "damage": {
         "min": 75,
@@ -54,7 +46,7 @@
       }
     },
     {
-      "id": "rapid-fire-hit-6",
+      "id": "rapid-fire-hit-5",
       "tickOffset": 5,
       "damage": {
         "min": 75,
@@ -62,7 +54,7 @@
       }
     },
     {
-      "id": "rapid-fire-hit-7",
+      "id": "rapid-fire-hit-6",
       "tickOffset": 6,
       "damage": {
         "min": 75,
@@ -70,8 +62,16 @@
       }
     },
     {
-      "id": "rapid-fire-hit-8",
+      "id": "rapid-fire-hit-7",
       "tickOffset": 7,
+      "damage": {
+        "min": 75,
+        "max": 85
+      }
+    },
+    {
+      "id": "rapid-fire-hit-8",
+      "tickOffset": 8,
       "damage": {
         "min": 75,
         "max": 85

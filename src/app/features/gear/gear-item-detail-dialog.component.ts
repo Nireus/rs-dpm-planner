@@ -25,6 +25,7 @@ export class GearItemDetailDialogComponent {
   @Output() close = new EventEmitter<void>();
   @Output() equip = new EventEmitter<void>();
   @Output() addToInventory = new EventEmitter<void>();
+  @Output() remove = new EventEmitter<void>();
   @Output() updateSocketPerks = new EventEmitter<{ socketIndex: number; perkIds: string[] }>();
   @Output() updatePerkRank = new EventEmitter<{ socketIndex: number; perkId: string; rank: number }>();
   @Output() updateBooleanConfig = new EventEmitter<{ optionId: string; checked: boolean }>();

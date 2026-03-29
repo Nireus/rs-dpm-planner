@@ -82,6 +82,36 @@ h4 {
   color: var(--text-strong);
 }
 
+.readonly-config-field {
+  align-self: stretch;
+}
+
+.readonly-config-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.75rem;
+  background: rgba(10, 16, 8, 0.66);
+  color: var(--text-strong);
+}
+
+.readonly-config-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.readonly-config-state {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 .config-field input[type='checkbox'] {
   width: 1rem;
   height: 1rem;
@@ -200,6 +230,21 @@ h4 {
   text-align: left;
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, opacity 120ms ease;
+}
+
+.perk-option-copy,
+.perk-rank-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.option-icon {
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .perk-option.selected {

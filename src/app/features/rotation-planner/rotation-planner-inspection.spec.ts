@@ -54,6 +54,14 @@ const DEATHSPORE_ARROWS: ItemDefinition = {
   effectRefs: ['deathspore-progress'],
 };
 
+const BAKRIMINEL_BOLTS: ItemDefinition = {
+  id: 'bakriminel-bolts',
+  name: 'Bakriminel bolts',
+  category: 'ammo',
+  slot: 'ammo',
+  combatStyleTags: ['ranged'],
+};
+
 const WEN_ARROWS: ItemDefinition = {
   id: 'wen-arrows',
   name: 'Wen arrows',
@@ -68,6 +76,15 @@ const SEREN_GODBOW: ItemDefinition = {
   category: 'weapon',
   slot: 'weapon',
   combatStyleTags: ['ranged'],
+};
+
+const ELDRITCH_CROSSBOW: ItemDefinition = {
+  id: 'eldritch-crossbow',
+  name: 'Eldritch crossbow',
+  category: 'weapon',
+  slot: 'weapon',
+  combatStyleTags: ['ranged'],
+  effectRefs: ['weapon-class:crossbow'],
 };
 
 const ESSENCE_OF_FINALITY: ItemDefinition = {
@@ -117,16 +134,18 @@ const FURY_OF_THE_SMALL: RelicDefinition = {
   name: 'Fury of the Small',
 };
 
-const EQUILIBRIUM_PERK = {
-  id: 'equilibrium',
-  name: 'Equilibrium',
-  effectRefs: ['equilibrium'],
+const PRECISE_PERK = {
+  id: 'precise',
+  name: 'Precise',
+  effectRefs: ['precise'],
 };
 
 const CATALOG: GameDataCatalog = {
   items: {
     [BOLG.id]: BOLG,
+    [BAKRIMINEL_BOLTS.id]: BAKRIMINEL_BOLTS,
     [DEATHSPORE_ARROWS.id]: DEATHSPORE_ARROWS,
+    [ELDRITCH_CROSSBOW.id]: ELDRITCH_CROSSBOW,
     [WEN_ARROWS.id]: WEN_ARROWS,
     [SEREN_GODBOW.id]: SEREN_GODBOW,
     [PERNIXS_QUIVER.id]: PERNIXS_QUIVER,
@@ -140,7 +159,7 @@ const CATALOG: GameDataCatalog = {
     [RIGOUR.id]: RIGOUR,
   },
   perks: {
-    [EQUILIBRIUM_PERK.id]: EQUILIBRIUM_PERK,
+    [PRECISE_PERK.id]: PRECISE_PERK,
   },
   relics: {
     [FURY_OF_THE_SMALL.id]: FURY_OF_THE_SMALL,
@@ -510,6 +529,45 @@ describe('rotation planner inspection', () => {
     expect(inspection.ammoState).toBe('Deathspore arrows');
   });
 
+  it('shows bakriminel bolts as the effective ammo state for crossbows with pernix quiver', () => {
+    const inspection = inspectRotationPlannerTick({
+      tick: 1,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: ELDRITCH_CROSSBOW.id,
+          },
+          ammo: {
+            instanceId: 'quiver-1',
+            definitionId: PERNIXS_QUIVER.id,
+            configValues: {
+              'loaded-ammo': DEATHSPORE_ARROWS.id,
+            },
+          },
+        },
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: ROTATION_PLAN,
+    });
+
+    expect(inspection.ammoState).toBe('Bakriminel bolts');
+    expect(inspection.equipmentState).toContainEqual({
+      slot: 'Ammo',
+      itemName: "Pernix's quiver",
+      details: ['Loaded arrows: Deathspore arrows', 'Loaded bolts: Bakriminel bolts'],
+    });
+  });
+
   it('hides deathspore stacks when deathspore arrows are not effectively equipped', () => {
     const simulationResult: SimulationResult = {
       isValid: true,
@@ -589,7 +647,7 @@ describe('rotation planner inspection', () => {
             configuredPerks: [
               {
                 socketIndex: 0,
-                perkId: EQUILIBRIUM_PERK.id,
+                perkId: PRECISE_PERK.id,
                 rank: 4,
               },
             ],
@@ -615,7 +673,7 @@ describe('rotation planner inspection', () => {
     expect(inspection.equipmentState).toContainEqual({
       slot: 'Weapon',
       itemName: 'Bow of the Last Guardian',
-      details: ['Perks: Equilibrium 4'],
+      details: ['Perks: Precise 4'],
     });
     expect(inspection.equipmentState).toContainEqual({
       slot: 'Amulet',

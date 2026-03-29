@@ -1,7 +1,8 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
-import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
+import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
 import type { GearBuilderState } from '../../core/gear/gear-state';
+import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
 import { formatEquipmentSlot } from '../gear/gear-builder.utils';
 import type {
   PlayerStats,
@@ -20,6 +21,8 @@ import {
   collectPersistentBuffIds,
   type PlannerBuffStateSnapshot,
 } from './rotation-planner-simulation';
+
+const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 export interface RotationPlannerTickInspection {
   tick: number;
@@ -204,6 +207,20 @@ function buildEquipmentDetails(
     }
   }
 
+  if (instance.definitionId === 'pernixs-quiver') {
+    const loadedArrows = resolveStringConfigValue(
+      catalog.items[instance.definitionId],
+      instance,
+      CONFIG_OPTION_IDS.loadedAmmo,
+    );
+
+    if (loadedArrows && loadedArrows !== 'none') {
+      details.push(`Loaded arrows: ${formatDefinitionLabel(loadedArrows, catalog)}`);
+    }
+
+    details.push(`Loaded bolts: ${formatDefinitionLabel(QUIVER_SECONDARY_BOLT_AMMO_ID, catalog)}`);
+  }
+
   return details;
 }
 
@@ -240,61 +257,6 @@ function resolveStringConfigValue(
 
   const defaultValue = item?.configOptions?.find((option) => option.id === optionId)?.defaultValue;
   return typeof defaultValue === 'string' ? defaultValue : null;
-}
-
-function projectGearStateAtTick(
-  gearState: GearBuilderState,
-  nonGcdActions: RotationAction[],
-  tick: number,
-): GearBuilderState {
-  let projectedState: GearBuilderState = {
-    equipment: { ...gearState.equipment },
-    inventory: [...gearState.inventory],
-  };
-
-  for (const action of [...nonGcdActions].sort((left, right) => left.tick - right.tick)) {
-    if (action.tick >= tick) {
-      break;
-    }
-
-    if (action.actionType === 'gear-swap') {
-      projectedState = applyProjectedGearSwap(projectedState, action);
-    }
-  }
-
-  return projectedState;
-}
-
-function applyProjectedGearSwap(
-  state: GearBuilderState,
-  action: RotationAction,
-): GearBuilderState {
-  const instanceId = readStringPayload(action, 'instanceId');
-  const slot = readStringPayload(action, 'slot') as EquipmentSlot | null;
-
-  if (!instanceId || !slot) {
-    return state;
-  }
-
-  const inventoryInstance = state.inventory.find((item) => item.instanceId === instanceId);
-  if (!inventoryInstance) {
-    return state;
-  }
-
-  const displaced = state.equipment[slot];
-  const nextInventory = state.inventory.filter((item) => item.instanceId !== instanceId);
-
-  if (displaced) {
-    nextInventory.push(displaced);
-  }
-
-  return {
-    equipment: {
-      ...state.equipment,
-      [slot]: inventoryInstance,
-    },
-    inventory: nextInventory,
-  };
 }
 
 function readPlannerActionLabel(action: RotationAction): string {

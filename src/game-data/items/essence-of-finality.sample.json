@@ -24,7 +24,7 @@
   "offensiveStats": {
     "rangedBonus": 56
   },
-  "effectRefs": ["eof-special-access"],
+  "effectRefs": ["eof-special-access", "amulet-of-souls-passive"],
   "configOptions": [
     {
       "id": "applied-dye",
@@ -38,7 +38,7 @@
       "label": "Stored special",
       "type": "select",
       "defaultValue": "dark-bow",
-      "options": ["dark-bow", "seren-godbow", "gloomfire-bow", "none"]
+      "options": ["dark-bow", "seren-godbow", "gloomfire-bow", "eldritch-crossbow", "none"]
     }
   ],
   "implementationNotes": "Sample amulet-slot item for gear builder MVP."

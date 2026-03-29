@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { CURATED_PERK_OPTIONS, type CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
@@ -16,6 +17,8 @@ import {
 } from './gear-builder.utils';
 
 type ConfiguredPerkSelectionLike = NonNullable<ItemInstanceConfig['configuredPerks']>[number];
+
+const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 @Component({
   selector: 'app-gear-builder-page',
@@ -117,6 +120,21 @@ export class GearBuilderPageComponent {
 
   protected removeFromInventory(instanceId: string): void {
     this.gearBuilderStore.removeFromInventory(instanceId);
+  }
+
+  protected removeSelectedResolvedInstance(): void {
+    const resolved = this.selectedResolvedInstance();
+    if (!resolved) {
+      return;
+    }
+
+    if (resolved.locationKind === 'equipment' && resolved.slot) {
+      this.clearSlot(resolved.slot);
+    } else {
+      this.removeFromInventory(resolved.instance.instanceId);
+    }
+
+    this.closeDetail();
   }
 
   protected equipInventoryItem(instanceId: string, slot: EquipmentSlot): void {
@@ -267,7 +285,7 @@ export class GearBuilderPageComponent {
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
   ): string | null {
-    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+    const ammoId = this.resolveStringConfigValue(item, instance, CONFIG_OPTION_IDS.loadedAmmo);
 
     if (!ammoId || ammoId === 'none') {
       return null;
@@ -280,20 +298,21 @@ export class GearBuilderPageComponent {
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
   ): string | null {
-    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+    const ammoId = this.resolveStringConfigValue(item, instance, CONFIG_OPTION_IDS.loadedAmmo);
 
     if (!ammoId || ammoId === 'none') {
       return null;
     }
 
-    return this.itemDefinitions()[ammoId]?.name ?? ammoId;
+    const ammoName = this.itemDefinitions()[ammoId]?.name ?? ammoId;
+    return `Loaded arrows: ${ammoName}`;
   }
 
   protected quiverAmmoShortLabel(
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
   ): string | null {
-    const ammoId = this.resolveStringConfigValue(item, instance, 'loaded-ammo');
+    const ammoId = this.resolveStringConfigValue(item, instance, CONFIG_OPTION_IDS.loadedAmmo);
 
     if (!ammoId || ammoId === 'none') {
       return null;
@@ -312,6 +331,40 @@ export class GearBuilderPageComponent {
           .join('')
           .slice(0, 4);
     }
+  }
+
+  protected quiverBoltIcon(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    if (!this.isQuiver(item, instance)) {
+      return null;
+    }
+
+    return this.itemDefinitions()[QUIVER_SECONDARY_BOLT_AMMO_ID]?.iconPath ?? null;
+  }
+
+  protected quiverBoltLabel(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    if (!this.isQuiver(item, instance)) {
+      return null;
+    }
+
+    const ammoName = this.itemDefinitions()[QUIVER_SECONDARY_BOLT_AMMO_ID]?.name ?? QUIVER_SECONDARY_BOLT_AMMO_ID;
+    return `Loaded bolts: ${ammoName}`;
+  }
+
+  protected quiverBoltShortLabel(
+    item: ItemDefinition | null,
+    instance: ItemInstanceConfig | null,
+  ): string | null {
+    if (!this.isQuiver(item, instance)) {
+      return null;
+    }
+
+    return 'BOLT';
   }
 
   protected itemIconPath(item: ItemDefinition | null, instance: ItemInstanceConfig | null = null): string | null {
@@ -603,5 +656,9 @@ export class GearBuilderPageComponent {
 
     const defaultValue = item?.configOptions?.find((option) => option.id === optionId)?.defaultValue;
     return typeof defaultValue === 'string' ? defaultValue : null;
+  }
+
+  private isQuiver(item: ItemDefinition | null, instance: ItemInstanceConfig | null): boolean {
+    return item?.id === 'pernixs-quiver' && instance !== null;
   }
 }

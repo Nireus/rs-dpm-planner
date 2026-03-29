@@ -2,6 +2,9 @@ import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import { advanceChanceAccumulator, createChanceAccumulatorState } from '../utils/chance-accumulator';
 import { resolveDeathsporeTimeline } from './deathspore';
 import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
 
@@ -42,6 +45,7 @@ export function resolveAdrenalineTimeline(
     deterministicRangedTimeline.buffTimeline,
   );
   let currentAdrenaline = clampAdrenaline(config, config.rotationPlan.startingAdrenaline);
+  let impatientAccumulator = createChanceAccumulatorState();
 
   if (currentAdrenaline !== config.rotationPlan.startingAdrenaline) {
     validationIssues.push({
@@ -63,6 +67,7 @@ export function resolveAdrenalineTimeline(
         action,
         currentAdrenaline,
         deathsporeTimeline.freeCastActionIds.has(action.id),
+        impatientAccumulator,
       );
 
       if (result.issue) {
@@ -71,6 +76,7 @@ export function resolveAdrenalineTimeline(
       }
 
       currentAdrenaline = result.nextAdrenaline;
+      impatientAccumulator = result.nextImpatientAccumulator ?? impatientAccumulator;
       actionsResolved.push(action.id);
     }
 
@@ -97,6 +103,7 @@ export function resolveAdrenalineTimeline(
 
 interface ResolveAbilityActionAdrenalineResult {
   nextAdrenaline: number;
+  nextImpatientAccumulator?: ReturnType<typeof createChanceAccumulatorState>;
   issue?: ValidationIssue;
 }
 
@@ -105,8 +112,10 @@ function resolveAbilityActionAdrenaline(
   action: RotationAction,
   currentAdrenaline: number,
   usesDeathsporeFreeCast: boolean,
+  impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
 ): ResolveAbilityActionAdrenalineResult {
-  const ability = resolveEffectiveAbilityDefinition(config, action);
+  const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
+  const ability = resolveEffectiveAbilityDefinition(projectedConfig, action);
 
   if (!ability) {
     return {
@@ -121,7 +130,8 @@ function resolveAbilityActionAdrenaline(
 
   const adrenalineCost = Math.max(ability.adrenalineCost ?? 0, 0);
   const effectiveAdrenalineCost = usesDeathsporeFreeCast ? 0 : adrenalineCost;
-  const adrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0) + resolveAdrenalineGainBonus(config, ability);
+  const adrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0) +
+    resolveAdrenalineGainBonus(projectedConfig, ability, impatientAccumulator);
 
   if (adrenalineCost > currentAdrenaline) {
     return {
@@ -136,12 +146,14 @@ function resolveAbilityActionAdrenaline(
 
   return {
     nextAdrenaline: clampAdrenaline(config, currentAdrenaline - effectiveAdrenalineCost + adrenalineGain),
+    nextImpatientAccumulator: resolveNextImpatientAccumulator(projectedConfig, ability, impatientAccumulator),
   };
 }
 
 function resolveAdrenalineGainBonus(
   config: SimulationConfig,
-  ability: { subtype: string },
+  ability: { subtype: string; adrenalineGain?: number },
+  impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
 ): number {
   const activeRelicIds = config.persistentBuffConfig.relicIds ?? [];
   const hasRelicEffect = (effectRef: string) => activeRelicIds.some((relicId) =>
@@ -150,8 +162,21 @@ function resolveAdrenalineGainBonus(
 
   let bonus = 0;
 
-  if (ability.subtype === 'basic' && hasRelicEffect(FURY_OF_THE_SMALL_EFFECT_REF)) {
-    bonus += 1;
+  if (ability.subtype === 'basic') {
+    const baseAdrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0);
+    const furyBonus = hasRelicEffect(FURY_OF_THE_SMALL_EFFECT_REF) ? 1 : 0;
+    bonus += furyBonus;
+
+    const invigoratingRank = collectHighestEquippedPerkRank(config, 'invigorating');
+    if (invigoratingRank > 0) {
+      bonus += roundAdrenalineValue((baseAdrenalineGain + furyBonus) * invigoratingRank * 0.05);
+    }
+
+    const impatientRank = collectHighestEquippedPerkRank(config, 'impatient');
+    if (impatientRank > 0) {
+      const impatientResult = advanceChanceAccumulator(impatientAccumulator, impatientRank * 9);
+      bonus += impatientResult.procCount * 3;
+    }
   }
 
   if (ability.subtype === 'ultimate' && hasRelicEffect(CONSERVATION_OF_ENERGY_EFFECT_REF)) {
@@ -159,6 +184,23 @@ function resolveAdrenalineGainBonus(
   }
 
   return bonus;
+}
+
+function resolveNextImpatientAccumulator(
+  config: SimulationConfig,
+  ability: { subtype: string },
+  impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
+): ReturnType<typeof createChanceAccumulatorState> {
+  if (ability.subtype !== 'basic') {
+    return impatientAccumulator;
+  }
+
+  const impatientRank = collectHighestEquippedPerkRank(config, 'impatient');
+  if (impatientRank <= 0) {
+    return impatientAccumulator;
+  }
+
+  return advanceChanceAccumulator(impatientAccumulator, impatientRank * 9).nextState;
 }
 
 function groupAbilityActionsByTick(actions: RotationAction[]): Map<number, RotationAction[]> {
@@ -211,4 +253,8 @@ function createAdrenalineIssue(
     relatedActionId: action.id,
     message,
   };
+}
+
+function roundAdrenalineValue(value: number): number {
+  return Math.round(value * 100) / 100;
 }

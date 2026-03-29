@@ -2,60 +2,57 @@
 
 ## Project purpose
 
-This repository contains a desktop-first web application for planning and simulating **theoretical RuneScape ranged damage output** for manually defined rotations.
+This repository contains a desktop-first web application for planning and simulating **theoretical RuneScape damage output** for manually defined rotations.
 
 The app is intended to help users:
 - configure gear and inventory
 - configure relevant persistent buffs
-- inspect available ranged abilities
+- inspect available abilities
 - plan a rotation on a tick-based timeline
 - calculate theoretical min / avg / max damage under ideal conditions
 - inspect buff states, adrenaline, cooldowns, and damage breakdowns
 - export and import portable configurations
+- save, share, and evolve builds over time as the product grows
 
 This document defines the implementation rules and constraints for coding agents working in this repository.
 
 ---
 
-## MVP scope
+## Current product scope
 
-The current MVP scope is intentionally limited.
+The project is evolving beyond its original MVP, but the current supported scope is still intentionally constrained.
 
-### Supported in MVP
-- **Ranged only**
+### Currently supported / current product focus
+- **Ranged is the current production focus**
 - **Single target only**
 - **Desktop-first UI**
-- **No backend**
-- **No login/auth**
-- **Manual JSON game data stored in repo**
-- **Strict validation mode**
-- **Manual rotation planning only**
+- **Strict validation mode by default**
 - **Portable versioned import/export**
 - **Theoretical ideal-condition damage simulation**
 - **Deterministic mechanics implemented exactly where required**
 - **Probability-based mechanics approximated by expected value where accepted**
+- **Curated game data**
+- **Architecture designed to support future persistence, public builds, and community features**
 
-### Not part of MVP
+### Not supported yet unless explicitly requested
 - melee
 - magic
 - necromancy
 - multiple targets
 - AoE simulation
 - mobile-first UX
-- backend persistence
-- cloud sync
-- sandbox mode
-- wiki scraping/import pipeline
-- collaborative features
+- sandbox mode as default behavior
+- full wiki scraping/import pipeline
+- broad speculative generalization for all future combat systems
 
-Do not introduce non-MVP features unless explicitly requested.
+Do not introduce unsupported features unless explicitly requested.
 
 ---
 
 ## Technical stack
 
 Preferred stack:
-- Angular (latest stable)
+- Angular (latest stable used by the project)
 - TypeScript
 - Standalone components
 - Angular Signals where helpful
@@ -67,12 +64,12 @@ Preferred stack:
 
 Do not introduce unnecessary framework complexity without explicit approval.
 
-Avoid:
-- NgRx unless clearly justified later
-- backend frameworks
-- databases
+Avoid unless clearly justified:
+- NgRx
 - SSR
-- large UI libraries unless there is a strong need
+- large UI libraries
+- speculative plugin systems
+- overengineered abstractions for unsupported combat styles
 
 ---
 
@@ -114,7 +111,7 @@ Responsibilities:
 
 This layer represents **how the simulation works**.
 
-This layer must be written as **pure TypeScript** and must not depend on Angular.
+This layer must be written as **pure TypeScript** and must not depend on Angular, browser storage, or backend SDKs.
 
 ### 3. `app/ui`
 Responsibilities:
@@ -126,7 +123,7 @@ Responsibilities:
 - planner display
 - results display
 - import/export UI
-- UI state only
+- app-level state and view state only
 
 This layer represents **how the user interacts with the simulator**.
 
@@ -135,8 +132,9 @@ Do **not** place combat calculation logic inside Angular components.
 
 Angular components may:
 - collect user input
-- call services/selectors
+- call services/selectors/facades
 - display simulation results
+- manage view state
 
 Angular components must **not** implement:
 - damage formulas
@@ -144,21 +142,22 @@ Angular components must **not** implement:
 - adrenaline logic
 - timeline resolution
 - buff resolution
+- effect resolution
 - ability availability engine rules beyond trivial display mapping
 
 ---
 
-## Domain rules and assumptions
+## Product and simulation rules
 
 ### Combat scope
-- Only ranged combat is supported in MVP.
-- Only single target is supported in MVP.
+- Ranged combat is the current production focus.
+- Only single target is supported.
 - The simulator models **theoretical perfect-condition damage**.
-- Do not model hit chance, target defense, movement requirements, or real fight interruptions unless explicitly requested later.
+- Do not model hit chance, target defense, movement requirements, or real fight interruptions unless explicitly requested.
 
 ### Tick model
 - The engine is tick-based.
-- 1 GCD = 3 ticks.
+- `1 GCD = 3 ticks`.
 - Planner actions occur on integer ticks.
 - Gear and ammo swaps take effect **starting from the next tick**, not the same tick.
 
@@ -166,7 +165,7 @@ Angular components must **not** implement:
 - Channeled abilities occupy their channel window.
 - Hits may resolve during channel or only at completion, depending on the ability definition.
 - Unsupported beneficial mid-channel swap behavior should not be simulated as valid.
-- In MVP, swaps during channel should not be modeled as improving later hits of that same channel.
+- Swaps during channel should not be modeled as improving later hits of that same channel unless explicitly supported.
 
 ### Damage model
 For base ability damage:
@@ -182,10 +181,10 @@ Apply modifiers consistently in code and document the order clearly.
 
 Examples:
 - deterministic/stateful weapon or ammo behavior -> exact
-- crit chance / crit damage -> expected value, if explicitly treated as approximated
+- crit chance / crit damage -> expected value, only if explicitly treated as approximated
 
 ### Validation mode
-MVP uses **strict validation**.
+Default behavior uses **strict validation**.
 
 Invalid actions should produce structured validation errors instead of being simulated silently.
 
@@ -196,6 +195,35 @@ Examples:
 - missing gear requirement
 - invalid action timing
 - unsupported channel conflict
+
+---
+
+## Persistence and backend boundaries
+
+The app may grow into save/share, public builds, voting, auth, and community features, but those concerns must remain isolated from simulation logic.
+
+Rules:
+- `simulation-engine/**` must remain framework-agnostic and backend-agnostic
+- backend, auth, voting, public builds, analytics, and persistence concerns must not leak into `simulation-engine/**`
+- app features must interact with persistence through repository/service/facade boundaries
+- local persistence, import/export, and future backend save/share flows must map from the same canonical workspace document or app-level persistence model
+- do not couple UI components directly to backend SDK calls when a repository/service abstraction is appropriate
+- persistence models may evolve, but simulation inputs/outputs should stay clean and explicit
+
+---
+
+## External sources and URL handling
+
+When the user provides a URL to a web page, the agent must **always use Playwright MCP to inspect that page directly** instead of relying on memory, assumptions, paraphrased recollection, or stale previously seen values.
+
+Rules:
+- always open user-provided web page URLs with Playwright MCP before making claims about their contents
+- prefer direct inspection of the live page over in-memory assumptions
+- if a page cannot be accessed, say so explicitly instead of guessing
+- if relevant values are dynamic, verify them from the page at the time of the task
+- when debugging issues tied to a live page, use Playwright MCP as the source of truth for visible behavior
+
+This rule applies whenever the user provides a web page URL, even if the agent believes it already knows the page.
 
 ---
 
@@ -215,6 +243,7 @@ Examples:
 - Prefer stable IDs and references over name matching.
 - Keep data loading separate from data display.
 - Keep UI state separate from simulation state.
+- Keep persistence mapping separate from both UI rendering and engine logic.
 
 ### Data modeling
 - Distinguish between **definitions** and **instances/config**.
@@ -230,27 +259,27 @@ If a mechanic or edge case is not yet supported:
 
 ---
 
-## Architecture Guardrails
+## Architecture guardrails and scaling rules
 
 - `app/core/**` must not import from `app/features/**`
 - shared helpers used by multiple features must live in `app/core/**`, `app/shared/**`, or `simulation-engine/**`
 - do not add direct `window.localStorage`, `sessionStorage`, or future HTTP persistence code in feature stores or components
-- all persistence must go through repository-style adapters in `app/core`
+- all persistence must go through repository-style adapters, services, or facades
 - local persistence, import/export, and future backend save/share must all map from the same canonical workspace document
-- every new `effectRef`, requirement tag, and config option ID must be added to a central registry or conventions file
-- do not add ad-hoc regex effect parsing in unrelated modules; new effect families must use shared parsers or helpers
+- every new `effectRef`, requirement tag, config option ID, or similar cross-cutting identifier must be added to a central registry, conventions file, or clearly documented shared location
+- do not add ad-hoc regex effect parsing in unrelated modules; new effect families must use shared parsers/helpers
 - if a module mixes orchestration, view shaping, and domain logic, extract before adding more features
-- use `~300` TypeScript lines as a warning threshold and `~450` as a hard extraction threshold
-- every new combat mechanic must include:
+- use `~300` TypeScript lines as a warning threshold and `~450` as a strong extraction threshold
+- every new combat mechanic should include:
   - one scenario-style engine test
-  - one user-visible verification note
-- release priorities are architecture, persistence, import/export, tests, and build health first
-- third-party runtime assets should not be expanded casually, but existing ones are acceptable temporarily and are low-priority cleanup
+  - one user-visible verification note or manual verification suggestion
+- release priorities are architecture, persistence integrity, import/export integrity, tests, and build health first
+- third-party runtime assets should not be expanded casually; existing ones may remain temporarily if low-priority cleanup is more appropriate than churn
 
-### Future Product Readiness
-
+### Future product readiness
 - future backend save/share/user features must adapt from app-level persistence models
 - backend concerns must not leak into `simulation-engine`
+- public builds, feature voting, and community metadata must not distort the canonical simulation model
 
 ---
 
@@ -258,15 +287,17 @@ If a mechanic or edge case is not yet supported:
 
 ### Before implementing
 - Read this file first.
-- Inspect the relevant phase or step in project planning docs if they exist.
+- Inspect the relevant planning or implementation docs if they exist.
 - Understand which layer the requested change belongs to.
 - Minimize the scope of changes.
+- Prefer working within the existing architecture over inventing a new one.
 
 ### During implementation
 - Modify only the relevant files.
 - Do not move logic into the wrong layer.
-- Avoid speculative abstractions for future combat styles unless they directly help the ranged MVP.
-- Prefer data-driven extensions where practical, but do not overengineer a generic universal combat engine too early.
+- Avoid speculative abstractions for future combat styles unless they directly help the current product.
+- Prefer data-driven extensions where practical, but do not overengineer a universal combat engine too early.
+- If a change touches persistence or backend-adjacent code, preserve clean separation from simulation logic.
 
 ### After implementing
 - Summarize what changed.
@@ -289,6 +320,7 @@ Unit tests are especially important for:
 - validation rules
 - import/export validation
 - data loading and normalization
+- persistence mapping and serialization logic
 
 ### Scenario tests
 Where useful, add scenario-based engine tests for:
@@ -306,9 +338,31 @@ UI tests should focus on:
 - planner state behavior
 - import/export behavior
 - critical user flows
+- persistence flow wiring where practical
 
 ### E2E
 Playwright tests should cover major happy paths, not every edge case.
+
+---
+
+## Bugfix regression policy
+
+When the user reports a bug, the agent should treat the task as both a fix and a regression-prevention task.
+
+Rules:
+- fix the root cause when reasonably possible, not only the visible symptom
+- add an automated regression test whenever the bug can be covered in a reliable and maintainable way
+- prefer unit tests for pure logic bugs
+- prefer scenario-style tests for combat, simulation, and state-transition bugs
+- prefer UI or E2E tests only when the bug is truly interaction-specific
+
+If no automated test is added, the agent must explicitly explain why.
+
+When completing a bugfix, report:
+- what the root cause was
+- what was changed
+- what regression test was added
+- if no test was added, why not
 
 ---
 
@@ -318,7 +372,7 @@ When completing a task:
 1. Make the smallest useful change.
 2. Keep the code readable.
 3. Keep the project runnable.
-4. Add tests if the step changes logic.
+4. Add tests if the step changes logic or fixes a bug that can be covered.
 5. Report:
    - what changed
    - what assumptions were made
@@ -337,6 +391,7 @@ If requirements shift:
 - prefer updating rule modules and data definitions over broad UI rewrites
 - keep the simulation engine isolated and testable
 - do not force old assumptions if the product direction changes
+- avoid unnecessary churn when a localized extension will do
 
 ---
 
@@ -356,6 +411,7 @@ If tradeoffs appear, prefer:
 The highest-priority engineering goals in this repository are:
 1. clean separation of concerns
 2. correct tick-based simulation behavior
-3. support for required ranged MVP mechanics
+3. support for required combat mechanics in the current product scope
 4. understandable output and breakdowns
 5. strong regression protection via tests
+6. persistence and sharing features that do not corrupt simulation correctness

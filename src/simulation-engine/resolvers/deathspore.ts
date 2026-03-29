@@ -2,6 +2,7 @@ import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 const DEATHSPORE_EFFECT_REF = EFFECT_REF_IDS.deathsporeProgress;
 const FEASTING_SPORES_READY_BUFF_ID = 'feasting-spores-ready';
@@ -37,16 +38,6 @@ export function resolveDeathsporeTimeline(
   const timelineGeneratedBuffSources: TimelineGeneratedBuffSource[] = [];
   const freeCastActionIds = new Set<string>();
   const notes: string[] = [];
-
-  if (!hasDeathsporeArrowsEquipped(config)) {
-    return {
-      buffTimeline,
-      stackTimeline,
-      timelineGeneratedBuffSources,
-      freeCastActionIds,
-      notes,
-    };
-  }
 
   const hitOccurrences = buildRangedHitOccurrences(config, blockedActionIds, baseBuffTimeline);
   const abilityActions = [...config.rotationPlan.abilityActions]
@@ -206,6 +197,13 @@ function buildRangedHitOccurrences(
         continue;
       }
 
+      const countsForDeathspore =
+        ability.style === 'ranged' &&
+        hasDeathsporeArrowsEquippedAtTick(config, tick) &&
+        !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
+      const contributesToPerfectEquilibrium =
+        countsForDeathspore && !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
+
       occurrences.push({
         tick,
         contributesToPerfectEquilibrium,
@@ -245,15 +243,19 @@ function buildRangedHitOccurrences(
   return occurrences;
 }
 
-function hasDeathsporeArrowsEquipped(config: SimulationConfig): boolean {
-  const ammoInstance = config.gearSetup.ammoSelection ?? config.gearSetup.equipment.ammo;
+function hasDeathsporeArrowsEquippedAtTick(
+  config: SimulationConfig,
+  tick: number,
+): boolean {
+  const projectedConfig = projectSimulationConfigAtTick(config, tick);
+  const ammoInstance = projectedConfig.gearSetup.ammoSelection ?? projectedConfig.gearSetup.equipment.ammo;
   if (!ammoInstance) {
     return false;
   }
 
   const definition =
-    config.gameData.items[ammoInstance.definitionId] ??
-    config.gameData.ammo[ammoInstance.definitionId];
+    projectedConfig.gameData.items[ammoInstance.definitionId] ??
+    projectedConfig.gameData.ammo[ammoInstance.definitionId];
 
   return definition?.effectRefs?.includes(DEATHSPORE_EFFECT_REF) ?? false;
 }

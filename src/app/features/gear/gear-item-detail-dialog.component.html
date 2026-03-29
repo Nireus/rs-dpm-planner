@@ -51,6 +51,16 @@
         (updateBooleanConfig)="updateBooleanConfig.emit($event)"
         (updateScalarConfig)="updateScalarConfig.emit($event)"
       />
+
+      <div class="detail-actions">
+        <button type="button" class="danger-button" (click)="remove.emit()">
+          @if (resolvedInstance.locationKind === 'equipment') {
+            Remove from equipped gear
+          } @else {
+            Remove from backpack
+          }
+        </button>
+      </div>
     }
 
     @if (!resolvedInstance) {

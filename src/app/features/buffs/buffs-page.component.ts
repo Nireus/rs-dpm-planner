@@ -59,7 +59,9 @@ export class BuffsPageComponent {
     buildPotionOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
   );
   protected readonly passiveBuffOptions = computed(() =>
-    buildPassiveBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
+    this.filterConditionalPerkBuffOptions(
+      buildPassiveBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
+    ),
   );
   protected readonly miscellaneousBuffOptions = computed(() =>
     buildMiscellaneousBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
@@ -84,6 +86,7 @@ export class BuffsPageComponent {
             kind: 'equipped-perk' as const,
             categoryLabel: `Perk · ${slot.label}`,
             description: `Derived from equipped ${slot.definition?.name ?? 'item'} in socket ${configuredPerk.socketIndex + 1}.`,
+            iconPath: definition?.iconPath,
             effectRefs: definition?.effectRefs ?? (curated ? [curated.id] : undefined),
           };
         }),
@@ -417,5 +420,28 @@ export class BuffsPageComponent {
         this.buffConfigurationStore.toggleBuff(buffId);
       }
     }
+  }
+
+  private filterConditionalPerkBuffOptions(options: readonly BuffSelectionOption[]): BuffSelectionOption[] {
+    const equippedPerkIds = new Set(
+      this.gearBuilderStore
+        .equippedSlots()
+        .flatMap((slot) => (slot.instance?.configuredPerks ?? []).map((perk) => perk.perkId)),
+    );
+
+    return options.filter((option) => {
+      switch (option.id) {
+        case 'dragon-slayer-active':
+          return equippedPerkIds.has('dragon-slayer');
+        case 'demon-slayer-active':
+          return equippedPerkIds.has('demon-slayer');
+        case 'undead-slayer-active':
+          return equippedPerkIds.has('undead-slayer');
+        case 'flanking-active':
+          return equippedPerkIds.has('flanking');
+        default:
+          return true;
+      }
+    });
   }
 }

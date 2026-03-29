@@ -7,18 +7,22 @@ export function applyAdrenalineCostModifiers(
   ability: AbilityDefinition,
 ): AbilityDefinition {
   const adrenalineCost = ability.adrenalineCost;
-  if (adrenalineCost === undefined || !hasVigourLikePassive(config)) {
+  if (adrenalineCost === undefined) {
     return ability;
   }
 
   if (ability.subtype === 'ultimate') {
+    if (!hasVigourLikePassive(config)) {
+      return ability;
+    }
+
     return {
       ...ability,
       adrenalineCost: Math.max(0, adrenalineCost - 10),
     };
   }
 
-  if (ability.subtype === 'special') {
+  if (ability.subtype === 'special' && hasVigourLikePassive(config)) {
     return {
       ...ability,
       adrenalineCost: Math.round(adrenalineCost * 90 * 100) / 10000,

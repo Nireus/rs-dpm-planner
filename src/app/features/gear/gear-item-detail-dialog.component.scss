@@ -138,6 +138,7 @@ li {
 
 .primary-button,
 .secondary-button,
+.danger-button,
 .icon-button {
   padding: 0.58rem 0.8rem;
   border-radius: 0.78rem;
@@ -148,6 +149,7 @@ li {
 
 .primary-button:hover,
 .secondary-button:hover,
+.danger-button:hover,
 .icon-button:hover {
   transform: translateY(-1px);
 }
@@ -163,6 +165,12 @@ li {
   border: 1px solid var(--panel-border);
   background: rgba(9, 14, 6, 0.88);
   color: var(--text-soft);
+}
+
+.danger-button {
+  border: 1px solid rgba(164, 78, 78, 0.55);
+  background: rgba(74, 20, 20, 0.55);
+  color: #f3d6d6;
 }
 
 @media (max-width: 720px) {

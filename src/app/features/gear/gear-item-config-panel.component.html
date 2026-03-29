@@ -50,7 +50,12 @@
                       [disabled]="isPerkOptionDisabled(socketIndex, perk.id)"
                       (click)="toggleSocketPerk(socketIndex, perk.id)"
                     >
-                      <span>{{ perk.label }}</span>
+                      <span class="perk-option-copy">
+                        @if (perkIconPath(perk.id); as perkIconPath) {
+                          <img [src]="perkIconPath" alt="" class="option-icon" />
+                        }
+                        <span>{{ perk.label }}</span>
+                      </span>
                       @if (isPerkSelected(socketIndex, perk.id)) {
                         <span class="perk-option-state">Selected</span>
                       }
@@ -67,7 +72,12 @@
             @for (selectionIndex of perkRankSlots; track selectionIndex) {
               @if (selectedSocketPerkAt(socketIndex, selectionIndex); as perk) {
                 <label class="config-field rank-field">
-                  <span>{{ perk.label }} rank</span>
+                  <span class="perk-rank-label">
+                    @if (perkIconPath(perk.id); as perkIconPath) {
+                      <img [src]="perkIconPath" alt="" class="option-icon" />
+                    }
+                    <span>{{ perk.label }} rank</span>
+                  </span>
                   <select
                     [ngModel]="perkRank(socketIndex, perk.id)"
                     (ngModelChange)="updatePerkRank.emit({ socketIndex, perkId: perk.id, rank: +$event })"
@@ -139,6 +149,21 @@
             }
           }
         </label>
+      }
+
+      @if (showImplicitQuiverBoltSlot()) {
+        <div class="config-field readonly-config-field">
+          <span>Loaded bolts</span>
+          <div class="readonly-config-value">
+            <span class="readonly-config-copy">
+              @if (implicitQuiverBoltIcon(); as boltIconPath) {
+                <img [src]="boltIconPath" alt="" class="option-icon" />
+              }
+              <span>{{ implicitQuiverBoltLabel() }}</span>
+            </span>
+            <span class="readonly-config-state">Fixed</span>
+          </div>
+        </div>
       }
     </div>
   }

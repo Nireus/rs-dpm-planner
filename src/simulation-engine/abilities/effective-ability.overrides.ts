@@ -6,6 +6,7 @@ import type { AbilityDefinition, EofSpecDefinition, ItemDefinition } from '../..
 import type { SimulationConfig } from '../models';
 import {
   BALANCE_BY_FORCE_ABILITY_ID,
+  SPLIT_SOUL_ABILITY_ID,
   SHADOWFALL_ABILITY_ID,
 } from './effective-ability.constants';
 
@@ -87,6 +88,26 @@ export function resolveEffectiveWeaponSpecialDefinition(
   const weaponDefinition = resolveEquippedWeaponDefinition(config);
 
   if (!weaponDefinition?.effectRefs?.includes(EFFECT_REF_IDS.weaponSpecialBalanceByForce)) {
+    if (weaponDefinition?.effectRefs?.includes(EFFECT_REF_IDS.weaponSpecialSplitSoul)) {
+      return {
+        ...baseAbility,
+        id: SPLIT_SOUL_ABILITY_ID,
+        name: 'Split Soul',
+        style: 'ranged',
+        subtype: 'special',
+        adrenalineCost: 25,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: {
+          min: 0,
+          max: 0,
+        },
+        effectRefs: [...(baseAbility.effectRefs ?? []), EFFECT_REF_IDS.weaponSpecialSplitSoul],
+        description:
+          'For 25 ticks, qualifying hits trigger a separate Split Soul damage splat on the same tick.',
+      };
+    }
+
     if (weaponDefinition?.effectRefs?.includes(EFFECT_REF_IDS.weaponSpecialShadowfall)) {
       return {
         ...baseAbility,
@@ -204,6 +225,11 @@ function mapEofSpecToAbility(
   baseAbility: AbilityDefinition,
   eofSpec: EofSpecDefinition,
 ): AbilityDefinition {
+  const extraEffectRefs =
+    eofSpec.weaponOrigin === 'eldritch-crossbow'
+      ? [EFFECT_REF_IDS.weaponSpecialSplitSoul]
+      : [];
+
   return {
     ...baseAbility,
     id: eofSpec.id,
@@ -218,7 +244,7 @@ function mapEofSpecToAbility(
     adrenalineGain: 0,
     hitSchedule: eofSpec.hitSchedule,
     baseDamage: eofSpec.baseDamage,
-    effectRefs: [...(baseAbility.effectRefs ?? []), ...(eofSpec.effectRefs ?? [])],
+    effectRefs: [...(baseAbility.effectRefs ?? []), ...(eofSpec.effectRefs ?? []), ...extraEffectRefs],
     description: eofSpec.description ?? baseAbility.description,
   };
 }

@@ -136,7 +136,7 @@
               class="ability-chip non-gcd-chip"
               [title]="entry.label"
               draggable="true"
-              (dragstart)="onCatalogNonGcdDragStart(entry)"
+              (dragstart)="onCatalogNonGcdDragStart(entry, $event)"
               (dragend)="onNonGcdDragEnd()"
             >
               <span class="ability-chip-main">
@@ -239,20 +239,28 @@
                         [title]="nonGcdLabel(action)"
                         draggable="true"
                         (click)="openNonGcdActionConfig(action, $event)"
-                        (dragstart)="onTimelineNonGcdDragStart(action)"
+                        (dragstart)="onTimelineNonGcdDragStart(action, $event)"
                         (dragend)="onNonGcdDragEnd()"
-                      >
-                        @if (nonGcdIconPath(action); as iconPath) {
-                          <img
-                            class="non-gcd-entry-icon"
-                            [src]="iconPath"
+                        >
+                          @if (nonGcdIconPath(action); as iconPath) {
+                            <img
+                              class="non-gcd-entry-icon"
+                              [src]="iconPath"
                             [alt]="nonGcdLabel(action)"
                           />
-                        }
-                        <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
-                      </div>
-                    }
-                  </div>
+                          }
+                          <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
+                          <button
+                            type="button"
+                            class="non-gcd-entry-remove"
+                            (click)="removePlacedNonGcdAction(action.id, $event)"
+                            aria-label="Remove {{ nonGcdLabel(action) }} from tick {{ tickIndex }}"
+                          >
+                            x
+                          </button>
+                        </div>
+                      }
+                    </div>
                 } @else if (lane.key === 'cooldown' && cooldownBarsStartingAtTick(tickIndex).length) {
                   <div class="cooldown-bar-stack">
                     @for (bar of cooldownBarsStartingAtTick(tickIndex); track bar.abilityId + ':' + bar.startTick) {
@@ -290,6 +298,7 @@
                     @for (bar of buffBarsStartingAtTick(tickIndex); track bar.buffId + ':' + bar.startTick) {
                       <div
                         class="buff-bar"
+                        [class.warning-buff-bar]="bar.isWarning"
                         [style.--buff-span]="bar.span"
                         [style.--buff-row]="bar.row"
                         [title]="buffBarTitle(bar)"

@@ -5,6 +5,7 @@ import type {
   DamageSummary,
   SimulationConfig,
 } from '../models';
+import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { collectActiveEffectRefs } from './active-effect-refs';
 
 const BASE_CRIT_CHANCE = 0.1;
@@ -30,7 +31,21 @@ export function applyExpectedValueCriticalStrike(
     };
   }
 
+  if (ability.effectRefs?.includes(EFFECT_REF_IDS.aftershock)) {
+    return {
+      finalDamage: baseDamage,
+      expectedValueModifiers: [],
+    };
+  }
+
   const effectRefs = collectActiveEffectRefs(config, ability, hitTick, timelineBuffs);
+  if (effectRefs.includes(EFFECT_REF_IDS.equilibrium) || effectRefs.includes(EFFECT_REF_IDS.equilibriumCooldown)) {
+    return {
+      finalDamage: baseDamage,
+      expectedValueModifiers: [],
+    };
+  }
+
   const critChanceBonus = effectRefs.reduce(
     (total, effectRef) => total + parseCriticalStrikeChanceBonus(effectRef, config),
     0,
@@ -84,6 +99,10 @@ function applyCriticalStrikeToDamageSummary(
 }
 
 function parseCriticalStrikeChanceBonus(effectRef: EffectRef, config: SimulationConfig): number {
+  if (effectRef === EFFECT_REF_IDS.biting) {
+    return (collectHighestEquippedPerkRank(config, 'biting') * 2) / 100;
+  }
+
   const match = /^(?:ranged-)?critical-strike-chance:\+(\d+(?:\.\d+)?)%(?::(bow-only))?$/.exec(effectRef);
 
   if (!match) {

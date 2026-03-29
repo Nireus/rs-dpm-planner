@@ -27,6 +27,15 @@ const SHADOW_IMBUED_EXTENSION_TICKS = 6;
 const SHADOW_IMBUED_HIT_ADRENALINE_EFFECT_PREFIX = 'ranged-hit-adrenaline:+';
 const BOW_TAG = 'two-handed-bow';
 const PERFECT_EQUILIBRIUM_THRESHOLD_BUFF_ID = 'balance-by-force-buff';
+const SPLIT_SOUL_ABILITY_ID = 'split-soul';
+const SPLIT_SOUL_BUFF_ID = 'split-soul';
+const SPLIT_SOUL_DURATION_TICKS = 25;
+const VULNERABILITY_BOMB_ACTION_TYPE = 'vulnerability-bomb';
+const VULNERABILITY_BOMB_AREA_BUFF_ID = 'vulnerability-bomb-area';
+const VULNERABILITY_DEBUFF_BUFF_ID = 'vulnerability';
+const VULNERABILITY_BOMB_TRAVEL_DELAY_TICKS = 3;
+const VULNERABILITY_BOMB_AREA_DURATION_TICKS = 3;
+const VULNERABILITY_DEBUFF_DURATION_TICKS = 100;
 
 export interface DeterministicRangedTimelineResult {
   adrenalineByTick: Record<number, number>;
@@ -48,6 +57,18 @@ export function resolveDeterministicRangedTimeline(
   let generatedSearingWinds = false;
   let shadowImbuedUntilTick = -1;
   let generatedShadowImbued = false;
+  let generatedVulnerabilityBomb = false;
+
+  for (const action of [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick)) {
+    if (blockedActionIds.has(action.id)) {
+      continue;
+    }
+
+    if (action.actionType === VULNERABILITY_BOMB_ACTION_TYPE) {
+      applyVulnerabilityBombBuffs(config, action, buffTimeline);
+      generatedVulnerabilityBomb = true;
+    }
+  }
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
     if (blockedActionIds.has(action.id)) {
@@ -58,6 +79,7 @@ export function resolveDeterministicRangedTimeline(
     const abilityId = effectiveAbility?.id ?? readAbilityId(action);
     applyBalanceByForceBuff(config, action, effectiveAbility?.id ?? null, buffTimeline, timelineGeneratedBuffSources);
     applyDeathsSwiftnessBuff(config, action, abilityId, buffTimeline, timelineGeneratedBuffSources);
+    applySplitSoulBuff(config, action, effectiveAbility, buffTimeline, timelineGeneratedBuffSources);
     if (abilityId === IMBUE_SHADOWS_ABILITY_ID) {
       shadowImbuedUntilTick = applyShadowImbuedBuff(
         config,
@@ -149,12 +171,60 @@ export function resolveDeterministicRangedTimeline(
     );
   }
 
+  if (Object.values(buffTimeline).some((buffIds) => buffIds.includes(SPLIT_SOUL_BUFF_ID))) {
+    notes.push(
+      'Split Soul: for 25 ticks, qualifying hits create a separate damage splat on the same tick. The effect ends early if the main-hand weapon is changed.',
+    );
+  }
+
+  if (generatedVulnerabilityBomb) {
+    timelineGeneratedBuffSources.push({
+      buffId: VULNERABILITY_BOMB_AREA_BUFF_ID,
+      sourceType: 'item',
+      sourceId: VULNERABILITY_DEBUFF_BUFF_ID,
+    });
+    timelineGeneratedBuffSources.push({
+      buffId: VULNERABILITY_DEBUFF_BUFF_ID,
+      sourceType: 'item',
+      sourceId: VULNERABILITY_DEBUFF_BUFF_ID,
+    });
+    notes.push(
+      'Vulnerability Bomb: 3 ticks after the throw it creates a 3-tick area, and the resulting debuff lasts 100 ticks.',
+    );
+  }
+
   return {
     adrenalineByTick,
     buffTimeline,
     timelineGeneratedBuffSources,
     notes,
   };
+}
+
+function applyVulnerabilityBombBuffs(
+  config: SimulationConfig,
+  action: RotationAction,
+  buffTimeline: Record<number, EntityId[]>,
+): void {
+  const areaStartTick = action.tick + VULNERABILITY_BOMB_TRAVEL_DELAY_TICKS;
+  const areaEndTick = areaStartTick + VULNERABILITY_BOMB_AREA_DURATION_TICKS - 1;
+  const debuffEndTick = areaStartTick + VULNERABILITY_DEBUFF_DURATION_TICKS - 1;
+
+  markBuffRange(
+    buffTimeline,
+    VULNERABILITY_BOMB_AREA_BUFF_ID,
+    areaStartTick,
+    areaEndTick,
+    config.rotationPlan.tickCount,
+  );
+
+  markBuffRange(
+    buffTimeline,
+    VULNERABILITY_DEBUFF_BUFF_ID,
+    areaStartTick,
+    debuffEndTick,
+    config.rotationPlan.tickCount,
+  );
 }
 
 function applyBalanceByForceBuff(
@@ -487,6 +557,65 @@ function applyTimelineHitAdrenaline(
   }
 }
 
+function applySplitSoulBuff(
+  config: SimulationConfig,
+  action: RotationAction,
+  effectiveAbility: { id: EntityId; effectRefs?: string[] } | null,
+  buffTimeline: Record<number, EntityId[]>,
+  timelineGeneratedBuffSources: TimelineGeneratedBuffSource[],
+): void {
+  if (!isSplitSoulAbility(effectiveAbility) || action.tick >= config.rotationPlan.tickCount) {
+    return;
+  }
+
+  const endTick = resolveSplitSoulEndTick(config, action.tick);
+  markBuffRange(
+    buffTimeline,
+    SPLIT_SOUL_BUFF_ID,
+    action.tick,
+    endTick,
+    config.rotationPlan.tickCount,
+  );
+
+  if (!timelineGeneratedBuffSources.some((entry) => entry.buffId === SPLIT_SOUL_BUFF_ID)) {
+    timelineGeneratedBuffSources.push({
+      buffId: SPLIT_SOUL_BUFF_ID,
+      sourceType: 'ability',
+      sourceId: SPLIT_SOUL_ABILITY_ID,
+    });
+  }
+}
+
+function isSplitSoulAbility(
+  ability: { id: EntityId; effectRefs?: string[] } | null,
+): boolean {
+  if (!ability) {
+    return false;
+  }
+
+  return (
+    ability.id === SPLIT_SOUL_ABILITY_ID ||
+    (ability.effectRefs?.includes(EFFECT_REF_IDS.weaponSpecialSplitSoul) ?? false)
+  );
+}
+
+function resolveSplitSoulEndTick(config: SimulationConfig, castTick: number): number {
+  const naturalEndTick = castTick + SPLIT_SOUL_DURATION_TICKS - 1;
+  const firstWeaponSwapTick = [...config.rotationPlan.nonGcdActions]
+    .filter((action) => action.actionType === 'gear-swap' && action.tick >= castTick)
+    .map((action) => ({
+      tick: action.tick,
+      slot: readStringPayload(action, 'slot'),
+    }))
+    .find((entry) => entry.slot === 'weapon')?.tick;
+
+  if (typeof firstWeaponSwapTick !== 'number') {
+    return naturalEndTick;
+  }
+
+  return Math.min(naturalEndTick, firstWeaponSwapTick);
+}
+
 function resolveTimelineHitAdrenalineGain(
   config: SimulationConfig,
   activeBuffIds: EntityId[],
@@ -533,6 +662,11 @@ function hasBolgEquipped(config: SimulationConfig): boolean {
 function readAbilityId(action: RotationAction): EntityId | null {
   const abilityId = action.payload['abilityId'];
   return typeof abilityId === 'string' && abilityId.length > 0 ? abilityId : null;
+}
+
+function readStringPayload(action: RotationAction, key: string): string | null {
+  const value = action.payload[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
 function createEmptyAdrenalineTimeline(tickCount: number): Record<number, number> {

@@ -92,10 +92,10 @@ describe('simulation regression scenarios', () => {
             cooldownTicks: 34,
             adrenalineCost: 25,
             isChanneled: true,
-            channelDurationTicks: 8,
+            channelDurationTicks: 9,
             hitSchedule: Array.from({ length: 8 }, (_, index) => ({
               id: `rapid-hit-${index + 1}`,
-              tickOffset: index,
+              tickOffset: index + 1,
               damage: { min: 75, max: 85 },
             })),
             baseDamage: { min: 600, max: 680 },
@@ -110,7 +110,7 @@ describe('simulation regression scenarios', () => {
     expect(result.isValid).toBe(true);
     expect(result.explainability.damageBreakdowns).toHaveLength(8);
     expect([...new Set(result.explainability.damageBreakdowns.map((entry) => entry.tick))]).toEqual(
-      [0, 1, 2, 3, 4, 5, 6, 7],
+      [1, 2, 3, 4, 5, 6, 7, 8],
     );
   });
 

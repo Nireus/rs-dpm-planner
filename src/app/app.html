@@ -21,6 +21,17 @@
   </aside>
 
   <main class="content-shell">
+    @if (currentScreenHelp()) {
+      <button
+        type="button"
+        class="info-fab"
+        aria-label="Open screen info"
+        title="Screen info"
+        (click)="openInfoDialog()"
+      >
+        i
+      </button>
+    }
     <router-outlet />
   </main>
 </div>
@@ -42,6 +53,43 @@
       <div class="app-dialog-actions">
         <button type="button" class="dialog-secondary" (click)="closeClearStateDialog()">Cancel</button>
         <button type="button" class="dialog-danger" (click)="confirmClearState()">Clear Everything</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (infoDialogOpen()) {
+  <div class="app-dialog-backdrop" (click)="closeInfoDialog()">
+    <section
+      class="app-dialog info-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="screen-info-dialog-title"
+      (click)="$event.stopPropagation()"
+    >
+      @if (currentScreenHelp(); as help) {
+        <div class="app-dialog-copy info-copy">
+          <p class="dialog-eyebrow">{{ help.eyebrow }}</p>
+          <h2 id="screen-info-dialog-title">{{ help.title }}</h2>
+          <p>{{ help.description }}</p>
+        </div>
+
+        @if (help.sections?.length) {
+          @for (section of help.sections; track section.title) {
+            <section class="info-section">
+              <h3>{{ section.title }}</h3>
+              <ul class="dialog-list">
+                @for (entry of section.bullets; track entry) {
+                  <li>{{ entry }}</li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      }
+
+      <div class="app-dialog-actions">
+        <button type="button" class="dialog-secondary" (click)="closeInfoDialog()">Close</button>
       </div>
     </section>
   </div>

@@ -8,7 +8,7 @@ describe('loadSampleGameData', () => {
       abilities: ['/abilities/rapid-fire.json'],
       buffs: ['/buffs/feasting-spores-ready.json'],
       eofSpecs: ['/eof-specs/dark-bow.json'],
-      perks: ['/perks/equilibrium.json'],
+      perks: ['/perks/precise.json'],
       relics: ['/relics/fury-of-the-small.json'],
     };
 
@@ -48,9 +48,9 @@ describe('loadSampleGameData', () => {
           max: 300,
         },
       }),
-      '/perks/equilibrium.json': JSON.stringify({
-        id: 'equilibrium',
-        name: 'Equilibrium',
+      '/perks/precise.json': JSON.stringify({
+        id: 'precise',
+        name: 'Precise',
       }),
       '/relics/fury-of-the-small.json': JSON.stringify({
         id: 'fury-of-the-small',
@@ -67,7 +67,7 @@ describe('loadSampleGameData', () => {
       expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire']);
       expect(Object.keys(result.data.buffs)).toEqual(['feasting-spores-ready']);
       expect(Object.keys(result.data.eofSpecs)).toEqual(['dark-bow-eof']);
-      expect(Object.keys(result.data.perks)).toEqual(['equilibrium']);
+      expect(Object.keys(result.data.perks)).toEqual(['precise']);
       expect(Object.keys(result.data.relics)).toEqual(['fury-of-the-small']);
     }
   });

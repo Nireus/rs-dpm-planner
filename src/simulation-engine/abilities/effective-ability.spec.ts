@@ -30,7 +30,7 @@ function createItem(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
         label: 'Stored special',
         type: 'select',
         defaultValue: 'dark-bow',
-        options: ['dark-bow', 'gloomfire-bow', 'none'],
+        options: ['dark-bow', 'gloomfire-bow', 'eldritch-crossbow', 'none'],
       },
     ],
     ...overrides,
@@ -48,12 +48,25 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         slot: 'ring',
         effectRefs: ['vigour-passive'],
       }),
+      'perk-host-armor': createItem({
+        id: 'perk-host-armor',
+        name: 'Perk Host Armor',
+        category: 'armor',
+        slot: 'body',
+      }),
       'gloomfire-bow': createItem({
         id: 'gloomfire-bow',
         name: 'Gloomfire bow',
         category: 'weapon',
         slot: 'weapon',
         effectRefs: ['gloomfire-darkfang', 'weapon-special-access', 'weapon-special:shadowfall'],
+      }),
+      'eldritch-crossbow': createItem({
+        id: 'eldritch-crossbow',
+        name: 'Eldritch crossbow',
+        category: 'weapon',
+        slot: 'weapon',
+        effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
       }),
     },
     ammo: {},
@@ -142,6 +155,15 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         ],
         baseDamage: { min: 425, max: 505 },
         effectRefs: ['eof-gloomfire-bow-spec'],
+      } satisfies EofSpecDefinition,
+      'eldritch-crossbow-eof': {
+        id: 'eldritch-crossbow-eof',
+        name: 'Eldritch Crossbow (EOF)',
+        weaponOrigin: 'eldritch-crossbow',
+        adrenalineCost: 25,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        effectRefs: ['eof-eldritch-crossbow-spec'],
       } satisfies EofSpecDefinition,
     },
   };
@@ -437,5 +459,73 @@ describe('resolveEffectiveAbilityDefinition', () => {
       baseDamage: { min: 425, max: 505 },
     });
     expect(result?.hitSchedule).toHaveLength(3);
+  });
+
+  it('maps wielded Eldritch crossbow special attack to Split Soul', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'ecb-1',
+            definitionId: 'eldritch-crossbow',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'spec-ecb-1',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'weapon-special-attack',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result).toMatchObject({
+      id: 'split-soul',
+      name: 'Split Soul',
+      adrenalineCost: 25,
+      baseDamage: { min: 0, max: 0 },
+    });
+    expect(result?.hitSchedule).toEqual([]);
+  });
+
+  it('maps Eldritch crossbow EOF special when stored in Essence of Finality', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          amulet: {
+            instanceId: 'eof-ecb-1',
+            definitionId: 'essence-of-finality',
+            configValues: {
+              'stored-special': 'eldritch-crossbow',
+            },
+          },
+        },
+      },
+    });
+    const action: RotationAction = {
+      id: 'eof-ecb-cast',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'essence-of-finality',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result).toMatchObject({
+      id: 'eldritch-crossbow-eof',
+      name: 'Eldritch Crossbow (EOF)',
+      adrenalineCost: 25,
+      baseDamage: { min: 0, max: 0 },
+    });
+    expect(result?.hitSchedule).toEqual([]);
+    expect(result?.effectRefs).toContain('weapon-special:split-soul');
   });
 });

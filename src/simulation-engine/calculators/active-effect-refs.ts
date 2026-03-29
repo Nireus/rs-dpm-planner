@@ -1,5 +1,6 @@
 import type { EffectRef, EntityId } from '../../game-data/types';
 import type { SimulationConfig } from '../models';
+import { collectEquippedPerkEffectRefs } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 export function collectActiveEffectRefs(
@@ -36,11 +37,13 @@ export function collectActiveEffectRefs(
       projectedConfig.gameData.ammo[ammoInstance.definitionId]?.effectRefs ??
       [])
     : [];
+  const equippedPerkEffectRefs = collectEquippedPerkEffectRefs(projectedConfig);
 
-  return [
+  return [...new Set([
     ...(ability.effectRefs ?? []),
     ...activeBuffEffectRefs,
     ...equippedItemEffectRefs,
     ...ammoEffectRefs,
-  ];
+    ...equippedPerkEffectRefs,
+  ])];
 }

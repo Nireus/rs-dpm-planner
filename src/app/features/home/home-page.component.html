@@ -1,16 +1,39 @@
 <section class="home-page">
   <header class="hero">
     <div class="hero-copy">
-      <p class="eyebrow">RuneScape Ranged Rotation Planner</p>
-      <h1>Build sharper ranged rotations and see what the damage ceiling looks like.</h1>
-    </div>
-
-    <div class="hero-actions">
-      <a class="primary-link" routerLink="/gear">Start With Gear</a>
-      <a class="secondary-link" routerLink="/rotation-planner">Open Planner</a>
-      <a class="secondary-link" routerLink="/results">See Results</a>
+      <h1>Build your rotation. Sweat the details.</h1>
     </div>
   </header>
+
+  <section class="panel welcome-panel">
+    <p class="section-label">Welcome</p>
+    <div class="welcome-copy">
+      <p>
+        Welcome to <strong>SweatyRS</strong> - a rotation planner and DPM calculator built for people who look at
+        RuneScape combat and think, <strong>"yeah, I can optimize that harder."</strong>
+      </p>
+      <p>
+        This started as a <strong>passion project</strong> to help me learn <strong>Ranged PvM</strong>, but also
+        because RuneScape combat math is an absolute mess and apparently I enjoy suffering. Right now this is still an
+        <strong>MVP</strong>, so it only supports <strong>Ranged</strong>. If there's demand, I'll keep adding more
+        mechanics, more cleanup, and more combat styles.
+      </p>
+      <p>
+        One important disclaimer: <strong>do not blindly trust every number on this site</strong>. RuneScape math is
+        cursed, the game explains half of nothing, and a lot of these calculations come from testing, assumptions,
+        experience, and educated guesswork held together by <strong>caffeine and bad decisions</strong>.
+      </p>
+      <p>
+        If you want to help the project, the best thing you can do is <strong>share it around</strong>. The second best
+        thing is to <strong>support it with a donation</strong>, which is a very effective way of telling me this tool
+        deserves even more unhealthy development hours.
+      </p>
+      <p>
+        I've been playing RuneScape for over <strong>20 years</strong>, and this is my little contribution to the
+        community. <strong>Have fun, and go build something disgusting.</strong>
+      </p>
+    </div>
+  </section>
 
   <section class="info-grid">
     <article class="panel quick-start">
@@ -34,22 +57,5 @@
         }
       </ul>
     </article>
-  </section>
-
-  <section class="screen-guide">
-    <div class="section-heading">
-      <p class="section-label">Screens</p>
-      <h2>What each area of the app does</h2>
-    </div>
-
-    <div class="screen-cards">
-      @for (screen of screens; track screen.path) {
-        <a class="screen-card" [routerLink]="screen.path">
-          <p class="screen-eyebrow">{{ screen.eyebrow }}</p>
-          <h3>{{ screen.title }}</h3>
-          <p>{{ screen.description }}</p>
-        </a>
-      }
-    </div>
   </section>
 </section>

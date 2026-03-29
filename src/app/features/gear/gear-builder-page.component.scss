@@ -110,6 +110,7 @@ li,
 .slot-card,
 .inventory-tile,
 .catalog-tile {
+  position: relative;
   display: grid;
   gap: 0.22rem;
   padding: 0.38rem;
@@ -124,6 +125,7 @@ li,
 .catalog-tile,
 .primary-button,
 .secondary-button,
+.danger-button,
 .icon-button {
   cursor: pointer;
 }
@@ -163,6 +165,24 @@ li,
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.tile-remove-button {
+  position: absolute;
+  top: 0.28rem;
+  right: 0.28rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid rgba(164, 78, 78, 0.55);
+  border-radius: 999px;
+  background: rgba(74, 20, 20, 0.88);
+  color: #f3d6d6;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .icon-tile {
@@ -243,6 +263,12 @@ li,
   bottom: 0.14rem;
   right: 0.14rem;
   border-color: rgba(140, 169, 82, 0.55);
+}
+
+.secondary-ammo-status {
+  right: auto;
+  left: 0.14rem;
+  border-color: rgba(123, 168, 196, 0.55);
 }
 
 .indicator-fallback-copy {

@@ -36,7 +36,7 @@ const CHANNELED_ABILITY: AbilityDefinition = {
   id: 'rapid-fire-channel',
   name: 'Rapid Fire Channel',
   isChanneled: true,
-  channelDurationTicks: 8,
+  channelDurationTicks: 9,
 };
 
 const COMPLETION_CHANNEL_ABILITY: AbilityDefinition = {
@@ -123,6 +123,7 @@ describe('rotation planner utils', () => {
 
     expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 12)).toBe(false);
     expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 15)).toBe(true);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 18)).toBe(true);
   });
 
   it('blocks placements that would exceed timeline bounds', () => {

@@ -13,10 +13,10 @@ function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefin
     cooldownTicks: 34,
     adrenalineCost: 25,
     isChanneled: true,
-    channelDurationTicks: 8,
+    channelDurationTicks: 9,
     hitSchedule: Array.from({ length: 8 }, (_, index) => ({
       id: `rapid-fire-hit-${index + 1}`,
-      tickOffset: index,
+      tickOffset: index + 1,
       damage: { min: 75, max: 85 },
     })),
     baseDamage: {
@@ -44,8 +44,31 @@ function createItem(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
 function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConfig {
   const gameData: LoadedGameDataSnapshot = {
     items: {
+      'essence-of-finality': createItem({
+        id: 'essence-of-finality',
+        name: 'Essence of Finality amulet',
+        category: 'jewellery',
+        slot: 'amulet',
+        effectRefs: ['eof-special-access'],
+        configOptions: [
+          {
+            id: 'stored-special',
+            label: 'Stored special',
+            type: 'select',
+            defaultValue: 'dark-bow',
+            options: ['dark-bow', 'eldritch-crossbow', 'none'],
+          },
+        ],
+      }),
       bolg: createItem({
         effectRefs: ['bolg-passive', 'weapon-special-access', 'weapon-special:balance-by-force'],
+      }),
+      'eldritch-crossbow': createItem({
+        id: 'eldritch-crossbow',
+        name: 'Eldritch crossbow',
+        category: 'weapon',
+        slot: 'weapon',
+        effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
       }),
       'dracolich-coif': createItem({
         id: 'dracolich-coif',
@@ -113,6 +136,17 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
     },
     ammo: {},
     abilities: {
+      'essence-of-finality': createAbility({
+        id: 'essence-of-finality',
+        name: 'Essence of Finality',
+        style: 'constitution',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 0,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+      }),
       'weapon-special-attack': createAbility({
         id: 'weapon-special-attack',
         name: 'Weapon Special Attack',
@@ -156,7 +190,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         name: 'Shadow Tendrils',
         subtype: 'enhanced',
         cooldownTicks: 75,
-        adrenalineCost: 15,
+        adrenalineCost: 0,
         isChanneled: false,
         channelDurationTicks: undefined,
         hitSchedule: [
@@ -179,10 +213,43 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         durationTicks: 50,
         effectRefs: ['ranged-hit-adrenaline:+5%'],
       },
+      'vulnerability-bomb-area': {
+        id: 'vulnerability-bomb-area',
+        name: 'Area',
+        category: 'temporary',
+        sourceType: 'item',
+        durationTicks: 3,
+        effectRefs: [],
+      },
+      vulnerability: {
+        id: 'vulnerability',
+        name: 'Debuff',
+        category: 'temporary',
+        sourceType: 'item',
+        durationTicks: 100,
+        effectRefs: ['target-damage-taken:+10%'],
+      },
+      'split-soul': {
+        id: 'split-soul',
+        name: 'Split Soul',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 25,
+      },
     },
     perks: {},
     relics: {},
-    eofSpecs: {},
+    eofSpecs: {
+      'eldritch-crossbow-eof': {
+        id: 'eldritch-crossbow-eof',
+        name: 'Eldritch Crossbow (EOF)',
+        weaponOrigin: 'eldritch-crossbow',
+        adrenalineCost: 25,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        effectRefs: ['eof-eldritch-crossbow-spec'],
+      },
+    },
   };
 
   return {
@@ -242,10 +309,10 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     expect(result.adrenalineByTick[0]).toBeCloseTo(0.6);
     expect(result.adrenalineByTick[7]).toBeCloseTo(0.6);
-    expect(result.buffTimeline[8]).toEqual([]);
-    expect(result.buffTimeline[9]).toEqual(['dracolich-infusion']);
-    expect(result.buffTimeline[13]).toEqual(['dracolich-infusion']);
-    expect(result.buffTimeline[14]).toEqual([]);
+    expect(result.buffTimeline[9]).toEqual([]);
+    expect(result.buffTimeline[10]).toEqual(['dracolich-infusion']);
+    expect(result.buffTimeline[14]).toEqual(['dracolich-infusion']);
+    expect(result.buffTimeline[15]).toEqual([]);
   });
 
   it('extends regular dracolich infusion to 11 ticks with all 5 pieces worn', () => {
@@ -266,8 +333,8 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     expect(result.adrenalineByTick[0]).toBeCloseTo(1);
     expect(result.adrenalineByTick[7]).toBeCloseTo(1);
-    expect(result.buffTimeline[8]).toEqual([]);
-    expect(result.buffTimeline[9]).toEqual(['dracolich-infusion']);
+    expect(result.buffTimeline[9]).toEqual([]);
+    expect(result.buffTimeline[10]).toEqual(['dracolich-infusion']);
     expect(result.buffTimeline[19]).toEqual(['dracolich-infusion']);
     expect(result.buffTimeline[20]).toEqual(undefined);
   });
@@ -289,10 +356,10 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     expect(result.adrenalineByTick[0]).toBeCloseTo(2);
     expect(result.adrenalineByTick[7]).toBeCloseTo(2);
-    expect(result.buffTimeline[8]).toEqual([]);
-    expect(result.buffTimeline[9]).toEqual(['elite-dracolich-infusion']);
-    expect(result.buffTimeline[16]).toEqual(['elite-dracolich-infusion']);
-    expect(result.buffTimeline[17]).toEqual([]);
+    expect(result.buffTimeline[9]).toEqual([]);
+    expect(result.buffTimeline[10]).toEqual(['elite-dracolich-infusion']);
+    expect(result.buffTimeline[17]).toEqual(['elite-dracolich-infusion']);
+    expect(result.buffTimeline[18]).toEqual([]);
     expect(result.timelineGeneratedBuffSources).toEqual([
       {
         buffId: 'elite-dracolich-infusion',
@@ -447,9 +514,9 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     expect(result.buffTimeline[0]).toContain('searing-winds');
     expect(result.buffTimeline[9]).toContain('searing-winds');
-    expect(result.buffTimeline[17]).toContain('searing-winds');
     expect(result.buffTimeline[18]).toContain('searing-winds');
-    expect(result.buffTimeline[19]).toEqual([]);
+    expect(result.buffTimeline[19]).toContain('searing-winds');
+    expect(result.buffTimeline[20]).toEqual([]);
   });
 
   it('applies Balance by Force on the cast tick for 50 ticks', () => {
@@ -586,7 +653,145 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     const result = resolveDeterministicRangedTimeline(config);
 
-    expect(result.adrenalineByTick[3]).toBeCloseTo(5);
-    expect(result.adrenalineByTick[10]).toBeCloseTo(10);
+    expect(result.adrenalineByTick[4]).toBeCloseTo(5);
+    expect(result.adrenalineByTick[11]).toBeCloseTo(10);
+  });
+
+  it('creates Vulnerability Bomb area and debuff as separate buff-lane states', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 110,
+        nonGcdActions: [
+          {
+            id: 'vulnerability-bomb-1',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'vulnerability-bomb',
+            payload: {
+              label: 'Vulnerability Bomb',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(result.buffTimeline[2]).toEqual([]);
+    expect(result.buffTimeline[3]).toEqual(['vulnerability-bomb-area', 'vulnerability']);
+    expect(result.buffTimeline[5]).toEqual(['vulnerability-bomb-area', 'vulnerability']);
+    expect(result.buffTimeline[6]).toEqual(['vulnerability']);
+    expect(result.buffTimeline[102]).toEqual(['vulnerability']);
+    expect(result.buffTimeline[103]).toEqual([]);
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'vulnerability-bomb-area',
+      sourceType: 'item',
+      sourceId: 'vulnerability',
+    });
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'vulnerability',
+      sourceType: 'item',
+      sourceId: 'vulnerability',
+    });
+  });
+
+  it('creates Split Soul for 25 ticks and ends it early on a weapon swap', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'eldritch-crossbow',
+          },
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'weapon-2',
+            definitionId: 'bolg',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 40,
+        nonGcdActions: [
+          {
+            id: 'weapon-swap',
+            tick: 6,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'weapon-2',
+              slot: 'weapon',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'split-soul-cast',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'weapon-special-attack',
+            },
+          },
+        ],
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(result.buffTimeline[0]).toContain('split-soul');
+    expect(result.buffTimeline[6]).toContain('split-soul');
+    expect(result.buffTimeline[7]).toEqual([]);
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'split-soul',
+      sourceType: 'ability',
+      sourceId: 'split-soul',
+    });
+  });
+
+  it('creates Split Soul on the buff lane for Eldritch crossbow stored in EOF', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          amulet: {
+            instanceId: 'eof-1',
+            definitionId: 'essence-of-finality',
+            configValues: {
+              'stored-special': 'eldritch-crossbow',
+            },
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 30,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'eof-ecb-cast',
+            tick: 2,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'essence-of-finality',
+            },
+          },
+        ],
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(result.buffTimeline[1]).toEqual([]);
+    expect(result.buffTimeline[2]).toContain('split-soul');
+    expect(result.buffTimeline[26]).toContain('split-soul');
+    expect(result.buffTimeline[27]).toEqual([]);
   });
 });

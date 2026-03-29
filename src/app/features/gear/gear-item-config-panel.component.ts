@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import type { ItemDefinition } from '../../../game-data/types';
 import type { CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import type { ResolvedItemInstanceViewModel } from './gear-builder.store';
 import { isAugmentableSlot } from './gear-builder.utils';
+
+const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 @Component({
   selector: 'app-gear-item-config-panel',
@@ -187,7 +190,7 @@ export class GearItemConfigPanelComponent {
   }
 
   configChoiceIcon(optionId: string, choice: string): string | null {
-    if (optionId === 'loaded-ammo') {
+    if (optionId === CONFIG_OPTION_IDS.loadedAmmo) {
       return this.gameDataStore.snapshot().catalog?.items[choice]?.iconPath ?? null;
     }
 
@@ -196,5 +199,21 @@ export class GearItemConfigPanelComponent {
     }
 
     return null;
+  }
+
+  perkIconPath(perkId: string): string | null {
+    return this.gameDataStore.snapshot().catalog?.perks[perkId]?.iconPath ?? null;
+  }
+
+  showImplicitQuiverBoltSlot(): boolean {
+    return this.item.id === 'pernixs-quiver' && this.resolvedInstance !== null;
+  }
+
+  implicitQuiverBoltLabel(): string {
+    return this.gameDataStore.snapshot().catalog?.items[QUIVER_SECONDARY_BOLT_AMMO_ID]?.name ?? 'Bakriminel bolts';
+  }
+
+  implicitQuiverBoltIcon(): string | null {
+    return this.gameDataStore.snapshot().catalog?.items[QUIVER_SECONDARY_BOLT_AMMO_ID]?.iconPath ?? null;
   }
 }

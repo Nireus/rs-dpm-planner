@@ -12,10 +12,10 @@ describe('resolveChannelTimeline', () => {
           name: 'Rapid Fire',
           cooldownTicks: 34,
           isChanneled: true,
-          channelDurationTicks: 8,
+          channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index,
+            tickOffset: index + 1,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -31,14 +31,14 @@ describe('resolveChannelTimeline', () => {
     expect(result.tickStates[3].activeChannel).toEqual({
       sourceActionId: 'rapid-1',
       abilityId: 'rapid-fire',
-      remainingTicks: 8,
+      remainingTicks: 9,
     });
-    expect(result.tickStates[10].activeChannel).toEqual({
+    expect(result.tickStates[11].activeChannel).toEqual({
       sourceActionId: 'rapid-1',
       abilityId: 'rapid-fire',
       remainingTicks: 1,
     });
-    expect(result.tickStates[11].activeChannel).toBeUndefined();
+    expect(result.tickStates[12].activeChannel).toBeUndefined();
   });
 
   it('supports completion-only channels such as snipe', () => {

@@ -75,7 +75,7 @@ describe('game-data sample JSON validation', () => {
   });
 
   it('parses and validates sample perk JSON', () => {
-    const document = readJson('src/game-data/perks/equilibrium.sample.json');
+    const document = readJson('src/game-data/perks/precise.sample.json');
     const result = validatePerkDefinition(document);
 
     expect(result.success).toBe(true);

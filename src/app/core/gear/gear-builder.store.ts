@@ -17,6 +17,8 @@ const DEFAULT_GEAR_BUILDER_STATE: GearBuilderState = {
   inventory: [],
 };
 
+const HIDDEN_GEAR_CATALOG_ITEM_IDS = new Set(['bakriminel-bolts']);
+
 export interface EquippedSlotViewModel {
   slot: EquipmentSlot;
   label: string;
@@ -35,6 +37,8 @@ export interface ResolvedItemInstanceViewModel {
   instance: ItemInstanceConfig;
   definition: ItemDefinition | null;
   locationLabel: string;
+  locationKind: 'equipment' | 'inventory';
+  slot?: EquipmentSlot;
 }
 
 @Injectable({
@@ -50,7 +54,11 @@ export class GearBuilderStore {
   readonly equipmentSlots = SUPPORTED_GEAR_SLOTS;
   readonly snapshot = this.state.asReadonly();
   readonly availableItems = computed(() =>
-    sortGearCatalogItems(Object.values(this.gameDataStore.snapshot().catalog?.items ?? {})),
+    sortGearCatalogItems(
+      Object.values(this.gameDataStore.snapshot().catalog?.items ?? {}).filter(
+        (item) => !HIDDEN_GEAR_CATALOG_ITEM_IDS.has(item.id),
+      ),
+    ),
   );
 
   readonly equippedSlots = computed<EquippedSlotViewModel[]>(() => {
@@ -244,6 +252,8 @@ export class GearBuilderStore {
           instance,
           definition: definitions[instance.definitionId] ?? null,
           locationLabel: `Equipped in ${formatEquipmentSlot(slot)}`,
+          locationKind: 'equipment',
+          slot,
         };
       }
     }
@@ -258,6 +268,7 @@ export class GearBuilderStore {
       instance: inventoryInstance,
       definition: definitions[inventoryInstance.definitionId] ?? null,
       locationLabel: 'In backpack',
+      locationKind: 'inventory',
     };
   }
 

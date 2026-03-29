@@ -1,4 +1,4 @@
-import type { AbilityDefinition, EntityId } from '../../../game-data/types';
+import type { AbilityDefinition, BuffDefinition, EntityId } from '../../../game-data/types';
 
 export interface PlannerCooldownLaneBar {
   abilityId: EntityId;
@@ -14,6 +14,8 @@ interface BuildPlannerCooldownLaneBarsInput {
   tickCount: number;
   cooldownTimeline: Record<number, Record<EntityId, number>>;
   abilityDefinitions: Record<EntityId, AbilityDefinition>;
+  buffTimeline?: Record<number, EntityId[]>;
+  buffDefinitions?: Record<EntityId, BuffDefinition>;
 }
 
 interface PendingCooldownRun {
@@ -24,10 +26,16 @@ interface PendingCooldownRun {
 export function buildPlannerCooldownLaneBars(
   input: BuildPlannerCooldownLaneBarsInput,
 ): PlannerCooldownLaneBar[] {
-  const abilityIds = collectTimelineAbilityIds(input.tickCount, input.cooldownTimeline);
-  const segments = abilityIds.flatMap((abilityId) =>
+  const abilitySegments = collectTimelineAbilityIds(input.tickCount, input.cooldownTimeline).flatMap((abilityId) =>
     buildSegmentsForCooldown(abilityId, input.tickCount, input.cooldownTimeline),
   );
+  const generatedCooldownSegments =
+    input.buffTimeline && input.buffDefinitions
+      ? collectTimelineCooldownBuffIds(input.tickCount, input.buffTimeline, input.buffDefinitions).flatMap((buffId) =>
+          buildSegmentsForGeneratedCooldown(buffId, input.tickCount, input.buffTimeline!),
+        )
+      : [];
+  const segments = [...abilitySegments, ...generatedCooldownSegments];
 
   const lastEndTickByRow: number[] = [];
 
@@ -46,12 +54,13 @@ export function buildPlannerCooldownLaneBars(
 
       lastEndTickByRow[row] = segment.endTick;
 
-      const definition = input.abilityDefinitions[segment.abilityId];
+      const abilityDefinition = input.abilityDefinitions[segment.abilityId];
+      const buffDefinition = input.buffDefinitions?.[segment.abilityId];
 
       return {
         abilityId: segment.abilityId,
-        name: definition?.name ?? segment.abilityId,
-        iconPath: definition?.iconPath,
+        name: abilityDefinition?.name ?? buffDefinition?.name ?? segment.abilityId,
+        iconPath: abilityDefinition?.iconPath ?? buffDefinition?.iconPath,
         startTick: segment.startTick,
         endTick: segment.endTick,
         span: segment.endTick - segment.startTick + 1,
@@ -117,4 +126,69 @@ function buildSegmentsForCooldown(
   }
 
   return segments;
+}
+
+function collectTimelineCooldownBuffIds(
+  tickCount: number,
+  buffTimeline: Record<number, EntityId[]>,
+  buffDefinitions: Record<EntityId, BuffDefinition>,
+): EntityId[] {
+  const ids = new Set<EntityId>();
+
+  for (let tick = 0; tick < tickCount; tick += 1) {
+    for (const buffId of buffTimeline[tick] ?? []) {
+      if (isCooldownLikeBuff(buffDefinitions[buffId])) {
+        ids.add(buffId);
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+function buildSegmentsForGeneratedCooldown(
+  buffId: EntityId,
+  tickCount: number,
+  buffTimeline: Record<number, EntityId[]>,
+): Array<PendingCooldownRun & { abilityId: EntityId }> {
+  const segments: Array<PendingCooldownRun & { abilityId: EntityId }> = [];
+  let activeRun: PendingCooldownRun | null = null;
+
+  for (let tick = 0; tick < tickCount; tick += 1) {
+    const isActive = (buffTimeline[tick] ?? []).includes(buffId);
+
+    if (isActive) {
+      if (!activeRun) {
+        activeRun = {
+          startTick: tick,
+          endTick: tick,
+        };
+      } else {
+        activeRun.endTick = tick;
+      }
+
+      continue;
+    }
+
+    if (activeRun) {
+      segments.push({
+        abilityId: buffId,
+        ...activeRun,
+      });
+      activeRun = null;
+    }
+  }
+
+  if (activeRun) {
+    segments.push({
+      abilityId: buffId,
+      ...activeRun,
+    });
+  }
+
+  return segments;
+}
+
+function isCooldownLikeBuff(definition: BuffDefinition | undefined): boolean {
+  return definition?.effectRefs?.some((effectRef) => effectRef.endsWith('-cooldown')) ?? false;
 }

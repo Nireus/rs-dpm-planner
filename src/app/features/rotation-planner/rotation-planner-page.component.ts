@@ -10,6 +10,7 @@ import { AbilityAvailabilityService } from '../../core/abilities/ability-availab
 import { SimulationSessionService } from '../../core/simulation/simulation-session.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import type { GearBuilderState } from '../../core/gear/gear-state';
+import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
 import { RotationPlannerStore } from './rotation-planner.store';
 import type { RotationAction } from '../../../simulation-engine/models';
 import { PLANNER_NON_GCD_TEMPLATES } from './rotation-planner.non-gcd';
@@ -139,12 +140,22 @@ export class RotationPlannerPageComponent {
 
     return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
   });
-  protected readonly gearSwapOptions = computed<PlannerGearSwapOption[]>(() =>
-    buildPlannerGearSwapOptions(
-      this.gearBuilderStore.snapshot().inventory,
-      this.gameDataStore.snapshot().catalog,
-    ),
-  );
+  protected readonly gearSwapOptions = computed<PlannerGearSwapOption[]>(() => {
+    const catalog = this.gameDataStore.snapshot().catalog;
+    const activeAction = this.activeGearSwapAction();
+    const tick = activeAction?.tick;
+
+    if (!catalog) {
+      return [];
+    }
+
+    const projectedGearState =
+      typeof tick === 'number'
+        ? projectGearStateAtTick(this.gearBuilderStore.snapshot(), this.nonGcdActions(), tick)
+        : this.gearBuilderStore.snapshot();
+
+    return buildPlannerGearSwapOptions(projectedGearState.inventory, catalog);
+  });
   protected readonly tickInspection = computed(() => {
     const catalog = this.gameDataStore.snapshot().catalog;
     if (!catalog) {
@@ -190,8 +201,9 @@ export class RotationPlannerPageComponent {
   });
   protected readonly cooldownLaneBars = computed<PlannerCooldownLaneBar[]>(() => {
     const result = this.simulationResult();
+    const catalog = this.gameDataStore.snapshot().catalog;
 
-    if (!result) {
+    if (!result || !catalog) {
       return [];
     }
 
@@ -199,6 +211,8 @@ export class RotationPlannerPageComponent {
       tickCount: this.tickCount(),
       cooldownTimeline: result.cooldownTimeline,
       abilityDefinitions: this.abilityCatalog(),
+      buffTimeline: result.buffTimeline,
+      buffDefinitions: catalog.buffs,
     });
   });
   protected readonly perfectEquilibriumProcMarkersByAction = computed<
@@ -217,11 +231,25 @@ export class RotationPlannerPageComponent {
       ? [...BASE_PLANNER_LANES, COOLDOWN_PLANNER_LANE]
       : BASE_PLANNER_LANES,
   );
+  protected readonly maxNonGcdStackSize = computed(() => {
+    const actions = this.nonGcdActions();
+    if (!actions.length) {
+      return 1;
+    }
+
+    const countsByTick = new Map<number, number>();
+    for (const action of actions) {
+      countsByTick.set(action.tick, (countsByTick.get(action.tick) ?? 0) + 1);
+    }
+
+    return Math.max(...countsByTick.values(), 1);
+  });
   protected readonly timelineRowTemplate = computed(() => {
     return buildTimelineRowTemplate(
       this.lanes(),
       this.buffLaneBars(),
       this.cooldownLaneBars(),
+      this.maxNonGcdStackSize(),
     );
   });
   protected draggedNonGcdPayload: PlannerNonGcdDropPayload | null = null;
@@ -358,7 +386,12 @@ export class RotationPlannerPageComponent {
   }
 
   protected laneHeightStyle(laneKey: PlannerLaneViewModel['key']): string {
-    return `${laneHeightRem(laneKey, this.buffLaneBars(), this.cooldownLaneBars())}rem`;
+    return `${laneHeightRem(
+      laneKey,
+      this.buffLaneBars(),
+      this.cooldownLaneBars(),
+      this.maxNonGcdStackSize(),
+    )}rem`;
   }
 
   protected selectedTickOverlayLeft(): string {
@@ -448,15 +481,16 @@ export class RotationPlannerPageComponent {
     this.draggedAbilityAction = action;
   }
 
-  protected onCatalogNonGcdDragStart(template: PlannerNonGcdTemplate): void {
+  protected onCatalogNonGcdDragStart(template: PlannerNonGcdTemplate, event: DragEvent): void {
     this.draggedNonGcdPayload = {
       sourceType: 'catalog',
       templateId: template.id,
     };
     this.draggedNonGcdAction = null;
+    this.applyCompactNonGcdDragPreview(event, template.iconPath ?? null, template.shortLabel);
   }
 
-  protected onTimelineNonGcdDragStart(action: RotationAction): void {
+  protected onTimelineNonGcdDragStart(action: RotationAction, event: DragEvent): void {
     const templateId = action.payload['templateId'];
     this.draggedNonGcdPayload = {
       sourceType: 'timeline',
@@ -464,6 +498,7 @@ export class RotationPlannerPageComponent {
       actionId: action.id,
     };
     this.draggedNonGcdAction = action;
+    this.applyCompactNonGcdDragPreview(event, this.nonGcdIconPath(action), this.nonGcdShortLabel(action));
   }
 
   protected onAbilityDragEnd(): void {
@@ -694,5 +729,62 @@ export class RotationPlannerPageComponent {
 
     const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  private applyCompactNonGcdDragPreview(
+    event: DragEvent,
+    iconPath: string | null,
+    fallbackLabel: string,
+  ): void {
+    const dataTransfer = event.dataTransfer;
+    if (!dataTransfer || typeof document === 'undefined') {
+      return;
+    }
+
+    const preview = document.createElement('div');
+    preview.style.position = 'fixed';
+    preview.style.top = '-1000px';
+    preview.style.left = '-1000px';
+    preview.style.width = '40px';
+    preview.style.height = '40px';
+    preview.style.display = 'grid';
+    preview.style.placeItems = 'center';
+    preview.style.padding = '4px';
+    preview.style.border = '1px solid rgba(150, 128, 68, 0.4)';
+    preview.style.borderRadius = '10px';
+    preview.style.background = 'linear-gradient(180deg, rgba(41, 31, 11, 0.98), rgba(17, 13, 7, 0.96))';
+    preview.style.boxShadow = '0 8px 18px rgba(0, 0, 0, 0.24)';
+    preview.style.pointerEvents = 'none';
+
+    if (iconPath) {
+      const image = document.createElement('img');
+      image.src = iconPath;
+      image.alt = fallbackLabel;
+      image.style.width = '24px';
+      image.style.height = '24px';
+      image.style.borderRadius = '6px';
+      image.style.objectFit = 'cover';
+      preview.appendChild(image);
+    } else {
+      const fallback = document.createElement('span');
+      fallback.textContent = fallbackLabel;
+      fallback.style.display = 'grid';
+      fallback.style.placeItems = 'center';
+      fallback.style.width = '24px';
+      fallback.style.height = '24px';
+      fallback.style.border = '1px solid rgba(150, 128, 68, 0.28)';
+      fallback.style.borderRadius = '6px';
+      fallback.style.color = '#eed9a5';
+      fallback.style.fontSize = '10px';
+      fallback.style.fontWeight = '800';
+      fallback.style.lineHeight = '1';
+      fallback.style.textTransform = 'uppercase';
+      fallback.style.background = 'rgba(26, 20, 9, 0.92)';
+      preview.appendChild(fallback);
+    }
+
+    document.body.appendChild(preview);
+    dataTransfer.setDragImage(preview, 20, 20);
+    setTimeout(() => preview.remove(), 0);
   }
 }

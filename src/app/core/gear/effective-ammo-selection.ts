@@ -4,6 +4,8 @@ import type { ItemDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import type { GearBuilderState } from './gear-state';
 
+const IMPLICIT_QUIVER_BOLT_AMMO_ID = 'bakriminel-bolts';
+
 export function resolveEffectiveAmmoSelection(
   gearState: GearBuilderState,
   catalog: GameDataCatalog,
@@ -23,6 +25,10 @@ export function resolveEffectiveAmmoSelection(
     return equippedAmmo;
   }
 
+  if (isCrossbowWeaponDefinition(resolveEquippedWeaponDefinition(gearState, catalog))) {
+    return buildImplicitQuiverAmmoInstance(equippedAmmo, IMPLICIT_QUIVER_BOLT_AMMO_ID, 'loaded-bolts');
+  }
+
   const loadedAmmoId = resolveStringConfigValue(
     equippedDefinition,
     equippedAmmo,
@@ -37,14 +43,38 @@ export function resolveEffectiveAmmoSelection(
     return undefined;
   }
 
-  return {
-    instanceId: `${equippedAmmo.instanceId}:${CONFIG_OPTION_IDS.loadedAmmo}:${loadedAmmoId}`,
-    definitionId: loadedAmmoId,
-  };
+  return buildImplicitQuiverAmmoInstance(equippedAmmo, loadedAmmoId, CONFIG_OPTION_IDS.loadedAmmo);
 }
 
 function isQuiverDefinition(definition: ItemDefinition): boolean {
   return definition.effectRefs?.includes(EFFECT_REF_IDS.quiverPassive) ?? false;
+}
+
+function resolveEquippedWeaponDefinition(
+  gearState: GearBuilderState,
+  catalog: GameDataCatalog,
+): ItemDefinition | null {
+  const equippedWeapon = gearState.equipment.weapon;
+  if (!equippedWeapon) {
+    return null;
+  }
+
+  return catalog.items[equippedWeapon.definitionId] ?? null;
+}
+
+function isCrossbowWeaponDefinition(definition: ItemDefinition | null): boolean {
+  return definition?.effectRefs?.includes(EFFECT_REF_IDS.weaponClassCrossbow) ?? false;
+}
+
+function buildImplicitQuiverAmmoInstance(
+  equippedAmmo: ItemInstanceConfig,
+  definitionId: string,
+  slotKey: string,
+): ItemInstanceConfig {
+  return {
+    instanceId: `${equippedAmmo.instanceId}:${slotKey}:${definitionId}`,
+    definitionId,
+  };
 }
 
 function resolveStringConfigValue(

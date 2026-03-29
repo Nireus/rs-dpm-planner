@@ -230,20 +230,7 @@ function resolveChannelTimelineSpan(abilityDefinition: AbilityDefinition): numbe
     return abilityDefinition.channelDurationTicks ?? 0;
   }
 
-  const channelDurationTicks = abilityDefinition.channelDurationTicks ?? 0;
-  const latestHitTick = abilityDefinition.hitSchedule.reduce(
-    (latest, hit) => Math.max(latest, hit.tickOffset),
-    0,
-  );
-
-  // Completion-only channels such as Snipe occupy the channel window itself,
-  // while channels that resolve hits during the channel keep the wider cast
-  // window used elsewhere in the planner.
-  if (latestHitTick >= channelDurationTicks) {
-    return channelDurationTicks;
-  }
-
-  return channelDurationTicks + 1;
+  return abilityDefinition.channelDurationTicks ?? 0;
 }
 
 export function getAbilitySegment(

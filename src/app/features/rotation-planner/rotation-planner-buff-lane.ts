@@ -4,6 +4,7 @@ export interface PlannerBuffLaneBar {
   buffId: EntityId;
   name: string;
   iconPath?: string;
+  isWarning?: boolean;
   startTick: number;
   endTick: number;
   span: number;
@@ -37,6 +38,7 @@ export function buildPlannerBuffLaneBars(
     .sort((left, right) =>
       left.startTick - right.startTick ||
       left.endTick - right.endTick ||
+      compareBuffRowPriority(left.buffId, right.buffId) ||
       left.buffId.localeCompare(right.buffId),
     )
     .map((segment) => {
@@ -54,6 +56,7 @@ export function buildPlannerBuffLaneBars(
         buffId: segment.buffId,
         name: definition?.name ?? segment.buffId,
         iconPath: definition?.iconPath,
+        isWarning: isWarningLikeBuff(definition),
         startTick: segment.startTick,
         endTick: segment.endTick,
         span: segment.endTick - segment.startTick + 1,
@@ -94,6 +97,10 @@ function collectTimelineBuffIds(
 
 function isCooldownLikeBuff(definition: BuffDefinition | undefined): boolean {
   return definition?.effectRefs?.some((effectRef) => effectRef.endsWith('-cooldown')) ?? false;
+}
+
+function isWarningLikeBuff(definition: BuffDefinition | undefined): boolean {
+  return definition?.effectRefs?.includes('equilibrium-lock') ?? false;
 }
 
 function buildSegmentsForBuff(
@@ -139,4 +146,20 @@ function buildSegmentsForBuff(
   }
 
   return segments;
+}
+
+function compareBuffRowPriority(leftBuffId: EntityId, rightBuffId: EntityId): number {
+  const priority = (buffId: EntityId): number => {
+    if (buffId === 'vulnerability') {
+      return 0;
+    }
+
+    if (buffId === 'vulnerability-bomb-area') {
+      return 1;
+    }
+
+    return 10;
+  };
+
+  return priority(leftBuffId) - priority(rightBuffId);
 }

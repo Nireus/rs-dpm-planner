@@ -702,10 +702,10 @@ describe('resolveAdrenalineTimeline', () => {
             adrenalineGain: 0,
             adrenalineCost: 25,
             isChanneled: true,
-            channelDurationTicks: 8,
+            channelDurationTicks: 9,
             hitSchedule: Array.from({ length: 8 }, (_, index) => ({
               id: `rapid-fire-hit-${index + 1}`,
-              tickOffset: index,
+              tickOffset: index + 1,
               damage: { min: 75, max: 85 },
             })),
             baseDamage: { min: 600, max: 680 },
@@ -758,14 +758,14 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.adrenalineTimeline[0]).toBe(60);
     expect(result.adrenalineTimeline[1]).toBe(60);
     expect(result.adrenalineTimeline[2]).toBe(60);
-    expect(result.adrenalineTimeline[3]).toBe(40);
-    expect(result.adrenalineTimeline[4]).toBe(45);
-    expect(result.adrenalineTimeline[5]).toBe(50);
-    expect(result.adrenalineTimeline[6]).toBe(55);
-    expect(result.adrenalineTimeline[7]).toBe(60);
-    expect(result.adrenalineTimeline[8]).toBe(65);
-    expect(result.adrenalineTimeline[9]).toBe(70);
-    expect(result.adrenalineTimeline[10]).toBe(80);
+    expect(result.adrenalineTimeline[3]).toBe(35);
+    expect(result.adrenalineTimeline[4]).toBe(40);
+    expect(result.adrenalineTimeline[5]).toBe(45);
+    expect(result.adrenalineTimeline[6]).toBe(50);
+    expect(result.adrenalineTimeline[7]).toBe(55);
+    expect(result.adrenalineTimeline[8]).toBe(60);
+    expect(result.adrenalineTimeline[9]).toBe(65);
+    expect(result.adrenalineTimeline[10]).toBe(70);
     expect(result.adrenalineTimeline[11]).toBe(80);
   });
 
@@ -813,5 +813,128 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.adrenalineTimeline[1]).toBe(68);
     expect(result.adrenalineTimeline[2]).toBe(68);
     expect(result.adrenalineTimeline[10]).toBe(68);
+  });
+
+  it('uses cumulative chance for Impatient and carries overflow forward', () => {
+    const base = createConfig();
+    const config = createConfig({
+      gameData: {
+        ...base.gameData,
+        perks: {
+          impatient: {
+            id: 'impatient',
+            name: 'Impatient',
+            effectRefs: ['impatient'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'ring-of-vigour',
+            configuredPerks: [{ socketIndex: 0, perkId: 'impatient', rank: 3 }],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 6,
+        nonGcdActions: [],
+        abilityActions: [
+          { id: 'basic-1', tick: 0, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+          { id: 'basic-2', tick: 1, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+          { id: 'basic-3', tick: 2, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+          { id: 'basic-4', tick: 3, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(9);
+    expect(result.adrenalineTimeline[1]).toBe(18);
+    expect(result.adrenalineTimeline[2]).toBe(27);
+    expect(result.adrenalineTimeline[3]).toBe(39);
+  });
+
+  it('adds percentage adrenaline gain from Invigorating to all basic abilities', () => {
+    const base = createConfig();
+    const config = createConfig({
+      gameData: {
+        ...base.gameData,
+        perks: {
+          invigorating: {
+            id: 'invigorating',
+            name: 'Invigorating',
+            effectRefs: ['invigorating'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'ring-of-vigour',
+            configuredPerks: [{ socketIndex: 0, perkId: 'invigorating', rank: 4 }],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          { id: 'basic-1', tick: 0, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(10.8);
+  });
+
+  it('applies Invigorating after Fury of the Small on basic abilities', () => {
+    const base = createConfig();
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['fury-of-the-small'],
+      },
+      gameData: {
+        ...base.gameData,
+        perks: {
+          invigorating: {
+            id: 'invigorating',
+            name: 'Invigorating',
+            effectRefs: ['invigorating'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'ring-of-vigour',
+            configuredPerks: [{ socketIndex: 0, perkId: 'invigorating', rank: 4 }],
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          { id: 'basic-1', tick: 0, lane: 'ability', actionType: 'ability-use', payload: { abilityId: 'basic-shot' } },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline[0]).toBe(12);
   });
 });

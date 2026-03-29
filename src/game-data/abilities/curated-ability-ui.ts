@@ -141,7 +141,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
   },
   'shadow-tendrils': {
     iconPath: 'https://runescape.wiki/w/Special:FilePath/Shadow_Tendrils.png',
-    hoverSummary: 'Enhanced | 75 ticks | 1 hit | -15% adrenaline',
+    hoverSummary: 'Enhanced | 75 ticks | 1 hit | 0% adrenaline',
     detailLines: [
       '200%-270% ranged damage.',
       'Deals 100%-135% self-damage.',

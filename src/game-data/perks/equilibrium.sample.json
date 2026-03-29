@@ -1,6 +1,8 @@
 {
   "id": "equilibrium",
   "name": "Equilibrium",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Equilibrium.png",
+  "wikiUrl": "https://runescape.wiki/w/Equilibrium",
   "effectRefs": ["equilibrium"],
-  "description": "Increases minimum hit potential at the cost of maximum hit potential."
+  "description": "Ability damage is increased by 10%, plus an additional 1% per rank, but prevents critically striking."
 }

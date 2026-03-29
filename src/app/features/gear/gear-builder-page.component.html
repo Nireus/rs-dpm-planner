@@ -2,7 +2,6 @@
   <header class="page-header">
     <p class="eyebrow">Builder</p>
     <h1>Gear</h1>
-    <p class="description">Compact icon-first loadout builder. Hover for quick context, click for detail.</p>
   </header>
 
   @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
@@ -48,6 +47,21 @@
               >
                 <span class="slot-label">{{ entry.label }}</span>
 
+                @if (entry.instance) {
+                  <span
+                    class="tile-remove-button"
+                    title="Remove item"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Remove item from equipped gear"
+                    (click)="$event.stopPropagation(); clearSlot(entry.slot)"
+                    (keydown.enter)="$event.stopPropagation(); clearSlot(entry.slot)"
+                    (keydown.space)="$event.preventDefault(); $event.stopPropagation(); clearSlot(entry.slot)"
+                  >
+                    ×
+                  </span>
+                }
+
                 @if (entry.definition) {
                   <div
                     class="icon-tile draggable"
@@ -59,7 +73,8 @@
                       eofStoredSpecialBadge(entry.definition, entry.instance) ||
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
-                      quiverAmmoIcon(entry.definition, entry.instance)
+                      quiverAmmoIcon(entry.definition, entry.instance) ||
+                      quiverBoltIcon(entry.definition, entry.instance)
                     ) {
                       <div class="item-overlays">
                         @if (
@@ -99,6 +114,19 @@
                             <img [src]="ammoIcon" [alt]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'" />
                             @if (quiverAmmoShortLabel(entry.definition, entry.instance); as ammoBadge) {
                               <span class="indicator-fallback-copy">{{ ammoBadge }}</span>
+                            }
+                          </span>
+                        }
+
+                        @if (quiverBoltIcon(entry.definition, entry.instance); as boltIcon) {
+                          <span
+                            class="status-icon ammo-status secondary-ammo-status"
+                            [attr.title]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'"
+                            [attr.aria-label]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'"
+                          >
+                            <img [src]="boltIcon" [alt]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'" />
+                            @if (quiverBoltShortLabel(entry.definition, entry.instance); as boltBadge) {
+                              <span class="indicator-fallback-copy">{{ boltBadge }}</span>
                             }
                           </span>
                         }
@@ -150,12 +178,26 @@
                   (dragstart)="startInventoryDrag($event, entry.instance.instanceId)"
                   (dragend)="finishDrag()"
                 >
+                  <span
+                    class="tile-remove-button"
+                    title="Remove item"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Remove item from backpack"
+                    (click)="$event.stopPropagation(); removeFromInventory(entry.instance.instanceId)"
+                    (keydown.enter)="$event.stopPropagation(); removeFromInventory(entry.instance.instanceId)"
+                    (keydown.space)="$event.preventDefault(); $event.stopPropagation(); removeFromInventory(entry.instance.instanceId)"
+                  >
+                    ×
+                  </span>
+
                   <div class="icon-tile compact-icon">
                     @if (
                       eofStoredSpecialBadge(entry.definition, entry.instance) ||
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
-                      quiverAmmoIcon(entry.definition, entry.instance)
+                      quiverAmmoIcon(entry.definition, entry.instance) ||
+                      quiverBoltIcon(entry.definition, entry.instance)
                     ) {
                       <div class="item-overlays">
                         @if (
@@ -195,6 +237,19 @@
                             <img [src]="ammoIcon" [alt]="quiverAmmoLabel(entry.definition, entry.instance) ?? 'Loaded ammo'" />
                             @if (quiverAmmoShortLabel(entry.definition, entry.instance); as ammoBadge) {
                               <span class="indicator-fallback-copy">{{ ammoBadge }}</span>
+                            }
+                          </span>
+                        }
+
+                        @if (quiverBoltIcon(entry.definition, entry.instance); as boltIcon) {
+                          <span
+                            class="status-icon ammo-status secondary-ammo-status"
+                            [attr.title]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'"
+                            [attr.aria-label]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'"
+                          >
+                            <img [src]="boltIcon" [alt]="quiverBoltLabel(entry.definition, entry.instance) ?? 'Loaded bolts'" />
+                            @if (quiverBoltShortLabel(entry.definition, entry.instance); as boltBadge) {
+                              <span class="indicator-fallback-copy">{{ boltBadge }}</span>
                             }
                           </span>
                         }
@@ -285,6 +340,7 @@
         (close)="closeDetail()"
         (equip)="equipDefinition(item)"
         (addToInventory)="addToInventory(item)"
+        (remove)="removeSelectedResolvedInstance()"
         (updateSocketPerks)="updateSocketPerks($event.socketIndex, $event.perkIds)"
         (updatePerkRank)="updatePerkRank($event.socketIndex, $event.perkId, $event.rank)"
         (updateBooleanConfig)="updateBooleanConfig($event.optionId, $event.checked)"

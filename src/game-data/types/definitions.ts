@@ -85,6 +85,8 @@ export interface BuffDefinition {
 export interface PerkDefinition {
   id: EntityId;
   name: string;
+  iconPath?: string;
+  wikiUrl?: string;
   effectRefs?: EffectRef[];
   configOptions?: ConfigOptionDefinition[];
   description?: string;

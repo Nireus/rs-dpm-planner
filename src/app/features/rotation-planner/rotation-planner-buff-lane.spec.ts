@@ -31,6 +31,7 @@ describe('buildPlannerBuffLaneBars', () => {
         buffId: 'dracolich-infusion',
         name: 'Dracolich infusion',
         iconPath: undefined,
+        isWarning: false,
         startTick: 2,
         endTick: 4,
         span: 3,
@@ -74,6 +75,7 @@ describe('buildPlannerBuffLaneBars', () => {
         buffId: 'buff-a',
         name: 'Buff A',
         iconPath: undefined,
+        isWarning: false,
         startTick: 1,
         endTick: 3,
         span: 3,
@@ -84,6 +86,7 @@ describe('buildPlannerBuffLaneBars', () => {
         buffId: 'buff-b',
         name: 'Buff B',
         iconPath: undefined,
+        isWarning: false,
         startTick: 2,
         endTick: 4,
         span: 3,
@@ -124,6 +127,42 @@ describe('buildPlannerBuffLaneBars', () => {
         buffId: 'dracolich-infusion',
         name: 'Dracolich infusion',
         iconPath: undefined,
+        isWarning: false,
+        startTick: 1,
+        endTick: 2,
+        span: 2,
+        row: 0,
+        stackPeak: 1,
+      },
+    ]);
+  });
+
+  it('marks equilibrium cooldown as a warning-colored buff bar', () => {
+    const bars = buildPlannerBuffLaneBars({
+      tickCount: 4,
+      buffTimeline: {
+        0: [],
+        1: ['equilibrium-cooldown'],
+        2: ['equilibrium-cooldown'],
+        3: [],
+      },
+      buffDefinitions: {
+        'equilibrium-cooldown': {
+          id: 'equilibrium-cooldown',
+          name: 'Equilibrium cooldown',
+          category: 'temporary',
+          sourceType: 'perk',
+          effectRefs: ['equilibrium-lock'],
+        },
+      },
+    });
+
+    expect(bars).toEqual([
+      {
+        buffId: 'equilibrium-cooldown',
+        name: 'Equilibrium cooldown',
+        iconPath: undefined,
+        isWarning: true,
         startTick: 1,
         endTick: 2,
         span: 2,

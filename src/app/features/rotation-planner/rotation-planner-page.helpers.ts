@@ -1,5 +1,6 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
+import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationResult, ValidationIssue } from '../../../simulation-engine/models';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import { formatEquipmentSlot } from '../../core/gear/gear-builder.utils';
@@ -9,12 +10,16 @@ import { getAbilitySegment, getAbilityTimelineSpan } from '../../core/rotation-p
 
 export const PERFECT_EQUILIBRIUM_ICON_PATH =
   'https://runescape.wiki/images/Perfect_Equilibrium_%28self_status%29.png';
+const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 const HEADER_ROW_HEIGHT_REM = 2.7;
 const DEFAULT_LANE_ROW_HEIGHT_REM = 2.96;
 const STACK_LANE_BASE_HEIGHT_REM = 1.06;
 const STACK_LANE_ROW_STEP_REM = 0.9;
 const STACK_LANE_BOTTOM_PADDING_REM = 0.22;
+const NON_GCD_TOKEN_SIZE_REM = 1.45;
+const NON_GCD_STACK_GAP_REM = 0.22;
+const NON_GCD_STACK_VERTICAL_PADDING_REM = 0.62;
 const TICK_COLUMN_WIDTH_REM = 2.18;
 const TICK_COLUMN_GAP_REM = 0.42;
 const TICK_SELECTION_OVERHANG_REM = 0.16;
@@ -242,8 +247,11 @@ export function buildTimelineRowTemplate(
   lanes: PlannerLaneViewModel[],
   buffBars: PlannerBuffLaneBar[],
   cooldownBars: PlannerCooldownLaneBar[],
+  maxNonGcdStackSize: number,
 ): string {
-  const rowHeights = lanes.map((lane) => laneHeightRem(lane.key, buffBars, cooldownBars));
+  const rowHeights = lanes.map((lane) =>
+    laneHeightRem(lane.key, buffBars, cooldownBars, maxNonGcdStackSize),
+  );
   return `${HEADER_ROW_HEIGHT_REM}rem ${rowHeights.map((height) => `${height}rem`).join(' ')}`;
 }
 
@@ -265,7 +273,12 @@ export function laneHeightRem(
   laneKey: PlannerLaneViewModel['key'],
   buffBars: PlannerBuffLaneBar[],
   cooldownBars: PlannerCooldownLaneBar[],
+  maxNonGcdStackSize: number,
 ): number {
+  if (laneKey === 'non-gcd') {
+    return dynamicNonGcdLaneHeightRem(maxNonGcdStackSize);
+  }
+
   if (laneKey === 'buff') {
     return dynamicStackLaneHeightRem(buffBars.map((bar) => bar.row));
   }
@@ -515,10 +528,12 @@ export function describeGearSwapOption(
   }
 
   if (definition.id === 'pernixs-quiver') {
-    const loadedAmmo = resolveStringConfigOptionValue(definition, instance, 'loaded-ammo');
+    const loadedAmmo = resolveStringConfigOptionValue(definition, instance, CONFIG_OPTION_IDS.loadedAmmo);
     if (loadedAmmo) {
-      details.push(`Ammo ${catalog.items[loadedAmmo]?.name ?? loadedAmmo}`);
+      details.push(`Arrows ${catalog.items[loadedAmmo]?.name ?? loadedAmmo}`);
     }
+
+    details.push(`Bolts ${catalog.items[QUIVER_SECONDARY_BOLT_AMMO_ID]?.name ?? QUIVER_SECONDARY_BOLT_AMMO_ID}`);
   }
 
   if (definition.id === 'essence-of-finality') {
@@ -575,6 +590,16 @@ function dynamicStackLaneHeightRem(rows: number[]): number {
     STACK_LANE_BASE_HEIGHT_REM +
     (stackRows - 1) * STACK_LANE_ROW_STEP_REM +
     STACK_LANE_BOTTOM_PADDING_REM;
+
+  return Math.max(DEFAULT_LANE_ROW_HEIGHT_REM, stackedHeight);
+}
+
+function dynamicNonGcdLaneHeightRem(maxStackSize: number): number {
+  const clampedStackSize = Math.max(1, maxStackSize);
+  const stackedHeight =
+    NON_GCD_STACK_VERTICAL_PADDING_REM +
+    (clampedStackSize * NON_GCD_TOKEN_SIZE_REM) +
+    ((clampedStackSize - 1) * NON_GCD_STACK_GAP_REM);
 
   return Math.max(DEFAULT_LANE_ROW_HEIGHT_REM, stackedHeight);
 }

@@ -54,6 +54,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         combatStyleTags: ['ranged'],
         effectRefs: ['deathspore-progress'],
       },
+      'ful-arrows': {
+        id: 'ful-arrows',
+        name: 'Ful arrows',
+        category: 'ammo',
+        slot: 'ammo',
+        combatStyleTags: ['ranged'],
+        effectRefs: [],
+      },
     },
     ammo: {},
     abilities: {
@@ -225,5 +233,67 @@ describe('resolveDeathsporeTimeline', () => {
     expect(result.stackTimeline[0]).toBe(0);
     expect(result.stackTimeline[10]).toBe(0);
     expect(result.buffTimeline[10]).toEqual([]);
+  });
+
+  it('stops building Deathspore progress after arrows are swapped away', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'plain-bow',
+          },
+          ammo: {
+            instanceId: 'ammo-1',
+            definitionId: 'deathspore-arrows',
+          },
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'ammo-2',
+            definitionId: 'ful-arrows',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 30,
+        nonGcdActions: [
+          {
+            id: 'swap-ammo',
+            tick: 5,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'ammo-2',
+              definitionId: 'ful-arrows',
+              slot: 'ammo',
+              label: 'Swap: Ful arrows',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'stack-builder-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'stack-builder',
+            },
+          },
+        ],
+      },
+    });
+
+    const result = resolveDeathsporeTimeline(config);
+
+    expect(result.stackTimeline[4]).toBe(5);
+    expect(result.stackTimeline[5]).toBe(6);
+    expect(result.stackTimeline[6]).toBe(6);
+    expect(result.stackTimeline[11]).toBe(6);
+    expect(result.buffTimeline[11]).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@
   "style": "ranged",
   "subtype": "enhanced",
   "cooldownTicks": 75,
-  "adrenalineCost": 15,
+  "adrenalineCost": 0,
   "requires": {
     "levelRequirements": {
       "ranged": 75
