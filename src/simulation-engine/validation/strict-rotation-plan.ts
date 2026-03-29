@@ -11,6 +11,11 @@ import type {
   SimulationConfig,
   ValidationIssue,
 } from '../models';
+import {
+  ADRENALINE_POTION_ACTION_TYPE,
+  ADRENALINE_POTION_COOLDOWN_TICKS,
+  getAdrenalinePotionVariant,
+} from '../actions/adrenaline-potions';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { buildBaseTimeline } from '../timeline';
 import { evaluateAbilityAvailability } from '../rules/ability-availability';
@@ -39,6 +44,7 @@ export function validateStrictRotationPlan(config: SimulationConfig): Validation
   issues.push(...timelineResult.validationIssues);
   issues.push(...validateAbilityLaneOverlap(timelineResult.timeline.ticks));
   issues.push(...validateSwapActionPayloads(config, context));
+  issues.push(...validateAdrenalinePotionActions(config));
   issues.push(...validateAbilityActions(config, context));
 
   return issues;
@@ -182,6 +188,19 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
         );
       }
     }
+
+    if (action.actionType === ADRENALINE_POTION_ACTION_TYPE) {
+      const variantId = readStringPayload(action, 'variantId');
+      if (!getAdrenalinePotionVariant(variantId)) {
+        issues.push(
+          createActionIssue(
+            action,
+            'action.invalid_payload',
+            'Adrenaline potion action is missing a valid potion variant.',
+          ),
+        );
+      }
+    }
   }
 
   return issues;
@@ -279,6 +298,36 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
         ),
       );
     }
+  }
+
+  return issues;
+}
+
+function validateAdrenalinePotionActions(config: SimulationConfig): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const potionActions = [...config.rotationPlan.nonGcdActions]
+    .filter((action) => action.actionType === ADRENALINE_POTION_ACTION_TYPE)
+    .sort((left, right) => left.tick - right.tick || left.id.localeCompare(right.id));
+  let cooldownUntilTick = -1;
+
+  for (const action of potionActions) {
+    const variant = getAdrenalinePotionVariant(readStringPayload(action, 'variantId'));
+    if (!variant) {
+      continue;
+    }
+
+    if (action.tick < cooldownUntilTick) {
+      issues.push(
+        createActionIssue(
+          action,
+          'action.cooldown_conflict',
+          `${variant.label} is on cooldown until tick ${cooldownUntilTick}.`,
+        ),
+      );
+      continue;
+    }
+
+    cooldownUntilTick = action.tick + ADRENALINE_POTION_COOLDOWN_TICKS;
   }
 
   return issues;

@@ -235,6 +235,48 @@ describe('resolveDeathsporeTimeline', () => {
     expect(result.buffTimeline[10]).toEqual([]);
   });
 
+  it('starts from configured Deathspore stacks and procs sooner', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'plain-bow',
+          },
+          ammo: {
+            instanceId: 'ammo-1',
+            definitionId: 'deathspore-arrows',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 20,
+        startingStacks: {
+          deathsporeStacks: 10,
+        },
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'stack-builder-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'stack-builder',
+            },
+          },
+        ],
+      },
+    });
+
+    const result = resolveDeathsporeTimeline(config);
+
+    expect(result.stackTimeline[0]).toBe(11);
+    expect(result.buffTimeline[1]).toEqual(['feasting-spores-ready', 'feasting-spores-cooldown']);
+    expect(result.stackTimeline[1]).toBe(0);
+  });
+
   it('stops building Deathspore progress after arrows are swapped away', () => {
     const config = createConfig({
       gearSetup: {

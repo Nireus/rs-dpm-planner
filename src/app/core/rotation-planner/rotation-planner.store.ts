@@ -1,6 +1,11 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { AbilityDefinition } from '../../../game-data/types';
 import type { RotationAction, RotationPlan } from '../../../simulation-engine/models';
+import {
+  normalizeStartingDeathsporeStacks,
+  normalizeStartingPerfectEquilibriumStacks,
+  type StartingStackState,
+} from '../../../simulation-engine/models/starting-stacks';
 import { MAX_ADRENALINE, resolveMaxAdrenaline } from '../../../simulation-engine/resolvers/adrenaline';
 import { buildBaseTimeline } from '../../../simulation-engine/timeline';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
@@ -11,10 +16,12 @@ import type { RotationPlannerWorkspaceState } from '../workspace/workspace.model
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 import { evaluateAbilityPlacement } from './rotation-planner-placement';
 import {
+  collapseAbilityGap,
   getAbilityTimelineSpan,
   removeNonGcdAction,
   removeAbilityAction,
   type PlannerAbilityDropPayload,
+  type PlannerAbilityGapControl,
   type PlannerNonGcdDropPayload,
   type PlannerNonGcdTemplate,
   updateNonGcdActionPayload,
@@ -22,12 +29,17 @@ import {
   upsertAbilityAction,
 } from './rotation-planner.utils';
 
-const MIN_TICK_COUNT = 6;
-const MAX_TICK_COUNT = 200;
+const TICKS_PER_GCD = 3;
+const MIN_GCD_COUNT = 2;
+const MAX_GCD_COUNT = 200;
+const MIN_TICK_COUNT = MIN_GCD_COUNT * TICKS_PER_GCD;
+const MAX_TICK_COUNT = MAX_GCD_COUNT * TICKS_PER_GCD;
+const DEFAULT_GCD_COUNT = 33;
 
 const DEFAULT_ROTATION_PLANNER_STATE: RotationPlannerWorkspaceState = {
   startingAdrenaline: 100,
-  tickCount: 100,
+  tickCount: DEFAULT_GCD_COUNT * TICKS_PER_GCD,
+  startingStacks: {},
   nonGcdActions: [],
   abilityActions: [],
 };
@@ -44,13 +56,36 @@ export class RotationPlannerStore {
   private readonly initialState = this.loadInitialState();
   private readonly startingAdrenalineValue = signal(this.initialState.startingAdrenaline);
   private readonly tickCountValue = signal(this.initialState.tickCount);
+  private readonly startingStacksValue = signal<StartingStackState>(this.initialState.startingStacks);
   private readonly nonGcdActionsValue = signal<RotationAction[]>(this.initialState.nonGcdActions);
   private readonly abilityActionsValue = signal<RotationAction[]>(this.initialState.abilityActions);
 
   readonly startingAdrenaline = this.startingAdrenalineValue.asReadonly();
   readonly tickCount = this.tickCountValue.asReadonly();
+  readonly gcdCount = computed(() => this.tickCount() / TICKS_PER_GCD);
+  readonly startingStacks = this.startingStacksValue.asReadonly();
   readonly nonGcdActions = this.nonGcdActionsValue.asReadonly();
   readonly abilityActions = this.abilityActionsValue.asReadonly();
+  readonly visibleNonGcdActions = computed(() =>
+    this.nonGcdActions().filter((action) => action.tick < this.tickCount()),
+  );
+  readonly visibleAbilityActions = computed(() => {
+    const abilityDefinitions = this.gameDataStore.snapshot().catalog?.abilities ?? {};
+
+    return this.abilityActions().filter((action) => {
+      const abilityId = action.payload['abilityId'];
+      if (typeof abilityId !== 'string') {
+        return action.tick < this.tickCount();
+      }
+
+      const definition = abilityDefinitions[abilityId];
+      if (!definition) {
+        return action.tick < this.tickCount();
+      }
+
+      return action.tick + getAbilityTimelineSpan(definition) <= this.tickCount();
+    });
+  });
   readonly maxStartingAdrenaline = computed(() =>
     resolveMaxAdrenaline({
       persistentBuffConfig: {
@@ -73,8 +108,9 @@ export class RotationPlannerStore {
   readonly rotationPlan = computed<RotationPlan>(() => ({
     startingAdrenaline: this.startingAdrenaline(),
     tickCount: this.tickCount(),
-    nonGcdActions: this.nonGcdActions(),
-    abilityActions: this.abilityActions(),
+    startingStacks: this.startingStacks(),
+    nonGcdActions: this.visibleNonGcdActions(),
+    abilityActions: this.visibleAbilityActions(),
   }));
 
   readonly timelineResult = computed(() =>
@@ -99,6 +135,7 @@ export class RotationPlannerStore {
       this.workspaceRepository.updateRotationPlannerState({
         startingAdrenaline: this.startingAdrenaline(),
         tickCount: this.tickCount(),
+        startingStacks: this.startingStacks(),
         nonGcdActions: this.nonGcdActions(),
         abilityActions: this.abilityActions(),
       });
@@ -110,23 +147,22 @@ export class RotationPlannerStore {
     this.startingAdrenalineValue.set(parsedValue);
   }
 
-  updateTickCount(value: number | string | null): void {
-    const parsedValue = normalizeIntegerInput(value, this.tickCount(), MIN_TICK_COUNT, MAX_TICK_COUNT);
-    this.tickCountValue.set(parsedValue);
-    const abilityDefinitions = this.gameDataStore.snapshot().catalog?.abilities ?? {};
-    this.nonGcdActionsValue.update((actions) => actions.filter((action) => action.tick < parsedValue));
-    this.abilityActionsValue.update((actions) => actions.filter((action) => {
-      const abilityId = action.payload['abilityId'];
-      if (typeof abilityId !== 'string') {
-        return action.tick < parsedValue;
-      }
+  updateGcdCount(value: number | string | null): void {
+    const parsedValue = normalizeIntegerInput(value, this.gcdCount(), MIN_GCD_COUNT, MAX_GCD_COUNT);
+    this.tickCountValue.set(parsedValue * TICKS_PER_GCD);
+  }
 
-      const definition = abilityDefinitions[abilityId];
-      if (!definition) {
-        return action.tick < parsedValue;
-      }
+  updateStartingDeathsporeStacks(value: number | string | null): void {
+    this.startingStacksValue.update((current) => ({
+      ...current,
+      deathsporeStacks: normalizeStartingDeathsporeStacks(parseOptionalInteger(value)),
+    }));
+  }
 
-      return action.tick + getAbilityTimelineSpan(definition) <= parsedValue;
+  updateStartingPerfectEquilibriumStacks(value: number | string | null): void {
+    this.startingStacksValue.update((current) => ({
+      ...current,
+      perfectEquilibriumStacks: normalizeStartingPerfectEquilibriumStacks(parseOptionalInteger(value)),
     }));
   }
 
@@ -180,7 +216,9 @@ export class RotationPlannerStore {
       return false;
     }
 
-    this.abilityActionsValue.update((actions) => upsertAbilityAction(actions, dropPayload, tick));
+    this.abilityActionsValue.update((actions) =>
+      upsertAbilityAction(actions, this.gameDataStore.snapshot().catalog?.abilities ?? {}, dropPayload, tick),
+    );
     return true;
   }
 
@@ -225,6 +263,10 @@ export class RotationPlannerStore {
     this.abilityActionsValue.update((actions) => removeAbilityAction(actions, actionId));
   }
 
+  collapseAbilityGap(control: PlannerAbilityGapControl): void {
+    this.abilityActionsValue.update((actions) => collapseAbilityGap(actions, control));
+  }
+
   removeNonGcdAction(actionId: string): void {
     this.nonGcdActionsValue.update((actions) => removeNonGcdAction(actions, actionId));
   }
@@ -232,6 +274,7 @@ export class RotationPlannerStore {
   reset(): void {
     this.startingAdrenalineValue.set(DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline);
     this.tickCountValue.set(DEFAULT_ROTATION_PLANNER_STATE.tickCount);
+    this.startingStacksValue.set(DEFAULT_ROTATION_PLANNER_STATE.startingStacks);
     this.nonGcdActionsValue.set(DEFAULT_ROTATION_PLANNER_STATE.nonGcdActions);
     this.abilityActionsValue.set(DEFAULT_ROTATION_PLANNER_STATE.abilityActions);
     this.workspaceRepository.updateRotationPlannerState(DEFAULT_ROTATION_PLANNER_STATE);
@@ -242,8 +285,9 @@ export class RotationPlannerStore {
       normalizeIntegerInput(state.startingAdrenaline, DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline, 0, this.maxStartingAdrenaline()),
     );
     this.tickCountValue.set(
-      normalizeIntegerInput(state.tickCount, DEFAULT_ROTATION_PLANNER_STATE.tickCount, MIN_TICK_COUNT, MAX_TICK_COUNT),
+      normalizeTickCountWindow(state.tickCount, DEFAULT_ROTATION_PLANNER_STATE.tickCount),
     );
+    this.startingStacksValue.set(normalizeStartingStacks(state.startingStacks));
     this.nonGcdActionsValue.set(sanitizeRotationActions(state.nonGcdActions, 'non-gcd'));
     this.abilityActionsValue.set(sanitizeRotationActions(state.abilityActions, 'ability'));
   }
@@ -259,15 +303,24 @@ export class RotationPlannerStore {
         HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE,
       ),
       tickCount: normalizeIntegerInput(
-        persisted.tickCount,
+        normalizeTickCountWindow(persisted.tickCount, DEFAULT_ROTATION_PLANNER_STATE.tickCount),
         DEFAULT_ROTATION_PLANNER_STATE.tickCount,
         MIN_TICK_COUNT,
         MAX_TICK_COUNT,
       ),
+      startingStacks: normalizeStartingStacks(persisted.startingStacks),
       nonGcdActions: sanitizeRotationActions(persisted.nonGcdActions, 'non-gcd'),
       abilityActions: sanitizeRotationActions(persisted.abilityActions, 'ability'),
     };
   }
+}
+
+function normalizeTickCountWindow(
+  value: number | string | null | undefined,
+  fallback: number,
+): number {
+  const normalized = normalizeIntegerInput(value ?? null, fallback, MIN_TICK_COUNT, MAX_TICK_COUNT);
+  return Math.max(MIN_TICK_COUNT, Math.min(MAX_TICK_COUNT, Math.ceil(normalized / TICKS_PER_GCD) * TICKS_PER_GCD));
 }
 
 const HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE = MAX_ADRENALINE + 10;
@@ -293,6 +346,26 @@ function normalizeIntegerInput(
 
   const integerValue = Math.trunc(nextValue);
   return Math.max(min, Math.min(max, integerValue));
+}
+
+function parseOptionalInteger(value: number | string | null): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const nextValue =
+    typeof value === 'number'
+      ? value
+      : Number.parseInt(typeof value === 'string' ? value.trim() : '', 10);
+
+  return Number.isFinite(nextValue) ? Math.trunc(nextValue) : null;
+}
+
+function normalizeStartingStacks(value: StartingStackState | undefined): StartingStackState {
+  return {
+    deathsporeStacks: normalizeStartingDeathsporeStacks(value?.deathsporeStacks),
+    perfectEquilibriumStacks: normalizeStartingPerfectEquilibriumStacks(value?.perfectEquilibriumStacks),
+  };
 }
 
 function sanitizeRotationActions(

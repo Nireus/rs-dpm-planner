@@ -13,13 +13,19 @@ export interface PlannerNonGcdTemplate {
   label: string;
   shortLabel: string;
   iconPath?: string;
-  actionType: Extract<RotationAction['actionType'], 'gear-swap' | 'ammo-swap' | 'vulnerability-bomb'>;
+  actionType: Extract<RotationAction['actionType'], 'adrenaline-potion' | 'gear-swap' | 'ammo-swap' | 'vulnerability-bomb'>;
 }
 
 export interface PlannerNonGcdDropPayload {
   sourceType: 'catalog' | 'timeline';
   templateId: string;
   actionId?: string;
+}
+
+export interface PlannerAbilityGapControl {
+  tick: number;
+  shiftTicks: number;
+  shiftFromTick: number;
 }
 
 export function isAbilityPlacementTick(tick: number): boolean {
@@ -44,100 +50,66 @@ export function canPlaceAbilityAtTick(
     return false;
   }
 
-  const targetSpan = getAbilityTimelineSpan(abilityDefinition);
-
-  if (snappedTick + targetSpan > tickCount) {
-    return false;
-  }
-
-  return !abilityActions.some((action) => {
-    if (action.id === draggedActionId) {
-      return false;
-    }
-
-    const existingDefinition = resolveAbilityDefinition(action, abilityDefinitions);
-    if (!existingDefinition) {
-      return action.tick === snappedTick;
-    }
-
-    return rangesOverlap(
-      snappedTick,
-      snappedTick + targetSpan,
-      action.tick,
-      action.tick + getAbilityTimelineSpan(existingDefinition),
-    );
-  });
+  return buildShiftedAbilityActions({
+    abilityActions,
+    abilityDefinitions,
+    payload: {
+      sourceType: draggedActionId ? 'timeline' : 'catalog',
+      abilityId: abilityDefinition.id,
+      actionId: draggedActionId,
+    },
+    tick: snappedTick,
+    tickCount,
+  }) !== null;
 }
 
 export function upsertAbilityAction(
   abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
   payload: PlannerAbilityDropPayload,
   tick: number,
 ): RotationAction[] {
-  if (payload.sourceType === 'timeline' && payload.actionId) {
-    return abilityActions.map((action) =>
-      action.id === payload.actionId
-        ? {
-            ...action,
-            tick,
-          }
-        : action,
-    );
-  }
-
-  const nextActionId = createAbilityActionId(payload.abilityId, tick, abilityActions);
-
-  return [
-    ...abilityActions,
-    {
-      id: nextActionId,
+  return (
+    buildShiftedAbilityActions({
+      abilityActions,
+      abilityDefinitions,
+      payload,
       tick,
-      lane: 'ability' as const,
-      actionType: 'ability-use' as const,
-      payload: {
-        abilityId: payload.abilityId,
-      },
-    } satisfies RotationAction,
-  ].sort((left, right) => left.tick - right.tick);
+      tickCount: Number.POSITIVE_INFINITY,
+    }) ?? abilityActions
+  );
 }
 
 export function previewAbilityActionsWithPlacement(
   abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
   payload: PlannerAbilityDropPayload,
   tick: number,
 ): {
   abilityActions: RotationAction[];
   targetActionId: string;
 } {
-  if (payload.sourceType === 'timeline' && payload.actionId) {
-    return {
-      abilityActions: abilityActions.map((action) =>
-        action.id === payload.actionId
-          ? {
-              ...action,
-              tick,
-            }
-          : action,
-      ),
-      targetActionId: payload.actionId,
-    };
-  }
-
-  const targetActionId = '__planner-preview-placement__';
+  const targetActionId = payload.sourceType === 'timeline' && payload.actionId
+    ? payload.actionId
+    : '__planner-preview-placement__';
 
   return {
-    abilityActions: [
-      ...abilityActions,
-      {
-        id: targetActionId,
+    abilityActions:
+      buildShiftedAbilityActions({
+        abilityActions,
+        abilityDefinitions,
+        payload:
+          payload.sourceType === 'timeline' && payload.actionId
+            ? payload
+            : {
+                sourceType: 'catalog',
+                abilityId: payload.abilityId,
+                actionId: targetActionId,
+              },
         tick,
-        lane: 'ability' as const,
-        actionType: 'ability-use' as const,
-        payload: {
-          abilityId: payload.abilityId,
-        },
-      } satisfies RotationAction,
-    ].sort((left, right) => left.tick - right.tick),
+        tickCount: Number.POSITIVE_INFINITY,
+        forceActionId: targetActionId,
+      }) ?? abilityActions,
     targetActionId,
   };
 }
@@ -225,12 +197,155 @@ export function getAbilityTimelineSpan(abilityDefinition: AbilityDefinition): nu
   return Math.max(GCD_TICKS, channelSpan);
 }
 
+export function buildAbilityGapControls(
+  abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
+): PlannerAbilityGapControl[] {
+  const orderedActions = [...abilityActions]
+    .filter((action) => action.lane === 'ability')
+    .sort(comparePlannerActions);
+  const controls: PlannerAbilityGapControl[] = [];
+  let previousEndTick = 0;
+
+  for (const action of orderedActions) {
+    const definition = resolveAbilityDefinition(action, abilityDefinitions);
+    const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
+
+    if (action.tick > previousEndTick) {
+      const shiftTicks = action.tick - previousEndTick;
+      const tick = action.tick - 1;
+
+      if (shiftTicks >= GCD_TICKS) {
+        controls.push({
+          tick,
+          shiftTicks,
+          shiftFromTick: action.tick,
+        });
+      }
+    }
+
+    previousEndTick = Math.max(previousEndTick, action.tick + span);
+  }
+
+  return controls;
+}
+
+export function collapseAbilityGap(
+  abilityActions: RotationAction[],
+  control: PlannerAbilityGapControl,
+): RotationAction[] {
+  return abilityActions
+    .map((action) =>
+      action.tick >= control.shiftFromTick
+        ? {
+            ...action,
+            tick: action.tick - control.shiftTicks,
+          }
+        : action,
+    )
+    .sort(comparePlannerActions);
+}
+
 function resolveChannelTimelineSpan(abilityDefinition: AbilityDefinition): number {
   if (!abilityDefinition.isChanneled) {
     return abilityDefinition.channelDurationTicks ?? 0;
   }
 
   return abilityDefinition.channelDurationTicks ?? 0;
+}
+
+function buildShiftedAbilityActions(input: {
+  abilityActions: RotationAction[];
+  abilityDefinitions: Record<EntityId, AbilityDefinition>;
+  payload: PlannerAbilityDropPayload;
+  tick: number;
+  tickCount: number;
+  forceActionId?: string;
+}): RotationAction[] | null {
+  const snappedTick = snapTickToAbilityWindowStart(input.tick);
+  const targetActionId = input.forceActionId ?? input.payload.actionId;
+  const existingActions = input.abilityActions.filter((action) => action.id !== input.payload.actionId);
+  const insertedAction = createAbilityPlacementAction(
+    input.payload.abilityId,
+    snappedTick,
+    existingActions,
+    targetActionId,
+  );
+  const insertionActionId = input.payload.sourceType === 'timeline'
+    ? (targetActionId ?? input.payload.actionId)
+    : insertedAction.id;
+
+  const actions = input.payload.sourceType === 'timeline' && input.payload.actionId
+    ? input.abilityActions.map((action) =>
+        action.id === input.payload.actionId
+          ? {
+              ...action,
+              tick: snappedTick,
+            }
+          : action,
+      )
+    : [...existingActions, insertedAction];
+
+  if (!insertionActionId || !actions.some((action) => action.id === insertionActionId)) {
+    return null;
+  }
+
+  const orderedActions = [...actions].sort((left, right) => {
+    if (left.id === insertionActionId && right.id !== insertionActionId) {
+      return left.tick === right.tick ? -1 : left.tick - right.tick;
+    }
+
+    if (right.id === insertionActionId && left.id !== insertionActionId) {
+      return left.tick === right.tick ? 1 : left.tick - right.tick;
+    }
+
+    return comparePlannerActions(left, right);
+  });
+
+  let previousEndTick = 0;
+
+  const shiftedActions = orderedActions.map((action) => {
+    const definition = resolveAbilityDefinition(action, input.abilityDefinitions);
+    const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
+    const nextTick = isAbilityPlacementTick(action.tick)
+      ? action.tick
+      : snapTickToAbilityWindowStart(action.tick);
+    const shiftedTick = Math.max(nextTick, previousEndTick);
+
+    previousEndTick = shiftedTick + span;
+
+    return {
+      ...action,
+      tick: shiftedTick,
+    };
+  });
+
+  if (shiftedActions.some((action) => {
+    const definition = resolveAbilityDefinition(action, input.abilityDefinitions);
+    const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
+    return action.tick + span > input.tickCount;
+  })) {
+    return null;
+  }
+
+  return shiftedActions.sort(comparePlannerActions);
+}
+
+function createAbilityPlacementAction(
+  abilityId: EntityId,
+  tick: number,
+  abilityActions: RotationAction[],
+  forcedActionId?: string,
+): RotationAction {
+  return {
+    id: forcedActionId ?? createAbilityActionId(abilityId, tick, abilityActions),
+    tick,
+    lane: 'ability',
+    actionType: 'ability-use',
+    payload: {
+      abilityId,
+    },
+  } satisfies RotationAction;
 }
 
 export function getAbilitySegment(
@@ -303,15 +418,6 @@ function resolveAbilityDefinition(
   }
 
   return abilityDefinitions[abilityId] ?? null;
-}
-
-function rangesOverlap(
-  startA: number,
-  endAExclusive: number,
-  startB: number,
-  endBExclusive: number,
-): boolean {
-  return startA < endBExclusive && startB < endAExclusive;
 }
 
 function comparePlannerActions(left: RotationAction, right: RotationAction): number {

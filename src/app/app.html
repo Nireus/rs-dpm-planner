@@ -17,15 +17,32 @@
       <button type="button" class="clear-state-button" (click)="openClearStateDialog()">
         Clear State
       </button>
+    </nav>
 
-      <a
-        class="donate-link"
-        href="https://ko-fi.com/sweatyrs"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Donate
-      </a>
+    <nav class="nav-panel secondary-nav-panel" aria-label="Project">
+      @for (item of secondaryNavItems; track item.label) {
+        @if (item.path) {
+          <a
+            class="nav-link secondary-nav-link"
+            [class.secondary-nav-link-accent]="item.accent === 'blue'"
+            [routerLink]="item.path"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            {{ item.label }}
+          </a>
+        } @else {
+          <a
+            class="nav-link secondary-nav-link"
+            [class.secondary-nav-link-accent]="item.accent === 'blue'"
+            [href]="item.href"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ item.label }}
+          </a>
+        }
+      }
     </nav>
   </aside>
 

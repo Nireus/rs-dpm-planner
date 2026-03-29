@@ -56,6 +56,8 @@ export const EFFECT_REF_IDS = {
 const EXACT_EFFECT_REFS = new Set<string>([
   ...Object.values(EFFECT_REF_IDS),
   'amulet-of-souls-passive',
+  'adrenaline-potion-cooldown',
+  'adrenaline-renewal',
   'anguish',
   'berserkers-fury',
   'binding-shot-bind',

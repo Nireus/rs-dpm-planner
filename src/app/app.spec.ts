@@ -24,16 +24,20 @@ describe('App', () => {
     expect(compiled.querySelector('.brand-logo')).toBeTruthy();
   });
 
-  it('should render primary navigation links', async () => {
+  it('should render primary and project navigation links', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    const navLinks = Array.from(compiled.querySelectorAll('.nav-link')).map((link) =>
+    const navPanels = compiled.querySelectorAll('.nav-panel');
+    const primaryLinks = Array.from(navPanels[0]?.querySelectorAll('.nav-link') ?? []).map((link) =>
+      link.textContent?.trim(),
+    );
+    const secondaryLinks = Array.from(navPanels[1]?.querySelectorAll('.nav-link') ?? []).map((link) =>
       link.textContent?.trim(),
     );
 
-    expect(navLinks).toEqual([
+    expect(primaryLinks).toEqual([
       'Home',
       'Gear',
       'Buffs',
@@ -41,6 +45,11 @@ describe('App', () => {
       'Rotation Planner',
       'Results',
       'Import / Export',
+    ]);
+    expect(secondaryLinks).toEqual([
+      'Donate',
+      'Bug Report / Functionality Request',
+      'Changelog',
     ]);
   });
 });

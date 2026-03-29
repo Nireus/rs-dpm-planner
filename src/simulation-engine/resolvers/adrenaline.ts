@@ -1,6 +1,13 @@
 import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
+import {
+  ADRENALINE_POTION_ACTION_TYPE,
+  ADRENALINE_POTION_COOLDOWN_TICKS,
+  ADRENALINE_RENEWAL_DURATION_TICKS,
+  ADRENALINE_RENEWAL_TICK_GAIN,
+  getAdrenalinePotionVariant,
+} from '../actions/adrenaline-potions';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
@@ -34,10 +41,12 @@ export function resolveAdrenalineTimeline(
   blockedActionIds: ReadonlySet<string> = new Set(),
 ): AdrenalineTimelineResult {
   const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
+  const nonGcdActions = [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick);
   const validationIssues: ValidationIssue[] = [];
   const tickStates: AdrenalineTickState[] = [];
   const adrenalineTimeline: number[] = [];
   const groupedActions = groupAbilityActionsByTick(abilityActions);
+  const groupedAdrenalinePotionActions = groupAdrenalinePotionActionsByTick(nonGcdActions);
   const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockedActionIds);
   const deathsporeTimeline = resolveDeathsporeTimeline(
     config,
@@ -46,6 +55,8 @@ export function resolveAdrenalineTimeline(
   );
   let currentAdrenaline = clampAdrenaline(config, config.rotationPlan.startingAdrenaline);
   let impatientAccumulator = createChanceAccumulatorState();
+  let adrenalinePotionCooldownUntilTick = -1;
+  let adrenalineRenewalTicksRemaining = 0;
 
   if (currentAdrenaline !== config.rotationPlan.startingAdrenaline) {
     validationIssues.push({
@@ -57,9 +68,29 @@ export function resolveAdrenalineTimeline(
   }
 
   for (let tick = 0; tick < config.rotationPlan.tickCount; tick += 1) {
+    const potionActionsAtTick = groupedAdrenalinePotionActions.get(tick) ?? [];
     const actionsAtTick = groupedActions.get(tick) ?? [];
     const valueAtTickStart = currentAdrenaline;
     const actionsResolved: string[] = [];
+
+    for (const action of potionActionsAtTick) {
+      const result = resolveAdrenalinePotionAction(
+        config,
+        action,
+        currentAdrenaline,
+        adrenalinePotionCooldownUntilTick,
+      );
+
+      if (result.issue) {
+        validationIssues.push(result.issue);
+        continue;
+      }
+
+      currentAdrenaline = result.nextAdrenaline;
+      adrenalinePotionCooldownUntilTick = result.nextCooldownUntilTick ?? adrenalinePotionCooldownUntilTick;
+      adrenalineRenewalTicksRemaining = result.nextRenewalTicksRemaining ?? adrenalineRenewalTicksRemaining;
+      actionsResolved.push(action.id);
+    }
 
     for (const action of actionsAtTick) {
       const result = resolveAbilityActionAdrenaline(
@@ -84,6 +115,10 @@ export function resolveAdrenalineTimeline(
       config,
       currentAdrenaline + (deterministicRangedTimeline.adrenalineByTick[tick] ?? 0),
     );
+    if (adrenalineRenewalTicksRemaining > 0) {
+      currentAdrenaline = clampAdrenaline(config, currentAdrenaline + ADRENALINE_RENEWAL_TICK_GAIN);
+      adrenalineRenewalTicksRemaining -= 1;
+    }
     adrenalineTimeline.push(currentAdrenaline);
     tickStates.push({
       tick,
@@ -104,6 +139,13 @@ export function resolveAdrenalineTimeline(
 interface ResolveAbilityActionAdrenalineResult {
   nextAdrenaline: number;
   nextImpatientAccumulator?: ReturnType<typeof createChanceAccumulatorState>;
+  issue?: ValidationIssue;
+}
+
+interface ResolveAdrenalinePotionActionResult {
+  nextAdrenaline: number;
+  nextCooldownUntilTick?: number;
+  nextRenewalTicksRemaining?: number;
   issue?: ValidationIssue;
 }
 
@@ -147,6 +189,54 @@ function resolveAbilityActionAdrenaline(
   return {
     nextAdrenaline: clampAdrenaline(config, currentAdrenaline - effectiveAdrenalineCost + adrenalineGain),
     nextImpatientAccumulator: resolveNextImpatientAccumulator(projectedConfig, ability, impatientAccumulator),
+  };
+}
+
+function resolveAdrenalinePotionAction(
+  config: SimulationConfig,
+  action: RotationAction,
+  currentAdrenaline: number,
+  cooldownUntilTick: number,
+): ResolveAdrenalinePotionActionResult {
+  const variant = getAdrenalinePotionVariant(readStringPayload(action, 'variantId'));
+  if (!variant) {
+    return {
+      nextAdrenaline: currentAdrenaline,
+      issue: createAdrenalineIssue(
+        action,
+        'action.invalid_payload',
+        'Adrenaline potion action is missing a valid potion variant.',
+      ),
+    };
+  }
+
+  if (action.tick < cooldownUntilTick) {
+    return {
+      nextAdrenaline: currentAdrenaline,
+      issue: createAdrenalineIssue(
+        action,
+        'action.cooldown_conflict',
+        `${variant.label} is on cooldown until tick ${cooldownUntilTick}.`,
+      ),
+    };
+  }
+
+  const maxAdrenaline = resolveMaxAdrenaline(config);
+  if (currentAdrenaline >= maxAdrenaline) {
+    return {
+      nextAdrenaline: currentAdrenaline,
+      issue: createAdrenalineIssue(
+        action,
+        'action.no_effect',
+        `${variant.label} cannot be used at full adrenaline.`,
+      ),
+    };
+  }
+
+  return {
+    nextAdrenaline: clampAdrenaline(config, currentAdrenaline + variant.immediateGain),
+    nextCooldownUntilTick: action.tick + ADRENALINE_POTION_COOLDOWN_TICKS,
+    nextRenewalTicksRemaining: variant.grantsRenewal ? ADRENALINE_RENEWAL_DURATION_TICKS : 0,
   };
 }
 
@@ -218,6 +308,25 @@ function groupAbilityActionsByTick(actions: RotationAction[]): Map<number, Rotat
   return grouped;
 }
 
+function groupAdrenalinePotionActionsByTick(actions: RotationAction[]): Map<number, RotationAction[]> {
+  const grouped = new Map<number, RotationAction[]>();
+
+  for (const action of actions) {
+    if (action.actionType !== ADRENALINE_POTION_ACTION_TYPE) {
+      continue;
+    }
+
+    const bucket = grouped.get(action.tick);
+    if (bucket) {
+      bucket.push(action);
+    } else {
+      grouped.set(action.tick, [action]);
+    }
+  }
+
+  return grouped;
+}
+
 function currentAdrenalineForTimeline(
   config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>,
   startingAdrenaline: number,
@@ -253,6 +362,11 @@ function createAdrenalineIssue(
     relatedActionId: action.id,
     message,
   };
+}
+
+function readStringPayload(action: RotationAction, key: string): string | null {
+  const value = action.payload[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
 function roundAdrenalineValue(value: number): number {

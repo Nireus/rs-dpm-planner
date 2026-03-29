@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
-import type { GameDataCatalog } from '../../../game-data/loaders';
+import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
@@ -9,10 +9,15 @@ import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-st
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { SimulationSessionService } from '../../core/simulation/simulation-session.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
-import type { GearBuilderState } from '../../core/gear/gear-state';
+import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
 import { RotationPlannerStore } from './rotation-planner.store';
 import type { RotationAction } from '../../../simulation-engine/models';
+import {
+  ADRENALINE_POTION_VARIANTS,
+  getAdrenalinePotionVariant,
+  type AdrenalinePotionVariantId,
+} from '../../../simulation-engine/actions/adrenaline-potions';
 import { PLANNER_NON_GCD_TEMPLATES } from './rotation-planner.non-gcd';
 import {
   buildPlannerBuffLaneBars,
@@ -25,10 +30,13 @@ import {
 } from './rotation-planner-cooldown-lane';
 import { inspectRotationPlannerTick } from './rotation-planner-inspection';
 import {
+  buildAbilityGapControls,
   getAbilityTimelineSpan,
   getNonGcdActionsAtTick,
   getAbilitySegment,
+  previewAbilityActionsWithPlacement,
   type PlannerAbilityDropPayload,
+  type PlannerAbilityGapControl,
   type PlannerNonGcdDropPayload,
   type PlannerNonGcdTemplate,
   snapTickToAbilityWindowStart,
@@ -72,11 +80,17 @@ import {
 } from './rotation-planner-page.helpers';
 import { RotationPlannerTickInspectorComponent } from './rotation-planner-tick-inspector.component';
 import { RotationPlannerGearSwapDialogComponent } from './rotation-planner-gear-swap-dialog.component';
+import { RotationPlannerAdrenalinePotionDialogComponent } from './rotation-planner-adrenaline-potion-dialog.component';
 
 @Component({
   selector: 'app-rotation-planner-page',
   standalone: true,
-  imports: [FormsModule, RotationPlannerTickInspectorComponent, RotationPlannerGearSwapDialogComponent],
+  imports: [
+    FormsModule,
+    RotationPlannerTickInspectorComponent,
+    RotationPlannerGearSwapDialogComponent,
+    RotationPlannerAdrenalinePotionDialogComponent,
+  ],
   templateUrl: './rotation-planner-page.component.html',
   styleUrl: './rotation-planner-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +107,8 @@ export class RotationPlannerPageComponent {
 
   protected readonly startingAdrenaline = this.plannerStore.startingAdrenaline;
   protected readonly maxStartingAdrenaline = this.plannerStore.maxStartingAdrenaline;
+  protected readonly startingStacks = this.plannerStore.startingStacks;
+  protected readonly gcdCount = this.plannerStore.gcdCount;
   protected readonly tickCount = this.plannerStore.tickCount;
   protected readonly playerStats = this.playerStatsStore.stats;
   protected readonly timelineResult = this.plannerStore.timelineResult;
@@ -128,12 +144,25 @@ export class RotationPlannerPageComponent {
   protected readonly simulationResult = this.resultsSimulationService.simulationResult;
   protected readonly selectedTick = signal(0);
   protected readonly showCooldownLane = signal(false);
+  protected readonly configurationPanelExpanded = signal(false);
+  protected readonly hoveredAbilityDropTick = signal<number | null>(null);
   protected readonly plannerWarning = signal<string | null>(null);
   protected readonly gearSwapDialogActionId = signal<string | null>(null);
   protected readonly gearSwapDialogRemovesOnCancel = signal(false);
   protected readonly selectedGearSwapInstanceId = signal<string | null>(null);
+  protected readonly adrenalinePotionDialogActionId = signal<string | null>(null);
+  protected readonly adrenalinePotionDialogRemovesOnCancel = signal(false);
+  protected readonly selectedAdrenalinePotionVariantId = signal<AdrenalinePotionVariantId | null>(null);
   protected readonly activeGearSwapAction = computed(() => {
     const actionId = this.gearSwapDialogActionId();
+    if (!actionId) {
+      return null;
+    }
+
+    return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+  });
+  protected readonly activeAdrenalinePotionAction = computed(() => {
+    const actionId = this.adrenalinePotionDialogActionId();
     if (!actionId) {
       return null;
     }
@@ -156,6 +185,35 @@ export class RotationPlannerPageComponent {
 
     return buildPlannerGearSwapOptions(projectedGearState.inventory, catalog);
   });
+  protected readonly abilityPreviewActionOriginalTicks = computed<Record<string, number>>(() =>
+    Object.fromEntries(this.abilityActions().map((action) => [action.id, action.tick])),
+  );
+  protected readonly previewAbilityPlacement = computed(() => {
+    const payload = this.draggedAbilityPayload;
+    const hoveredTick = this.hoveredAbilityDropTick();
+    const abilityCatalog = this.abilityCatalog();
+
+    if (!payload || hoveredTick === null) {
+      return null;
+    }
+
+    const definition = abilityCatalog[payload.abilityId];
+    if (!definition) {
+      return null;
+    }
+
+    const snappedTick = this.abilityWindowStartTick(hoveredTick);
+    if (!this.plannerStore.canPlaceAbilityAtTick(definition, snappedTick, payload.actionId)) {
+      return null;
+    }
+
+    return previewAbilityActionsWithPlacement(
+      this.abilityActions(),
+      abilityCatalog,
+      payload,
+      snappedTick,
+    );
+  });
   protected readonly tickInspection = computed(() => {
     const catalog = this.gameDataStore.snapshot().catalog;
     if (!catalog) {
@@ -173,10 +231,13 @@ export class RotationPlannerPageComponent {
     });
   });
   protected readonly abilityOccupancy = computed<Record<number, AbilityOccupancyEntry>>(() => {
+    const preview = this.previewAbilityPlacement();
+
     return buildAbilityOccupancyMap(
-      this.abilityActions(),
+      preview?.abilityActions ?? this.abilityActions(),
       this.tickIndexes(),
       this.abilityCatalog(),
+      preview ? this.abilityPreviewActionOriginalTicks() : undefined,
     );
   });
   protected readonly abilityPaletteEntries = computed<PlannerAbilityPaletteEntry[]>(() => {
@@ -185,6 +246,11 @@ export class RotationPlannerPageComponent {
       this.abilityAvailabilityService.availabilityMap(),
     );
   });
+  protected readonly abilityGapControls = computed<Record<number, PlannerAbilityGapControl>>(() =>
+    Object.fromEntries(
+      buildAbilityGapControls(this.abilityActions(), this.abilityCatalog()).map((control) => [control.tick, control]),
+    ),
+  );
   protected readonly buffLaneBars = computed<PlannerBuffLaneBar[]>(() => {
     const result = this.simulationResult();
     const catalog = this.gameDataStore.snapshot().catalog;
@@ -226,6 +292,52 @@ export class RotationPlannerPageComponent {
   });
   protected readonly perfectEquilibriumIconPath = computed(() => PERFECT_EQUILIBRIUM_ICON_PATH);
   protected readonly nonGcdPaletteEntries = PLANNER_NON_GCD_TEMPLATES;
+  protected readonly adrenalinePotionVariants = ADRENALINE_POTION_VARIANTS;
+  protected readonly startingStackControls = computed(() => {
+    const catalog = this.gameDataStore.snapshot().catalog;
+    const gearState = this.gearBuilderStore.snapshot();
+
+    if (!catalog) {
+      return [];
+    }
+
+    const controls: Array<{
+      key: 'perfect-equilibrium' | 'deathspore';
+      label: string;
+      iconPath: string | null;
+      value: number;
+      max: number;
+    }> = [];
+
+    const weapon = gearState.equipment.weapon
+      ? catalog.items[gearState.equipment.weapon.definitionId]
+      : null;
+    if (weapon?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive)) {
+      controls.push({
+        key: 'perfect-equilibrium',
+        label: 'BoLG stacks',
+        iconPath: weapon.iconPath ?? null,
+        value: this.startingStacks().perfectEquilibriumStacks ?? 0,
+        max: 7,
+      });
+    }
+
+    const ammoInstance = resolveEffectiveAmmoSelection(gearState, catalog);
+    const ammoDefinition = ammoInstance
+      ? catalog.items[ammoInstance.definitionId] ?? catalog.ammo[ammoInstance.definitionId]
+      : null;
+    if (ammoDefinition?.effectRefs?.includes(EFFECT_REF_IDS.deathsporeProgress)) {
+      controls.push({
+        key: 'deathspore',
+        label: 'Deathspore stacks',
+        iconPath: 'iconPath' in ammoDefinition ? ammoDefinition.iconPath ?? null : null,
+        value: this.startingStacks().deathsporeStacks ?? 0,
+        max: 11,
+      });
+    }
+
+    return controls;
+  });
   protected readonly lanes = computed<PlannerLaneViewModel[]>(() =>
     this.showCooldownLane()
       ? [...BASE_PLANNER_LANES, COOLDOWN_PLANNER_LANE]
@@ -261,8 +373,16 @@ export class RotationPlannerPageComponent {
     this.plannerStore.updateStartingAdrenaline(value);
   }
 
-  protected updateTickCount(value: number | string | null): void {
-    this.plannerStore.updateTickCount(value);
+  protected updateStartingDeathsporeStacks(value: number | string | null): void {
+    this.plannerStore.updateStartingDeathsporeStacks(value);
+  }
+
+  protected updateStartingPerfectEquilibriumStacks(value: number | string | null): void {
+    this.plannerStore.updateStartingPerfectEquilibriumStacks(value);
+  }
+
+  protected updateGcdCount(value: number | string | null): void {
+    this.plannerStore.updateGcdCount(value);
     this.selectedTick.update((current) => Math.max(0, Math.min(current, this.tickCount() - 1)));
   }
 
@@ -289,6 +409,10 @@ export class RotationPlannerPageComponent {
 
   protected toggleCooldownLane(value: boolean | string | null): void {
     this.showCooldownLane.set(value === true || value === 'true');
+  }
+
+  protected toggleConfigurationPanel(): void {
+    this.configurationPanelExpanded.update((expanded) => !expanded);
   }
 
   protected laneCellLabel(laneKey: PlannerLaneViewModel['key'], tickIndex: number): string {
@@ -347,6 +471,14 @@ export class RotationPlannerPageComponent {
 
   protected abilityOccupancyAtTick(tickIndex: number): AbilityOccupancyEntry | null {
     return this.abilityOccupancy()[tickIndex] ?? null;
+  }
+
+  protected abilityGapControlAtTick(tickIndex: number): PlannerAbilityGapControl | null {
+    return this.abilityGapControls()[tickIndex] ?? null;
+  }
+
+  protected isPreviewDropTick(tickIndex: number): boolean {
+    return this.hoveredAbilityDropTick() === tickIndex && Boolean(this.previewAbilityPlacement());
   }
 
   protected nonGcdActionsAtTick(tickIndex: number): RotationAction[] {
@@ -504,6 +636,7 @@ export class RotationPlannerPageComponent {
   protected onAbilityDragEnd(): void {
     this.draggedAbilityPayload = null;
     this.draggedAbilityAction = null;
+    this.hoveredAbilityDropTick.set(null);
   }
 
   protected onNonGcdDragEnd(): void {
@@ -514,6 +647,7 @@ export class RotationPlannerPageComponent {
   protected allowAbilityDrop(event: DragEvent, tickIndex: number): void {
     if (this.draggedAbilityPayload) {
       event.preventDefault();
+      this.hoveredAbilityDropTick.set(tickIndex);
     }
   }
 
@@ -575,6 +709,8 @@ export class RotationPlannerPageComponent {
 
     if (template.id === 'gear-swap' && payload.sourceType === 'catalog') {
       this.openGearSwapConfig(actionId, true);
+    } else if (template.id === 'adrenaline-potion' && payload.sourceType === 'catalog') {
+      this.openAdrenalinePotionConfig(actionId, true);
     } else {
       this.clearPlannerWarning();
     }
@@ -605,6 +741,11 @@ export class RotationPlannerPageComponent {
     this.plannerStore.removeAbility(actionId);
   }
 
+  protected collapseAbilityGap(control: PlannerAbilityGapControl, event: Event): void {
+    event.stopPropagation();
+    this.plannerStore.collapseAbilityGap(control);
+  }
+
   protected removePlacedNonGcdAction(actionId: string, event: Event): void {
     event.stopPropagation();
     this.plannerStore.removeNonGcdAction(actionId);
@@ -613,11 +754,14 @@ export class RotationPlannerPageComponent {
   protected openNonGcdActionConfig(action: RotationAction, event: Event): void {
     event.stopPropagation();
 
-    if (action.actionType !== 'gear-swap') {
+    if (action.actionType === 'gear-swap') {
+      this.openGearSwapConfig(action.id, false);
       return;
     }
 
-    this.openGearSwapConfig(action.id, false);
+    if (action.actionType === 'adrenaline-potion') {
+      this.openAdrenalinePotionConfig(action.id, false);
+    }
   }
 
   protected confirmGearSwapConfig(): void {
@@ -657,6 +801,53 @@ export class RotationPlannerPageComponent {
 
   protected updateSelectedGearSwapInstanceId(value: string | null): void {
     this.selectedGearSwapInstanceId.set(value);
+  }
+
+  protected confirmAdrenalinePotionConfig(): void {
+    const action = this.activeAdrenalinePotionAction();
+    const variant = getAdrenalinePotionVariant(this.selectedAdrenalinePotionVariantId());
+
+    if (!action || !variant) {
+      this.showPlannerWarning('Choose an adrenaline potion variant.');
+      return;
+    }
+
+    this.plannerStore.updateNonGcdAction(action.id, {
+      variantId: variant.id,
+      label: variant.label,
+      shortLabel: variant.shortLabel,
+      iconPath: variant.iconPath,
+      wikiUrl: variant.wikiUrl,
+    });
+
+    this.closeAdrenalinePotionConfig(false);
+  }
+
+  protected closeAdrenalinePotionConfig(cancelled: boolean): void {
+    const actionId = this.adrenalinePotionDialogActionId();
+    const shouldRemove = cancelled && this.adrenalinePotionDialogRemovesOnCancel() && actionId;
+
+    this.adrenalinePotionDialogActionId.set(null);
+    this.adrenalinePotionDialogRemovesOnCancel.set(false);
+    this.selectedAdrenalinePotionVariantId.set(null);
+
+    if (shouldRemove) {
+      this.plannerStore.removeNonGcdAction(actionId);
+    }
+  }
+
+  protected updateSelectedAdrenalinePotionVariantId(value: AdrenalinePotionVariantId | null): void {
+    this.selectedAdrenalinePotionVariantId.set(value);
+  }
+
+  protected removeAdrenalinePotionActionFromDialog(): void {
+    const actionId = this.adrenalinePotionDialogActionId();
+    if (!actionId) {
+      return;
+    }
+
+    this.closeAdrenalinePotionConfig(false);
+    this.plannerStore.removeNonGcdAction(actionId);
   }
 
   protected removeGearSwapActionFromDialog(): void {
@@ -710,6 +901,19 @@ export class RotationPlannerPageComponent {
     this.gearSwapDialogActionId.set(actionId);
     this.gearSwapDialogRemovesOnCancel.set(removesOnCancel);
     this.selectedGearSwapInstanceId.set(defaultInstanceId);
+    this.clearPlannerWarning();
+  }
+
+  private openAdrenalinePotionConfig(actionId: string, removesOnCancel: boolean): void {
+    const action = this.nonGcdActions().find((entry) => entry.id === actionId) ?? null;
+    const currentVariantId = typeof action?.payload['variantId'] === 'string'
+      ? action.payload['variantId'] as AdrenalinePotionVariantId
+      : null;
+    const defaultVariantId = currentVariantId ?? this.adrenalinePotionVariants[0]?.id ?? null;
+
+    this.adrenalinePotionDialogActionId.set(actionId);
+    this.adrenalinePotionDialogRemovesOnCancel.set(removesOnCancel);
+    this.selectedAdrenalinePotionVariantId.set(defaultVariantId);
     this.clearPlannerWarning();
   }
 

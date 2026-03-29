@@ -1,5 +1,6 @@
 import { createPortableConfigDocument, PORTABLE_CONFIG_SCHEMA_VERSION, type PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
 import type { PlayerStats, RotationAction } from '../../../simulation-engine/models';
+import type { StartingStackState } from '../../../simulation-engine/models/starting-stacks';
 import { buildBuffSelectionStateFromPersistentConfig, type BuffSelectionState } from '../buffs/persistent-buff-config';
 import type { GearBuilderState } from '../gear/gear-state';
 
@@ -13,6 +14,7 @@ export interface GearBuilderWorkspaceState {
 export interface RotationPlannerWorkspaceState {
   startingAdrenaline: number;
   tickCount: number;
+  startingStacks: StartingStackState;
   nonGcdActions: RotationAction[];
   abilityActions: RotationAction[];
 }
@@ -44,7 +46,8 @@ export const DEFAULT_WORKSPACE_DOCUMENT: WorkspaceDocument = {
     persistentBuffConfig: {},
     rotationPlan: {
       startingAdrenaline: 100,
-      tickCount: 100,
+      tickCount: 99,
+      startingStacks: {},
       nonGcdActions: [],
       abilityActions: [],
     },

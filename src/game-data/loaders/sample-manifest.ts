@@ -78,6 +78,8 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
     '/game-data/abilities/essence-of-finality.sample.json',
   ],
   buffs: [
+    '/game-data/buffs/adrenaline-potion-cooldown.sample.json',
+    '/game-data/buffs/adrenaline-renewal.sample.json',
     '/game-data/buffs/feasting-spores-ready.sample.json',
     '/game-data/buffs/feasting-spores-cooldown.sample.json',
     '/game-data/buffs/deaths-swiftness.sample.json',

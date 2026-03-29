@@ -97,6 +97,7 @@ export class PortableConfigExchangeService {
     this.rotationPlannerStore.loadState({
       startingAdrenaline: workspaceDocument.portableConfig.rotationPlan.startingAdrenaline,
       tickCount: workspaceDocument.portableConfig.rotationPlan.tickCount,
+      startingStacks: workspaceDocument.portableConfig.rotationPlan.startingStacks ?? {},
       nonGcdActions: workspaceDocument.portableConfig.rotationPlan.nonGcdActions,
       abilityActions: workspaceDocument.portableConfig.rotationPlan.abilityActions,
     });

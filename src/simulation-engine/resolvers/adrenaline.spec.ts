@@ -937,4 +937,115 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.validationIssues).toEqual([]);
     expect(result.adrenalineTimeline[0]).toBe(12);
   });
+
+  it('lets an immediate adrenaline potion fund an ability on the same tick', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 3,
+        nonGcdActions: [
+          {
+            id: 'super-adren-pot-1',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'adrenaline-potion',
+            payload: {
+              templateId: 'adrenaline-potion',
+              variantId: 'super-adrenaline-potion',
+              label: 'Super Adrenaline Potion',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'enhanced-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'enhanced-shot' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.tickStates[0]?.actionsResolved).toEqual(['super-adren-pot-1', 'enhanced-1']);
+    expect(result.adrenalineTimeline).toEqual([5, 5, 5]);
+  });
+
+  it('adds adrenaline renewal over 10 ticks and then stops', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 12,
+        nonGcdActions: [
+          {
+            id: 'adren-renewal-1',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'adrenaline-potion',
+            payload: {
+              templateId: 'adrenaline-potion',
+              variantId: 'adrenaline-renewal-potion',
+              label: 'Adrenaline Renewal Potion',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 40, 40]);
+  });
+
+  it('shares cooldown across all adrenaline potion variants', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 120,
+        nonGcdActions: [
+          {
+            id: 'adren-pot-1',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'adrenaline-potion',
+            payload: {
+              templateId: 'adrenaline-potion',
+              variantId: 'adrenaline-potion',
+              label: 'Adrenaline Potion',
+            },
+          },
+          {
+            id: 'super-adren-pot-2',
+            tick: 100,
+            lane: 'non-gcd',
+            actionType: 'adrenaline-potion',
+            payload: {
+              templateId: 'adrenaline-potion',
+              variantId: 'super-adrenaline-potion',
+              label: 'Super Adrenaline Potion',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toContainEqual(
+      expect.objectContaining({
+        code: 'action.cooldown_conflict',
+        tick: 100,
+        relatedActionId: 'super-adren-pot-2',
+      }),
+    );
+    expect(result.adrenalineTimeline[0]).toBe(25);
+    expect(result.adrenalineTimeline[100]).toBe(25);
+  });
 });

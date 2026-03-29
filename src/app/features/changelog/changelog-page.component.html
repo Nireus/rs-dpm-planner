@@ -1,0 +1,16 @@
+<section class="page">
+  <header class="hero">
+    <h1>Changelog</h1>
+    <p>Recent project updates and feature delivery notes for SweatyRS.</p>
+  </header>
+
+  <section class="entries">
+    @for (entry of entries; track entry.date) {
+      <article class="entry-row">
+        <span class="entry-date">{{ entry.date }}</span>
+        <span class="entry-separator">:</span>
+        <span class="entry-change">{{ entry.change }}</span>
+      </article>
+    }
+  </section>
+</section>

@@ -93,6 +93,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
       return {
         startingAdrenaline: plan.startingAdrenaline,
         tickCount: plan.tickCount,
+        startingStacks: plan.startingStacks ?? {},
         nonGcdActions: plan.nonGcdActions,
         abilityActions: plan.abilityActions,
       };
@@ -103,6 +104,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
     return {
       startingAdrenaline: legacyPlannerState?.startingAdrenaline ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.startingAdrenaline,
       tickCount: legacyPlannerState?.tickCount ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.tickCount,
+      startingStacks: legacyPlannerState?.startingStacks ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.startingStacks ?? {},
       nonGcdActions: legacyPlannerState?.nonGcdActions ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.nonGcdActions,
       abilityActions: legacyPlannerState?.abilityActions ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.abilityActions,
     };
@@ -181,6 +183,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         rotationPlan: {
           startingAdrenaline: state.startingAdrenaline,
           tickCount: state.tickCount,
+          startingStacks: state.startingStacks,
           nonGcdActions: state.nonGcdActions,
           abilityActions: state.abilityActions,
         },
@@ -251,6 +254,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         rotationPlan: {
           startingAdrenaline: rotationPlanner.startingAdrenaline,
           tickCount: rotationPlanner.tickCount,
+          startingStacks: rotationPlanner.startingStacks,
           nonGcdActions: rotationPlanner.nonGcdActions,
           abilityActions: rotationPlanner.abilityActions,
         },

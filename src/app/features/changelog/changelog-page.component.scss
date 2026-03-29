@@ -1,0 +1,57 @@
+.page {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.hero,
+.entries {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1.35rem;
+  background: var(--panel-surface);
+  box-shadow: var(--panel-shadow);
+}
+
+.hero {
+  display: grid;
+  gap: 0.3rem;
+}
+
+h1,
+p,
+span {
+  margin: 0;
+}
+
+h1 {
+  color: var(--text-strong);
+}
+
+p,
+.entry-change {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.entries {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.entry-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.35rem;
+}
+
+.entry-date {
+  color: var(--text-strong);
+  font-weight: 800;
+}
+
+.entry-separator {
+  color: var(--text-strong);
+  font-weight: 800;
+}

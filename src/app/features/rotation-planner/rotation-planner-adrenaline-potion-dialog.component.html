@@ -1,0 +1,36 @@
+<div class="planner-dialog-backdrop" (click)="cancelDialog()">
+  <section
+    class="planner-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="adrenaline-potion-dialog-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="planner-dialog-header">
+      <div>
+        <h2 id="adrenaline-potion-dialog-title">Configure Adrenaline Potion</h2>
+        <p>Choose which potion variant should be used on tick T{{ actionTick() }}.</p>
+      </div>
+    </div>
+
+    <label class="control-field dialog-field">
+      <span>Potion variant</span>
+      <select
+        [ngModel]="selectedVariantId()"
+        (ngModelChange)="updateSelectedVariantId($event)"
+      >
+        @for (option of options(); track option.id) {
+          <option [ngValue]="option.id">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <div class="planner-dialog-actions">
+      <button type="button" class="dialog-danger" (click)="removeAction()">Remove</button>
+      <button type="button" class="dialog-secondary" (click)="cancelDialog()">Cancel</button>
+      <button type="button" class="dialog-primary" (click)="applySelection()">Apply</button>
+    </div>
+  </section>
+</div>

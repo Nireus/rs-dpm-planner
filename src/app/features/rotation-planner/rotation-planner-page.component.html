@@ -6,7 +6,8 @@
     </div>
   </header>
 
-  <section class="planner-shell">
+  <section class="planner-layout">
+    <section class="planner-shell">
     <div class="planner-header">
       <div class="planner-meta">
         <h2>Tick Grid</h2>
@@ -14,43 +15,7 @@
       </div>
 
       <div class="planner-header-side">
-        <label class="control-field compact-field">
-          <span>Ranged</span>
-          <input
-            type="number"
-            min="1"
-            max="120"
-            step="1"
-            [ngModel]="playerStats().rangedLevel"
-            (ngModelChange)="updateRangedLevel($event)"
-          />
-        </label>
-
-        <label class="control-field compact-field">
-          <span>Adren</span>
-          <input
-            type="number"
-            min="0"
-            [max]="maxStartingAdrenaline()"
-            step="1"
-            [ngModel]="startingAdrenaline()"
-            (ngModelChange)="updateStartingAdrenaline($event)"
-          />
-        </label>
-
-        <label class="control-field compact-field">
-          <span>Ticks</span>
-          <input
-            type="number"
-            min="6"
-            max="200"
-            step="1"
-            [ngModel]="tickCount()"
-            (ngModelChange)="updateTickCount($event)"
-          />
-        </label>
-
-        <label class="tick-slider-field">
+        <label class="tick-slider-field planner-inspect-field">
           <span>Inspect</span>
           <input
             type="range"
@@ -61,15 +26,6 @@
             (ngModelChange)="updateSelectedTick($event)"
           />
           <span class="tick-slider-value">T{{ selectedTick() }}</span>
-        </label>
-
-        <label class="lane-toggle">
-          <input
-            type="checkbox"
-            [ngModel]="showCooldownLane()"
-            (ngModelChange)="toggleCooldownLane($event)"
-          />
-          <span>Cooldown lane</span>
         </label>
 
         @if (plannerValidationIssues().length) {
@@ -224,6 +180,8 @@
                 [class.off-gcd-slot]="lane.key === 'ability' && !isAbilityPlacementTick(tickIndex)"
                 [class.drop-ready]="(lane.key === 'ability' && canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && canDropNonGcd(tickIndex))"
                 [class.drop-blocked]="(lane.key === 'ability' && draggedAbilityPayload && !canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && draggedNonGcdPayload && !canDropNonGcd(tickIndex))"
+                [class.preview-drop-tick]="lane.key === 'ability' && isPreviewDropTick(tickIndex)"
+                [class.collapse-gap-tick]="lane.key === 'ability' && abilityGapControlAtTick(tickIndex)"
                 [class.occupied-window-cell]="lane.key === 'ability' && abilityOccupancyAtTick(tickIndex)"
                 [attr.data-drop-id]="lane.key === 'ability' ? abilityDropListId(tickIndex) : lane.key === 'non-gcd' ? nonGcdDropListId(tickIndex) : null"
                 (dragover)="lane.key === 'ability' ? allowAbilityDrop($event, tickIndex) : lane.key === 'non-gcd' ? allowNonGcdDrop($event, tickIndex) : null"
@@ -336,6 +294,8 @@
                       class="placed-ability"
                       [class]=" 'placed-ability ' + abilitySegmentClass(occupancy.segment)"
                       [class.invalid-action]="actionValidationSummary(occupancy.action)"
+                      [class.preview-inserted]="occupancy.previewState === 'inserted'"
+                      [class.preview-shifted]="occupancy.previewState === 'shifted'"
                       [style.--occupied-span]="abilitySpan(occupancy.definition)"
                       [title]="placedAbilityTitle(occupancy.action)"
                       draggable="true"
@@ -393,6 +353,16 @@
                   <span class="cell-entry">{{ laneCellLabel(lane.key, tickIndex) }}</span>
                 } @else if (lane.key === 'buff' || lane.key === 'cooldown') {
                   <span class="cell-placeholder muted-placeholder"></span>
+                } @else if (lane.key === 'ability' && abilityGapControlAtTick(tickIndex); as gapControl) {
+                  <button
+                    type="button"
+                    class="collapse-gap-button"
+                    (click)="collapseAbilityGap(gapControl, $event)"
+                    title="Collapse empty space and shift later abilities left"
+                    aria-label="Collapse empty space ending at tick {{ tickIndex }}"
+                  >
+                    <<
+                  </button>
                 } @else if (lane.key === 'ability' && isAbilityPlacementTick(tickIndex)) {
                   <span class="cell-placeholder">GCD</span>
                 } @else if (lane.key === 'ability') {
@@ -444,6 +414,122 @@
       />
     }
 
+    @if (adrenalinePotionDialogActionId(); as adrenalinePotionActionId) {
+      <app-rotation-planner-adrenaline-potion-dialog
+        [actionTick]="activeAdrenalinePotionAction()?.tick ?? 0"
+        [options]="adrenalinePotionVariants"
+        [selectedVariantId]="selectedAdrenalinePotionVariantId()"
+        (selectedVariantIdChange)="updateSelectedAdrenalinePotionVariantId($event)"
+        (cancel)="closeAdrenalinePotionConfig(true)"
+        (remove)="removeAdrenalinePotionActionFromDialog()"
+        (apply)="confirmAdrenalinePotionConfig()"
+      />
+    }
+
+    </section>
+
+    <aside
+      class="configuration-panel"
+      [class.expanded]="configurationPanelExpanded()"
+      [class.collapsed]="!configurationPanelExpanded()"
+    >
+      <button
+        type="button"
+        class="configuration-panel-toggle"
+        (click)="toggleConfigurationPanel()"
+        [attr.aria-expanded]="configurationPanelExpanded()"
+      >
+        <span class="configuration-panel-title">Configuration</span>
+        <span class="configuration-panel-chevron">{{ configurationPanelExpanded() ? '>' : '<' }}</span>
+      </button>
+
+      @if (configurationPanelExpanded()) {
+        <div class="configuration-panel-body">
+          <label class="control-field compact-field">
+            <span class="control-field-label with-icon">
+              <img
+                class="control-field-icon"
+                src="https://runescape.wiki/images/thumb/Ranged-icon.png/21px-Ranged-icon.png?310aa"
+                alt="Ranged"
+              />
+              <span>Ranged</span>
+            </span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().rangedLevel"
+              (ngModelChange)="updateRangedLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span>Adrenaline</span>
+            <input
+              type="number"
+              min="0"
+              [max]="maxStartingAdrenaline()"
+              step="1"
+              [ngModel]="startingAdrenaline()"
+              (ngModelChange)="updateStartingAdrenaline($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span>Number of global cooldowns</span>
+            <input
+              type="number"
+              min="2"
+              max="200"
+              step="1"
+              [ngModel]="gcdCount()"
+              (ngModelChange)="updateGcdCount($event)"
+            />
+          </label>
+
+          @if (startingStackControls().length) {
+            <div class="configuration-group">
+              <span class="configuration-group-title">Starting stacks</span>
+
+              @for (control of startingStackControls(); track control.key) {
+                <label class="control-field compact-field">
+                  <span class="control-field-label with-icon">
+                    @if (control.iconPath) {
+                      <img
+                        class="control-field-icon"
+                        [src]="control.iconPath"
+                        [alt]="control.label"
+                      />
+                    }
+                    <span>{{ control.label }}</span>
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    [max]="control.max"
+                    step="1"
+                    [ngModel]="control.value"
+                    (ngModelChange)="control.key === 'deathspore'
+                      ? updateStartingDeathsporeStacks($event)
+                      : updateStartingPerfectEquilibriumStacks($event)"
+                  />
+                </label>
+              }
+            </div>
+          }
+
+          <label class="lane-toggle configuration-lane-toggle">
+            <input
+              type="checkbox"
+              [ngModel]="showCooldownLane()"
+              (ngModelChange)="toggleCooldownLane($event)"
+            />
+            <span>Show cooldown lane</span>
+          </label>
+        </div>
+      }
+    </aside>
   </section>
 
   <section class="lane-guide">

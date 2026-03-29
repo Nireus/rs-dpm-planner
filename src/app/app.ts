@@ -42,6 +42,21 @@ export class App {
     { label: 'Results', path: '/results' },
     { label: 'Import / Export', path: '/import-export' },
   ];
+  protected readonly secondaryNavItems = [
+    {
+      label: 'Donate',
+      href: 'https://ko-fi.com/sweatyrs',
+      accent: 'blue',
+    },
+    {
+      label: 'Bug Report / Functionality Request',
+      path: '/reporting',
+    },
+    {
+      label: 'Changelog',
+      path: '/changelog',
+    },
+  ];
   protected readonly currentScreenHelp = computed<ScreenHelpInfo | null>(
     () => (this.currentRouteData()?.['screenHelp'] as ScreenHelpInfo | null | undefined) ?? null,
   );

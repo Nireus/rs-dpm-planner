@@ -1,0 +1,13 @@
+{
+  "id": "adrenaline-potion-cooldown",
+  "name": "Adrenaline potion cooldown",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Adrenaline_potion_(4).png",
+  "wikiUrl": "https://runescape.wiki/w/Adrenaline_potion#(4)",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 200,
+  "effectRefs": [
+    "adrenaline-potion-cooldown"
+  ],
+  "displayPriority": 58
+}

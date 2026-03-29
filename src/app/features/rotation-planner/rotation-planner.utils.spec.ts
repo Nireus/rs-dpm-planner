@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { AbilityDefinition } from '../../../game-data/types';
 import type { RotationAction } from '../../../simulation-engine/models';
 import {
+  buildAbilityGapControls,
+  collapseAbilityGap,
   canPlaceAbilityAtTick,
   getNonGcdActionsAtTick,
   getAbilitySegment,
@@ -105,11 +107,11 @@ describe('rotation planner utils', () => {
     expect(canPlaceAbilityAtTick([], ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 2)).toBe(true);
   });
 
-  it('blocks ability placement into occupied ticks', () => {
+  it('allows ability placement into occupied ticks by shifting later actions to the right', () => {
     const actions = [createAbilityAction('existing', 6)];
 
-    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 6)).toBe(false);
-    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 7)).toBe(false);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 6)).toBe(true);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 7)).toBe(true);
   });
 
   it('allows moving an existing action back onto its own tick', () => {
@@ -118,10 +120,10 @@ describe('rotation planner utils', () => {
     expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 6, 'existing')).toBe(true);
   });
 
-  it('blocks placements whose occupied window would overlap another ability', () => {
+  it('shifts overlapping placements to the next valid space when room exists', () => {
     const actions = [createAbilityAction('existing', 6, 'rapid-fire-channel')];
 
-    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 12)).toBe(false);
+    expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 12)).toBe(true);
     expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 15)).toBe(true);
     expect(canPlaceAbilityAtTick(actions, ABILITY_DEFINITIONS, 30, BASIC_ABILITY, 18)).toBe(true);
   });
@@ -146,10 +148,15 @@ describe('rotation planner utils', () => {
   });
 
   it('adds a new ability action for catalog drops', () => {
-    const actions = upsertAbilityAction([], {
-      sourceType: 'catalog',
-      abilityId: 'rapid-fire',
-    }, 9);
+    const actions = upsertAbilityAction(
+      [],
+      ABILITY_DEFINITIONS,
+      {
+        sourceType: 'catalog',
+        abilityId: 'rapid-fire',
+      },
+      9,
+    );
 
     expect(actions).toHaveLength(1);
     expect(actions[0]).toMatchObject({
@@ -165,6 +172,7 @@ describe('rotation planner utils', () => {
   it('moves an existing action for timeline drags', () => {
     const actions = upsertAbilityAction(
       [createAbilityAction('existing', 6)],
+      ABILITY_DEFINITIONS,
       {
         sourceType: 'timeline',
         abilityId: 'rapid-fire',
@@ -176,9 +184,28 @@ describe('rotation planner utils', () => {
     expect(actions).toEqual([createAbilityAction('existing', 12)]);
   });
 
+  it('inserts a new ability and pushes occupied abilities to the right', () => {
+    const actions = upsertAbilityAction(
+      [createAbilityAction('existing', 6), createAbilityAction('later', 9)],
+      ABILITY_DEFINITIONS,
+      {
+        sourceType: 'catalog',
+        abilityId: 'rapid-fire',
+      },
+      6,
+    );
+
+    expect(actions).toEqual([
+      expect.objectContaining({ tick: 6, payload: { abilityId: 'rapid-fire' } }),
+      createAbilityAction('existing', 9),
+      createAbilityAction('later', 12),
+    ]);
+  });
+
   it('creates a preview action id for catalog placement validation', () => {
     const preview = previewAbilityActionsWithPlacement(
       [createAbilityAction('existing', 6)],
+      ABILITY_DEFINITIONS,
       {
         sourceType: 'catalog',
         abilityId: 'rapid-fire',
@@ -193,6 +220,38 @@ describe('rotation planner utils', () => {
         tick: 12,
       }),
     );
+  });
+
+  it('builds a collapse control on the right edge of an empty ability gap', () => {
+    const controls = buildAbilityGapControls(
+      [createAbilityAction('one', 0), createAbilityAction('two', 9)],
+      ABILITY_DEFINITIONS,
+    );
+
+    expect(controls).toEqual([
+      {
+        tick: 8,
+        shiftTicks: 6,
+        shiftFromTick: 9,
+      },
+    ]);
+  });
+
+  it('collapses an empty gap by shifting later abilities left', () => {
+    const actions = collapseAbilityGap(
+      [createAbilityAction('one', 0), createAbilityAction('two', 9), createAbilityAction('three', 12)],
+      {
+        tick: 8,
+        shiftTicks: 6,
+        shiftFromTick: 9,
+      },
+    );
+
+    expect(actions).toEqual([
+      createAbilityAction('one', 0),
+      createAbilityAction('two', 3),
+      createAbilityAction('three', 6),
+    ]);
   });
 
   it('allows stacking multiple non-gcd actions on the same tick', () => {

@@ -42,6 +42,7 @@ export interface AbilityOccupancyEntry {
   action: RotationAction;
   definition: AbilityDefinition;
   segment: 'single' | 'start' | 'middle' | 'end';
+  previewState?: 'inserted' | 'shifted';
 }
 
 export interface PlannerActionValidationSummary {
@@ -108,6 +109,7 @@ export function buildAbilityOccupancyMap(
   abilityActions: RotationAction[],
   tickIndexes: number[],
   abilityCatalog: Record<string, AbilityDefinition>,
+  previewTicksByActionId?: Record<string, number>,
 ): Record<number, AbilityOccupancyEntry> {
   const occupancy: Record<number, AbilityOccupancyEntry> = {};
 
@@ -127,11 +129,32 @@ export function buildAbilityOccupancyMap(
         action,
         definition,
         segment,
+        previewState: resolvePreviewState(action, previewTicksByActionId),
       };
     }
   }
 
   return occupancy;
+}
+
+function resolvePreviewState(
+  action: RotationAction,
+  previewTicksByActionId: Record<string, number> | undefined,
+): AbilityOccupancyEntry['previewState'] {
+  if (!previewTicksByActionId) {
+    return undefined;
+  }
+
+  if (action.id === '__planner-preview-placement__') {
+    return 'inserted';
+  }
+
+  const originalTick = previewTicksByActionId[action.id];
+  if (typeof originalTick === 'number' && originalTick !== action.tick) {
+    return 'shifted';
+  }
+
+  return undefined;
 }
 
 export function buildPerfectEquilibriumProcMarkersByAction(

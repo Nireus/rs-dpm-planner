@@ -1,0 +1,13 @@
+{
+  "id": "adrenaline-renewal",
+  "name": "Adrenaline renewal",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Adrenaline_renewal_potion_(4).png",
+  "wikiUrl": "https://runescape.wiki/w/Adrenaline_renewal_potion#(4)",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 10,
+  "effectRefs": [
+    "adrenaline-renewal"
+  ],
+  "displayPriority": 31
+}

@@ -5,8 +5,14 @@
   align-content: start;
 }
 
+.planner-layout {
+  position: relative;
+  display: block;
+}
+
 .toolbar,
 .planner-shell,
+.configuration-panel,
 .guide-card {
   border: 1px solid var(--panel-border);
   border-radius: 1.35rem;
@@ -71,6 +77,19 @@ p {
   font-weight: 600;
 }
 
+.control-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.control-field-icon {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.2rem;
+  object-fit: cover;
+}
+
 .compact-field {
   min-width: 4.9rem;
 }
@@ -124,7 +143,11 @@ p {
 }
 
 .planner-header-side {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 0.85rem;
+  min-height: 100%;
 }
 
 .tick-slider-field {
@@ -162,6 +185,103 @@ p {
 
 .lane-toggle input {
   accent-color: #a44b4b;
+}
+
+.planner-inspect-field {
+  align-self: center;
+}
+
+.configuration-panel {
+  position: fixed;
+  right: 1rem;
+  top: 50vh;
+  transform: translateY(-50%);
+  display: grid;
+  width: 3.25rem;
+  min-width: 3.25rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(12, 24, 34, 0.98), rgba(8, 14, 22, 0.96));
+  border-color: rgba(86, 140, 178, 0.34);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.26),
+    0 0 0 1px rgba(71, 120, 156, 0.12);
+  transition: width 160ms ease;
+  z-index: 6;
+}
+
+.configuration-panel.expanded {
+  width: 16rem;
+  min-width: 16rem;
+}
+
+.configuration-panel-toggle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.8rem 0.95rem;
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(18, 42, 58, 0.98), rgba(10, 24, 36, 0.96));
+  color: var(--text-strong);
+  cursor: pointer;
+}
+
+.configuration-panel.collapsed .configuration-panel-toggle {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 0.9rem 0.35rem;
+}
+
+.configuration-panel-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.configuration-panel.collapsed .configuration-panel-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+}
+
+.configuration-panel-chevron {
+  color: #9ec9e6;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.configuration-panel.collapsed .configuration-panel-chevron {
+  display: none;
+}
+
+.configuration-panel-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.95rem;
+  border-top: 1px solid rgba(86, 140, 178, 0.22);
+  background: linear-gradient(180deg, rgba(10, 18, 26, 0.96), rgba(7, 12, 18, 0.98));
+}
+
+.configuration-group {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 0.1rem;
+  border-top: 1px solid rgba(86, 140, 178, 0.18);
+}
+
+.configuration-group-title {
+  color: #9ec9e6;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.configuration-lane-toggle {
+  justify-content: flex-start;
 }
 
 .ability-palette {
@@ -304,8 +424,9 @@ p {
 .timeline-scroll {
   min-height: 0;
   max-width: 100%;
-  max-height: min(26rem, calc(100vh - 22rem));
-  overflow: auto;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 0.18rem 0 0.4rem;
   scrollbar-gutter: stable both-edges;
 }
@@ -491,6 +612,13 @@ p {
   box-shadow: inset 0 0 0 1px rgba(123, 144, 75, 0.22);
 }
 
+.timeline-cell.ability-cell.preview-drop-tick {
+  border-color: rgba(205, 230, 156, 0.76);
+  box-shadow:
+    inset 0 0 0 1px rgba(205, 230, 156, 0.26),
+    0 0 0 1px rgba(123, 144, 75, 0.18);
+}
+
 .timeline-cell.ability-cell.drop-blocked {
   border-color: rgba(166, 96, 83, 0.3);
 }
@@ -516,6 +644,15 @@ p {
     linear-gradient(180deg, rgba(20, 32, 14, 0.98), rgba(12, 18, 9, 0.96));
 }
 
+.timeline-cell.ability-cell.gcd-slot.collapse-gap-tick {
+  border-color: rgba(208, 184, 94, 0.62);
+  background:
+    linear-gradient(180deg, rgba(76, 63, 23, 0.96), rgba(39, 29, 11, 0.94));
+  box-shadow:
+    inset 0 0 0 1px rgba(208, 184, 94, 0.18),
+    0 0 0 1px rgba(208, 184, 94, 0.08);
+}
+
 .timeline-cell.ability-cell.gcd-slot::after {
   content: '';
   position: absolute;
@@ -527,6 +664,15 @@ p {
 .timeline-cell.ability-cell.off-gcd-slot {
   background:
     linear-gradient(180deg, rgba(11, 17, 8, 0.98), rgba(8, 12, 6, 0.96));
+}
+
+.timeline-cell.ability-cell.off-gcd-slot.collapse-gap-tick {
+  border-color: rgba(208, 184, 94, 0.62);
+  background:
+    linear-gradient(180deg, rgba(68, 56, 21, 0.94), rgba(34, 26, 10, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(208, 184, 94, 0.18),
+    0 0 0 1px rgba(208, 184, 94, 0.08);
 }
 
 .timeline-cell.ability-cell.off-gcd-slot::after {
@@ -824,6 +970,22 @@ p {
     0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
+.placed-ability.preview-inserted {
+  border-style: dashed;
+  border-color: rgba(205, 230, 156, 0.82);
+  background: linear-gradient(180deg, rgba(46, 74, 28, 0.9), rgba(23, 37, 15, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(205, 230, 156, 0.2),
+    0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.placed-ability.preview-shifted {
+  border-style: dashed;
+  border-color: rgba(154, 182, 104, 0.6);
+  background: linear-gradient(180deg, rgba(34, 52, 23, 0.82), rgba(17, 27, 11, 0.86));
+  opacity: 0.9;
+}
+
 .validation-banner {
   display: grid;
   gap: 0.75rem;
@@ -1000,6 +1162,30 @@ p {
   justify-self: center;
 }
 
+.collapse-gap-button {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  justify-self: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 1px solid rgba(190, 168, 92, 0.48);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(67, 56, 22, 0.96), rgba(31, 24, 10, 0.94));
+  color: #f0e0ac;
+  font-size: 0.48rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.collapse-gap-button:hover {
+  border-color: rgba(229, 204, 112, 0.82);
+  color: #fff2c7;
+}
+
 .muted-placeholder {
   position: relative;
   z-index: 0;
@@ -1028,6 +1214,36 @@ p {
 }
 
 @media (max-width: 1100px) {
+  .planner-layout {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .configuration-panel,
+  .configuration-panel.expanded {
+    position: static;
+    right: auto;
+    top: auto;
+    transform: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .configuration-panel.collapsed .configuration-panel-toggle {
+    grid-template-columns: 1fr auto;
+    justify-items: stretch;
+    padding: 0.8rem 0.95rem;
+  }
+
+  .configuration-panel.collapsed .configuration-panel-title {
+    writing-mode: initial;
+    transform: none;
+  }
+
+  .configuration-panel.collapsed .configuration-panel-chevron {
+    display: inline;
+  }
+
   .palette-row {
     grid-template-columns: 1fr;
   }

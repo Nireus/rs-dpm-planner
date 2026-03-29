@@ -1,6 +1,10 @@
 import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
+import {
+  normalizeStartingDeathsporeStacks,
+  normalizeStartingPerfectEquilibriumStacks,
+} from '../models/starting-stacks';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
@@ -44,7 +48,7 @@ export function resolveDeathsporeTimeline(
     .filter((action) => !blockedActionIds.has(action.id))
     .sort((left, right) => left.tick - right.tick);
 
-  let feastingSporesStacks = 0;
+  let feastingSporesStacks = normalizeStartingDeathsporeStacks(config.rotationPlan.startingStacks?.deathsporeStacks);
   let cooldownUntilTick = -1;
   let lastRecordedTick = -1;
 
@@ -218,7 +222,9 @@ function buildRangedHitOccurrences(
     return occurrences;
   }
 
-  let perfectEquilibriumStacks = 0;
+  let perfectEquilibriumStacks = normalizeStartingPerfectEquilibriumStacks(
+    config.rotationPlan.startingStacks?.perfectEquilibriumStacks,
+  );
 
   for (let index = 0; index < occurrences.length; index += 1) {
     const occurrence = occurrences[index];

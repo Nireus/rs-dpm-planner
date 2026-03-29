@@ -62,6 +62,9 @@ describe('WorkspaceRepositoryService', () => {
       JSON.stringify({
         startingAdrenaline: 87,
         tickCount: 42,
+        startingStacks: {
+          deathsporeStacks: 9,
+        },
         nonGcdActions: [],
         abilityActions: [],
       }),
@@ -87,6 +90,9 @@ describe('WorkspaceRepositoryService', () => {
     expect(repository.readRotationPlannerState()).toEqual({
       startingAdrenaline: 87,
       tickCount: 42,
+      startingStacks: {
+        deathsporeStacks: 9,
+      },
       nonGcdActions: [],
       abilityActions: [],
     });
@@ -129,6 +135,9 @@ describe('WorkspaceRepositoryService', () => {
       JSON.stringify({
         startingAdrenaline: 64,
         tickCount: 60,
+        startingStacks: {
+          perfectEquilibriumStacks: 5,
+        },
         nonGcdActions: [],
         abilityActions: [],
       }),
@@ -144,6 +153,9 @@ describe('WorkspaceRepositoryService', () => {
     expect(storedWorkspace.portableConfig.playerStats.rangedLevel).toBe(119);
     expect(storedWorkspace.portableConfig.gearSetup.equipment.weapon).toEqual(weapon);
     expect(storedWorkspace.portableConfig.rotationPlan.tickCount).toBe(60);
+    expect(storedWorkspace.portableConfig.rotationPlan.startingStacks).toEqual({
+      perfectEquilibriumStacks: 5,
+    });
     expect(storedWorkspace.appState.gearBuilder.nextInstanceId).toBe(9);
     expect(storedWorkspace.appState.buffSelection.activeBuffIds).toEqual(['rigour']);
     expect(window.localStorage.getItem(LEGACY_PLAYER_STATS_STORAGE_KEY)).toBeNull();
@@ -215,6 +227,9 @@ describe('WorkspaceRepositoryService', () => {
         rotationPlan: {
           startingAdrenaline: 73,
           tickCount: 84,
+          startingStacks: {
+            deathsporeStacks: 7,
+          },
           nonGcdActions: [],
           abilityActions: [],
         },
@@ -229,5 +244,8 @@ describe('WorkspaceRepositoryService', () => {
       activePocketItemIds: ['scripture-of-jas'],
     });
     expect(repository.readPortableConfigDocument().rotationPlan.tickCount).toBe(84);
+    expect(repository.readPortableConfigDocument().rotationPlan.startingStacks).toEqual({
+      deathsporeStacks: 7,
+    });
   });
 });

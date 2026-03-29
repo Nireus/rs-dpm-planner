@@ -365,6 +365,43 @@ describe('simulateBaseDamage', () => {
     expect(result.tickStates[10]?.hitsResolvingThisTick.some((hit) => hit.id.includes('perfect-equilibrium'))).toBe(true);
   });
 
+  it('starts Bow of the Last Guardian from configured passive stacks', () => {
+    const config = createConfig({
+      abilityActions: [
+        createAbilityAction('action-piercing-1', 0, 'piercing-shot'),
+      ],
+      abilities: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [
+            { id: 'hit-1', tickOffset: 0, damage: { min: 45, max: 55 } },
+            { id: 'hit-2', tickOffset: 1, damage: { min: 45, max: 55 } },
+          ],
+          baseDamage: { min: 90, max: 110 },
+        }),
+      },
+      startingAdrenaline: 100,
+      tickCount: 8,
+    });
+    config.rotationPlan.startingStacks = {
+      perfectEquilibriumStacks: 6,
+    };
+    config.gameData.items['bolg'] = {
+      ...config.gameData.items['bolg'],
+      effectRefs: ['bolg-passive'],
+    };
+
+    const result = simulateBaseDamage(config);
+    const passiveBreakdown = result.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'perfect-equilibrium',
+    );
+
+    expect(passiveBreakdown?.tick).toBe(1);
+  });
+
   it('models Ricochet as three single-target hits across two ticks', () => {
     const config = createConfig({
       abilityActions: [createAbilityAction('action-ricochet', 0, 'ricochet')],

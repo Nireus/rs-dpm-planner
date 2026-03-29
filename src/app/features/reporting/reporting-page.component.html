@@ -1,0 +1,38 @@
+<section class="page">
+  <header class="hero">
+    <h1>Bug Reports and Functionality Requests</h1>
+    <p>
+      Send reports and requests to
+      <strong>{{ emailAddress }}</strong>.
+      Good reports save a lot of debugging time and make it much easier to ship fixes quickly.
+    </p>
+  </header>
+
+  <section class="cards">
+    <article class="card">
+      <h2>How to Report a Bug</h2>
+      <p>When something looks wrong, send an email with as much reproduction detail as you can.</p>
+      <h3>Suggested email title</h3>
+      <code>Bug: Deathspore stacks stop updating after quiver swap</code>
+      <h3>Include</h3>
+      <ul>
+        @for (item of bugChecklist; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </article>
+
+    <article class="card">
+      <h2>How to Request Functionality</h2>
+      <p>If you want a new mechanic, screen improvement, or workflow, send it as a clear request email.</p>
+      <h3>Suggested email title</h3>
+      <code>Feature Request: Add configurable ECB Split Soul assumptions</code>
+      <h3>Include</h3>
+      <ul>
+        @for (item of featureChecklist; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </article>
+  </section>
+</section>

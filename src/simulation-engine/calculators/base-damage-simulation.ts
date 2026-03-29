@@ -8,6 +8,7 @@ import type {
   SimulationResult,
   ValidationIssue,
 } from '../models';
+import { normalizeStartingPerfectEquilibriumStacks } from '../models/starting-stacks';
 import { resolveAdrenalineTimeline, resolveChannelTimeline, resolveCooldownTimeline } from '../resolvers';
 import { resolveDeathsporeTimeline } from '../resolvers/deathspore';
 import { resolveEquilibriumTimeline } from '../resolvers/equilibrium';
@@ -83,7 +84,9 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const damageByAbilityMap = new Map<EntityId, DamageSummary>();
   const hitEvents = buildSimulationHitEvents(config, blockingActionIds);
   const hasBolgEquipped = isBolgEquipped(config);
-  let perfectEquilibriumStacks = 0;
+  let perfectEquilibriumStacks = normalizeStartingPerfectEquilibriumStacks(
+    config.rotationPlan.startingStacks?.perfectEquilibriumStacks,
+  );
   let cracklingReadyAtTick = 0;
   let aftershockReadyAtTick = 0;
   let aftershockPendingProcCount = 0;

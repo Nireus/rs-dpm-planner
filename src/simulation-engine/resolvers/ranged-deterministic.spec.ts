@@ -697,6 +697,47 @@ describe('resolveDeterministicRangedTimeline', () => {
     });
   });
 
+  it('creates adrenaline potion cooldown and renewal buff windows', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 205,
+        nonGcdActions: [
+          {
+            id: 'adren-renewal-1',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'adrenaline-potion',
+            payload: {
+              templateId: 'adrenaline-potion',
+              variantId: 'adrenaline-renewal-potion',
+              label: 'Adrenaline Renewal Potion',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(result.buffTimeline[0]).toEqual(['adrenaline-potion-cooldown', 'adrenaline-renewal']);
+    expect(result.buffTimeline[9]).toEqual(['adrenaline-potion-cooldown', 'adrenaline-renewal']);
+    expect(result.buffTimeline[10]).toEqual(['adrenaline-potion-cooldown']);
+    expect(result.buffTimeline[199]).toEqual(['adrenaline-potion-cooldown']);
+    expect(result.buffTimeline[200]).toEqual([]);
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'adrenaline-potion-cooldown',
+      sourceType: 'item',
+      sourceId: 'adrenaline-potion-cooldown',
+    });
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'adrenaline-renewal',
+      sourceType: 'item',
+      sourceId: 'adrenaline-renewal',
+    });
+  });
+
   it('creates Split Soul for 25 ticks and ends it early on a weapon swap', () => {
     const config = createConfig({
       gearSetup: {

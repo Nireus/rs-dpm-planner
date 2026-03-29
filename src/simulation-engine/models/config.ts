@@ -10,6 +10,7 @@ import type {
   PerkDefinition,
   RelicDefinition,
 } from '../../game-data/types';
+import type { StartingStackState } from './starting-stacks';
 
 export interface ItemInstanceConfig {
   instanceId: string;
@@ -57,6 +58,7 @@ export interface TimelineGeneratedBuffSource {
 
 export type RotationActionType =
   | 'ability-use'
+  | 'adrenaline-potion'
   | 'ammo-swap'
   | 'gear-swap'
   | 'vulnerability-bomb'
@@ -76,6 +78,7 @@ export interface RotationAction {
 export interface RotationPlan {
   startingAdrenaline: number;
   tickCount: number;
+  startingStacks?: StartingStackState;
   nonGcdActions: RotationAction[];
   abilityActions: RotationAction[];
 }

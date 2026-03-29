@@ -2,6 +2,14 @@ import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import {
+  ADRENALINE_POTION_ACTION_TYPE,
+  ADRENALINE_POTION_COOLDOWN_BUFF_ID,
+  ADRENALINE_POTION_COOLDOWN_TICKS,
+  ADRENALINE_RENEWAL_BUFF_ID,
+  ADRENALINE_RENEWAL_DURATION_TICKS,
+  getAdrenalinePotionVariant,
+} from '../actions/adrenaline-potions';
+import {
   BALANCE_BY_FORCE_ABILITY_ID,
   resolveEffectiveAbilityDefinition,
 } from '../abilities/effective-ability';
@@ -58,6 +66,8 @@ export function resolveDeterministicRangedTimeline(
   let shadowImbuedUntilTick = -1;
   let generatedShadowImbued = false;
   let generatedVulnerabilityBomb = false;
+  let generatedAdrenalinePotionCooldown = false;
+  let generatedAdrenalineRenewal = false;
 
   for (const action of [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick)) {
     if (blockedActionIds.has(action.id)) {
@@ -67,6 +77,12 @@ export function resolveDeterministicRangedTimeline(
     if (action.actionType === VULNERABILITY_BOMB_ACTION_TYPE) {
       applyVulnerabilityBombBuffs(config, action, buffTimeline);
       generatedVulnerabilityBomb = true;
+    }
+
+    if (action.actionType === ADRENALINE_POTION_ACTION_TYPE) {
+      const result = applyAdrenalinePotionBuffs(config, action, buffTimeline);
+      generatedAdrenalinePotionCooldown ||= result.generatedCooldown;
+      generatedAdrenalineRenewal ||= result.generatedRenewal;
     }
   }
 
@@ -193,6 +209,24 @@ export function resolveDeterministicRangedTimeline(
     );
   }
 
+  if (generatedAdrenalinePotionCooldown) {
+    timelineGeneratedBuffSources.push({
+      buffId: ADRENALINE_POTION_COOLDOWN_BUFF_ID,
+      sourceType: 'item',
+      sourceId: ADRENALINE_POTION_COOLDOWN_BUFF_ID,
+    });
+    notes.push('Adrenaline potions share a 200-tick cooldown starting on the drink tick.');
+  }
+
+  if (generatedAdrenalineRenewal) {
+    timelineGeneratedBuffSources.push({
+      buffId: ADRENALINE_RENEWAL_BUFF_ID,
+      sourceType: 'item',
+      sourceId: ADRENALINE_RENEWAL_BUFF_ID,
+    });
+    notes.push('Adrenaline Renewal: applies a 10-tick buff starting on the drink tick and grants 4% adrenaline on each active tick.');
+  }
+
   return {
     adrenalineByTick,
     buffTimeline,
@@ -225,6 +259,51 @@ function applyVulnerabilityBombBuffs(
     debuffEndTick,
     config.rotationPlan.tickCount,
   );
+}
+
+function applyAdrenalinePotionBuffs(
+  config: SimulationConfig,
+  action: RotationAction,
+  buffTimeline: Record<number, EntityId[]>,
+): {
+  generatedCooldown: boolean;
+  generatedRenewal: boolean;
+} {
+  const variant = getAdrenalinePotionVariant(readStringPayload(action, 'variantId'));
+  if (!variant) {
+    return {
+      generatedCooldown: false,
+      generatedRenewal: false,
+    };
+  }
+
+  markBuffRange(
+    buffTimeline,
+    ADRENALINE_POTION_COOLDOWN_BUFF_ID,
+    action.tick,
+    action.tick + ADRENALINE_POTION_COOLDOWN_TICKS - 1,
+    config.rotationPlan.tickCount,
+  );
+
+  if (!variant.grantsRenewal) {
+    return {
+      generatedCooldown: true,
+      generatedRenewal: false,
+    };
+  }
+
+  markBuffRange(
+    buffTimeline,
+    ADRENALINE_RENEWAL_BUFF_ID,
+    action.tick,
+    action.tick + ADRENALINE_RENEWAL_DURATION_TICKS - 1,
+    config.rotationPlan.tickCount,
+  );
+
+  return {
+    generatedCooldown: true,
+    generatedRenewal: true,
+  };
 }
 
 function applyBalanceByForceBuff(
