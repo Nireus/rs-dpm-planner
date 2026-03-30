@@ -1,0 +1,20 @@
+{
+  "id": "bloodlust",
+  "name": "Bloodlust",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Bloodlust.png",
+  "wikiUrl": "https://runescape.wiki/w/Bloodlust",
+  "category": "temporary",
+  "sourceType": "ability",
+  "stackRules": {
+    "maxStacks": 4,
+    "consumesOnTrigger": true,
+    "conditionalModifiers": [
+      {
+        "whenBuffActive": "berserk-buff",
+        "maxStacks": 8,
+        "gainMultiplier": 2
+      }
+    ]
+  },
+  "displayPriority": 88
+}

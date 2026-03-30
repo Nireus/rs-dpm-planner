@@ -12,5 +12,8 @@
     "min": 0,
     "max": 0
   },
+  "specialDispatch": {
+    "source": "equipped-weapon"
+  },
   "description": "Constitution special ability that activates the special attack of the currently equipped weapon."
 }

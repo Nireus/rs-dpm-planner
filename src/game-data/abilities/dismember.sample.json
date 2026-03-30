@@ -1,0 +1,196 @@
+{
+  "id": "dismember",
+  "name": "Dismember",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 40,
+  "requires": {
+    "levelRequirements": {
+      "attack": 50
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "dismember-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-3",
+      "tickOffset": 4,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-4",
+      "tickOffset": 6,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-5",
+      "tickOffset": 8,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-6",
+      "tickOffset": 10,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-7",
+      "tickOffset": 12,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    },
+    {
+      "id": "dismember-hit-8",
+      "tickOffset": 14,
+      "damage": {
+        "min": 25,
+        "max": 31
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 248
+  },
+  "variants": [
+    {
+      "id": "dismember",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:masterwork-spear-of-annihilation-passive"]
+      },
+      "hitSchedule": [
+        {
+          "id": "dismember-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-2",
+          "tickOffset": 2,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-3",
+          "tickOffset": 4,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-4",
+          "tickOffset": 6,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-5",
+          "tickOffset": 8,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-6",
+          "tickOffset": 10,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-7",
+          "tickOffset": 12,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-hit-8",
+          "tickOffset": 14,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-extended-hit-1",
+          "tickOffset": 16,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-extended-hit-2",
+          "tickOffset": 18,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-extended-hit-3",
+          "tickOffset": 20,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        },
+        {
+          "id": "dismember-extended-hit-4",
+          "tickOffset": 22,
+          "damage": {
+            "min": 25,
+            "max": 31
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 300,
+        "max": 372
+      }
+    }
+  ],
+  "effectRefs": ["damage-over-time"],
+  "description": "Enhanced melee bleed with 8 live-timed hits and healing on dealt damage. The live recast chain into Slaughter and Massacre is not modeled yet."
+}

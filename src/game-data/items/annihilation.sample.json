@@ -1,0 +1,22 @@
+{
+  "id": "annihilation",
+  "name": "Annihilation",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Annihilation.png",
+  "wikiUrl": "https://runescape.wiki/w/Annihilation",
+  "combatStyleTags": ["melee"],
+  "tier": 87,
+  "offensiveStats": {
+    "damageTier": 87,
+    "accuracyTier": 87
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 87
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:gravitate"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Annihilation page. Wiki-verified with Playwright for tier, Attack requirement, combat stats, and the Gravitate special attack."
+}

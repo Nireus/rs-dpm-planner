@@ -26,7 +26,12 @@ export interface ItemInstanceConfig {
 }
 
 export interface PlayerStats {
+  attackLevel?: number;
+  strengthLevel?: number;
+  defenceLevel?: number;
   rangedLevel: number;
+  magicLevel?: number;
+  necromancyLevel?: number;
   prayerLevel?: number;
   combatStats?: Record<string, number>;
   toggles?: Record<string, boolean>;

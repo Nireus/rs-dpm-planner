@@ -1,0 +1,40 @@
+{
+  "id": "berserk",
+  "name": "Berserk",
+  "style": "melee",
+  "subtype": "ultimate",
+  "cooldownTicks": 100,
+  "adrenalineCost": 100,
+  "requires": {
+    "levelRequirements": {
+      "attack": 76
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "berserk-buff",
+      "conditionalDurationBonuses": [
+        {
+          "requiredEquippedEffect": "vestments-of-havoc-set",
+          "minCount": 3,
+          "bonusTicks": 10
+        }
+      ]
+    }
+  ],
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 2
+    }
+  ],
+  "description": "Go berserk, empowering yourself. Melee attacks deal 1.75x damage for 19.8s, but you take 25% more damage."
+}

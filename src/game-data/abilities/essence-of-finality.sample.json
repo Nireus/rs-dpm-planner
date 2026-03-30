@@ -12,5 +12,8 @@
     "min": 0,
     "max": 0
   },
+  "specialDispatch": {
+    "source": "equipped-eof"
+  },
   "description": "Constitution special ability that activates the stored special attack from an equipped Essence of Finality amulet."
 }

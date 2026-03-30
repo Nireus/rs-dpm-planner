@@ -1,0 +1,19 @@
+{
+  "id": "masterwork-melee-helm",
+  "name": "Masterwork melee helm",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_helm.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "meleeBonus": 22.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 90
+    }
+  },
+  "implementationNotes": "Curated masterwork melee helm from the live Masterwork melee equipment page. Wiki-verified with Playwright for slot and melee style bonus."
+}

@@ -167,4 +167,94 @@ describe('applyExpectedValueCriticalStrike', () => {
       max: 100,
     });
   });
+
+  it('applies Champion ring and heroism bonuses against bleeding targets', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          'champions-ring': {
+            id: 'champions-ring',
+            name: "Champion's ring",
+            category: 'jewellery',
+            slot: 'ring',
+            combatStyleTags: ['melee'],
+            effectRefs: ['crimson-strikes'],
+          },
+          'enchantment-of-heroism': {
+            id: 'enchantment-of-heroism',
+            name: 'Enchantment of heroism',
+            category: 'other',
+            combatStyleTags: ['melee'],
+            effectRefs: ['enchantment-of-heroism'],
+          },
+        },
+        abilities: {
+          ...createConfig().gameData.abilities,
+          dismember: {
+            id: 'dismember',
+            name: 'Dismember',
+            style: 'melee',
+            subtype: 'enhanced',
+            cooldownTicks: 40,
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `dismember-hit-${index + 1}`,
+              tickOffset: index * 2,
+              damage: { min: 25, max: 31 },
+            })),
+            baseDamage: { min: 200, max: 248 },
+            effectRefs: ['damage-over-time'],
+          },
+        },
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+          ring: {
+            instanceId: 'ring-1',
+            definitionId: 'champions-ring',
+          },
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'heroism-1',
+            definitionId: 'enchantment-of-heroism',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 20,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'dismember-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'dismember' },
+          },
+        ],
+      },
+    });
+
+    const result = applyExpectedValueCriticalStrike(
+      config,
+      createAbility({
+        style: 'melee',
+      }),
+      { min: 100, avg: 100, max: 100 },
+      15,
+      {},
+    );
+
+    expect(result.finalDamage.avg).toBe(107.21);
+    expect(result.finalDamage.max).toBe(151.5);
+  });
 });

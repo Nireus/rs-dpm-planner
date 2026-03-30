@@ -1,6 +1,46 @@
 <article class="stats-panel">
   <div class="stats-grid">
     <label class="stat-field">
+      <span>Attack</span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().attackLevel ?? ''"
+        (ngModelChange)="updateAttackLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
+      <span>Strength</span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().strengthLevel ?? ''"
+        (ngModelChange)="updateStrengthLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
+      <span class="stat-field-label">
+        <img
+          class="stat-field-icon white-tint-icon"
+          src="https://runescape.wiki/w/Special:FilePath/Defence-icon.png"
+          alt="Defence"
+        />
+        <span>Defence</span>
+      </span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().defenceLevel ?? ''"
+        (ngModelChange)="updateDefenceLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
       <span>Ranged</span>
       <input
         type="number"
@@ -8,6 +48,28 @@
         max="120"
         [ngModel]="stats().rangedLevel"
         (ngModelChange)="updateRangedLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
+      <span>Magic</span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().magicLevel ?? ''"
+        (ngModelChange)="updateMagicLevel($event)"
+      />
+    </label>
+
+    <label class="stat-field">
+      <span>Necromancy</span>
+      <input
+        type="number"
+        min="1"
+        max="120"
+        [ngModel]="stats().necromancyLevel ?? ''"
+        (ngModelChange)="updateNecromancyLevel($event)"
       />
     </label>
 

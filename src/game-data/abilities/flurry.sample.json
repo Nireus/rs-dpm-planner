@@ -1,0 +1,94 @@
+{
+  "id": "flurry",
+  "name": "Flurry",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 34,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 45
+    },
+    "requiredEquipmentTags": ["melee-dual-wield"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 9,
+  "hitSchedule": [
+    {
+      "id": "flurry-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-3",
+      "tickOffset": 3,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-4",
+      "tickOffset": 4,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-5",
+      "tickOffset": 5,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-6",
+      "tickOffset": 6,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-7",
+      "tickOffset": 7,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "flurry-hit-8",
+      "tickOffset": 8,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 480,
+    "max": 560
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "spend",
+      "stacks": 4
+    }
+  ],
+  "description": "Dual-wield melee channel that hits 8 times. The live stun, bind, Bloodlust missing-health scaling, and area behavior are carried in curated copy only for now."
+}

@@ -17,6 +17,7 @@ import {
   getAdrenalinePotionVariant,
 } from '../actions/adrenaline-potions';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import { applyEquipmentPlacement } from '../gear/equipment-topology';
 import { buildBaseTimeline } from '../timeline';
 import { evaluateAbilityAvailability } from '../rules/ability-availability';
 
@@ -28,6 +29,7 @@ interface ValidationContext {
 
 interface ProjectedGearState {
   equipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>>;
+  inventory: ItemInstanceConfig[];
   ammoSelection?: ItemInstanceConfig;
 }
 
@@ -104,8 +106,12 @@ function validateAbilityLaneOverlap(
 
 function validateSwapActionPayloads(config: SimulationConfig, context: ValidationContext): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const nonGcdActions = [...config.rotationPlan.nonGcdActions].sort(
+    (left, right) => left.tick - right.tick || left.id.localeCompare(right.id),
+  );
+  let projectedGearState = createInitialProjectedGearState(config);
 
-  for (const action of config.rotationPlan.nonGcdActions) {
+  for (const action of nonGcdActions) {
     if (action.actionType === 'gear-swap') {
       const instanceId = readStringPayload(action, 'instanceId');
       const definitionId = readStringPayload(action, 'definitionId') ?? readStringPayload(action, 'itemId');
@@ -131,7 +137,9 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
         continue;
       }
 
-      if (!instance) {
+      const projectedInstance = findProjectedItemInstance(projectedGearState, definitionId ?? null, instanceId);
+
+      if (!instance || !projectedInstance) {
         issues.push(
           createActionIssue(
             action,
@@ -152,6 +160,8 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
         continue;
       }
 
+      const resolvedTargetSlot = targetSlot ?? itemDefinition.slot;
+
       if (targetSlot && targetSlot !== itemDefinition.slot) {
         issues.push(
           createActionIssue(
@@ -160,6 +170,19 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
             `Item "${itemDefinition.name}" cannot be equipped into slot "${targetSlot}".`,
           ),
         );
+        continue;
+      }
+
+      if (projectedInstance && resolvedTargetSlot) {
+        projectedGearState = {
+          ...projectedGearState,
+          ...applyEquipmentPlacement(
+            projectedGearState,
+            projectedInstance,
+            resolvedTargetSlot,
+            config.gameData.items,
+          ),
+        };
       }
     }
 
@@ -278,7 +301,7 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
     cooldownMap.set(ability.id, action.tick + Math.max(ability.cooldownTicks, 0));
 
     if (ability.isChanneled && ability.channelDurationTicks && ability.channelDurationTicks > 0) {
-      activeChannelUntilTickExclusive = action.tick + ability.channelDurationTicks;
+      activeChannelUntilTickExclusive = action.tick + resolveChannelBlockDurationTicks(ability);
       channelWindows.push({
         startTick: action.tick,
         endTickExclusive: activeChannelUntilTickExclusive,
@@ -336,6 +359,7 @@ function validateAdrenalinePotionActions(config: SimulationConfig): ValidationIs
 function createInitialProjectedGearState(config: SimulationConfig): ProjectedGearState {
   return {
     equipment: { ...config.gearSetup.equipment },
+    inventory: [...config.inventory.items],
     ammoSelection: config.gearSetup.ammoSelection,
   };
 }
@@ -359,6 +383,7 @@ function applyProjectedSwap(
     return {
       ...state,
       ammoSelection: instance,
+      inventory: state.inventory,
       equipment: {
         ...state.equipment,
         ammo: instance,
@@ -381,12 +406,12 @@ function applyProjectedSwap(
       return state;
     }
 
+    const applied = applyEquipmentPlacement(state, instance, targetSlot, config.gameData.items);
+
     return {
       ...state,
-      equipment: {
-        ...state.equipment,
-        [targetSlot]: instance,
-      },
+      equipment: applied.equipment,
+      inventory: applied.inventory,
     };
   }
 
@@ -453,6 +478,45 @@ function findItemInstance(
   return config.inventory.items.find((item) => item.definitionId === definitionId);
 }
 
+function findProjectedItemInstance(
+  state: ProjectedGearState,
+  definitionId: EntityId | null,
+  instanceId?: string | null,
+): ItemInstanceConfig | undefined {
+  if (instanceId) {
+    for (const item of Object.values(state.equipment)) {
+      if (item?.instanceId === instanceId) {
+        return item;
+      }
+    }
+
+    if (state.ammoSelection?.instanceId === instanceId) {
+      return state.ammoSelection;
+    }
+
+    const inventoryMatch = state.inventory.find((item) => item.instanceId === instanceId);
+    if (inventoryMatch) {
+      return inventoryMatch;
+    }
+  }
+
+  if (!definitionId) {
+    return undefined;
+  }
+
+  for (const item of Object.values(state.equipment)) {
+    if (item?.definitionId === definitionId) {
+      return item;
+    }
+  }
+
+  if (state.ammoSelection?.definitionId === definitionId) {
+    return state.ammoSelection;
+  }
+
+  return state.inventory.find((item) => item.definitionId === definitionId);
+}
+
 function resolveAmmoDefinition(
   config: SimulationConfig,
   ammoId: EntityId,
@@ -466,6 +530,21 @@ function isChannelSensitiveAction(action: RotationAction): boolean {
 
 function isWithinChannelWindow(tick: number, windows: ChannelWindow[]): boolean {
   return windows.some((window) => tick > window.startTick && tick < window.endTickExclusive);
+}
+
+function resolveChannelBlockDurationTicks(
+  ability: AbilityDefinition,
+): number {
+  const latestHitOffset = ability.hitSchedule.reduce(
+    (latestTick, hit) => Math.max(latestTick, hit.tickOffset),
+    0,
+  );
+
+  if (latestHitOffset > 0) {
+    return latestHitOffset;
+  }
+
+  return Math.max(ability.channelDurationTicks ?? 0, 0);
 }
 
 function readStringPayload(action: RotationAction, key: string): string | null {

@@ -1,0 +1,44 @@
+{
+  "id": "shadowfall",
+  "name": "Shadowfall",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 65,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "shadowfall-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 85,
+        "max": 105
+      }
+    },
+    {
+      "id": "shadowfall-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 85,
+        "max": 105
+      }
+    },
+    {
+      "id": "shadowfall-hit-3",
+      "tickOffset": 0,
+      "damage": {
+        "min": 255,
+        "max": 295
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 425,
+    "max": 505
+  },
+  "effectRefs": ["weapon-special:shadowfall"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Gloomfire bow special attack. Fires two smaller hits followed by a stronger finishing hit."
+}

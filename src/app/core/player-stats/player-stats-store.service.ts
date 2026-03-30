@@ -1,6 +1,7 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { PlayerStats } from '../../../simulation-engine/models';
 import {
+  DEFAULT_PLAYER_LEVELS,
   sanitizePlayerStats,
   validatePlayerStats,
   type PlayerStatsValidationIssue,
@@ -8,8 +9,7 @@ import {
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 
 export const DEFAULT_PLAYER_STATS: PlayerStats = {
-  rangedLevel: 99,
-  prayerLevel: 99,
+  ...DEFAULT_PLAYER_LEVELS,
 };
 
 @Injectable({

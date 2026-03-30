@@ -1,8 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
+import {
+  ABILITY_STYLE_TABS,
+  abilityStyleEmptyMessage,
+  filterAbilitiesByStyle,
+  groupAbilitiesBySubtype,
+} from '../../core/abilities/ability-style-tabs';
 import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
-import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
+import type { AbilityDefinition, CombatStyle, EquipmentSlot } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
@@ -30,6 +36,7 @@ import {
 } from './rotation-planner-cooldown-lane';
 import { inspectRotationPlannerTick } from './rotation-planner-inspection';
 import {
+  buildAbilityPlacementTicks,
   buildAbilityGapControls,
   getAbilityTimelineSpan,
   getNonGcdActionsAtTick,
@@ -52,11 +59,13 @@ import {
   buildAbilityShortLabel,
   buildAbilityOccupancyMap,
   buildBuffBarTitle,
+  buildBloodlustSpendMarkersByAction,
+  buildPlacedAbilityMarkerLeft,
   buildCooldownBarTitle,
   buildPerfectEquilibriumProcMarkersByAction,
-  buildPerfectEquilibriumProcLeft,
   buildPlannerGearSwapOptions,
   buildPlacedAbilityTitle,
+  buildPlacedAbilityThemeClass,
   buildSelectedTickOverlayLeft,
   buildTimelineRowTemplate,
   COOLDOWN_PLANNER_LANE,
@@ -66,9 +75,11 @@ import {
   laneBarCopyTemplate,
   laneHeightRem,
   PERFECT_EQUILIBRIUM_ICON_PATH,
+  BLOODLUST_ICON_PATH,
   type AbilityOccupancyEntry,
   type PlannerAbilityPaletteEntry,
   type PlannerActionValidationSummary,
+  type PlannerBloodlustSpendMarker,
   type PlannerGearSwapOption,
   type PlannerLaneViewModel,
   type PlannerPerfectEquilibriumProcMarker,
@@ -145,6 +156,8 @@ export class RotationPlannerPageComponent {
   protected readonly selectedTick = signal(0);
   protected readonly showCooldownLane = signal(false);
   protected readonly configurationPanelExpanded = signal(false);
+  protected readonly abilityPaletteStyleTabs = ABILITY_STYLE_TABS;
+  protected readonly selectedAbilityPaletteStyle = signal<CombatStyle>('ranged');
   protected readonly hoveredAbilityDropTick = signal<number | null>(null);
   protected readonly plannerWarning = signal<string | null>(null);
   protected readonly gearSwapDialogActionId = signal<string | null>(null);
@@ -180,7 +193,12 @@ export class RotationPlannerPageComponent {
 
     const projectedGearState =
       typeof tick === 'number'
-        ? projectGearStateAtTick(this.gearBuilderStore.snapshot(), this.nonGcdActions(), tick)
+        ? projectGearStateAtTick(
+            this.gearBuilderStore.snapshot(),
+            catalog.items,
+            this.nonGcdActions(),
+            tick,
+          )
         : this.gearBuilderStore.snapshot();
 
     return buildPlannerGearSwapOptions(projectedGearState.inventory, catalog);
@@ -246,9 +264,31 @@ export class RotationPlannerPageComponent {
       this.abilityAvailabilityService.availabilityMap(),
     );
   });
+  protected readonly visibleAbilityPaletteEntries = computed(() =>
+    filterAbilitiesByStyle(this.abilityPaletteEntries(), this.selectedAbilityPaletteStyle()),
+  );
+  protected readonly groupedAbilityPaletteEntries = computed(() =>
+    groupAbilitiesBySubtype(this.visibleAbilityPaletteEntries()),
+  );
+  protected readonly selectedAbilityPaletteThemeClass = computed(
+    () =>
+      this.abilityPaletteStyleTabs.find((tab) => tab.id === this.selectedAbilityPaletteStyle())?.themeClass ?? '',
+  );
+  protected readonly abilityPaletteEmptyCopy = computed(() =>
+    abilityStyleEmptyMessage(this.selectedAbilityPaletteStyle()),
+  );
   protected readonly abilityGapControls = computed<Record<number, PlannerAbilityGapControl>>(() =>
     Object.fromEntries(
       buildAbilityGapControls(this.abilityActions(), this.abilityCatalog()).map((control) => [control.tick, control]),
+    ),
+  );
+  protected readonly abilityPlacementTicks = computed<Set<number>>(() =>
+    new Set(
+      buildAbilityPlacementTicks(
+        this.abilityActions(),
+        this.abilityCatalog(),
+        this.tickCount(),
+      ),
     ),
   );
   protected readonly buffLaneBars = computed<PlannerBuffLaneBar[]>(() => {
@@ -263,6 +303,8 @@ export class RotationPlannerPageComponent {
       tickCount: this.tickCount(),
       buffTimeline: result.buffTimeline,
       buffDefinitions: catalog.buffs,
+      timelineGeneratedBuffSources: result.timelineGeneratedBuffSources,
+      abilityDefinitions: this.abilityCatalog(),
     });
   });
   protected readonly cooldownLaneBars = computed<PlannerCooldownLaneBar[]>(() => {
@@ -291,6 +333,14 @@ export class RotationPlannerPageComponent {
     );
   });
   protected readonly perfectEquilibriumIconPath = computed(() => PERFECT_EQUILIBRIUM_ICON_PATH);
+  protected readonly bloodlustSpendMarkersByAction = computed<
+    Record<string, PlannerBloodlustSpendMarker[]>
+  >(() => buildBloodlustSpendMarkersByAction(
+    this.simulationResult(),
+    this.abilityActions(),
+    this.abilityCatalog(),
+  ));
+  protected readonly bloodlustIconPath = computed(() => BLOODLUST_ICON_PATH);
   protected readonly nonGcdPaletteEntries = PLANNER_NON_GCD_TEMPLATES;
   protected readonly adrenalinePotionVariants = ADRENALINE_POTION_VARIANTS;
   protected readonly startingStackControls = computed(() => {
@@ -390,6 +440,26 @@ export class RotationPlannerPageComponent {
     this.playerStatsStore.updateStat('rangedLevel', this.parseLevel(value));
   }
 
+  protected updateAttackLevel(value: number | string | null): void {
+    this.playerStatsStore.updateStat('attackLevel', this.parseLevel(value));
+  }
+
+  protected updateStrengthLevel(value: number | string | null): void {
+    this.playerStatsStore.updateStat('strengthLevel', this.parseLevel(value));
+  }
+
+  protected updateDefenceLevel(value: number | string | null): void {
+    this.playerStatsStore.updateStat('defenceLevel', this.parseLevel(value));
+  }
+
+  protected updateMagicLevel(value: number | string | null): void {
+    this.playerStatsStore.updateStat('magicLevel', this.parseLevel(value));
+  }
+
+  protected updateNecromancyLevel(value: number | string | null): void {
+    this.playerStatsStore.updateStat('necromancyLevel', this.parseLevel(value));
+  }
+
   protected updateSelectedTick(value: number | string | null): void {
     if (value === null || value === undefined || value === '') {
       return;
@@ -415,6 +485,10 @@ export class RotationPlannerPageComponent {
     this.configurationPanelExpanded.update((expanded) => !expanded);
   }
 
+  protected selectAbilityPaletteStyle(style: CombatStyle): void {
+    this.selectedAbilityPaletteStyle.set(style);
+  }
+
   protected laneCellLabel(laneKey: PlannerLaneViewModel['key'], tickIndex: number): string {
     return laneCellLabel(laneKey, this.timelineResult().timeline.ticks[tickIndex]);
   }
@@ -424,11 +498,16 @@ export class RotationPlannerPageComponent {
   }
 
   protected isAbilityPlacementTick(tickIndex: number): boolean {
-    return tickIndex % 3 === 0;
+    return this.abilityPlacementTicks().has(tickIndex);
   }
 
   protected abilityWindowStartTick(tickIndex: number): number {
-    return snapTickToAbilityWindowStart(tickIndex);
+    return snapTickToAbilityWindowStart(
+      this.abilityActions(),
+      this.abilityCatalog(),
+      this.tickCount(),
+      tickIndex,
+    );
   }
 
   protected abilityDropListId(tickIndex: number): string {
@@ -550,6 +629,10 @@ export class RotationPlannerPageComponent {
     return buildAbilitySegmentClass(segment);
   }
 
+  protected placedAbilityThemeClass(definition: AbilityDefinition): string {
+    return buildPlacedAbilityThemeClass(definition);
+  }
+
   protected abilitySpan(definition: AbilityDefinition): number {
     return getAbilityTimelineSpan(definition);
   }
@@ -568,7 +651,24 @@ export class RotationPlannerPageComponent {
     action: RotationAction,
     marker: PlannerPerfectEquilibriumProcMarker,
   ): string {
-    return buildPerfectEquilibriumProcLeft(
+    return buildPlacedAbilityMarkerLeft(
+      action,
+      marker,
+      this.abilityDefinitionForAction(action),
+    );
+  }
+
+  protected bloodlustSpendMarkers(
+    action: RotationAction,
+  ): PlannerBloodlustSpendMarker[] {
+    return this.bloodlustSpendMarkersByAction()[action.id] ?? [];
+  }
+
+  protected bloodlustSpendLeft(
+    action: RotationAction,
+    marker: PlannerBloodlustSpendMarker,
+  ): string {
+    return buildPlacedAbilityMarkerLeft(
       action,
       marker,
       this.abilityDefinitionForAction(action),

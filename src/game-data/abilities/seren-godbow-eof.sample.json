@@ -1,0 +1,36 @@
+{
+  "id": "seren-godbow-eof",
+  "name": "Seren Godbow (EOF)",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 30,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "seren-godbow-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 100,
+        "max": 160
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 320
+  },
+  "effectRefs": ["eof-seren-godbow-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Curated EOF special access entry for the Seren godbow special attack."
+}

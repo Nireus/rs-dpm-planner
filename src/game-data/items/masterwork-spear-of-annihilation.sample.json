@@ -1,0 +1,22 @@
+{
+  "id": "masterwork-spear-of-annihilation",
+  "name": "Masterwork Spear of Annihilation",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_Spear_of_Annihilation.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_Spear_of_Annihilation",
+  "combatStyleTags": ["melee"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 92
+    }
+  },
+  "effectRefs": ["masterwork-spear-of-annihilation-passive"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed spear from the live Masterwork Spear of Annihilation page. Wiki-verified with Playwright for tier, combat stats, and bleed-extension passive."
+}

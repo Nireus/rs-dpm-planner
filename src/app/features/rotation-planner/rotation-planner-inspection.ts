@@ -13,6 +13,7 @@ import type {
 } from '../../../simulation-engine/models';
 import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 import { simulateBaseDamage } from '../../../simulation-engine/calculators';
+import { resolveBuffStackRuleState } from '../../../simulation-engine/buffs/buff-stack-rules';
 import { resolveAdrenalineTimeline } from '../../../simulation-engine/resolvers/adrenaline';
 import { resolveCooldownTimeline } from '../../../simulation-engine/resolvers/cooldowns';
 import { buildBaseTimeline } from '../../../simulation-engine/timeline';
@@ -31,6 +32,9 @@ export interface RotationPlannerTickInspection {
     end: number;
   };
   deathsporeStacks: number | null;
+  perfectEquilibriumStacks: number | null;
+  bloodlustStacks: number | null;
+  bloodlustMaxStacks: number | null;
   activePersistentBuffs: string[];
   activeTemporaryBuffs: string[];
   equipmentState: Array<{
@@ -87,8 +91,20 @@ export function inspectRotationPlannerTick(input: {
   const temporaryBuffIds = (simulatedTickState?.activeTimelineBuffIds ?? []).filter(
     (buffId) => !isCooldownLikeBuff(input.catalog.buffs[buffId]),
   );
-  const projectedGearState = projectGearStateAtTick(input.gearState, input.rotationPlan.nonGcdActions, clampedTick);
+  const projectedGearState = projectGearStateAtTick(
+    input.gearState,
+    input.catalog.items,
+    input.rotationPlan.nonGcdActions,
+    clampedTick,
+  );
   const deathsporeAmmoActive = hasDeathsporeAmmoEquipped(projectedGearState, input.catalog);
+  const perfectEquilibriumWeaponActive = hasEquippedBolg(projectedGearState, input.catalog);
+  const bloodlustStacks = countBuffStacks(simulatedTickState?.activeTimelineBuffIds ?? [], 'bloodlust');
+  const meleeWeaponActive = hasEquippedMeleeWeapon(projectedGearState, input.catalog);
+  const bloodlustStackState = resolveBuffStackRuleState(
+    input.catalog.buffs['bloodlust'],
+    simulatedTickState?.activeTimelineBuffIds ?? [],
+  );
 
   return {
     tick: clampedTick,
@@ -100,10 +116,18 @@ export function inspectRotationPlannerTick(input: {
       deathsporeAmmoActive && typeof simulatedTickState?.deathsporeStacks === 'number'
         ? simulatedTickState.deathsporeStacks
         : null,
+    perfectEquilibriumStacks:
+      perfectEquilibriumWeaponActive && typeof simulatedTickState?.perfectEquilibriumStacks === 'number'
+        ? simulatedTickState.perfectEquilibriumStacks
+        : null,
+    bloodlustStacks: meleeWeaponActive ? bloodlustStacks : null,
+    bloodlustMaxStacks: meleeWeaponActive ? bloodlustStackState.maxStacks : null,
     activePersistentBuffs: persistentBuffIds.map(
       (buffId) => input.catalog.buffs[buffId]?.name ?? input.catalog.relics[buffId]?.name ?? buffId,
     ),
-    activeTemporaryBuffs: temporaryBuffIds.map((buffId) => input.catalog.buffs[buffId]?.name ?? buffId),
+    activeTemporaryBuffs: temporaryBuffIds
+      .filter((buffId) => buffId !== 'bloodlust')
+      .map((buffId) => input.catalog.buffs[buffId]?.name ?? buffId),
     equipmentState: Object.entries(projectedGearState.equipment)
       .filter((entry) => Boolean(entry[1]))
       .map(([slot, instance]) => ({
@@ -178,6 +202,36 @@ function hasDeathsporeAmmoEquipped(
     [];
 
   return effectRefs.includes(EFFECT_REF_IDS.deathsporeProgress);
+}
+
+function hasEquippedMeleeWeapon(
+  gearState: GearBuilderState,
+  catalog: GameDataCatalog,
+): boolean {
+  return ['weapon', 'offHand'].some((slot) => {
+    const item = gearState.equipment[slot as EquipmentSlot];
+    if (!item) {
+      return false;
+    }
+
+    return catalog.items[item.definitionId]?.combatStyleTags.includes('melee') ?? false;
+  });
+}
+
+function hasEquippedBolg(
+  gearState: GearBuilderState,
+  catalog: GameDataCatalog,
+): boolean {
+  const weapon = gearState.equipment.weapon;
+  if (!weapon) {
+    return false;
+  }
+
+  return catalog.items[weapon.definitionId]?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
+}
+
+function countBuffStacks(activeTimelineBuffIds: string[], buffId: string): number {
+  return activeTimelineBuffIds.filter((entry) => entry === buffId).length;
 }
 
 function buildEquipmentDetails(
@@ -454,7 +508,7 @@ function readStringPayload(action: RotationAction, key: string): string | null {
 }
 
 function shouldUseResolvedHitTickInPlanner(ability: AbilityDefinition): boolean {
-  return ability.id === 'rapid-fire';
+  return ability.displayHints?.hitTickMode === 'resolved';
 }
 
 function isCooldownLikeBuff(definition: GameDataCatalog['buffs'][string] | undefined): boolean {

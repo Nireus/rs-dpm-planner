@@ -7,6 +7,11 @@ import type {
 } from '../models';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { collectActiveEffectRefs } from './active-effect-refs';
+import {
+  countActiveTrackedBleeds,
+  hasChampionRingEquipped,
+  hasHeroismChampionRingBonus,
+} from '../melee/melee-combat-state';
 
 const BASE_CRIT_CHANCE = 0.1;
 const DOT_EFFECT_REF = EFFECT_REF_IDS.damageOverTime;
@@ -51,9 +56,18 @@ export function applyExpectedValueCriticalStrike(
     0,
   );
   const critDamageBonus = effectRefs.reduce((total, effectRef) => total + parseCriticalStrikeDamageBonus(effectRef), 0);
+  const activeBleeds = countActiveTrackedBleeds(config, hitTick);
+  const championRingChanceBonus =
+    hasChampionRingEquipped(config, hitTick) && activeBleeds > 0
+      ? 0.03 + (hasHeroismChampionRingBonus(config, hitTick) ? 0.01 : 0)
+      : 0;
+  const championRingDamageBonus =
+    hasHeroismChampionRingBonus(config, hitTick) && activeBleeds > 0
+      ? activeBleeds * 0.015
+      : 0;
   const baseCritDamageBonus = resolveBaseCriticalStrikeDamageBonus(config.playerStats.rangedLevel);
-  const totalChance = clampProbability(BASE_CRIT_CHANCE + critChanceBonus);
-  const totalDamageBonus = Math.max(0, baseCritDamageBonus + critDamageBonus);
+  const totalChance = clampProbability(BASE_CRIT_CHANCE + critChanceBonus + championRingChanceBonus);
+  const totalDamageBonus = Math.max(0, baseCritDamageBonus + critDamageBonus + championRingDamageBonus);
 
   if (totalChance <= 0 || totalDamageBonus <= 0) {
     return {
@@ -72,8 +86,8 @@ export function applyExpectedValueCriticalStrike(
     baseDamage,
     BASE_CRIT_CHANCE,
     baseCritDamageBonus,
-    critChanceBonus,
-    critDamageBonus,
+    critChanceBonus + championRingChanceBonus,
+    critDamageBonus + championRingDamageBonus,
   );
 
   return {

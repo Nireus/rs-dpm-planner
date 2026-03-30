@@ -1,0 +1,157 @@
+{
+  "id": "slaughter",
+  "name": "Slaughter",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 40,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 60
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "slaughter-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    },
+    {
+      "id": "slaughter-hit-2",
+      "tickOffset": 3,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    },
+    {
+      "id": "slaughter-hit-3",
+      "tickOffset": 6,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    },
+    {
+      "id": "slaughter-hit-4",
+      "tickOffset": 9,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    },
+    {
+      "id": "slaughter-hit-5",
+      "tickOffset": 12,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    },
+    {
+      "id": "slaughter-hit-6",
+      "tickOffset": 15,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 480,
+    "max": 600
+  },
+  "variants": [
+    {
+      "id": "slaughter",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:masterwork-spear-of-annihilation-passive"]
+      },
+      "hitSchedule": [
+        {
+          "id": "slaughter-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-hit-2",
+          "tickOffset": 3,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-hit-3",
+          "tickOffset": 6,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-hit-4",
+          "tickOffset": 9,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-hit-5",
+          "tickOffset": 12,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-hit-6",
+          "tickOffset": 15,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-extended-hit-1",
+          "tickOffset": 18,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-extended-hit-2",
+          "tickOffset": 21,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        },
+        {
+          "id": "slaughter-extended-hit-3",
+          "tickOffset": 24,
+          "damage": {
+            "min": 80,
+            "max": 100
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 720,
+        "max": 900
+      }
+    }
+  ],
+  "effectRefs": ["damage-over-time"],
+  "description": "Curated melee bleed entry for the second live Dismember recast. It is modeled with a conservative 40-tick cooldown until recast-family support exists."
+}

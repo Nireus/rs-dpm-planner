@@ -1,0 +1,29 @@
+{
+  "id": "dark-shard-of-leng",
+  "name": "Dark Shard of Leng",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Shard_of_Leng.png",
+  "wikiUrl": "https://runescape.wiki/w/Dark_Shard_of_Leng",
+  "combatStyleTags": ["melee"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 95
+    }
+  },
+  "effectRefs": ["endless-frost", "weapon-special-access", "weapon-special:icy-tempest"],
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
+  "implementationNotes": "Curated main-hand melee weapon from the live Dark Shard of Leng page. Wiki-verified with Playwright for slot, Attack requirement, combat stats, Endless Frost, and the Icy Tempest special attack."
+}

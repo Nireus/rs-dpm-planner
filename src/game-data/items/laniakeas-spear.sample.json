@@ -1,0 +1,22 @@
+{
+  "id": "laniakeas-spear",
+  "name": "Laniakea's spear",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Laniakea%27s_spear.png",
+  "wikiUrl": "https://runescape.wiki/w/Laniakea%27s_spear",
+  "combatStyleTags": ["melee"],
+  "tier": 82,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 75
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 82
+    }
+  },
+  "effectRefs": ["toxic-fang"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed spear from the live Laniakea's spear page. Wiki-verified with Playwright for Attack requirement, halberd-range weapon profile, and Toxic Fang passive."
+}

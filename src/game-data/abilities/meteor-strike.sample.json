@@ -1,0 +1,42 @@
+{
+  "id": "meteor-strike",
+  "name": "Meteor Strike",
+  "style": "melee",
+  "subtype": "ultimate",
+  "cooldownTicks": 100,
+  "adrenalineCost": 60,
+  "requires": {
+    "levelRequirements": {
+      "attack": 90
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "meteor-strike-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 220,
+        "max": 250
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 220,
+    "max": 250
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "meteor-strike-buff"
+    },
+    {
+      "kind": "grant-adrenaline",
+      "amount": 4.5,
+      "timing": "per-tick-window",
+      "durationTicks": 50,
+      "requiresWeaponStyle": "melee"
+    }
+  ],
+  "description": "Jump up and strike the ground. Grants a 30s melee adrenaline-generation buff after the hit."
+}

@@ -1,0 +1,173 @@
+{
+  "id": "massacre",
+  "name": "Massacre",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 40,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 75
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "massacre-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 110,
+        "max": 130
+      }
+    },
+    {
+      "id": "massacre-hit-2",
+      "tickOffset": 4,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    },
+    {
+      "id": "massacre-hit-3",
+      "tickOffset": 8,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    },
+    {
+      "id": "massacre-hit-4",
+      "tickOffset": 12,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    },
+    {
+      "id": "massacre-hit-5",
+      "tickOffset": 16,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    },
+    {
+      "id": "massacre-hit-6",
+      "tickOffset": 20,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    },
+    {
+      "id": "massacre-hit-7",
+      "tickOffset": 24,
+      "damage": {
+        "min": 100,
+        "max": 100
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 710,
+    "max": 730
+  },
+  "variants": [
+    {
+      "id": "massacre",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:masterwork-spear-of-annihilation-passive"]
+      },
+      "hitSchedule": [
+        {
+          "id": "massacre-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 110,
+            "max": 130
+          }
+        },
+        {
+          "id": "massacre-hit-2",
+          "tickOffset": 4,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-hit-3",
+          "tickOffset": 8,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-hit-4",
+          "tickOffset": 12,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-hit-5",
+          "tickOffset": 16,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-hit-6",
+          "tickOffset": 20,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-hit-7",
+          "tickOffset": 24,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-extended-hit-1",
+          "tickOffset": 28,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-extended-hit-2",
+          "tickOffset": 32,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        },
+        {
+          "id": "massacre-extended-hit-3",
+          "tickOffset": 36,
+          "damage": {
+            "min": 100,
+            "max": 100
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 1010,
+        "max": 1030
+      }
+    }
+  ],
+  "effectRefs": ["damage-over-time"],
+  "description": "Curated melee bleed entry for the third live Dismember recast. It is modeled with a conservative 40-tick cooldown until recast-family support exists."
+}

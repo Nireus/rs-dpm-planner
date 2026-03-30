@@ -1,0 +1,36 @@
+{
+  "id": "chaos-roar",
+  "name": "Chaos Roar",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 100,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 92
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "chaos-roar-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 100,
+        "max": 120
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 100,
+    "max": 120
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Release a savage war cry, empowering your next strike. Your next melee ability within 7.2s deals 1.75x base damage."
+}

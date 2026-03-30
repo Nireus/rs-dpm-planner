@@ -1,0 +1,15 @@
+{
+  "id": "igneous-kal-ket",
+  "name": "Igneous Kal-Ket",
+  "category": "armor",
+  "slot": "cape",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Igneous_Kal-Ket.png",
+  "wikiUrl": "https://runescape.wiki/w/Igneous_Kal-Ket",
+  "combatStyleTags": ["melee"],
+  "tier": 85,
+  "offensiveStats": {
+    "meleeBonus": 37.1
+  },
+  "effectRefs": ["igneous-kal-ket-passive"],
+  "implementationNotes": "Curated melee cape from the live Igneous Kal-Ket page. Wiki-verified with Playwright for melee style bonus and the Overpower-altering cape passive."
+}

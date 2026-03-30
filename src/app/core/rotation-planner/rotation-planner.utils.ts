@@ -28,12 +28,59 @@ export interface PlannerAbilityGapControl {
   shiftFromTick: number;
 }
 
-export function isAbilityPlacementTick(tick: number): boolean {
-  return tick % GCD_TICKS === 0;
+export function isAbilityPlacementTick(
+  abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
+  tickCount: number,
+  tick: number,
+): boolean {
+  return buildAbilityPlacementTicks(abilityActions, abilityDefinitions, tickCount).includes(tick);
 }
 
-export function snapTickToAbilityWindowStart(tick: number): number {
-  return Math.floor(tick / GCD_TICKS) * GCD_TICKS;
+export function snapTickToAbilityWindowStart(
+  abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
+  tickCount: number,
+  tick: number,
+): number {
+  const placementTicks = buildAbilityPlacementTicks(abilityActions, abilityDefinitions, tickCount)
+    .filter((placementTick) => placementTick <= tick);
+
+  return placementTicks.at(-1) ?? 0;
+}
+
+export function buildAbilityPlacementTicks(
+  abilityActions: RotationAction[],
+  abilityDefinitions: Record<EntityId, AbilityDefinition>,
+  tickCount: number,
+): number[] {
+  const orderedActions = [...abilityActions]
+    .filter((action) => action.lane === 'ability')
+    .sort(comparePlannerActions);
+  const placementTicks: number[] = [];
+  let nextWindowStart = 0;
+
+  for (const action of orderedActions) {
+    while (nextWindowStart < action.tick && nextWindowStart < tickCount) {
+      placementTicks.push(nextWindowStart);
+      nextWindowStart += GCD_TICKS;
+    }
+
+    if (action.tick < tickCount) {
+      placementTicks.push(action.tick);
+    }
+
+    const definition = resolveAbilityDefinition(action, abilityDefinitions);
+    const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
+    nextWindowStart = action.tick + span;
+  }
+
+  while (nextWindowStart < tickCount) {
+    placementTicks.push(nextWindowStart);
+    nextWindowStart += GCD_TICKS;
+  }
+
+  return [...new Set(placementTicks)].sort((left, right) => left - right);
 }
 
 export function canPlaceAbilityAtTick(
@@ -44,9 +91,14 @@ export function canPlaceAbilityAtTick(
   tick: number,
   draggedActionId?: string,
 ): boolean {
-  const snappedTick = snapTickToAbilityWindowStart(tick);
+  const snappedTick = snapTickToAbilityWindowStart(
+    abilityActions,
+    abilityDefinitions,
+    tickCount,
+    tick,
+  );
 
-  if (!isAbilityPlacementTick(snappedTick)) {
+  if (!isAbilityPlacementTick(abilityActions, abilityDefinitions, tickCount, snappedTick)) {
     return false;
   }
 
@@ -251,7 +303,16 @@ function resolveChannelTimelineSpan(abilityDefinition: AbilityDefinition): numbe
     return abilityDefinition.channelDurationTicks ?? 0;
   }
 
-  return abilityDefinition.channelDurationTicks ?? 0;
+  const lastHitOffset = abilityDefinition.hitSchedule.reduce(
+    (latestTick, hit) => Math.max(latestTick, hit.tickOffset),
+    0,
+  );
+
+  if (lastHitOffset > 0) {
+    return lastHitOffset;
+  }
+
+  return Math.max((abilityDefinition.channelDurationTicks ?? 0) - 1, 0);
 }
 
 function buildShiftedAbilityActions(input: {
@@ -262,9 +323,24 @@ function buildShiftedAbilityActions(input: {
   tickCount: number;
   forceActionId?: string;
 }): RotationAction[] | null {
-  const snappedTick = snapTickToAbilityWindowStart(input.tick);
   const targetActionId = input.forceActionId ?? input.payload.actionId;
   const existingActions = input.abilityActions.filter((action) => action.id !== input.payload.actionId);
+  const boundedTickCount = Number.isFinite(input.tickCount)
+    ? input.tickCount
+    : Math.max(
+        input.tick + GCD_TICKS + 1,
+        ...existingActions.map((action) => {
+          const definition = resolveAbilityDefinition(action, input.abilityDefinitions);
+          const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
+          return action.tick + span + GCD_TICKS;
+        }),
+      );
+  const snappedTick = snapTickToAbilityWindowStart(
+    existingActions,
+    input.abilityDefinitions,
+    boundedTickCount,
+    input.tick,
+  );
   const insertedAction = createAbilityPlacementAction(
     input.payload.abilityId,
     snappedTick,
@@ -307,10 +383,7 @@ function buildShiftedAbilityActions(input: {
   const shiftedActions = orderedActions.map((action) => {
     const definition = resolveAbilityDefinition(action, input.abilityDefinitions);
     const span = definition ? getAbilityTimelineSpan(definition) : GCD_TICKS;
-    const nextTick = isAbilityPlacementTick(action.tick)
-      ? action.tick
-      : snapTickToAbilityWindowStart(action.tick);
-    const shiftedTick = Math.max(nextTick, previousEndTick);
+    const shiftedTick = Math.max(action.tick, previousEndTick);
 
     previousEndTick = shiftedTick + span;
 

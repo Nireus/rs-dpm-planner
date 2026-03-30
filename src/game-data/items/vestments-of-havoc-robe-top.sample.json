@@ -1,0 +1,20 @@
+{
+  "id": "vestments-of-havoc-robe-top",
+  "name": "Vestments of havoc robe top",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Vestments_of_havoc_robe_top.png",
+  "wikiUrl": "https://runescape.wiki/w/Vestments_of_havoc_armour",
+  "combatStyleTags": ["melee"],
+  "tier": 95,
+  "offensiveStats": {
+    "meleeBonus": 41.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 95
+    }
+  },
+  "effectRefs": ["vestments-of-havoc-set"],
+  "implementationNotes": "Curated vestment robe top from the live Vestments of havoc armour page. Wiki-verified with Playwright for level requirement, slot, and set-bonus membership."
+}

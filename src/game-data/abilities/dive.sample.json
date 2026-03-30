@@ -1,0 +1,14 @@
+{
+  "id": "dive",
+  "name": "Dive",
+  "style": "melee",
+  "subtype": "other",
+  "cooldownTicks": 34,
+  "adrenalineCost": 0,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Dive forward. Move up to 10 tiles towards the targeted tile."
+}

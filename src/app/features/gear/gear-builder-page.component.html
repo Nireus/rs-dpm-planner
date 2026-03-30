@@ -292,6 +292,21 @@
           </label>
         </div>
 
+        <div class="catalog-tabs" role="tablist" aria-label="Gear catalog categories">
+          @for (tab of catalogTabs; track tab.id) {
+            <button
+              type="button"
+              class="catalog-tab"
+              role="tab"
+              [class.catalog-tab-active]="selectedCatalogTab() === tab.id"
+              [attr.aria-selected]="selectedCatalogTab() === tab.id"
+              (click)="selectCatalogTab(tab.id)"
+            >
+              {{ tab.label }}
+            </button>
+          }
+        </div>
+
         <div class="catalog-grid">
           @for (item of filteredItems(); track item.id) {
             <button
@@ -317,8 +332,8 @@
             </button>
           } @empty {
             <article class="empty-state">
-              <h3>No Matches</h3>
-              <p>No loaded item definitions match the current search.</p>
+              <h3>{{ catalogEmptyHeading() }}</h3>
+              <p>{{ catalogEmptyCopy() }}</p>
             </article>
           }
         </div>

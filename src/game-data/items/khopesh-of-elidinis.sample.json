@@ -1,0 +1,20 @@
+{
+  "id": "khopesh-of-elidinis",
+  "name": "Khopesh of Elidinis",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Khopesh_of_Elidinis.png",
+  "wikiUrl": "https://runescape.wiki/w/Khopesh_of_Elidinis",
+  "combatStyleTags": ["melee"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 92
+    }
+  },
+  "implementationNotes": "Curated off-hand melee weapon from the live Khopesh of Elidinis page. Wiki-verified with Playwright for off-hand slot, Attack requirement, and combat stats."
+}

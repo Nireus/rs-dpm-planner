@@ -1,0 +1,21 @@
+{
+  "id": "masterwork-2h-sword",
+  "name": "Masterwork 2h sword",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_2h_sword.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_2h_sword",
+  "combatStyleTags": ["melee"],
+  "tier": 99,
+  "offensiveStats": {
+    "damageTier": 100,
+    "accuracyTier": 100
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 99
+    }
+  },
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Masterwork 2h sword page. Wiki-verified with Playwright for the level 99 Attack requirement and tier 100 damage/accuracy profile."
+}

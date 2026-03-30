@@ -1,5 +1,5 @@
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
-import type { EntityId, EquipmentSlot } from '../../game-data/types';
+import type { EntityId } from '../../game-data/types';
 import type {
   AbilityDamageSummary,
   DamageBreakdown,
@@ -13,7 +13,9 @@ import { resolveAdrenalineTimeline, resolveChannelTimeline, resolveCooldownTimel
 import { resolveDeathsporeTimeline } from '../resolvers/deathspore';
 import { resolveEquilibriumTimeline } from '../resolvers/equilibrium';
 import { resolveDeterministicRangedTimeline } from '../resolvers/ranged-deterministic';
+import { resolveDeterministicMeleeTimeline } from '../resolvers/melee-deterministic';
 import { applyAdditiveDamageModifiers } from './additive-damage-modifiers';
+import { calculateAbilityDamage } from './ability-damage';
 import { applyExpectedValueCriticalStrike } from './critical-strike';
 import {
   addDamageSummary,
@@ -61,6 +63,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       .map((issue) => issue.relatedActionId as string),
   );
   const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockingActionIds);
+  const deterministicMeleeTimeline = resolveDeterministicMeleeTimeline(config, blockingActionIds);
   const deathsporeTimeline = resolveDeathsporeTimeline(
     config,
     blockingActionIds,
@@ -70,6 +73,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const mergedBuffTimeline = mergeBuffTimelines(
     config.rotationPlan.tickCount,
     deterministicRangedTimeline.buffTimeline,
+    deterministicMeleeTimeline.buffTimeline,
     deathsporeTimeline.buffTimeline,
     equilibriumTimeline.buffTimeline,
   );
@@ -83,10 +87,12 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const damageByTick = createEmptyDamageByTick(config.rotationPlan.tickCount);
   const damageByAbilityMap = new Map<EntityId, DamageSummary>();
   const hitEvents = buildSimulationHitEvents(config, blockingActionIds);
-  const hasBolgEquipped = isBolgEquipped(config);
   let perfectEquilibriumStacks = normalizeStartingPerfectEquilibriumStacks(
     config.rotationPlan.startingStacks?.perfectEquilibriumStacks,
   );
+  const perfectEquilibriumStackTimeline = Object.fromEntries(
+    Array.from({ length: config.rotationPlan.tickCount }, (_, tick) => [tick, perfectEquilibriumStacks]),
+  ) as Record<number, number>;
   let cracklingReadyAtTick = 0;
   let aftershockReadyAtTick = 0;
   let aftershockPendingProcCount = 0;
@@ -96,7 +102,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   for (let index = 0; index < hitEvents.length; index += 1) {
     const event = hitEvents[index];
     const projectedConfig = projectSimulationConfigAtTick(config, event.action.tick);
-    const actionAbilityDamage = calculateRangedAbilityDamage(projectedConfig);
+    const actionAbilityDamage = calculateAbilityDamage(projectedConfig, event.ability);
     const aftershockRank = collectHighestEquippedPerkRank(projectedConfig, AFTERSHOCK_ABILITY_ID);
     const aftershockEquipped = aftershockRank > 0;
 
@@ -152,7 +158,9 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       aftershockReadyAtTick = event.tick + AFTERSHOCK_COOLDOWN_TICKS;
     }
 
-    if (!hasBolgEquipped || !event.contributesToPerfectEquilibrium) {
+    const bolgEquippedForEvent = isBolgEquipped(projectedConfig);
+
+    if (!bolgEquippedForEvent || !event.contributesToPerfectEquilibrium) {
       if (shouldTriggerCrackling(event, projectedConfig, cracklingReadyAtTick)) {
         const cracklingRank = collectHighestEquippedPerkRank(projectedConfig, CRACKLING_ABILITY_ID);
         hitEvents.splice(index + 1, 0, createCracklingHitEvent(event, actionAbilityDamage, cracklingRank));
@@ -165,6 +173,12 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     perfectEquilibriumStacks += 1;
     const perfectEquilibriumThreshold =
       mergedBuffTimeline[event.tick]?.includes(BALANCE_BY_FORCE_BUFF_ID) ? 4 : 8;
+    fillPerfectEquilibriumStackTimeline(
+      perfectEquilibriumStackTimeline,
+      event.tick,
+      perfectEquilibriumStacks,
+      config.rotationPlan.tickCount,
+    );
 
     if (perfectEquilibriumStacks < perfectEquilibriumThreshold) {
       if (shouldTriggerCrackling(event, projectedConfig, cracklingReadyAtTick)) {
@@ -177,6 +191,12 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     }
 
     perfectEquilibriumStacks = 0;
+    fillPerfectEquilibriumStackTimeline(
+      perfectEquilibriumStackTimeline,
+      event.tick,
+      perfectEquilibriumStacks,
+      config.rotationPlan.tickCount,
+    );
     const multiplicativeAbilityDamageMultiplier = calculateBreakdownMultiplierProduct(breakdown);
     hitEvents.splice(
       index + 1,
@@ -224,6 +244,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     buffTimeline: mergedBuffTimeline,
     timelineGeneratedBuffSources: [
       ...deterministicRangedTimeline.timelineGeneratedBuffSources,
+      ...deterministicMeleeTimeline.timelineGeneratedBuffSources,
       ...deathsporeTimeline.timelineGeneratedBuffSources,
       ...equilibriumTimeline.timelineGeneratedBuffSources,
     ],
@@ -237,13 +258,16 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       cooldownResult,
       mergedBuffTimeline,
       deathsporeTimeline.stackTimeline,
+      perfectEquilibriumStackTimeline,
       damageBreakdowns,
     ),
     explainability: {
       damageBreakdowns,
       notes: [
-        'Base hit scheduling is active. Critical strike expected value is applied, while other additive and multiplicative modifier families remain unimplemented.',
-        ...(hasBolgEquipped ? ['Perfect Equilibrium: every 8 qualifying hits fire a derived passive hit on the triggering tick.'] : []),
+        'Base hit scheduling is active. Critical strike still uses expected value, and additive versus multiplicative ordering follows the simulator\'s current MVP damage model.',
+        ...(damageBreakdowns.some((entry) => entry.abilityId === PERFECT_EQUILIBRIUM_ABILITY_ID)
+          ? ['Perfect Equilibrium: every 8 qualifying hits fire a derived passive hit on the triggering tick.']
+          : []),
         ...(collectHighestEquippedPerkRank(config, CRACKLING_ABILITY_ID) > 0
           ? ['Crackling: after its cooldown ends, the next qualifying hit adds a direct perk hit on the same tick.']
           : []),
@@ -254,6 +278,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
           ? ['Split Soul: each qualifying hit while the buff is active creates a separate same-tick damage splat based on Soul Split healing.']
           : []),
         ...deterministicRangedTimeline.notes,
+        ...deterministicMeleeTimeline.notes,
         ...deathsporeTimeline.notes,
         ...equilibriumTimeline.notes,
       ],
@@ -271,7 +296,7 @@ function createDamageBreakdown(
   derivedDamageParts?: SimulationHitEvent['derivedDamageParts'],
 ): DamageBreakdown {
   const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
-  const abilityDamage = calculateRangedAbilityDamage(projectedConfig);
+  const abilityDamage = calculateAbilityDamage(projectedConfig, ability);
   const baseDamage = derivedDamageParts?.scaledAbilityDamage ?? (hit.tags?.includes('direct-damage')
     ? createDirectDamageSummary(hit.damage)
     : scaleDamageRangeFromAbilityDamage(hit.damage, abilityDamage));
@@ -281,6 +306,7 @@ function createDamageBreakdown(
     ability,
     hit,
     preciseAdjustedBaseDamage,
+    action.tick,
     hitTick,
     buffTimeline,
   );
@@ -338,76 +364,6 @@ function createDamageBreakdown(
   };
 }
 
-function calculateRangedAbilityDamage(config: SimulationConfig): number {
-  const rangedLevel = config.playerStats.rangedLevel;
-  const weapon = resolveEquippedDefinition(config, 'weapon');
-
-  if (!weapon) {
-    return 0;
-  }
-
-  const weaponTier = readDamageTier(weapon);
-  const ammoTier = readAmmoTier(config);
-  const rangedBonus = calculateRangedBonus(config);
-  const tierForRangedScaling =
-    ammoTier > 0 ? Math.min(weaponTier, ammoTier) : weaponTier;
-
-  const baseAbilityDamage = (
-    Math.floor(2.5 * rangedLevel) +
-    Math.floor(1.25 * rangedLevel) +
-    Math.floor(9.6 * tierForRangedScaling + rangedBonus) +
-    Math.floor(4.8 * tierForRangedScaling + 0.5 * rangedBonus)
-  );
-
-  const eruptiveRank = collectHighestEquippedPerkRank(config, 'eruptive');
-  const eruptiveMultiplier = 1 + eruptiveRank * 0.005;
-
-  return roundDamageValue(baseAbilityDamage * eruptiveMultiplier);
-}
-
-function resolveEquippedDefinition(
-  config: SimulationConfig,
-  slot: EquipmentSlot,
-): { offensiveStats?: Record<string, number> } | null {
-  const equippedItem = config.gearSetup.equipment[slot];
-  if (!equippedItem) {
-    return null;
-  }
-
-  return config.gameData.items[equippedItem.definitionId] ?? config.gameData.ammo[equippedItem.definitionId] ?? null;
-}
-
-function readAmmoTier(config: SimulationConfig): number {
-  const ammoInstance = config.gearSetup.ammoSelection ?? config.gearSetup.equipment.ammo;
-  if (!ammoInstance) {
-    return 0;
-  }
-
-  const ammoDefinition =
-    config.gameData.ammo[ammoInstance.definitionId] ??
-    config.gameData.items[ammoInstance.definitionId];
-
-  return ammoDefinition ? readDamageTier(ammoDefinition) : 0;
-}
-
-function readDamageTier(definition: { offensiveStats?: Record<string, number>; tier?: number }): number {
-  return Math.max(
-    0,
-    Math.trunc(definition.offensiveStats?.['damageTier'] ?? definition.tier ?? 0),
-  );
-}
-
-function calculateRangedBonus(config: SimulationConfig): number {
-  return Object.values(config.gearSetup.equipment).reduce((total, instance) => {
-    if (!instance) {
-      return total;
-    }
-
-    const definition = config.gameData.items[instance.definitionId];
-    return total + Math.trunc(definition?.offensiveStats?.['rangedBonus'] ?? 0);
-  }, 0);
-}
-
 function isBolgEquipped(config: SimulationConfig): boolean {
   const weapon = config.gearSetup.equipment.weapon;
   if (!weapon) {
@@ -434,6 +390,17 @@ function calculateBreakdownMultiplierProduct(breakdown: DamageBreakdown): number
 
 function roundDamageValue(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function fillPerfectEquilibriumStackTimeline(
+  timeline: Record<number, number>,
+  startTick: number,
+  stacks: number,
+  tickCount: number,
+): void {
+  for (let tick = startTick; tick < tickCount; tick += 1) {
+    timeline[tick] = stacks;
+  }
 }
 
 function shouldTriggerCrackling(

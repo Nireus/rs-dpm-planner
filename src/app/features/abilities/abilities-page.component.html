@@ -28,6 +28,30 @@
         </div>
       </div>
     </div>
+
+    <div class="style-tabs" role="tablist" aria-label="Ability styles">
+      @for (tab of styleTabs; track tab.id) {
+        <button
+          type="button"
+          class="style-tab"
+          [class]=" 'style-tab ' + tab.themeClass"
+          [class.style-tab-active]="selectedStyleTab() === tab.id"
+          role="tab"
+          [attr.aria-selected]="selectedStyleTab() === tab.id"
+          (click)="selectStyleTab(tab.id)"
+        >
+          @if (tab.iconPath) {
+            <img
+              class="style-tab-icon"
+              [class.white-tint-icon]="tab.iconTint === 'white'"
+              [src]="tab.iconPath"
+              [alt]="tab.label"
+            />
+          }
+          {{ tab.label }}
+        </button>
+      }
+    </div>
   </header>
 
   @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
@@ -45,13 +69,13 @@
       </ul>
     </article>
   } @else {
-    @for (styleGroup of groupedAbilities(); track styleGroup.style) {
+    @if (groupedAbilities().length) {
       <section class="style-group">
-        <div class="section-heading">
-          <p class="eyebrow">{{ styleGroup.displayStyle }}</p>
+        <div class="section-heading" [class]="selectedStyleThemeClass()">
+          <p class="eyebrow">{{ selectedStyleLabel() }}</p>
         </div>
 
-        @for (category of styleGroup.categories; track category.key) {
+        @for (category of groupedAbilities(); track category.key) {
           <section class="category-group">
             <div class="category-header">
               <h3>{{ category.label }}</h3>
@@ -64,8 +88,7 @@
                   <button
                     type="button"
                     class="ability-card"
-                    [class.ranged-card]="ability.style === 'ranged'"
-                    [class.constitution-card]="ability.style === 'constitution'"
+                    [class]=" 'ability-card ' + selectedStyleThemeClass()"
                     [class.available]="availability.isAvailable"
                     [class.unavailable]="!availability.isAvailable"
                     [title]="hoverText(ability)"
@@ -91,10 +114,10 @@
           </section>
         }
       </section>
-    } @empty {
+    } @else {
       <article class="panel">
-        <h2>No Matches</h2>
-        <p>No loaded abilities match the current search.</p>
+        <h2>{{ abilitiesEmptyHeading() }}</h2>
+        <p>{{ abilitiesEmptyCopy() }}</p>
       </article>
     }
   }

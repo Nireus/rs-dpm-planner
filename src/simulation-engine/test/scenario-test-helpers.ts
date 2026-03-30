@@ -28,7 +28,12 @@ export function createScenarioConfig(input: {
 }): SimulationConfig {
   return {
     playerStats: {
+      attackLevel: 99,
+      strengthLevel: 99,
+      defenceLevel: 99,
       rangedLevel: 99,
+      magicLevel: 99,
+      necromancyLevel: 99,
       prayerLevel: 99,
     },
     gearSetup: {

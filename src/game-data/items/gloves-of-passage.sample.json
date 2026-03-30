@@ -1,0 +1,20 @@
+{
+  "id": "gloves-of-passage",
+  "name": "Gloves of passage",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Gloves_of_passage.png",
+  "wikiUrl": "https://runescape.wiki/w/Gloves_of_passage",
+  "combatStyleTags": ["melee"],
+  "tier": 85,
+  "offensiveStats": {
+    "meleeBonus": 13.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 85
+    }
+  },
+  "effectRefs": ["enduring-ruin"],
+  "implementationNotes": "Curated melee gloves from the live Gloves of passage page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and the Enduring Ruin passive."
+}

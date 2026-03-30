@@ -1,4 +1,6 @@
 import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
+import type { EquipmentSlot } from '../../game-data/types';
+import { applyEquipmentPlacement } from '../gear/equipment-topology';
 import type { RotationAction, SimulationConfig } from '../models';
 
 const IMPLICIT_QUIVER_BOLT_AMMO_ID = 'bakriminel-bolts';
@@ -30,16 +32,18 @@ export function projectSimulationConfigAtTick(
       continue;
     }
 
-    const displaced = projectedEquipment[slot as keyof typeof projectedEquipment];
-    projectedInventory = projectedInventory.filter((item) => item.instanceId !== instanceId);
-    if (displaced) {
-      projectedInventory.push(displaced);
-    }
+    const applied = applyEquipmentPlacement(
+      {
+        equipment: projectedEquipment,
+        inventory: projectedInventory,
+      },
+      inventoryInstance,
+      slot as EquipmentSlot,
+      config.gameData.items,
+    );
 
-    projectedEquipment = {
-      ...projectedEquipment,
-      [slot]: inventoryInstance,
-    };
+    projectedEquipment = applied.equipment;
+    projectedInventory = applied.inventory;
   }
 
   return {

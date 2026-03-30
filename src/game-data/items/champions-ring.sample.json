@@ -1,0 +1,14 @@
+{
+  "id": "champions-ring",
+  "name": "Champion's ring",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Champion%27s_ring.png",
+  "wikiUrl": "https://runescape.wiki/w/Champion%27s_ring",
+  "combatStyleTags": ["melee"],
+  "offensiveStats": {
+    "meleeBonus": 34.5
+  },
+  "effectRefs": ["crimson-strikes"],
+  "implementationNotes": "Curated melee ring from the live Champion's ring page. Wiki-verified with Playwright for melee style bonus and the Crimson Strikes passive."
+}

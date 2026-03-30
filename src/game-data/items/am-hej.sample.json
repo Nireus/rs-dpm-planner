@@ -1,0 +1,19 @@
+{
+  "id": "am-hej",
+  "name": "Am-hej",
+  "category": "jewellery",
+  "slot": "amulet",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Am-hej.png",
+  "wikiUrl": "https://runescape.wiki/w/Am-hej",
+  "combatStyleTags": ["melee"],
+  "offensiveStats": {
+    "meleeBonus": 51.7
+  },
+  "requirements": {
+    "levelRequirements": {
+      "strength": 90
+    }
+  },
+  "effectRefs": ["am-hej-passive"],
+  "implementationNotes": "Curated melee amulet from the live Am-hej page. Wiki-verified with Playwright for Strength requirement, melee style bonus, and the additive melee-damage passive."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "split-soul",
+  "name": "Split Soul",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 25,
+  "adrenalineGain": 0,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "split-soul",
+      "endsOnWeaponSwap": true
+    }
+  ],
+  "effectRefs": ["weapon-special:split-soul"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Eldritch crossbow special attack. Qualifying hits create a separate Split Soul damage splat while the buff remains active."
+}

@@ -1,0 +1,20 @@
+{
+  "id": "jaws-of-the-abyss",
+  "name": "Jaws of the Abyss",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Jaws_of_the_Abyss.png",
+  "wikiUrl": "https://runescape.wiki/w/Jaws_of_the_Abyss",
+  "combatStyleTags": ["melee"],
+  "tier": 85,
+  "offensiveStats": {
+    "meleeBonus": 21.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 85
+    }
+  },
+  "effectRefs": ["jaws-of-the-abyss-passive"],
+  "implementationNotes": "Curated melee helm from the live Jaws of the Abyss page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and the bleed-scaling adrenaline passive."
+}

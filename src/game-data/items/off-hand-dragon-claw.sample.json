@@ -1,0 +1,21 @@
+{
+  "id": "off-hand-dragon-claw",
+  "name": "Off-hand dragon claw",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Off-hand_dragon_claw.png",
+  "wikiUrl": "https://runescape.wiki/w/Off-hand_dragon_claw",
+  "combatStyleTags": ["melee"],
+  "tier": 60,
+  "offensiveStats": {
+    "damageTier": 60,
+    "accuracyTier": 60
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 60
+    }
+  },
+  "effectRefs": ["weapon-special:slice-and-dice"],
+  "implementationNotes": "Curated off-hand melee weapon from the live Off-hand dragon claw page. Wiki-verified with Playwright for slot, tier, Attack requirement, and the paired Slice and Dice special-attack requirement."
+}

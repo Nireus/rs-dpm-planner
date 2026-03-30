@@ -1,0 +1,36 @@
+{
+  "id": "backhand",
+  "name": "Backhand",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 31
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "backhand-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 95,
+        "max": 105
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 95,
+    "max": 105
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Strike the target with the back of the hand. Stuns and binds the target for 1.8s."
+}

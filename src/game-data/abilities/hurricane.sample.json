@@ -1,0 +1,44 @@
+{
+  "id": "hurricane",
+  "name": "Hurricane",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 34,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 37
+    },
+    "requiredEquipmentTags": ["melee-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "hurricane-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 135,
+        "max": 165
+      }
+    },
+    {
+      "id": "hurricane-hit-2",
+      "tickOffset": 1,
+      "damage": {
+        "min": 140,
+        "max": 165
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 275,
+    "max": 330
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "spend",
+      "stacks": 4
+    }
+  ],
+  "description": "Two-handed melee spin with a stronger follow-up area hit. Live cooldown reduction per enemy hit and Bloodlust extra hit are not simulated yet."
+}

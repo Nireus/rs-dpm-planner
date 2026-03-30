@@ -61,6 +61,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         ],
       }),
       bolg: createItem({
+        specialAbilityId: 'balance-by-force',
         effectRefs: ['bolg-passive', 'weapon-special-access', 'weapon-special:balance-by-force'],
       }),
       'eldritch-crossbow': createItem({
@@ -68,6 +69,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         name: 'Eldritch crossbow',
         category: 'weapon',
         slot: 'weapon',
+        specialAbilityId: 'split-soul',
         effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
       }),
       'dracolich-coif': createItem({
@@ -146,6 +148,9 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         adrenalineGain: 0,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        specialDispatch: {
+          source: 'equipped-eof',
+        },
       }),
       'weapon-special-attack': createAbility({
         id: 'weapon-special-attack',
@@ -156,6 +161,70 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         adrenalineGain: 0,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        specialDispatch: {
+          source: 'equipped-weapon',
+        },
+      }),
+      'balance-by-force': createAbility({
+        id: 'balance-by-force',
+        name: 'Balance by Force',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 30,
+        adrenalineGain: 0,
+        hitSchedule: [
+          {
+            id: 'balance-by-force-hit',
+            tickOffset: 0,
+            damage: { min: 235, max: 255 },
+          },
+        ],
+        baseDamage: { min: 235, max: 255 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'balance-by-force-buff',
+          },
+        ],
+      }),
+      'split-soul': createAbility({
+        id: 'split-soul',
+        name: 'Split Soul',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 25,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'split-soul',
+            endsOnWeaponSwap: true,
+          },
+        ],
+        effectRefs: ['weapon-special:split-soul'],
+      }),
+      'eldritch-crossbow-eof': createAbility({
+        id: 'eldritch-crossbow-eof',
+        name: 'Eldritch Crossbow (EOF)',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 25,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'split-soul',
+            endsOnWeaponSwap: true,
+          },
+        ],
+        effectRefs: ['eof-eldritch-crossbow-spec', 'weapon-special:split-soul'],
       }),
       galeshot: createAbility({
         id: 'galeshot',
@@ -172,8 +241,28 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
           },
         ],
         effectRefs: ['searing-winds'],
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'searing-winds',
+          },
+        ],
       }),
-      'rapid-fire': createAbility(),
+      'rapid-fire': createAbility({
+        effectRefs: ['rapid-fire-channel'],
+        timelineEffects: [
+          {
+            kind: 'extend-buff',
+            buffId: 'searing-winds',
+            requiresActive: true,
+            durationFromAbility: 'max-hit-count-or-channel-duration',
+            bonusTicks: 1,
+          },
+        ],
+        displayHints: {
+          hitTickMode: 'resolved',
+        },
+      }),
       'imbue-shadows': createAbility({
         id: 'imbue-shadows',
         name: 'Imbue: Shadows',
@@ -184,6 +273,12 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         channelDurationTicks: undefined,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'shadow-imbued',
+          },
+        ],
       }),
       'shadow-tendrils': createAbility({
         id: 'shadow-tendrils',
@@ -202,6 +297,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         ],
         baseDamage: { min: 200, max: 270 },
         effectRefs: ['critical-strike-chance:+100%', 'shadow-tendrils'],
+        timelineEffects: [
+          {
+            kind: 'extend-buff',
+            buffId: 'shadow-imbued',
+            requiresActive: true,
+            durationTicks: 6,
+          },
+        ],
       }),
     },
     buffs: {
@@ -236,6 +339,28 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         sourceType: 'ability',
         durationTicks: 25,
       },
+      'balance-by-force-buff': {
+        id: 'balance-by-force-buff',
+        name: 'Balance by Force',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 50,
+        effectRefs: ['perfect-equilibrium-threshold:4'],
+      },
+      'deaths-swiftness-buff': {
+        id: 'deaths-swiftness-buff',
+        name: "Death's Swiftness",
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 63,
+      },
+      'searing-winds': {
+        id: 'searing-winds',
+        name: 'Searing Winds',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 10,
+      },
     },
     perks: {},
     relics: {},
@@ -244,9 +369,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         id: 'eldritch-crossbow-eof',
         name: 'Eldritch Crossbow (EOF)',
         weaponOrigin: 'eldritch-crossbow',
-        adrenalineCost: 25,
-        hitSchedule: [],
-        baseDamage: { min: 0, max: 0 },
+        abilityId: 'eldritch-crossbow-eof',
         effectRefs: ['eof-eldritch-crossbow-spec'],
       },
     },
@@ -414,6 +537,12 @@ describe('resolveDeterministicRangedTimeline', () => {
             subtype: 'ultimate',
             cooldownTicks: 100,
             adrenalineCost: 100,
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'deaths-swiftness-buff',
+              },
+            ],
           }),
         },
       },

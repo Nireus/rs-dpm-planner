@@ -123,9 +123,42 @@ describe('game-data sample JSON validation', () => {
       },
       hitSchedule: [],
       effectRefs: ['weapon-special:sample-special', 'critical-strike-chance:+100%'],
-      requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+      requires: {
+        requiredEquipmentTags: ['equipped-effect:weapon-special-access', 'melee-dual-wield'],
+        blockedEquipmentTags: ['ranged-two-handed'],
+      },
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown nested requirement tags', () => {
+    const result = validateAbilityDefinition({
+      id: 'bad-ability',
+      name: 'Bad Ability',
+      style: 'melee',
+      subtype: 'basic',
+      cooldownTicks: 0,
+      baseDamage: {
+        min: 100,
+        max: 120,
+      },
+      hitSchedule: [],
+      requires: {
+        requiredEquipmentTags: ['not-a-real-tag'],
+      },
+    });
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'requires.requiredEquipmentTags[0]',
+          }),
+        ]),
+      );
+    }
   });
 });

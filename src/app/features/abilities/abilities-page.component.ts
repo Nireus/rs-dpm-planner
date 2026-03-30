@@ -1,29 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { AbilityDefinition } from '../../../game-data/types';
+import {
+  ABILITY_STYLE_TABS,
+  abilityStyleEmptyMessage,
+  displayAbilitySubtypeLabel,
+  filterAbilitiesByStyle,
+  groupAbilitiesBySubtype,
+} from '../../core/abilities/ability-style-tabs';
+import type { AbilityDefinition, CombatStyle } from '../../../game-data/types';
 import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
+import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { GearBuilderStore } from '../../core/gear/gear-builder.store';
+import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
+import { buildSimulationConfigFromAppState } from '../../core/simulation/simulation-config.builder';
+import { resolveEffectiveAbilityDefinition } from '../../../simulation-engine/abilities/effective-ability';
 import {
   AbilityDetailDialogComponent,
   type AbilityDetailEntry,
   type DetailAvailabilityState,
 } from './ability-detail-dialog.component';
 
-interface GroupedAbilityCategory {
-  key: string;
-  label: string;
-  abilities: AbilityBrowserEntry[];
-}
-
-interface GroupedAbilityStyle {
-  style: string;
-  displayStyle: string;
-  categories: GroupedAbilityCategory[];
-}
-
 interface AbilityBrowserEntry extends AbilityDetailEntry {
-  style: string;
+  style: CombatStyle;
+  subtype: AbilityDefinition['subtype'];
 }
 
 @Component({
@@ -37,22 +38,46 @@ interface AbilityBrowserEntry extends AbilityDetailEntry {
 export class AbilitiesPageComponent {
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
+  private readonly gearBuilderStore = inject(GearBuilderStore);
+  private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly playerStatsStore = inject(PlayerStatsStoreService);
 
   protected readonly query = signal('');
+  protected readonly styleTabs = ABILITY_STYLE_TABS;
+  protected readonly selectedStyleTab = signal<CombatStyle>('ranged');
   protected readonly selectedEntryId = signal<string | null>(null);
   protected readonly storeSummary = this.gameDataStore.summary;
   protected readonly abilityAvailabilityMap = this.abilityAvailabilityService.availabilityMap;
-  protected readonly abilityDefinitions = computed<AbilityBrowserEntry[]>(() =>
-    Object.values(this.gameDataStore.snapshot().catalog?.abilities ?? {}).map((ability) => ({
-      ...ability,
-      ...CURATED_ABILITY_UI[ability.id],
-      detailLines: this.buildAbilityDetailLines(ability, CURATED_ABILITY_UI[ability.id]?.detailLines),
-      hitCount: ability.hitSchedule.length,
-    })),
-  );
+  protected readonly abilityDefinitions = computed<AbilityBrowserEntry[]>(() => {
+    const catalog = this.gameDataStore.snapshot().catalog;
+    if (!catalog) {
+      return [];
+    }
+
+    const simulationConfig = buildSimulationConfigFromAppState({
+      catalog,
+      playerStats: this.playerStatsStore.stats(),
+      gearState: this.gearBuilderStore.snapshot(),
+      buffState: this.buffConfigurationStore.state(),
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 1,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+    });
+
+    return Object.values(catalog.abilities)
+      .filter((ability) => !ability.displayHints?.hiddenFromUi)
+      .map((ability) =>
+        buildAbilityBrowserEntry(simulationConfig, ability, (resolvedAbility, curatedDetailLines) =>
+        this.buildAbilityDetailLines(resolvedAbility, curatedDetailLines),
+        ),
+      );
+  });
   protected readonly filteredAbilities = computed(() => {
     const normalizedQuery = this.query().trim().toLowerCase();
-    const abilities = this.abilityDefinitions();
+    const abilities = filterAbilitiesByStyle(this.abilityDefinitions(), this.selectedStyleTab());
 
     if (!normalizedQuery) {
       return abilities;
@@ -62,46 +87,21 @@ export class AbilitiesPageComponent {
       `${ability.name} ${ability.id} ${ability.subtype} ${ability.style}`.toLowerCase().includes(normalizedQuery),
     );
   });
-  protected readonly groupedAbilities = computed<GroupedAbilityStyle[]>(() => {
-    const styleOrder = ['ranged', 'constitution', 'magic', 'melee', 'necromancy'];
-    const categoryOrder = ['basic', 'enhanced', 'ultimate', 'special', 'other'];
-    const styleGroups = new Map<string, GroupedAbilityStyle>();
-
-    for (const ability of this.filteredAbilities()) {
-      const styleKey = ability.style;
-      const categoryKey = ability.subtype;
-      const styleGroup = styleGroups.get(styleKey) ?? {
-        style: styleKey,
-        displayStyle: this.displayStyleLabel(styleKey),
-        categories: [],
-      };
-      let category = styleGroup.categories.find((entry) => entry.key === categoryKey);
-
-      if (!category) {
-        category = {
-          key: categoryKey,
-          label: this.displaySubtypeLabel(categoryKey),
-          abilities: [],
-        };
-        styleGroup.categories.push(category);
-      }
-
-      category.abilities.push(ability);
-      styleGroups.set(styleKey, styleGroup);
-    }
-
-    return Array.from(styleGroups.values())
-      .sort((left, right) => styleOrder.indexOf(left.style) - styleOrder.indexOf(right.style))
-      .map((styleGroup) => ({
-        ...styleGroup,
-        categories: styleGroup.categories
-          .map((category) => ({
-            ...category,
-            abilities: [...category.abilities].sort((left, right) => left.name.localeCompare(right.name)),
-          }))
-          .sort((left, right) => categoryOrder.indexOf(left.key) - categoryOrder.indexOf(right.key)),
-      }));
-  });
+  protected readonly groupedAbilities = computed(() => groupAbilitiesBySubtype(this.filteredAbilities()));
+  protected readonly selectedStyleLabel = computed(
+    () => this.styleTabs.find((tab) => tab.id === this.selectedStyleTab())?.label ?? this.selectedStyleTab(),
+  );
+  protected readonly selectedStyleThemeClass = computed(
+    () => this.styleTabs.find((tab) => tab.id === this.selectedStyleTab())?.themeClass ?? '',
+  );
+  protected readonly abilitiesEmptyHeading = computed(() =>
+    this.query().trim() ? 'No Matches' : 'Coming Soon',
+  );
+  protected readonly abilitiesEmptyCopy = computed(() =>
+    this.query().trim()
+      ? 'No loaded abilities match the current search.'
+      : abilityStyleEmptyMessage(this.selectedStyleTab()),
+  );
   protected readonly selectedEntry = computed<AbilityBrowserEntry | null>(() => {
     const selectedId = this.selectedEntryId();
     if (!selectedId) {
@@ -126,7 +126,7 @@ export class AbilitiesPageComponent {
   protected hoverText(entry: AbilityBrowserEntry): string {
     const availability = this.abilityAvailability(entry);
     const lines = [
-      entry.hoverSummary ?? this.compactMeta(entry),
+      entry.displayHoverSummary ?? entry.hoverSummary ?? this.compactMeta(entry),
       `Damage: ${this.damageRangeLabel(entry)}`,
       `Schedule: ${this.hitScheduleSummary(entry)}`,
       availability
@@ -141,7 +141,7 @@ export class AbilitiesPageComponent {
     const segments = [
       this.displaySubtypeLabel(entry.subtype),
       entry.cooldownTicks !== null && entry.cooldownTicks !== undefined ? `${entry.cooldownTicks} ticks` : null,
-      entry.hitCount > 0 ? `${entry.hitCount} hit(s)` : 'Varies',
+      entry.displayHitCountLabel ?? (entry.hitCount > 0 ? `${entry.hitCount} hit(s)` : 'Varies'),
       entry.adrenalineGain !== undefined
         ? `+${entry.adrenalineGain}% adrenaline`
         : entry.adrenalineCost !== undefined
@@ -180,26 +180,11 @@ export class AbilitiesPageComponent {
   }
 
   protected displaySubtypeLabel(subtype: string): string {
-    switch (subtype) {
-      case 'enhanced':
-        return 'Enhanced';
-      case 'basic':
-        return 'Basic';
-      case 'ultimate':
-        return 'Ultimate';
-      case 'special':
-        return 'Special';
-      default:
-        return subtype;
-    }
+    return displayAbilitySubtypeLabel(subtype);
   }
 
-  protected displayStyleLabel(style: string): string {
-    if (style === 'constitution') {
-      return 'Constitution';
-    }
-
-    return style.charAt(0).toUpperCase() + style.slice(1);
+  protected selectStyleTab(style: CombatStyle): void {
+    this.selectedStyleTab.set(style);
   }
 
   private damageRangeLabel(entry: AbilityBrowserEntry): string {
@@ -217,6 +202,10 @@ export class AbilitiesPageComponent {
   }
 
   private hitScheduleSummary(entry: AbilityBrowserEntry): string {
+    if (entry.displayHitScheduleSummary) {
+      return entry.displayHitScheduleSummary;
+    }
+
     const schedule = entry.hitSchedule ?? [];
 
     if (schedule.length === 0) {
@@ -250,4 +239,35 @@ export class AbilitiesPageComponent {
 
     return lines.filter((line): line is string => Boolean(line));
   }
+}
+
+export function buildAbilityBrowserEntry(
+  simulationConfig: Parameters<typeof resolveEffectiveAbilityDefinition>[0],
+  ability: AbilityDefinition,
+  buildDetailLines: (ability: AbilityDefinition, curatedDetailLines?: string[]) => string[],
+): AbilityBrowserEntry {
+  const resolvedAbility = resolveEffectiveAbilityDefinition(simulationConfig, {
+    id: `ability-browser:${ability.id}`,
+    tick: 0,
+    lane: 'ability',
+    actionType: 'ability-use',
+    payload: {
+      abilityId: ability.id,
+    },
+  }) ?? ability;
+  const curatedUi = CURATED_ABILITY_UI[ability.id];
+  const displayHints = resolvedAbility.displayHints;
+
+  return {
+    ...resolvedAbility,
+    iconPath: curatedUi?.iconPath ?? resolvedAbility.iconPath,
+    hoverSummary: curatedUi?.hoverSummary ?? resolvedAbility.hoverSummary,
+    wikiUrl: curatedUi?.wikiUrl ?? resolvedAbility.wikiUrl,
+    detailLines: buildDetailLines(resolvedAbility, curatedUi?.detailLines),
+    hitCount: resolvedAbility.hitSchedule.length,
+    displayHoverSummary: displayHints?.hoverSummary,
+    displayHitCountLabel: displayHints?.hitCountLabel,
+    displayDamageRangeLabel: displayHints?.damageRangeLabel,
+    displayHitScheduleSummary: displayHints?.hitScheduleSummary,
+  };
 }

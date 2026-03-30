@@ -10,39 +10,9 @@
   ],
   "wikiUrl": "https://runescape.wiki/w/Gloomfire_bow",
   "weaponOrigin": "gloomfire-bow",
+  "abilityId": "gloomfire-bow-eof",
   "requires": {
     "requiredEquipmentTags": ["eof-special:gloomfire-bow"]
-  },
-  "adrenalineCost": 65,
-  "hitSchedule": [
-    {
-      "id": "gloomfire-bow-eof-hit-1",
-      "tickOffset": 0,
-      "damage": {
-        "min": 85,
-        "max": 105
-      }
-    },
-    {
-      "id": "gloomfire-bow-eof-hit-2",
-      "tickOffset": 0,
-      "damage": {
-        "min": 85,
-        "max": 105
-      }
-    },
-    {
-      "id": "gloomfire-bow-eof-hit-3",
-      "tickOffset": 0,
-      "damage": {
-        "min": 255,
-        "max": 295
-      }
-    }
-  ],
-  "baseDamage": {
-    "min": 425,
-    "max": 505
   },
   "effectRefs": ["eof-gloomfire-bow-spec"],
   "description": "Stored Gloomfire bow special attack for Essence of Finality. Strikes for two smaller hits and a stronger finishing hit."

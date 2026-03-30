@@ -230,6 +230,9 @@ describe('rotation planner inspection', () => {
     expect(inspection.adrenaline.start).toBe(21);
     expect(inspection.adrenaline.end).toBe(21);
     expect(inspection.deathsporeStacks).toBe(2);
+    expect(inspection.perfectEquilibriumStacks).toBeNull();
+    expect(inspection.bloodlustStacks).toBeNull();
+    expect(inspection.bloodlustMaxStacks).toBeNull();
     expect(inspection.activePersistentBuffs).toEqual(['Rigour', 'Fury of the Small']);
     expect(inspection.activeTemporaryBuffs).toEqual([]);
     expect(inspection.equipmentState).toEqual([
@@ -290,33 +293,33 @@ describe('rotation planner inspection', () => {
 
     expect(inspection.actionsStarting).toEqual(['Vulnerability Bomb', 'Piercing Shot']);
     expect(inspection.hitsResolving).toEqual([
-      'Piercing Shot: Piercing Shot Hit 1 (166-304.5)',
-      'Piercing Shot: Piercing Shot Hit 2 (166-304.5)',
+      'Piercing Shot: Piercing Shot Hit 1 (178-325.5)',
+      'Piercing Shot: Piercing Shot Hit 2 (178-325.5)',
     ]);
     expect(inspection.damageCalculations).toEqual([
       {
         abilityName: 'Piercing Shot',
         hitName: 'Piercing Shot Hit 1',
-        baseRange: '166 / 184.5 / 203',
+        baseRange: '178 / 197.5 / 217',
         additiveStep: 'No flat added damage',
         multiplicativeStep: 'No damage multipliers',
         expectedValueStep: 'Min x1, Avg x1.05, Max x1.5 (crit)',
-        finalRange: '166 / 193.73 / 304.5',
-        minFormula: 'Min: ((166 × 1) + 0) × 1 = 166',
-        avgFormula: 'Avg: ((184.5 × 1) + 0) × 1.05 (crit) = 193.73',
-        maxFormula: 'Max: ((203 × 1) + 0) × 1.5 (crit) = 304.5',
+        finalRange: '178 / 207.38 / 325.5',
+        minFormula: 'Min: ((178 × 1) + 0) × 1 = 178',
+        avgFormula: 'Avg: ((197.5 × 1) + 0) × 1.05 (crit) = 207.38',
+        maxFormula: 'Max: ((217 × 1) + 0) × 1.5 (crit) = 325.5',
       },
       {
         abilityName: 'Piercing Shot',
         hitName: 'Piercing Shot Hit 2',
-        baseRange: '166 / 184.5 / 203',
+        baseRange: '178 / 197.5 / 217',
         additiveStep: 'No flat added damage',
         multiplicativeStep: 'No damage multipliers',
         expectedValueStep: 'Min x1, Avg x1.05, Max x1.5 (crit)',
-        finalRange: '166 / 193.73 / 304.5',
-        minFormula: 'Min: ((166 × 1) + 0) × 1 = 166',
-        avgFormula: 'Avg: ((184.5 × 1) + 0) × 1.05 (crit) = 193.73',
-        maxFormula: 'Max: ((203 × 1) + 0) × 1.5 (crit) = 304.5',
+        finalRange: '178 / 207.38 / 325.5',
+        minFormula: 'Min: ((178 × 1) + 0) × 1 = 178',
+        avgFormula: 'Avg: ((197.5 × 1) + 0) × 1.05 (crit) = 207.38',
+        maxFormula: 'Max: ((217 × 1) + 0) × 1.5 (crit) = 325.5',
       },
     ]);
   });
@@ -426,6 +429,8 @@ describe('rotation planner inspection', () => {
 
     expect(inspection.activeTemporaryBuffs).toEqual(["Death's Swiftness"]);
     expect(inspection.deathsporeStacks).toBe(7);
+    expect(inspection.perfectEquilibriumStacks).toBeNull();
+    expect(inspection.bloodlustStacks).toBeNull();
   });
 
   it('filters cooldown-style generated buffs out of temporary inspector buffs', () => {
@@ -630,6 +635,210 @@ describe('rotation planner inspection', () => {
 
     expect(inspection.ammoState).toBe('Wen arrows');
     expect(inspection.deathsporeStacks).toBeNull();
+  });
+
+  it('shows BoLG stacks after swapping into Bow of the Last Guardian', () => {
+    const meleeWeapon: ItemDefinition = {
+      id: 'dark-shard-of-leng',
+      name: 'Dark Shard of Leng',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+    };
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: 6 }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        deathsporeStacks: 0,
+        perfectEquilibriumStacks: index >= 2 ? 3 : 0,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: [],
+        activeBuffIds: [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 2,
+      catalog: {
+        ...CATALOG,
+        items: {
+          ...CATALOG.items,
+          [BOLG.id]: {
+            ...BOLG,
+            effectRefs: ['bolg-passive'],
+          },
+          [meleeWeapon.id]: meleeWeapon,
+        },
+      },
+      playerStats: {
+        attackLevel: 99,
+        strengthLevel: 99,
+        rangedLevel: 99,
+      },
+      gearState: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: meleeWeapon.id,
+          },
+        },
+        inventory: [
+          {
+            instanceId: 'weapon-2',
+            definitionId: BOLG.id,
+          },
+        ],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 6,
+        nonGcdActions: [
+          {
+            id: 'swap-bolg',
+            tick: 1,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'weapon-2',
+              definitionId: BOLG.id,
+              slot: 'weapon',
+              label: 'Swap: Bow of the Last Guardian',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.equipmentState[0]?.itemName).toBe('Bow of the Last Guardian');
+    expect(inspection.perfectEquilibriumStacks).toBe(3);
+  });
+
+  it('shows Bloodlust stacks in tick inspection and hides the raw Bloodlust buff entry', () => {
+    const meleeWeapon: ItemDefinition = {
+      id: 'abyssal-scourge',
+      name: 'Abyssal scourge',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+    };
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: 6 }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        deathsporeStacks: 0,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: index === 4 ? ['berserk-buff', 'bloodlust', 'bloodlust', 'bloodlust'] : [],
+        activeBuffIds: index === 4 ? ['berserk-buff', 'bloodlust', 'bloodlust', 'bloodlust'] : [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 4,
+      catalog: {
+        ...CATALOG,
+        items: {
+          ...CATALOG.items,
+          [meleeWeapon.id]: meleeWeapon,
+        },
+        buffs: {
+          ...CATALOG.buffs,
+          'berserk-buff': {
+            id: 'berserk-buff',
+            name: 'Berserk',
+            category: 'temporary',
+            sourceType: 'ability',
+          },
+          bloodlust: {
+            id: 'bloodlust',
+            name: 'Bloodlust',
+            category: 'temporary',
+            sourceType: 'ability',
+            stackRules: {
+              maxStacks: 4,
+              conditionalModifiers: [
+                {
+                  whenBuffActive: 'berserk-buff',
+                  maxStacks: 8,
+                  gainMultiplier: 2,
+                },
+              ],
+            },
+          },
+        },
+      },
+      playerStats: {
+        attackLevel: 99,
+        strengthLevel: 99,
+        rangedLevel: 99,
+      },
+      gearState: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: meleeWeapon.id,
+          },
+        },
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 6,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.bloodlustStacks).toBe(3);
+    expect(inspection.bloodlustMaxStacks).toBe(8);
+    expect(inspection.perfectEquilibriumStacks).toBeNull();
+    expect(inspection.activeTemporaryBuffs).toEqual(['Berserk']);
   });
 
   it('shows equipped perks and EOF stored special in equipment details', () => {

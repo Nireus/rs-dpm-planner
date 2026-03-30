@@ -1,0 +1,73 @@
+{
+  "id": "adaptive-strike",
+  "name": "Adaptive Strike",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 12,
+  "requires": {
+    "levelRequirements": {
+      "attack": 7
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "adaptive-strike-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 120,
+        "max": 140
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 140
+  },
+  "variants": [
+    {
+      "id": "adaptive-strike",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["melee-dual-wield"]
+      },
+      "hitSchedule": [
+        {
+          "id": "adaptive-strike-dual-wield-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 60,
+            "max": 75
+          }
+        },
+        {
+          "id": "adaptive-strike-dual-wield-hit-2",
+          "tickOffset": 0,
+          "damage": {
+            "min": 60,
+            "max": 75
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 120,
+        "max": 150
+      }
+    }
+  ],
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "displayHints": {
+    "hoverSummary": "Basic | 9 ticks | weapon-dependent | +12% adrenaline",
+    "hitCountLabel": "1-2 hit(s)",
+    "damageRangeLabel": "120%-140% (main-hand / 2h), or 2 x 60%-75% (dual-wield)",
+    "hitScheduleSummary": "1 hit at tick 0, or 2 same-tick hits while dual-wielding."
+  },
+  "description": "Channel your weapons into an adaptive strike. Main-hand-only and two-handed setups use one hit, while dual-wield uses two hits."
+}

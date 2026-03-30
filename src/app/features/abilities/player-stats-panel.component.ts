@@ -19,6 +19,26 @@ export class PlayerStatsPanelComponent {
     this.playerStatsStore.updateStat('rangedLevel', this.parseLevel(value));
   }
 
+  protected updateAttackLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('attackLevel', this.parseLevel(value));
+  }
+
+  protected updateStrengthLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('strengthLevel', this.parseLevel(value));
+  }
+
+  protected updateDefenceLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('defenceLevel', this.parseLevel(value));
+  }
+
+  protected updateMagicLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('magicLevel', this.parseLevel(value));
+  }
+
+  protected updateNecromancyLevel(value: string | number | null): void {
+    this.playerStatsStore.updateStat('necromancyLevel', this.parseLevel(value));
+  }
+
   protected updatePrayerLevel(value: string | number | null): void {
     this.playerStatsStore.updateStat('prayerLevel', this.parseLevel(value));
   }

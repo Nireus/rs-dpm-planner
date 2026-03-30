@@ -1,0 +1,19 @@
+{
+  "id": "masterwork-melee-platelegs",
+  "name": "Masterwork melee platelegs",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_platelegs.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "meleeBonus": 28.1
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 90
+    }
+  },
+  "implementationNotes": "Curated masterwork melee platelegs from the live Masterwork melee equipment page. Wiki-verified with Playwright for slot and melee style bonus."
+}

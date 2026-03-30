@@ -1,0 +1,36 @@
+{
+  "id": "greater-fury",
+  "name": "Greater Fury",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 21
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-fury-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 120,
+        "max": 140
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 140
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Strike at the target with unmatched fury. Your next melee attack within 15s is guaranteed to critically strike."
+}

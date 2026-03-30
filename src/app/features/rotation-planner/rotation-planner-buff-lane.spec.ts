@@ -32,6 +32,7 @@ describe('buildPlannerBuffLaneBars', () => {
         name: 'Dracolich infusion',
         iconPath: undefined,
         isWarning: false,
+        themeClass: undefined,
         startTick: 2,
         endTick: 4,
         span: 3,
@@ -76,6 +77,7 @@ describe('buildPlannerBuffLaneBars', () => {
         name: 'Buff A',
         iconPath: undefined,
         isWarning: false,
+        themeClass: undefined,
         startTick: 1,
         endTick: 3,
         span: 3,
@@ -87,6 +89,7 @@ describe('buildPlannerBuffLaneBars', () => {
         name: 'Buff B',
         iconPath: undefined,
         isWarning: false,
+        themeClass: undefined,
         startTick: 2,
         endTick: 4,
         span: 3,
@@ -128,6 +131,48 @@ describe('buildPlannerBuffLaneBars', () => {
         name: 'Dracolich infusion',
         iconPath: undefined,
         isWarning: false,
+        themeClass: undefined,
+        startTick: 1,
+        endTick: 2,
+        span: 2,
+        row: 0,
+        stackPeak: 1,
+      },
+    ]);
+  });
+
+  it('filters Bloodlust stacks out of the shared buff lane', () => {
+    const bars = buildPlannerBuffLaneBars({
+      tickCount: 4,
+      buffTimeline: {
+        0: ['bloodlust'],
+        1: ['bloodlust', 'bloodlust', 'berserk-buff'],
+        2: ['berserk-buff'],
+        3: [],
+      },
+      buffDefinitions: {
+        bloodlust: {
+          id: 'bloodlust',
+          name: 'Bloodlust',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+        'berserk-buff': {
+          id: 'berserk-buff',
+          name: 'Berserk',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+      },
+    });
+
+    expect(bars).toEqual([
+      {
+        buffId: 'berserk-buff',
+        name: 'Berserk',
+        iconPath: undefined,
+        isWarning: false,
+        themeClass: undefined,
         startTick: 1,
         endTick: 2,
         span: 2,
@@ -163,6 +208,64 @@ describe('buildPlannerBuffLaneBars', () => {
         name: 'Equilibrium cooldown',
         iconPath: undefined,
         isWarning: true,
+        themeClass: undefined,
+        startTick: 1,
+        endTick: 2,
+        span: 2,
+        row: 0,
+        stackPeak: 1,
+      },
+    ]);
+  });
+
+  it('uses melee palette styling for buffs sourced from melee abilities', () => {
+    const bars = buildPlannerBuffLaneBars({
+      tickCount: 4,
+      buffTimeline: {
+        0: [],
+        1: ['berserk-buff'],
+        2: ['berserk-buff'],
+        3: [],
+      },
+      buffDefinitions: {
+        'berserk-buff': {
+          id: 'berserk-buff',
+          name: 'Berserk',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+      },
+      timelineGeneratedBuffSources: [
+        {
+          buffId: 'berserk-buff',
+          sourceType: 'ability',
+          sourceId: 'berserk',
+        },
+      ],
+      abilityDefinitions: {
+        berserk: {
+          id: 'berserk',
+          name: 'Berserk',
+          style: 'melee',
+          subtype: 'ultimate',
+          cooldownTicks: 100,
+          adrenalineCost: 100,
+          hitSchedule: [],
+          baseDamage: {
+            min: 0,
+            max: 0,
+          },
+        },
+      },
+    });
+
+    expect(bars).toEqual([
+      {
+        buffId: 'berserk-buff',
+        name: 'Berserk',
+        iconPath: undefined,
+        isWarning: false,
+        themeClass: 'style-melee',
         startTick: 1,
         endTick: 2,
         span: 2,

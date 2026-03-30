@@ -23,9 +23,7 @@ describe('evaluateEofSpecAvailability', () => {
       id: 'dark-bow-eof',
       name: 'Dark Bow (EOF)',
       weaponOrigin: 'dark-bow',
-      adrenalineCost: 25,
-      hitSchedule: [],
-      baseDamage: { min: 1, max: 2 },
+      abilityId: 'dark-bow-eof',
       requires: {
         requiredEquipmentTags: ['eof-special:dark-bow'],
       },
@@ -58,9 +56,7 @@ describe('evaluateEofSpecAvailability', () => {
       id: 'seren-godbow-eof',
       name: 'Seren Godbow (EOF)',
       weaponOrigin: 'seren-godbow',
-      adrenalineCost: 30,
-      hitSchedule: [],
-      baseDamage: { min: 1, max: 2 },
+      abilityId: 'seren-godbow-eof',
       requires: {
         requiredEquipmentTags: ['eof-special:seren-godbow'],
       },

@@ -1,0 +1,20 @@
+{
+  "id": "khopesh-of-tumeken",
+  "name": "Khopesh of Tumeken",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Khopesh_of_Tumeken.png",
+  "wikiUrl": "https://runescape.wiki/w/Khopesh_of_Tumeken",
+  "combatStyleTags": ["melee"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 92
+    }
+  },
+  "implementationNotes": "Curated main-hand melee weapon from the live Khopesh of Tumeken page. Wiki-verified with Playwright for slot, Attack requirement, and combat stats."
+}

@@ -8,6 +8,12 @@ import { GameDataStoreService } from '../../core/game-data/game-data-store.servi
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
 import {
+  GEAR_CATALOG_TABS,
+  gearCatalogTabEmptyMessage,
+  matchesGearCatalogTab,
+  type GearCatalogTabId,
+} from './gear-catalog-tabs';
+import {
   canDropIntoEquipmentSlot,
   canDropIntoInventory,
   formatEquipmentSlot,
@@ -35,6 +41,8 @@ export class GearBuilderPageComponent {
   private readonly gearBuilderStore = inject(GearBuilderStore);
 
   protected readonly query = signal('');
+  protected readonly catalogTabs = GEAR_CATALOG_TABS;
+  protected readonly selectedCatalogTab = signal<GearCatalogTabId>('ranged');
   protected readonly dragSource = signal<GearDragSource | null>(null);
   protected readonly hoveredSlot = signal<EquipmentSlot | null>(null);
   protected readonly inventoryHovering = signal(false);
@@ -71,9 +79,13 @@ export class GearBuilderPageComponent {
   protected readonly equippedCount = computed(
     () => this.equippedSlots().filter((entry) => entry.definition).length,
   );
+  protected readonly visibleCatalogItems = computed(() => {
+    const items = this.gearBuilderStore.availableItems();
+    return items.filter((item) => matchesGearCatalogTab(item, this.selectedCatalogTab()));
+  });
   protected readonly filteredItems = computed(() => {
     const normalizedQuery = this.query().trim().toLowerCase();
-    const items = this.gearBuilderStore.availableItems();
+    const items = this.visibleCatalogItems();
 
     if (!normalizedQuery) {
       return items;
@@ -81,6 +93,18 @@ export class GearBuilderPageComponent {
 
     return items.filter((item) => `${item.name} ${item.id}`.toLowerCase().includes(normalizedQuery));
   });
+  protected readonly catalogEmptyHeading = computed(() =>
+    this.query().trim() ? 'No Matches' : 'Coming Soon',
+  );
+  protected readonly catalogEmptyCopy = computed(() =>
+    this.query().trim()
+      ? 'No loaded item definitions match the current search.'
+      : gearCatalogTabEmptyMessage(this.selectedCatalogTab()),
+  );
+
+  protected selectCatalogTab(tabId: GearCatalogTabId): void {
+    this.selectedCatalogTab.set(tabId);
+  }
 
   protected openCatalogDetail(item: ItemDefinition | null): void {
     this.selectedItemId.set(item?.id ?? null);

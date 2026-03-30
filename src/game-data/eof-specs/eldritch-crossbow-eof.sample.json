@@ -10,14 +10,9 @@
   ],
   "wikiUrl": "https://runescape.wiki/w/Eldritch_crossbow",
   "weaponOrigin": "eldritch-crossbow",
+  "abilityId": "eldritch-crossbow-eof",
   "requires": {
     "requiredEquipmentTags": ["eof-special:eldritch-crossbow"]
-  },
-  "adrenalineCost": 25,
-  "hitSchedule": [],
-  "baseDamage": {
-    "min": 0,
-    "max": 0
   },
   "effectRefs": ["eof-eldritch-crossbow-spec"],
   "description": "Curated EOF special access entry for the Eldritch crossbow special attack."

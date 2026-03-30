@@ -46,6 +46,7 @@ export interface TickState {
   activeAmmoState?: string;
   adrenaline: number;
   deathsporeStacks?: number;
+  perfectEquilibriumStacks?: number;
   activePersistentBuffIds: EntityId[];
   activeTimelineBuffIds: EntityId[];
   activeBuffIds: EntityId[];

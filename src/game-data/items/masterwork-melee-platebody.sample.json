@@ -1,0 +1,19 @@
+{
+  "id": "masterwork-melee-platebody",
+  "name": "Masterwork melee platebody",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_platebody.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "meleeBonus": 33.7
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 90
+    }
+  },
+  "implementationNotes": "Curated masterwork melee platebody from the live Masterwork melee equipment page. Wiki-verified with Playwright for slot and melee style bonus."
+}

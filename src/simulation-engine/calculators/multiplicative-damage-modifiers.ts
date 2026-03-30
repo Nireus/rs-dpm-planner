@@ -7,6 +7,10 @@ import type {
 } from '../models';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { collectActiveEffectRefs } from './active-effect-refs';
+import {
+  getCorruptedWoundsBleedBonus,
+  getEnduringRuinNextAttackBonus,
+} from '../melee/melee-combat-state';
 
 export interface MultiplicativeDamageComputation {
   finalDamage: DamageSummary;
@@ -18,13 +22,33 @@ export function applyMultiplicativeDamageModifiers(
   ability: { id?: string; style?: string; subtype?: string; effectRefs?: EffectRef[] },
   hit: { id?: string },
   baseDamage: DamageSummary,
+  castTick: number,
   hitTick: number,
   timelineBuffs: Record<number, EntityId[]>,
 ): MultiplicativeDamageComputation {
   const effectRefs = collectActiveEffectRefs(config, ability, hitTick, timelineBuffs);
+  const isDamageOverTime = ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime) ?? false;
   const modifiers = effectRefs
     .map((effectRef) => parseMultiplicativeModifier(effectRef, effectRefs, ability, hit, config))
     .filter((entry): entry is DamageModifierContribution & { multiplier: number } => Boolean(entry));
+  const enduringRuinBonus = getEnduringRuinNextAttackBonus(config, castTick);
+  if (enduringRuinBonus > 0 && ability.style === 'melee' && !isDamageOverTime) {
+    modifiers.push({
+      sourceId: EFFECT_REF_IDS.glovesOfPassagePassive,
+      label: `Enduring Ruin x${roundValue(1 + enduringRuinBonus).toFixed(2)}`,
+      value: 0,
+      multiplier: 1 + enduringRuinBonus,
+    });
+  }
+  const corruptedWoundsBonus = getCorruptedWoundsBleedBonus(config, hitTick);
+  if (corruptedWoundsBonus > 0 && isDamageOverTime) {
+    modifiers.push({
+      sourceId: 'corrupted-wounds',
+      label: `Corrupted Wounds x${roundValue(1 + corruptedWoundsBonus).toFixed(2)}`,
+      value: 0,
+      multiplier: 1 + corruptedWoundsBonus,
+    });
+  }
 
   if (!modifiers.length) {
     return {
@@ -123,6 +147,7 @@ function parseMultiplicativeModifier(
   }
 
   const match = /^ranged-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
+  const meleeMatch = /^melee-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
   const targetDamageTakenMatch = /^target-damage-taken:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
 
   if (targetDamageTakenMatch) {
@@ -132,6 +157,22 @@ function parseMultiplicativeModifier(
     return {
       sourceId: effectRef,
       label: `Target damage taken x${roundValue(multiplier).toFixed(2)}`,
+      value: 0,
+      multiplier,
+    };
+  }
+
+  if (meleeMatch) {
+    if (ability.style !== 'melee') {
+      return null;
+    }
+
+    const percent = Number.parseFloat(meleeMatch[1]);
+    const multiplier = 1 + percent / 100;
+
+    return {
+      sourceId: effectRef,
+      label: `Melee damage x${roundValue(multiplier).toFixed(2)}`,
       value: 0,
       multiplier,
     };

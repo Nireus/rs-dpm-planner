@@ -88,6 +88,9 @@ export class RotationPlannerStore {
   });
   readonly maxStartingAdrenaline = computed(() =>
     resolveMaxAdrenaline({
+      gearSetup: {
+        equipment: this.gearBuilderStore.snapshot().equipment,
+      },
       persistentBuffConfig: {
         buffIds: this.buffConfigurationStore.activeBuffIds(),
         relicIds: this.buffConfigurationStore.activeRelicIds(),
@@ -300,7 +303,7 @@ export class RotationPlannerStore {
         persisted.startingAdrenaline,
         DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline,
         0,
-        HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE,
+        MAX_SUPPORTED_STARTING_ADRENALINE,
       ),
       tickCount: normalizeIntegerInput(
         normalizeTickCountWindow(persisted.tickCount, DEFAULT_ROTATION_PLANNER_STATE.tickCount),
@@ -323,7 +326,7 @@ function normalizeTickCountWindow(
   return Math.max(MIN_TICK_COUNT, Math.min(MAX_TICK_COUNT, Math.ceil(normalized / TICKS_PER_GCD) * TICKS_PER_GCD));
 }
 
-const HEIGHTENED_SENSES_MAX_STARTING_ADRENALINE = MAX_ADRENALINE + 10;
+const MAX_SUPPORTED_STARTING_ADRENALINE = MAX_ADRENALINE + 30;
 
 function normalizeIntegerInput(
   value: number | string | null,

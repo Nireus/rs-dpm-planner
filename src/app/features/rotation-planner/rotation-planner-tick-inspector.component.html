@@ -82,6 +82,12 @@
       @if (inspection().deathsporeStacks !== null) {
         <div class="inspector-inline-stat">Deathspore {{ inspection().deathsporeStacks }}/12</div>
       }
+      @if (inspection().perfectEquilibriumStacks !== null) {
+        <div class="inspector-inline-stat">BoLG {{ inspection().perfectEquilibriumStacks }}/8</div>
+      }
+      @if (inspection().bloodlustStacks !== null && inspection().bloodlustMaxStacks !== null) {
+        <div class="inspector-inline-stat">Bloodlust {{ inspection().bloodlustStacks }}/{{ inspection().bloodlustMaxStacks }}</div>
+      }
       @if (inspection().activePersistentBuffs.length || inspection().activeTemporaryBuffs.length) {
         @if (inspection().activeTemporaryBuffs.length) {
           <h4>Temporary</h4>

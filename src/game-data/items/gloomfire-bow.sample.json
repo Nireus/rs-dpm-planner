@@ -24,5 +24,6 @@
     "requiredEquipmentTags": ["two-handed-bow"]
   },
   "effectRefs": ["gloomfire-darkfang", "weapon-special-access", "weapon-special:shadowfall"],
+  "specialAbilityId": "shadowfall",
   "equipBehavior": "two-handed"
 }

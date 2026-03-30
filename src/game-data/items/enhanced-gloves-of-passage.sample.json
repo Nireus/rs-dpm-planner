@@ -1,0 +1,20 @@
+{
+  "id": "enhanced-gloves-of-passage",
+  "name": "Enhanced gloves of passage",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Enhanced_gloves_of_passage.png",
+  "wikiUrl": "https://runescape.wiki/w/Enhanced_gloves_of_passage",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "meleeBonus": 14
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 90
+    }
+  },
+  "effectRefs": ["enduring-ruin"],
+  "implementationNotes": "Curated upgraded melee gloves from the live Enhanced gloves of passage page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and the enhanced Enduring Ruin behavior."
+}

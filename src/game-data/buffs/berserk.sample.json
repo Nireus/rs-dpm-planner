@@ -1,0 +1,13 @@
+{
+  "id": "berserk-buff",
+  "name": "Berserk",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Berserk.png",
+  "wikiUrl": "https://runescape.wiki/w/Berserk",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 33,
+  "effectRefs": [
+    "melee-damage-multiplier:+75%"
+  ],
+  "displayPriority": 95
+}

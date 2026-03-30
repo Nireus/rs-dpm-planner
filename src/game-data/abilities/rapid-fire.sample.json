@@ -82,6 +82,18 @@
     "min": 600,
     "max": 680
   },
+  "timelineEffects": [
+    {
+      "kind": "extend-buff",
+      "buffId": "searing-winds",
+      "requiresActive": true,
+      "durationFromAbility": "max-hit-count-or-channel-duration",
+      "bonusTicks": 1
+    }
+  ],
+  "displayHints": {
+    "hitTickMode": "resolved"
+  },
   "effectRefs": ["rapid-fire-channel"],
   "description": "Enhanced ranged channel that fires multiple hits over its channel window."
 }

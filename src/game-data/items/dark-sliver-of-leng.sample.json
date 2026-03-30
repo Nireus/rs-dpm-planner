@@ -1,0 +1,29 @@
+{
+  "id": "dark-sliver-of-leng",
+  "name": "Dark Sliver of Leng",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Sliver_of_Leng.png",
+  "wikiUrl": "https://runescape.wiki/w/Dark_Sliver_of_Leng",
+  "combatStyleTags": ["melee"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 95
+    }
+  },
+  "effectRefs": ["frostblades"],
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
+  "implementationNotes": "Curated off-hand melee weapon from the live Dark Sliver of Leng page. Wiki-verified with Playwright for off-hand slot, Attack requirement, combat stats, and the Boundless Chill/Frostblades passive behavior."
+}

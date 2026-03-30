@@ -5,7 +5,7 @@ describe('loadSampleGameData', () => {
   it('loads and normalizes sample definitions', async () => {
     const manifest: SampleGameDataManifest = {
       items: ['/items/bolg.json'],
-      abilities: ['/abilities/rapid-fire.json'],
+      abilities: ['/abilities/rapid-fire.json', '/abilities/dark-bow-eof.json'],
       buffs: ['/buffs/feasting-spores-ready.json'],
       eofSpecs: ['/eof-specs/dark-bow.json'],
       perks: ['/perks/precise.json'],
@@ -31,6 +31,22 @@ describe('loadSampleGameData', () => {
           max: 120,
         },
       }),
+      '/abilities/dark-bow-eof.json': JSON.stringify({
+        id: 'dark-bow-eof',
+        name: 'Dark Bow (EOF)',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 25,
+        hitSchedule: [],
+        baseDamage: {
+          min: 180,
+          max: 300,
+        },
+        displayHints: {
+          hiddenFromUi: true,
+        },
+      }),
       '/buffs/feasting-spores-ready.json': JSON.stringify({
         id: 'feasting-spores-ready',
         name: 'Feasting Spores',
@@ -41,12 +57,7 @@ describe('loadSampleGameData', () => {
         id: 'dark-bow-eof',
         name: 'Dark Bow (EOF)',
         weaponOrigin: 'dark-bow',
-        adrenalineCost: 25,
-        hitSchedule: [],
-        baseDamage: {
-          min: 180,
-          max: 300,
-        },
+        abilityId: 'dark-bow-eof',
       }),
       '/perks/precise.json': JSON.stringify({
         id: 'precise',
@@ -64,7 +75,7 @@ describe('loadSampleGameData', () => {
 
     if (result.success) {
       expect(Object.keys(result.data.items)).toEqual(['bolg']);
-      expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire']);
+      expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire', 'dark-bow-eof']);
       expect(Object.keys(result.data.buffs)).toEqual(['feasting-spores-ready']);
       expect(Object.keys(result.data.eofSpecs)).toEqual(['dark-bow-eof']);
       expect(Object.keys(result.data.perks)).toEqual(['precise']);
@@ -98,6 +109,51 @@ describe('loadSampleGameData', () => {
     if (!result.success) {
       expect(result.issues.map((issue) => issue.path)).toEqual(
         expect.arrayContaining(['/items/bad.json:category', '/items/bad.json:combatStyleTags']),
+      );
+    }
+  });
+
+  it('returns clean load issues when combat styles are unknown', async () => {
+    const manifest: SampleGameDataManifest = {
+      items: ['/items/bad-style-item.json'],
+      abilities: ['/abilities/bad-style-ability.json'],
+      buffs: [],
+      eofSpecs: [],
+      perks: [],
+      relics: [],
+    };
+
+    const documents: Record<string, string> = {
+      '/items/bad-style-item.json': JSON.stringify({
+        id: 'bad-style-item',
+        name: 'Bad Style Item',
+        category: 'weapon',
+        combatStyleTags: ['alchemy'],
+      }),
+      '/abilities/bad-style-ability.json': JSON.stringify({
+        id: 'bad-style-ability',
+        name: 'Bad Style Ability',
+        style: 'alchemy',
+        subtype: 'basic',
+        cooldownTicks: 3,
+        hitSchedule: [],
+        baseDamage: {
+          min: 0,
+          max: 0,
+        },
+      }),
+    };
+
+    const result = await loadSampleGameData(manifest, async (path) => documents[path] ?? '');
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.issues.map((issue) => issue.path)).toEqual(
+        expect.arrayContaining([
+          '/items/bad-style-item.json:combatStyleTags[0]',
+          '/abilities/bad-style-ability.json:style',
+        ]),
       );
     }
   });

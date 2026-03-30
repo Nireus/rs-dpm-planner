@@ -1,0 +1,94 @@
+{
+  "id": "greater-flurry",
+  "name": "Greater Flurry",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 34,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 45
+    },
+    "requiredEquipmentTags": ["melee-dual-wield"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 9,
+  "hitSchedule": [
+    {
+      "id": "greater-flurry-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-2",
+      "tickOffset": 2,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-3",
+      "tickOffset": 3,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-4",
+      "tickOffset": 4,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-5",
+      "tickOffset": 5,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-6",
+      "tickOffset": 6,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-7",
+      "tickOffset": 7,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    },
+    {
+      "id": "greater-flurry-hit-8",
+      "tickOffset": 8,
+      "damage": {
+        "min": 60,
+        "max": 70
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 480,
+    "max": 560
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "spend",
+      "stacks": 4
+    }
+  ],
+  "description": "Greater Flurry uses the same live damage profile as Flurry and extends Berserk with each hit. The Berserk extension remains descriptive until melee buff support lands."
+}

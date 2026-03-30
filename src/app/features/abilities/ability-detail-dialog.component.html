@@ -19,7 +19,7 @@
         <div class="detail-copy">
           <p class="eyebrow">{{ subtypeLabel(entry.subtype) }}</p>
           <h2 id="ability-detail-title">{{ entry.name }}</h2>
-          <p>{{ entry.hoverSummary ?? entry.description }}</p>
+          <p>{{ entry.displayHoverSummary ?? entry.hoverSummary ?? entry.description }}</p>
         </div>
       </div>
 
@@ -34,7 +34,7 @@
       @if (entry.cooldownTicks !== null && entry.cooldownTicks !== undefined) {
         <span class="detail-tag">{{ entry.cooldownTicks }} ticks</span>
       }
-      <span class="detail-tag">{{ entry.hitCount > 0 ? entry.hitCount + ' hit(s)' : 'Varies' }}</span>
+      <span class="detail-tag">{{ entry.displayHitCountLabel ?? (entry.hitCount > 0 ? entry.hitCount + ' hit(s)' : 'Varies') }}</span>
       @if (entry.adrenalineGain !== undefined) {
         <span class="detail-tag">+{{ entry.adrenalineGain }}% adrenaline</span>
       }

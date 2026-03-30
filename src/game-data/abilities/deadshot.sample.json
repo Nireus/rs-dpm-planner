@@ -48,5 +48,161 @@
     "min": 420,
     "max": 500
   },
+  "variants": [
+    {
+      "id": "deadshot",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:igneous-kal-xil-passive"]
+      },
+      "hitSchedule": [
+        {
+          "id": "deadshot-igneous-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-2",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-3",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-4",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-5",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-6",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-7",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-8",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 440,
+        "max": 600
+      }
+    },
+    {
+      "id": "deadshot",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:igneous-kal-zuk-passive"]
+      },
+      "hitSchedule": [
+        {
+          "id": "deadshot-igneous-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-2",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-3",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-4",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-5",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-6",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-7",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        },
+        {
+          "id": "deadshot-igneous-hit-8",
+          "tickOffset": 0,
+          "damage": {
+            "min": 55,
+            "max": 75
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 440,
+        "max": 600
+      }
+    }
+  ],
   "description": "Fire an enchanted shot at the target, striking them multiple times. Igneous capes change it into an 8-hit version with lower per-hit damage."
 }

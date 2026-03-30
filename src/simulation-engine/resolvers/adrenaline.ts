@@ -9,18 +9,25 @@ import {
   getAdrenalinePotionVariant,
 } from '../actions/adrenaline-potions';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import { parseBasicAdrenalineBonusMultiplier } from '../buffs/buff-effect-refs';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import { advanceChanceAccumulator, createChanceAccumulatorState } from '../utils/chance-accumulator';
 import { resolveDeathsporeTimeline } from './deathspore';
 import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
+import { resolveDeterministicMeleeTimeline } from './melee-deterministic';
+import { countActiveTrackedBleeds, hasJawsOfTheAbyssEquipped } from '../melee/melee-combat-state';
 
 export const MIN_ADRENALINE = 0;
 export const MAX_ADRENALINE = 100;
 export const HEIGHTENED_SENSES_MAX_ADRENALINE = 110;
+export const FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE = 120;
+export const HEIGHTENED_SENSES_AND_FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE = 130;
+const FULL_VESTMENTS_OF_HAVOC_REQUIRED_PIECES = 4;
 const FURY_OF_THE_SMALL_EFFECT_REF = EFFECT_REF_IDS.furyOfTheSmall;
 const HEIGHTENED_SENSES_EFFECT_REF = EFFECT_REF_IDS.heightenedSenses;
 const CONSERVATION_OF_ENERGY_EFFECT_REF = EFFECT_REF_IDS.conservationOfEnergy;
+const VESTMENTS_OF_HAVOC_SET_EFFECT_REF = EFFECT_REF_IDS.vestmentsOfHavocSet;
 
 export interface AdrenalineTickState {
   tick: number;
@@ -36,6 +43,10 @@ export interface AdrenalineTimelineResult {
   validationIssues: ValidationIssue[];
 }
 
+type MaxAdrenalineConfig =
+  Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'> &
+  Partial<Pick<SimulationConfig, 'gearSetup'>>;
+
 export function resolveAdrenalineTimeline(
   config: SimulationConfig,
   blockedActionIds: ReadonlySet<string> = new Set(),
@@ -48,6 +59,7 @@ export function resolveAdrenalineTimeline(
   const groupedActions = groupAbilityActionsByTick(abilityActions);
   const groupedAdrenalinePotionActions = groupAdrenalinePotionActionsByTick(nonGcdActions);
   const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockedActionIds);
+  const deterministicMeleeTimeline = resolveDeterministicMeleeTimeline(config, blockedActionIds);
   const deathsporeTimeline = resolveDeathsporeTimeline(
     config,
     blockedActionIds,
@@ -99,6 +111,7 @@ export function resolveAdrenalineTimeline(
         currentAdrenaline,
         deathsporeTimeline.freeCastActionIds.has(action.id),
         impatientAccumulator,
+        deterministicMeleeTimeline.buffTimeline[action.tick] ?? [],
       );
 
       if (result.issue) {
@@ -111,12 +124,16 @@ export function resolveAdrenalineTimeline(
       actionsResolved.push(action.id);
     }
 
+    const projectedConfig = projectSimulationConfigAtTick(config, tick);
+
     currentAdrenaline = clampAdrenaline(
-      config,
-      currentAdrenaline + (deterministicRangedTimeline.adrenalineByTick[tick] ?? 0),
+      projectedConfig,
+      currentAdrenaline +
+      (deterministicRangedTimeline.adrenalineByTick[tick] ?? 0) +
+      (deterministicMeleeTimeline.adrenalineByTick[tick] ?? 0),
     );
     if (adrenalineRenewalTicksRemaining > 0) {
-      currentAdrenaline = clampAdrenaline(config, currentAdrenaline + ADRENALINE_RENEWAL_TICK_GAIN);
+      currentAdrenaline = clampAdrenaline(projectedConfig, currentAdrenaline + ADRENALINE_RENEWAL_TICK_GAIN);
       adrenalineRenewalTicksRemaining -= 1;
     }
     adrenalineTimeline.push(currentAdrenaline);
@@ -155,6 +172,7 @@ function resolveAbilityActionAdrenaline(
   currentAdrenaline: number,
   usesDeathsporeFreeCast: boolean,
   impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
+  activeBuffIds: EntityId[],
 ): ResolveAbilityActionAdrenalineResult {
   const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
   const ability = resolveEffectiveAbilityDefinition(projectedConfig, action);
@@ -173,7 +191,7 @@ function resolveAbilityActionAdrenaline(
   const adrenalineCost = Math.max(ability.adrenalineCost ?? 0, 0);
   const effectiveAdrenalineCost = usesDeathsporeFreeCast ? 0 : adrenalineCost;
   const adrenalineGain = Math.max(ability.adrenalineGain ?? 0, 0) +
-    resolveAdrenalineGainBonus(projectedConfig, ability, impatientAccumulator);
+    resolveAdrenalineGainBonus(projectedConfig, action.tick, ability, impatientAccumulator, activeBuffIds);
 
   if (adrenalineCost > currentAdrenaline) {
     return {
@@ -187,7 +205,7 @@ function resolveAbilityActionAdrenaline(
   }
 
   return {
-    nextAdrenaline: clampAdrenaline(config, currentAdrenaline - effectiveAdrenalineCost + adrenalineGain),
+    nextAdrenaline: clampAdrenaline(projectedConfig, currentAdrenaline - effectiveAdrenalineCost + adrenalineGain),
     nextImpatientAccumulator: resolveNextImpatientAccumulator(projectedConfig, ability, impatientAccumulator),
   };
 }
@@ -221,7 +239,8 @@ function resolveAdrenalinePotionAction(
     };
   }
 
-  const maxAdrenaline = resolveMaxAdrenaline(config);
+  const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
+  const maxAdrenaline = resolveMaxAdrenaline(projectedConfig);
   if (currentAdrenaline >= maxAdrenaline) {
     return {
       nextAdrenaline: currentAdrenaline,
@@ -234,7 +253,7 @@ function resolveAdrenalinePotionAction(
   }
 
   return {
-    nextAdrenaline: clampAdrenaline(config, currentAdrenaline + variant.immediateGain),
+    nextAdrenaline: clampAdrenaline(projectedConfig, currentAdrenaline + variant.immediateGain),
     nextCooldownUntilTick: action.tick + ADRENALINE_POTION_COOLDOWN_TICKS,
     nextRenewalTicksRemaining: variant.grantsRenewal ? ADRENALINE_RENEWAL_DURATION_TICKS : 0,
   };
@@ -242,8 +261,10 @@ function resolveAdrenalinePotionAction(
 
 function resolveAdrenalineGainBonus(
   config: SimulationConfig,
-  ability: { subtype: string; adrenalineGain?: number },
+  actionTick: number,
+  ability: { style?: string; subtype: string; adrenalineGain?: number; hitSchedule?: Array<{ damage: { min: number; max: number } }> },
   impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
+  activeBuffIds: EntityId[],
 ): number {
   const activeRelicIds = config.persistentBuffConfig.relicIds ?? [];
   const hasRelicEffect = (effectRef: string) => activeRelicIds.some((relicId) =>
@@ -267,6 +288,19 @@ function resolveAdrenalineGainBonus(
       const impatientResult = advanceChanceAccumulator(impatientAccumulator, impatientRank * 9);
       bonus += impatientResult.procCount * 3;
     }
+
+    const isDamagingBasicMelee =
+      ability.style === 'melee' &&
+      (ability.hitSchedule?.some((hit) => hit.damage.min > 0 || hit.damage.max > 0) ?? false);
+    if (isDamagingBasicMelee && hasJawsOfTheAbyssEquipped(config, actionTick)) {
+      bonus += countActiveTrackedBleeds(config, actionTick) * 2;
+    }
+
+    if (isDamagingBasicMelee) {
+      bonus += roundAdrenalineValue(
+        baseAdrenalineGain * resolveBasicAdrenalineBuffBonusMultiplier(config, activeBuffIds),
+      );
+    }
   }
 
   if (ability.subtype === 'ultimate' && hasRelicEffect(CONSERVATION_OF_ENERGY_EFFECT_REF)) {
@@ -274,6 +308,15 @@ function resolveAdrenalineGainBonus(
   }
 
   return bonus;
+}
+
+function resolveBasicAdrenalineBuffBonusMultiplier(
+  config: SimulationConfig,
+  activeBuffIds: EntityId[],
+): number {
+  return [...new Set(activeBuffIds)]
+    .flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? [])
+    .reduce((total, effectRef) => total + parseBasicAdrenalineBonusMultiplier(effectRef), 0);
 }
 
 function resolveNextImpatientAccumulator(
@@ -328,26 +371,60 @@ function groupAdrenalinePotionActionsByTick(actions: RotationAction[]): Map<numb
 }
 
 function currentAdrenalineForTimeline(
-  config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>,
+  config: MaxAdrenalineConfig,
   startingAdrenaline: number,
 ): number {
   return clampAdrenaline(config, startingAdrenaline);
 }
 
-export function resolveMaxAdrenaline(config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>): number {
+export function resolveMaxAdrenaline(config: MaxAdrenalineConfig): number {
   const activeRelicIds = config.persistentBuffConfig.relicIds ?? [];
   const hasHeightenedSenses = activeRelicIds.some((relicId) =>
     config.gameData.relics[relicId]?.effectRefs?.includes(HEIGHTENED_SENSES_EFFECT_REF),
   );
+  const hasVestmentsOfHavocBonus =
+    hasEquippedMeleeWeapon(config) &&
+    countEquippedVestmentsOfHavocPieces(config) >= FULL_VESTMENTS_OF_HAVOC_REQUIRED_PIECES;
+
+  if (hasHeightenedSenses && hasVestmentsOfHavocBonus) {
+    return HEIGHTENED_SENSES_AND_FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE;
+  }
+
+  if (hasVestmentsOfHavocBonus) {
+    return FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE;
+  }
 
   return hasHeightenedSenses ? HEIGHTENED_SENSES_MAX_ADRENALINE : MAX_ADRENALINE;
 }
 
 function clampAdrenaline(
-  config: Pick<SimulationConfig, 'persistentBuffConfig' | 'gameData'>,
+  config: MaxAdrenalineConfig,
   value: number,
 ): number {
   return Math.max(MIN_ADRENALINE, Math.min(resolveMaxAdrenaline(config), value));
+}
+
+function countEquippedVestmentsOfHavocPieces(config: MaxAdrenalineConfig): number {
+  return Object.values(config.gearSetup?.equipment ?? {}).reduce((count, instance) => {
+    if (!instance) {
+      return count;
+    }
+
+    const definition = config.gameData.items[instance.definitionId];
+    return definition?.effectRefs?.includes(VESTMENTS_OF_HAVOC_SET_EFFECT_REF) ? count + 1 : count;
+  }, 0);
+}
+
+function hasEquippedMeleeWeapon(config: MaxAdrenalineConfig): boolean {
+  return (['weapon', 'offHand'] as const).some((slot) => {
+    const instance = config.gearSetup?.equipment[slot];
+    if (!instance) {
+      return false;
+    }
+
+    const definition = config.gameData.items[instance.definitionId];
+    return definition?.category === 'weapon' && (definition.combatStyleTags?.includes('melee') ?? false);
+  });
 }
 
 function createAdrenalineIssue(

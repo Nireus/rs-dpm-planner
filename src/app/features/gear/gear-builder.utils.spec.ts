@@ -16,6 +16,15 @@ describe('gear-builder utils', () => {
     category: 'weapon',
     slot: 'weapon',
     combatStyleTags: ['ranged'],
+    equipBehavior: 'two-handed',
+  };
+
+  const offHand: ItemDefinition = {
+    id: 'sample-off-hand',
+    name: 'Sample off-hand',
+    category: 'weapon',
+    slot: 'offHand',
+    combatStyleTags: ['melee'],
   };
 
   const arrows: ItemDefinition = {
@@ -80,6 +89,7 @@ describe('gear-builder utils', () => {
 
   it('returns the supported slot for equippable items', () => {
     expect(getAllowedEquipmentSlots(bow)).toEqual(['weapon']);
+    expect(getAllowedEquipmentSlots(offHand)).toEqual(['offHand']);
     expect(getAllowedEquipmentSlots(arrows)).toEqual(['ammo']);
   });
 
@@ -107,6 +117,7 @@ describe('gear-builder utils', () => {
   it('validates drag-and-drop targets', () => {
     const definitions = {
       [bow.id]: bow,
+      [offHand.id]: offHand,
       [arrows.id]: arrows,
       [ring.id]: ring,
     };
@@ -148,6 +159,37 @@ describe('gear-builder utils', () => {
     expect(canDropIntoInventory({ kind: 'inventory', instanceId: 'inventory-arrows' }, state)).toBe(
       false,
     );
+  });
+
+  it('allows off-hand placement and displaces a two-handed weapon', () => {
+    const definitions = {
+      [bow.id]: bow,
+      [offHand.id]: offHand,
+    };
+
+    const state = {
+      equipment: {
+        weapon: {
+          instanceId: 'equipped-bow',
+          definitionId: bow.id,
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'inventory-off-hand',
+          definitionId: offHand.id,
+        },
+      ],
+    };
+
+    expect(
+      canDropIntoEquipmentSlot(
+        { kind: 'inventory', instanceId: 'inventory-off-hand' },
+        'offHand',
+        definitions,
+        state,
+      ),
+    ).toBe(true);
   });
 
   it('preserves config-like fields on equipped items', () => {

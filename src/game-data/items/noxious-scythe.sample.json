@@ -1,0 +1,22 @@
+{
+  "id": "noxious-scythe",
+  "name": "Noxious scythe",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Noxious_scythe.png",
+  "wikiUrl": "https://runescape.wiki/w/Noxious_scythe",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 90
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:mirrorback"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Noxious scythe page. Wiki-verified with Playwright for tier, Attack requirement, and the Mirrorback special attack."
+}

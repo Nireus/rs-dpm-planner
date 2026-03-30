@@ -1,6 +1,7 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
+import { displayAbilitySubtypeLabel, styleTabThemeClass } from '../../core/abilities/ability-style-tabs';
 import type { RotationAction, SimulationResult, ValidationIssue } from '../../../simulation-engine/models';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import { formatEquipmentSlot } from '../../core/gear/gear-builder.utils';
@@ -10,6 +11,8 @@ import { getAbilitySegment, getAbilityTimelineSpan } from '../../core/rotation-p
 
 export const PERFECT_EQUILIBRIUM_ICON_PATH =
   'https://runescape.wiki/images/Perfect_Equilibrium_%28self_status%29.png';
+export const BLOODLUST_ICON_PATH =
+  'https://runescape.wiki/images/Bloodlust_%28max_stacks%29.png?59e1f';
 const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 const HEADER_ROW_HEIGHT_REM = 2.7;
@@ -23,7 +26,9 @@ const NON_GCD_STACK_VERTICAL_PADDING_REM = 0.62;
 const TICK_COLUMN_WIDTH_REM = 2.18;
 const TICK_COLUMN_GAP_REM = 0.42;
 const TICK_SELECTION_OVERHANG_REM = 0.16;
-const PERFECT_EQUILIBRIUM_MARKER_BASE_OFFSET_REM = 0.16;
+const PLACED_ABILITY_MARKER_SIZE_REM = 0.72;
+const PERFECT_EQUILIBRIUM_MARKER_BASE_OFFSET_REM =
+  roundPlannerMeasure((TICK_COLUMN_WIDTH_REM - PLACED_ABILITY_MARKER_SIZE_REM) / 2);
 const PERFECT_EQUILIBRIUM_MARKER_STACK_OFFSET_REM = 0.52;
 
 export interface PlannerLaneViewModel {
@@ -35,6 +40,10 @@ export interface PlannerLaneViewModel {
 
 export interface PlannerAbilityPaletteEntry {
   definition: AbilityDefinition;
+  name: AbilityDefinition['name'];
+  style: AbilityDefinition['style'];
+  subtype: AbilityDefinition['subtype'];
+  themeClass: string;
   availabilityIssue?: string;
 }
 
@@ -73,6 +82,11 @@ export interface PlannerPerfectEquilibriumProcMarker {
   indexAtTick: number;
 }
 
+export interface PlannerBloodlustSpendMarker {
+  tickOffset: number;
+  indexAtTick: number;
+}
+
 export interface PlannerTimelineTickBucket {
   nonGcdActions: unknown[];
   abilityActions: unknown[];
@@ -88,7 +102,7 @@ export const BASE_PLANNER_LANES: PlannerLaneViewModel[] = [
   {
     key: 'ability',
     title: 'Ability',
-    summary: 'Starts snap to the 3-tick GCD ruler.',
+    summary: 'Starts follow live GCD windows, including post-channel offsets.',
   },
   {
     key: 'buff',
@@ -204,6 +218,36 @@ export function buildPerfectEquilibriumProcMarkersByAction(
   }, {});
 }
 
+export function buildBloodlustSpendMarkersByAction(
+  simulationResult: SimulationResult | null,
+  abilityActions: RotationAction[],
+  abilityCatalog: Record<string, AbilityDefinition>,
+): Record<string, PlannerBloodlustSpendMarker[]> {
+  if (!simulationResult) {
+    return {};
+  }
+
+  return abilityActions.reduce<Record<string, PlannerBloodlustSpendMarker[]>>((markersByAction, action) => {
+    const definition = abilityDefinitionForAction(action, abilityCatalog);
+    if (!definition || !spendsBloodlustStacks(definition)) {
+      return markersByAction;
+    }
+
+    const bloodlustStacksBeforeAction = countBloodlustStacksAtTick(simulationResult.buffTimeline, action.tick - 1);
+    const bloodlustStacksAfterAction = countBloodlustStacksAtTick(simulationResult.buffTimeline, action.tick);
+    if (bloodlustStacksBeforeAction < 4 || bloodlustStacksAfterAction > bloodlustStacksBeforeAction - 4) {
+      return markersByAction;
+    }
+
+    markersByAction[action.id] = [{
+      tickOffset: 0,
+      indexAtTick: 0,
+    }];
+
+    return markersByAction;
+  }, {});
+}
+
 export function buildActionValidationSummaryByAction(
   issues: ValidationIssue[],
 ): Record<string, PlannerActionValidationSummary> {
@@ -283,8 +327,13 @@ export function buildAbilityPaletteEntries(
   availabilityMap: Record<string, { isAvailable: boolean; issues?: Array<{ message: string }> }>,
 ): PlannerAbilityPaletteEntry[] {
   return Object.values(abilityCatalog)
+    .filter((definition) => !definition.displayHints?.hiddenFromUi)
     .map((definition) => ({
       definition,
+      name: definition.name,
+      style: definition.style,
+      subtype: definition.subtype,
+      themeClass: styleTabThemeClass(definition.style),
       availabilityIssue: availabilityMap[definition.id]?.isAvailable
         ? undefined
         : availabilityMap[definition.id]?.issues?.[0]?.message,
@@ -346,7 +395,7 @@ export function buildAbilityPaletteEntryTitle(entry: PlannerAbilityPaletteEntry)
   const details = [
     entry.definition.name,
     entry.availabilityIssue ? `Blocked: ${entry.availabilityIssue}` : 'Ready to place',
-    `${entry.definition.subtype} | ${entry.definition.cooldownTicks}t`,
+    `${displayAbilitySubtypeLabel(entry.definition.subtype)} | ${entry.definition.cooldownTicks}t`,
   ];
 
   return details.join('\n');
@@ -380,6 +429,10 @@ export function buildAbilitySegmentClass(
   return `segment-${segment}`;
 }
 
+export function buildPlacedAbilityThemeClass(definition: AbilityDefinition): string {
+  return styleTabThemeClass(definition.style);
+}
+
 export function buildAbilityShortLabel(definition: AbilityDefinition): string {
   return definition.name
     .split(/\s+/)
@@ -398,9 +451,16 @@ export function buildPerfectEquilibriumProcLeft(
   marker: PlannerPerfectEquilibriumProcMarker,
   definition: AbilityDefinition | null,
 ): string {
-  const span = definition ? getAbilityTimelineSpan(definition) : 1;
-  const clampedOffset = Math.max(0, Math.min(marker.tickOffset, Math.max(span - 1, 0)));
-  return `calc(${clampedOffset} * (${TICK_COLUMN_WIDTH_REM}rem + ${TICK_COLUMN_GAP_REM}rem) + ${PERFECT_EQUILIBRIUM_MARKER_BASE_OFFSET_REM}rem + (${marker.indexAtTick} * ${PERFECT_EQUILIBRIUM_MARKER_STACK_OFFSET_REM}rem))`;
+  return buildPlacedAbilityMarkerLeft(action, marker, definition);
+}
+
+export function buildPlacedAbilityMarkerLeft(
+  action: RotationAction,
+  marker: PlannerPerfectEquilibriumProcMarker | PlannerBloodlustSpendMarker,
+  definition: AbilityDefinition | null,
+): string {
+  const offset = Math.max(0, marker.tickOffset);
+  return `calc(${offset} * (${TICK_COLUMN_WIDTH_REM}rem + ${TICK_COLUMN_GAP_REM}rem) + ${PERFECT_EQUILIBRIUM_MARKER_BASE_OFFSET_REM}rem + (${marker.indexAtTick} * ${PERFECT_EQUILIBRIUM_MARKER_STACK_OFFSET_REM}rem))`;
 }
 
 export function buildNonGcdShortLabel(action: RotationAction): string {
@@ -512,7 +572,7 @@ export function shortLabelForGearSwap(option: PlannerGearSwapOption): string {
 }
 
 export function shouldUseResolvedHitTickInPlanner(definition: AbilityDefinition): boolean {
-  return definition.id === 'rapid-fire';
+  return definition.displayHints?.hitTickMode === 'resolved';
 }
 
 export function formatGearSwapOptionLabel(
@@ -652,4 +712,27 @@ function resolvePlannerActionLabel(
   }
 
   return buildNonGcdLabel(action);
+}
+
+function countBloodlustStacksAtTick(
+  buffTimeline: Record<number, string[]>,
+  tick: number,
+): number {
+  if (tick < 0) {
+    return 0;
+  }
+
+  return (buffTimeline[tick] ?? []).filter((buffId) => buffId === 'bloodlust').length;
+}
+
+function roundPlannerMeasure(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function spendsBloodlustStacks(definition: AbilityDefinition): boolean {
+  return definition.stackEffects?.some((effect) =>
+    effect.buffId === 'bloodlust' &&
+    effect.operation === 'spend' &&
+    effect.stacks > 0
+  ) ?? false;
 }

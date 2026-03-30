@@ -1,0 +1,13 @@
+{
+  "id": "meteor-strike-buff",
+  "name": "Meteor Strike",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Meteor_Strike.png",
+  "wikiUrl": "https://runescape.wiki/w/Meteor_Strike",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 50,
+  "effectRefs": [
+    "basic-adrenaline:+50%"
+  ],
+  "displayPriority": 90
+}

@@ -1,3 +1,4 @@
+import { formatStyleTopologyRequirementTag } from '../../game-data/conventions/equipment-requirement-tags';
 import type { EofSpecDefinition, ItemDefinition } from '../../game-data/types';
 import type { ItemInstanceConfig, PlayerStats } from '../models';
 import { collectAvailabilityTags } from './ability-availability';
@@ -68,15 +69,24 @@ export function evaluateEofSpecAvailability(
 }
 
 function resolvePlayerStat(playerStats: PlayerStats, stat: string): number {
-  if (stat === 'ranged') {
-    return playerStats.rangedLevel;
+  switch (stat) {
+    case 'attack':
+      return playerStats.attackLevel ?? 0;
+    case 'strength':
+      return playerStats.strengthLevel ?? 0;
+    case 'defence':
+      return playerStats.defenceLevel ?? 0;
+    case 'ranged':
+      return playerStats.rangedLevel;
+    case 'magic':
+      return playerStats.magicLevel ?? 0;
+    case 'necromancy':
+      return playerStats.necromancyLevel ?? 0;
+    case 'prayer':
+      return playerStats.prayerLevel ?? 1;
+    default:
+      return playerStats.combatStats?.[stat] ?? 0;
   }
-
-  if (stat === 'prayer') {
-    return playerStats.prayerLevel ?? 1;
-  }
-
-  return playerStats.combatStats?.[stat] ?? 0;
 }
 
 function formatStatName(stat: string): string {
@@ -84,6 +94,11 @@ function formatStatName(stat: string): string {
 }
 
 function formatRequiredTag(tag: string): string {
+  const styleRequirementMessage = formatStyleTopologyRequirementTag(tag);
+  if (styleRequirementMessage) {
+    return styleRequirementMessage;
+  }
+
   if (tag.startsWith('eof-special:')) {
     const storedSpecial = tag.replace('eof-special:', '').replace(/-/g, ' ');
     return `Requires Essence of Finality storing ${storedSpecial}.`;

@@ -1,0 +1,36 @@
+{
+  "id": "dark-bow-eof",
+  "name": "Dark Bow (EOF)",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 65,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "dark-bow-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 190,
+        "max": 230
+      }
+    },
+    {
+      "id": "dark-bow-eof-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 190,
+        "max": 230
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 380,
+    "max": 460
+  },
+  "effectRefs": ["eof-dark-bow-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Stored Dark bow special attack for Essence of Finality. Strikes twice for 190%-230% ability damage per hit."
+}

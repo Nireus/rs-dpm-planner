@@ -1,0 +1,36 @@
+{
+  "id": "greater-barge",
+  "name": "Greater Barge",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 34,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 65
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-barge-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 75,
+        "max": 95
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 75,
+    "max": 95
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Run up and ram the target. Live behavior gains extra damage after downtime and can convert the next channeled melee attack into damage over time."
+}

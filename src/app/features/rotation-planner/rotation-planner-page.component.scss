@@ -70,7 +70,9 @@ p {
 
 .control-field {
   display: grid;
-  gap: 0.32rem;
+  grid-template-columns: minmax(0, 1fr) 4.1rem;
+  align-items: center;
+  gap: 0.45rem;
   min-width: 8.5rem;
   color: var(--text-soft);
   font-size: 0.78rem;
@@ -92,6 +94,10 @@ p {
 
 .compact-field {
   min-width: 4.9rem;
+}
+
+.configuration-panel-body .control-field.compact-field {
+  min-width: 0;
 }
 
 .control-field input,
@@ -293,6 +299,114 @@ p {
   background: rgba(8, 13, 6, 0.55);
 }
 
+.style-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.style-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(12, 20, 8, 0.88);
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.style-tab-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  object-fit: contain;
+}
+
+.white-tint-icon {
+  filter: brightness(0) invert(1);
+}
+
+.style-tab:hover {
+  transform: translateY(-1px);
+}
+
+.style-tab-active {
+  color: var(--text-strong);
+}
+
+.style-tab.style-ranged.style-tab-active {
+  border-color: rgba(123, 144, 75, 0.72);
+  background: rgba(25, 36, 15, 0.95);
+}
+
+.style-tab.style-melee.style-tab-active {
+  border-color: rgba(212, 141, 72, 0.55);
+  background: rgba(41, 27, 13, 0.95);
+}
+
+.style-tab.style-magic.style-tab-active {
+  border-color: rgba(104, 165, 235, 0.55);
+  background: rgba(15, 25, 38, 0.95);
+}
+
+.style-tab.style-necromancy.style-tab-active {
+  border-color: rgba(149, 128, 226, 0.55);
+  background: rgba(20, 17, 34, 0.95);
+}
+
+.style-tab.style-constitution.style-tab-active {
+  border-color: rgba(214, 219, 226, 0.58);
+  background: rgba(44, 48, 54, 0.96);
+}
+
+.palette-inline-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.palette-inline-group {
+  display: grid;
+  padding: 0.38rem;
+  border: 1px solid rgba(88, 100, 29, 0.22);
+  border-radius: 0.82rem;
+  background: rgba(10, 16, 8, 0.5);
+}
+
+.palette-inline-group .palette-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(2.6rem, 2.6rem);
+  grid-template-columns: none;
+  justify-content: start;
+  gap: 0.45rem;
+}
+
+.palette-empty-state {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(88, 100, 29, 0.22);
+  border-radius: 0.9rem;
+  background: rgba(10, 16, 8, 0.78);
+}
+
+.palette-empty-state h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+}
+
+.palette-empty-state p {
+  margin: 0;
+  font-size: 0.74rem;
+}
+
 .palette-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -419,6 +533,31 @@ p {
 .blocked-chip {
   opacity: 0.52;
   cursor: not-allowed;
+}
+
+.ability-chip.style-ranged {
+  border-color: rgba(123, 144, 75, 0.28);
+  background: linear-gradient(180deg, rgba(17, 29, 13, 0.98), rgba(11, 19, 8, 0.96));
+}
+
+.ability-chip.style-melee {
+  border-color: rgba(137, 93, 46, 0.28);
+  background: linear-gradient(180deg, rgba(38, 24, 12, 0.98), rgba(18, 11, 6, 0.96));
+}
+
+.ability-chip.style-magic {
+  border-color: rgba(67, 112, 170, 0.28);
+  background: linear-gradient(180deg, rgba(14, 24, 37, 0.98), rgba(8, 12, 20, 0.96));
+}
+
+.ability-chip.style-necromancy {
+  border-color: rgba(90, 80, 148, 0.28);
+  background: linear-gradient(180deg, rgba(21, 18, 35, 0.98), rgba(10, 8, 18, 0.96));
+}
+
+.ability-chip.style-constitution {
+  border-color: rgba(214, 219, 226, 0.32);
+  background: linear-gradient(180deg, rgba(54, 58, 66, 0.98), rgba(28, 31, 37, 0.96));
 }
 
 .timeline-scroll {
@@ -769,6 +908,31 @@ p {
   color: #f3d4d4;
 }
 
+.buff-bar.style-ranged {
+  border-color: rgba(123, 144, 75, 0.42);
+  background: linear-gradient(180deg, rgba(45, 65, 27, 0.98), rgba(21, 31, 13, 0.98));
+}
+
+.buff-bar.style-melee {
+  border-color: rgba(212, 141, 72, 0.46);
+  background: linear-gradient(180deg, rgba(78, 47, 22, 0.98), rgba(34, 19, 10, 0.98));
+}
+
+.buff-bar.style-magic {
+  border-color: rgba(104, 165, 235, 0.46);
+  background: linear-gradient(180deg, rgba(28, 49, 78, 0.98), rgba(14, 24, 39, 0.98));
+}
+
+.buff-bar.style-necromancy {
+  border-color: rgba(149, 128, 226, 0.46);
+  background: linear-gradient(180deg, rgba(48, 38, 82, 0.98), rgba(21, 16, 37, 0.98));
+}
+
+.buff-bar.style-constitution {
+  border-color: rgba(214, 219, 226, 0.42);
+  background: linear-gradient(180deg, rgba(74, 79, 88, 0.98), rgba(34, 37, 43, 0.98));
+}
+
 .lane-bar-copy-track {
   display: grid;
   align-items: center;
@@ -962,6 +1126,31 @@ p {
   cursor: grab;
 }
 
+.placed-ability.style-ranged {
+  border-color: rgba(123, 144, 75, 0.38);
+  background: linear-gradient(180deg, rgba(26, 42, 17, 0.98), rgba(13, 22, 9, 0.96));
+}
+
+.placed-ability.style-melee {
+  border-color: rgba(212, 141, 72, 0.44);
+  background: linear-gradient(180deg, rgba(69, 40, 18, 0.98), rgba(30, 17, 9, 0.96));
+}
+
+.placed-ability.style-magic {
+  border-color: rgba(104, 165, 235, 0.44);
+  background: linear-gradient(180deg, rgba(20, 38, 63, 0.98), rgba(10, 18, 31, 0.96));
+}
+
+.placed-ability.style-necromancy {
+  border-color: rgba(149, 128, 226, 0.44);
+  background: linear-gradient(180deg, rgba(35, 28, 62, 0.98), rgba(17, 12, 31, 0.96));
+}
+
+.placed-ability.style-constitution {
+  border-color: rgba(214, 219, 226, 0.4);
+  background: linear-gradient(180deg, rgba(67, 72, 81, 0.98), rgba(34, 38, 45, 0.96));
+}
+
 .placed-ability.invalid-action {
   border-color: rgba(170, 76, 76, 0.76);
   background: linear-gradient(180deg, rgba(90, 28, 28, 0.98), rgba(50, 16, 16, 0.98));
@@ -984,6 +1173,56 @@ p {
   border-color: rgba(154, 182, 104, 0.6);
   background: linear-gradient(180deg, rgba(34, 52, 23, 0.82), rgba(17, 27, 11, 0.86));
   opacity: 0.9;
+}
+
+.placed-ability.style-ranged.preview-inserted {
+  border-color: rgba(205, 230, 156, 0.82);
+  background: linear-gradient(180deg, rgba(46, 74, 28, 0.9), rgba(23, 37, 15, 0.92));
+}
+
+.placed-ability.style-melee.preview-inserted {
+  border-color: rgba(239, 177, 112, 0.82);
+  background: linear-gradient(180deg, rgba(109, 63, 28, 0.9), rgba(52, 29, 15, 0.92));
+}
+
+.placed-ability.style-magic.preview-inserted {
+  border-color: rgba(154, 202, 255, 0.82);
+  background: linear-gradient(180deg, rgba(34, 64, 102, 0.9), rgba(17, 31, 50, 0.92));
+}
+
+.placed-ability.style-necromancy.preview-inserted {
+  border-color: rgba(188, 171, 255, 0.82);
+  background: linear-gradient(180deg, rgba(59, 49, 108, 0.9), rgba(28, 21, 50, 0.92));
+}
+
+.placed-ability.style-constitution.preview-inserted {
+  border-color: rgba(240, 242, 246, 0.76);
+  background: linear-gradient(180deg, rgba(92, 98, 110, 0.9), rgba(43, 48, 55, 0.92));
+}
+
+.placed-ability.style-ranged.preview-shifted {
+  border-color: rgba(154, 182, 104, 0.6);
+  background: linear-gradient(180deg, rgba(34, 52, 23, 0.82), rgba(17, 27, 11, 0.86));
+}
+
+.placed-ability.style-melee.preview-shifted {
+  border-color: rgba(214, 152, 89, 0.62);
+  background: linear-gradient(180deg, rgba(74, 46, 24, 0.82), rgba(35, 20, 11, 0.86));
+}
+
+.placed-ability.style-magic.preview-shifted {
+  border-color: rgba(120, 176, 235, 0.62);
+  background: linear-gradient(180deg, rgba(27, 47, 74, 0.82), rgba(13, 23, 37, 0.86));
+}
+
+.placed-ability.style-necromancy.preview-shifted {
+  border-color: rgba(160, 141, 228, 0.62);
+  background: linear-gradient(180deg, rgba(44, 35, 74, 0.82), rgba(20, 15, 34, 0.86));
+}
+
+.placed-ability.style-constitution.preview-shifted {
+  border-color: rgba(214, 219, 226, 0.58);
+  background: linear-gradient(180deg, rgba(62, 67, 77, 0.82), rgba(29, 32, 38, 0.86));
 }
 
 .validation-banner {
@@ -1094,6 +1333,16 @@ p {
   font-size: 0.34rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+
+.bloodlust-spend-icon,
+.bloodlust-spend-fallback {
+  border-color: rgba(185, 86, 86, 0.42);
+  background: rgba(31, 8, 8, 0.94);
+}
+
+.bloodlust-spend-fallback {
+  color: #f2d0d0;
 }
 
 .placed-ability.segment-start {
@@ -1275,5 +1524,9 @@ p {
 
   .tick-slider-field {
     grid-template-columns: 1fr;
+  }
+
+  .control-field {
+    grid-template-columns: minmax(0, 1fr) 3.8rem;
   }
 }

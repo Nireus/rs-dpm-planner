@@ -1,0 +1,34 @@
+{
+  "id": "balance-by-force",
+  "name": "Balance by Force",
+  "style": "ranged",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 30,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "balance-by-force-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 235,
+        "max": 255
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 235,
+    "max": 255
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "balance-by-force-buff"
+    }
+  ],
+  "effectRefs": ["weapon-special:balance-by-force"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Bow of the Last Guardian special attack. Applies Balance by Force and lowers the Perfect Equilibrium threshold while active."
+}

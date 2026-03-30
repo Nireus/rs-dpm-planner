@@ -1,0 +1,21 @@
+{
+  "id": "varanuss-mercy",
+  "name": "Varanus's Mercy",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Varanus%27s_Mercy.png",
+  "wikiUrl": "https://runescape.wiki/w/Varanus%27s_Mercy",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 90
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:the-final-flurry"],
+  "implementationNotes": "Curated main-hand melee dagger from the live Varanus's Mercy page. Wiki-verified with Playwright for slot, tier, Attack requirement, combat stats, and The Final Flurry special attack."
+}

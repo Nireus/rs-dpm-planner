@@ -15,6 +15,12 @@
     "min": 0,
     "max": 0
   },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "deaths-swiftness-buff"
+    }
+  ],
   "effectRefs": ["deaths-swiftness"],
   "description": "Create a shroud of death that amplifies ranged damage while active."
 }

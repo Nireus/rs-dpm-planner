@@ -141,4 +141,90 @@ describe('projectSimulationConfigAtTick', () => {
     expect(projectSimulationConfigAtTick(config, 10).gearSetup.ammoSelection?.definitionId).toBe('ful-arrows');
     expect(projectSimulationConfigAtTick(config, 20).gearSetup.ammoSelection?.definitionId).toBe('deathspore-arrows');
   });
+
+  it('unequips the projected two-handed weapon when an off-hand item is swapped in', () => {
+    const config = {
+      ...createConfig(),
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-two-handed',
+            definitionId: 'bow',
+          },
+          ammo: {
+            instanceId: 'quiver-deathspore',
+            definitionId: 'pernixs-quiver',
+            configValues: {
+              'loaded-ammo': 'deathspore-arrows',
+            },
+          },
+        },
+        ammoSelection: {
+          instanceId: 'quiver-deathspore:loaded-ammo:deathspore-arrows',
+          definitionId: 'deathspore-arrows',
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'off-hand-one',
+            definitionId: 'off-hand-test',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 30,
+        abilityActions: [],
+        nonGcdActions: [
+          {
+            id: 'swap-to-off-hand',
+            tick: 5,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'off-hand-one',
+              definitionId: 'off-hand-test',
+              slot: 'offHand',
+            },
+          },
+        ],
+      },
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          'dark-bow': {
+            id: 'dark-bow',
+            name: 'Dark bow',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['ranged'],
+          },
+          'off-hand-test': {
+            id: 'off-hand-test',
+            name: 'Off-hand test',
+            category: 'weapon',
+            slot: 'offHand',
+            combatStyleTags: ['melee'],
+          },
+          bow: {
+            id: 'bow',
+            name: 'Bow',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['ranged'],
+            equipBehavior: 'two-handed',
+            effectRefs: [],
+          },
+        },
+      },
+    } satisfies SimulationConfig;
+
+    const projected = projectSimulationConfigAtTick(config, 10);
+
+    expect(projected.gearSetup.equipment.weapon).toBeUndefined();
+    expect(projected.gearSetup.equipment.offHand?.instanceId).toBe('off-hand-one');
+    expect(projected.inventory.items.map((item) => item.instanceId)).toContain('weapon-two-handed');
+  });
 });

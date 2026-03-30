@@ -1,0 +1,22 @@
+{
+  "id": "zaros-godsword",
+  "name": "Zaros godsword",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Zaros_godsword.png",
+  "wikiUrl": "https://runescape.wiki/w/Zaros_godsword",
+  "combatStyleTags": ["melee"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 92
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:blackhole"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Zaros godsword page. Wiki-verified with Playwright for tier, Attack requirement, and the Blackhole special attack."
+}

@@ -15,6 +15,12 @@
     "min": 0,
     "max": 0
   },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "shadow-imbued"
+    }
+  ],
   "effectRefs": ["shadow-imbued"],
   "description": "Apply Shadow Imbued to yourself, causing ranged attacks to generate extra adrenaline."
 }

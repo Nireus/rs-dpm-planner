@@ -1,10 +1,15 @@
 import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
 import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import {
+  applyEquipmentPlacement,
+  canEquipItemInEquipmentTopology,
+} from '../../../simulation-engine/gear/equipment-topology';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import type { GearBuilderState } from './gear-state';
 
 export const SUPPORTED_GEAR_SLOTS: EquipmentSlot[] = [
   'weapon',
+  'offHand',
   'ammo',
   'head',
   'body',
@@ -43,6 +48,19 @@ export function canEquipItemInSlot(item: ItemDefinition, slot: EquipmentSlot): b
   return getAllowedEquipmentSlots(item).includes(slot);
 }
 
+export function canEquipItemInCurrentTopology(
+  item: ItemDefinition,
+  slot: EquipmentSlot,
+  definitions: Record<string, ItemDefinition>,
+  state: GearBuilderState,
+): boolean {
+  if (!canEquipItemInSlot(item, slot)) {
+    return false;
+  }
+
+  return canEquipItemInEquipmentTopology(item, slot, state.equipment, definitions);
+}
+
 export function canDropIntoInventory(
   source: GearDragSource | null,
   state: GearBuilderState,
@@ -74,13 +92,13 @@ export function canDropIntoEquipmentSlot(
 
   if (source.kind === 'catalog') {
     const definition = definitions[source.definitionId];
-    return Boolean(definition && canEquipItemInSlot(definition, targetSlot));
+    return Boolean(definition && canEquipItemInCurrentTopology(definition, targetSlot, definitions, state));
   }
 
   if (source.kind === 'inventory') {
     const instance = state.inventory.find((entry) => entry.instanceId === source.instanceId);
     const definition = instance ? definitions[instance.definitionId] : null;
-    return Boolean(definition && canEquipItemInSlot(definition, targetSlot));
+    return Boolean(definition && canEquipItemInCurrentTopology(definition, targetSlot, definitions, state));
   }
 
   const instance = state.equipment[source.slot];
@@ -90,7 +108,7 @@ export function canDropIntoEquipmentSlot(
     return false;
   }
 
-  return canEquipItemInSlot(definition, targetSlot);
+  return canEquipItemInCurrentTopology(definition, targetSlot, definitions, state);
 }
 
 export function validateGearSetup(
@@ -122,6 +140,10 @@ export function validateGearSetup(
 }
 
 export function formatEquipmentSlot(slot: EquipmentSlot): string {
+  if (slot === 'offHand') {
+    return 'Off-hand';
+  }
+
   if (slot === 'ammo') {
     return 'Ammo';
   }
@@ -130,7 +152,17 @@ export function formatEquipmentSlot(slot: EquipmentSlot): string {
 }
 
 export function isAugmentableSlot(slot: EquipmentSlot | undefined): boolean {
-  return slot === 'weapon' || slot === 'body' || slot === 'legs';
+  return slot === 'weapon' || slot === 'offHand' || slot === 'body' || slot === 'legs';
+}
+
+export function applyGearBuilderPlacement(
+  state: GearBuilderState,
+  itemInstance: ItemInstanceConfig,
+  targetSlot: EquipmentSlot,
+  definitions: Record<string, ItemDefinition>,
+  sourceSlot?: EquipmentSlot,
+): GearBuilderState {
+  return applyEquipmentPlacement(state, itemInstance, targetSlot, definitions, sourceSlot);
 }
 
 export function requiresImmediateItemConfiguration(item: ItemDefinition): boolean {

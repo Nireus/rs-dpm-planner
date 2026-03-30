@@ -15,14 +15,28 @@ export function mergeBuffTimelines(
 ): Record<number, EntityId[]> {
   return Object.fromEntries(
     Array.from({ length: tickCount }, (_, tick) => {
-      const merged = new Set<EntityId>();
+      const maxCountByBuffId = new Map<EntityId, number>();
+      const orderedBuffIds: EntityId[] = [];
+
       for (const timeline of timelines) {
+        const countByBuffId = new Map<EntityId, number>();
         for (const buffId of timeline[tick] ?? []) {
-          merged.add(buffId);
+          countByBuffId.set(buffId, (countByBuffId.get(buffId) ?? 0) + 1);
+          if (!orderedBuffIds.includes(buffId)) {
+            orderedBuffIds.push(buffId);
+          }
+        }
+
+        for (const [buffId, count] of countByBuffId.entries()) {
+          maxCountByBuffId.set(buffId, Math.max(maxCountByBuffId.get(buffId) ?? 0, count));
         }
       }
 
-      return [tick, [...merged]];
+      const merged = orderedBuffIds.flatMap((buffId) =>
+        Array.from({ length: maxCountByBuffId.get(buffId) ?? 0 }, () => buffId),
+      );
+
+      return [tick, merged];
     }),
   );
 }
@@ -36,6 +50,7 @@ export function buildTickStates(
   cooldownResult: { cooldownTimeline: Record<number, Record<EntityId, number>> },
   buffTimeline: Record<number, EntityId[]>,
   deathsporeStackTimeline: Record<number, number>,
+  perfectEquilibriumStackTimeline: Record<number, number>,
   damageBreakdowns: DamageBreakdown[],
 ): TickState[] {
   const actionsByTick = groupActionsByTick(config.rotationPlan.abilityActions, config.rotationPlan.nonGcdActions);
@@ -49,6 +64,7 @@ export function buildTickStates(
     activeAmmoState: config.gearSetup.ammoSelection?.definitionId,
     adrenaline: adrenalineResult.adrenalineTimeline[tickIndex] ?? adrenalineResult.startingAdrenaline,
     deathsporeStacks: deathsporeStackTimeline[tickIndex],
+    perfectEquilibriumStacks: perfectEquilibriumStackTimeline[tickIndex],
     activePersistentBuffIds: [
       ...(config.persistentBuffConfig.prayerIds ?? []),
       ...(config.persistentBuffConfig.potionIds ?? []),

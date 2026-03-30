@@ -59,6 +59,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         name: 'Gloomfire bow',
         category: 'weapon',
         slot: 'weapon',
+        specialAbilityId: 'shadowfall',
         effectRefs: ['gloomfire-darkfang', 'weapon-special-access', 'weapon-special:shadowfall'],
       }),
       'eldritch-crossbow': createItem({
@@ -66,12 +67,47 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         name: 'Eldritch crossbow',
         category: 'weapon',
         slot: 'weapon',
+        specialAbilityId: 'split-soul',
         effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
+      }),
+      'masterwork-spear-of-annihilation': createItem({
+        id: 'masterwork-spear-of-annihilation',
+        name: 'Masterwork Spear of Annihilation',
+        category: 'weapon',
+        slot: 'weapon',
+        combatStyleTags: ['melee'],
+        effectRefs: ['masterwork-spear-of-annihilation-passive'],
+      }),
+      'melee-main-hand': createItem({
+        id: 'melee-main-hand',
+        name: 'Melee Main-hand',
+        category: 'weapon',
+        slot: 'weapon',
+        combatStyleTags: ['melee'],
+      }),
+      'melee-off-hand': createItem({
+        id: 'melee-off-hand',
+        name: 'Melee Off-hand',
+        category: 'weapon',
+        slot: 'offHand',
+        combatStyleTags: ['melee'],
+      }),
+      'melee-two-handed': createItem({
+        id: 'melee-two-handed',
+        name: 'Melee Two-handed',
+        category: 'weapon',
+        slot: 'weapon',
+        combatStyleTags: ['melee'],
+        equipBehavior: 'two-handed',
       }),
     },
     ammo: {},
     abilities: {
-      'essence-of-finality': createAbility(),
+      'essence-of-finality': createAbility({
+        specialDispatch: {
+          source: 'equipped-eof',
+        },
+      }),
       'weapon-special-attack': createAbility({
         id: 'weapon-special-attack',
         name: 'Special Attack',
@@ -80,6 +116,80 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         cooldownTicks: 0,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        specialDispatch: {
+          source: 'equipped-weapon',
+        },
+      }),
+      'dark-bow-eof': createAbility({
+        id: 'dark-bow-eof',
+        name: 'Dark Bow (EOF)',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 65,
+        adrenalineGain: 0,
+        hitSchedule: [
+          { id: 'dark-bow-eof-hit-1', tickOffset: 0, damage: { min: 190, max: 230 } },
+          { id: 'dark-bow-eof-hit-2', tickOffset: 0, damage: { min: 190, max: 230 } },
+        ],
+        baseDamage: { min: 380, max: 460 },
+        effectRefs: ['eof-dark-bow-spec'],
+      }),
+      'gloomfire-bow-eof': createAbility({
+        id: 'gloomfire-bow-eof',
+        name: 'Gloomfire Bow (EOF)',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 65,
+        adrenalineGain: 0,
+        hitSchedule: [
+          { id: 'gloomfire-bow-eof-hit-1', tickOffset: 0, damage: { min: 85, max: 105 } },
+          { id: 'gloomfire-bow-eof-hit-2', tickOffset: 0, damage: { min: 85, max: 105 } },
+          { id: 'gloomfire-bow-eof-hit-3', tickOffset: 0, damage: { min: 255, max: 295 } },
+        ],
+        baseDamage: { min: 425, max: 505 },
+        effectRefs: ['eof-gloomfire-bow-spec'],
+      }),
+      'eldritch-crossbow-eof': createAbility({
+        id: 'eldritch-crossbow-eof',
+        name: 'Eldritch Crossbow (EOF)',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 25,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        effectRefs: ['eof-eldritch-crossbow-spec', 'weapon-special:split-soul'],
+      }),
+      shadowfall: createAbility({
+        id: 'shadowfall',
+        name: 'Shadowfall',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 65,
+        adrenalineGain: 0,
+        hitSchedule: [
+          { id: 'shadowfall-hit-1', tickOffset: 0, damage: { min: 85, max: 105 } },
+          { id: 'shadowfall-hit-2', tickOffset: 0, damage: { min: 85, max: 105 } },
+          { id: 'shadowfall-hit-3', tickOffset: 0, damage: { min: 255, max: 295 } },
+        ],
+        baseDamage: { min: 425, max: 505 },
+        effectRefs: ['weapon-special:shadowfall'],
+      }),
+      'split-soul': createAbility({
+        id: 'split-soul',
+        name: 'Split Soul',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 25,
+        adrenalineGain: 0,
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+        effectRefs: ['weapon-special:split-soul'],
       }),
       ranged: createAbility({
         id: 'ranged',
@@ -90,6 +200,20 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         adrenalineGain: 9,
         hitSchedule: [{ id: 'ranged-hit', tickOffset: 0, damage: { min: 90, max: 110 } }],
         baseDamage: { min: 90, max: 110 },
+        variants: [
+          {
+            id: 'ranged',
+            when: {
+              requiredEquipmentTags: ['equipped-effect:gloomfire-darkfang'],
+            },
+            hitSchedule: [
+              { id: 'ranged-darkfang-hit-1', tickOffset: 0, damage: { min: 45, max: 55 } },
+              { id: 'ranged-darkfang-hit-2', tickOffset: 0, damage: { min: 45, max: 55 } },
+            ],
+            baseDamage: { min: 90, max: 110 },
+            effectRefs: ['gloomfire-darkfang'],
+          },
+        ],
       }),
       deadshot: createAbility({
         id: 'deadshot',
@@ -105,6 +229,78 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
           { id: 'deadshot-hit-4', tickOffset: 0, damage: { min: 105, max: 125 } },
         ],
         baseDamage: { min: 420, max: 500 },
+        variants: [
+          {
+            id: 'deadshot',
+            when: {
+              requiredEquipmentTags: ['equipped-effect:igneous-kal-xil-passive'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `deadshot-igneous-hit-${index + 1}`,
+              tickOffset: 0,
+              damage: { min: 55, max: 75 },
+            })),
+            baseDamage: { min: 440, max: 600 },
+          },
+        ],
+      }),
+      dismember: createAbility({
+        id: 'dismember',
+        name: 'Dismember',
+        style: 'melee',
+        subtype: 'enhanced',
+        cooldownTicks: 40,
+        hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+          id: `dismember-hit-${index + 1}`,
+          tickOffset: index * 2,
+          damage: { min: 25, max: 31 },
+        })),
+        baseDamage: { min: 200, max: 248 },
+        effectRefs: ['damage-over-time'],
+        variants: [
+          {
+            id: 'dismember',
+            when: {
+              requiredEquipmentTags: ['equipped-effect:masterwork-spear-of-annihilation-passive'],
+            },
+            hitSchedule: [
+              ...Array.from({ length: 8 }, (_, index) => ({
+                id: `dismember-hit-${index + 1}`,
+                tickOffset: index * 2,
+                damage: { min: 25, max: 31 },
+              })),
+              ...Array.from({ length: 4 }, (_, index) => ({
+                id: `dismember-extended-hit-${index + 1}`,
+                tickOffset: 16 + index * 2,
+                damage: { min: 25, max: 31 },
+              })),
+            ],
+            baseDamage: { min: 300, max: 372 },
+          },
+        ],
+      }),
+      'adaptive-strike': createAbility({
+        id: 'adaptive-strike',
+        name: 'Adaptive Strike',
+        style: 'melee',
+        subtype: 'basic',
+        cooldownTicks: 9,
+        adrenalineGain: 12,
+        hitSchedule: [{ id: 'adaptive-strike-hit-1', tickOffset: 0, damage: { min: 120, max: 140 } }],
+        baseDamage: { min: 120, max: 140 },
+        variants: [
+          {
+            id: 'adaptive-strike',
+            when: {
+              requiredEquipmentTags: ['melee-dual-wield'],
+            },
+            hitSchedule: [
+              { id: 'adaptive-strike-dual-wield-hit-1', tickOffset: 0, damage: { min: 60, max: 75 } },
+              { id: 'adaptive-strike-dual-wield-hit-2', tickOffset: 0, damage: { min: 60, max: 75 } },
+            ],
+            baseDamage: { min: 120, max: 150 },
+          },
+        ],
       }),
     },
     buffs: {},
@@ -115,54 +311,21 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         id: 'dark-bow-eof',
         name: 'Dark Bow (EOF)',
         weaponOrigin: 'dark-bow',
-        adrenalineCost: 65,
-        hitSchedule: [
-          {
-            id: 'dark-bow-eof-hit-1',
-            tickOffset: 0,
-            damage: { min: 190, max: 230 },
-          },
-          {
-            id: 'dark-bow-eof-hit-2',
-            tickOffset: 0,
-            damage: { min: 190, max: 230 },
-          },
-        ],
-        baseDamage: { min: 380, max: 460 },
+        abilityId: 'dark-bow-eof',
         effectRefs: ['eof-dark-bow-spec'],
       } satisfies EofSpecDefinition,
       'gloomfire-bow-eof': {
         id: 'gloomfire-bow-eof',
         name: 'Gloomfire Bow (EOF)',
         weaponOrigin: 'gloomfire-bow',
-        adrenalineCost: 65,
-        hitSchedule: [
-          {
-            id: 'gloomfire-bow-eof-hit-1',
-            tickOffset: 0,
-            damage: { min: 85, max: 105 },
-          },
-          {
-            id: 'gloomfire-bow-eof-hit-2',
-            tickOffset: 0,
-            damage: { min: 85, max: 105 },
-          },
-          {
-            id: 'gloomfire-bow-eof-hit-3',
-            tickOffset: 0,
-            damage: { min: 255, max: 295 },
-          },
-        ],
-        baseDamage: { min: 425, max: 505 },
+        abilityId: 'gloomfire-bow-eof',
         effectRefs: ['eof-gloomfire-bow-spec'],
       } satisfies EofSpecDefinition,
       'eldritch-crossbow-eof': {
         id: 'eldritch-crossbow-eof',
         name: 'Eldritch Crossbow (EOF)',
         weaponOrigin: 'eldritch-crossbow',
-        adrenalineCost: 25,
-        hitSchedule: [],
-        baseDamage: { min: 0, max: 0 },
+        abilityId: 'eldritch-crossbow-eof',
         effectRefs: ['eof-eldritch-crossbow-spec'],
       } satisfies EofSpecDefinition,
     },
@@ -527,5 +690,96 @@ describe('resolveEffectiveAbilityDefinition', () => {
     });
     expect(result?.hitSchedule).toEqual([]);
     expect(result?.effectRefs).toContain('weapon-special:split-soul');
+  });
+
+  it('extends melee bleed hit counts with Masterwork Spear of Annihilation equipped', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'msoa-1',
+            definitionId: 'masterwork-spear-of-annihilation',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'dismember-1',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'dismember',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result?.hitSchedule).toHaveLength(12);
+    expect(result?.hitSchedule[11]?.tickOffset).toBe(22);
+    expect(result?.baseDamage).toEqual({ min: 300, max: 372 });
+  });
+
+  it('turns Adaptive Strike into a two-hit ability while dual-wielding melee weapons', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'melee-main-1',
+            definitionId: 'melee-main-hand',
+          },
+          offHand: {
+            instanceId: 'melee-off-1',
+            definitionId: 'melee-off-hand',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'adaptive-strike-1',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'adaptive-strike',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result?.hitSchedule).toEqual([
+      { id: 'adaptive-strike-dual-wield-hit-1', tickOffset: 0, damage: { min: 60, max: 75 } },
+      { id: 'adaptive-strike-dual-wield-hit-2', tickOffset: 0, damage: { min: 60, max: 75 } },
+    ]);
+    expect(result?.baseDamage).toEqual({ min: 120, max: 150 });
+  });
+
+  it('keeps Adaptive Strike as a single hit when using a two-handed melee weapon', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'melee-2h-1',
+            definitionId: 'melee-two-handed',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'adaptive-strike-2h',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'adaptive-strike',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result?.hitSchedule).toEqual([
+      { id: 'adaptive-strike-hit-1', tickOffset: 0, damage: { min: 120, max: 140 } },
+    ]);
+    expect(result?.baseDamage).toEqual({ min: 120, max: 140 });
   });
 });

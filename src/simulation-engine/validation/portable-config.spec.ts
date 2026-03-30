@@ -32,6 +32,12 @@ describe('parsePortableConfigDocument', () => {
     if (result.success) {
       expect(result.data.schemaVersion).toBe(PORTABLE_CONFIG_SCHEMA_VERSION);
       expect(result.data.playerStats.rangedLevel).toBe(99);
+      expect(result.data.playerStats.attackLevel).toBe(99);
+      expect(result.data.playerStats.strengthLevel).toBe(99);
+      expect(result.data.playerStats.defenceLevel).toBe(99);
+      expect(result.data.playerStats.magicLevel).toBe(99);
+      expect(result.data.playerStats.necromancyLevel).toBe(99);
+      expect(result.data.playerStats.prayerLevel).toBe(99);
     }
   });
 

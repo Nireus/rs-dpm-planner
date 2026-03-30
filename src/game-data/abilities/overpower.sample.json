@@ -1,0 +1,29 @@
+{
+  "id": "overpower",
+  "name": "Overpower",
+  "style": "melee",
+  "subtype": "ultimate",
+  "cooldownTicks": 50,
+  "adrenalineCost": 60,
+  "requires": {
+    "levelRequirements": {
+      "attack": 15
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "overpower-hit-1",
+      "tickOffset": 3,
+      "damage": {
+        "min": 520,
+        "max": 570
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 520,
+    "max": 570
+  },
+  "description": "Strike the target with a massive overhead swing."
+}

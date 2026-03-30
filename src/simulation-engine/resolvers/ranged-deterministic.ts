@@ -1,5 +1,5 @@
-import type { EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
+import type { EntityId } from '../../game-data/types';
 import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import {
   ADRENALINE_POTION_ACTION_TYPE,
@@ -9,41 +9,35 @@ import {
   ADRENALINE_RENEWAL_DURATION_TICKS,
   getAdrenalinePotionVariant,
 } from '../actions/adrenaline-potions';
+import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import {
-  BALANCE_BY_FORCE_ABILITY_ID,
-  resolveEffectiveAbilityDefinition,
-} from '../abilities/effective-ability';
+  parsePerfectEquilibriumThreshold,
+  parseRangedHitAdrenalineGain,
+} from '../buffs/buff-effect-refs';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import {
+  applyAbilityTimelineEffects,
+  createEmptyBuffTimeline,
+  markBuffRange,
+} from './ability-timeline-effects';
 
-const RAPID_FIRE_ABILITY_ID = 'rapid-fire';
-const GALESHOT_ABILITY_ID = 'galeshot';
-const DEATHS_SWIFTNESS_ABILITY_ID = 'deaths-swiftness';
-const BALANCE_BY_FORCE_BUFF_ID = 'balance-by-force-buff';
-const BALANCE_BY_FORCE_DURATION_TICKS = 50;
 const DRACOLICH_SET_EFFECT = EFFECT_REF_IDS.dracolichSet;
 const ELITE_DRACOLICH_SET_EFFECT = EFFECT_REF_IDS.eliteDracolichSet;
 const DRACOLICH_INFUSION_BUFF_ID = 'dracolich-infusion';
 const ELITE_DRACOLICH_INFUSION_BUFF_ID = 'elite-dracolich-infusion';
+const BALANCE_BY_FORCE_BUFF_ID = 'balance-by-force-buff';
 const DEATHS_SWIFTNESS_BUFF_ID = 'deaths-swiftness-buff';
-const DEATHS_SWIFTNESS_DURATION_TICKS = 63;
 const SEARING_WINDS_BUFF_ID = 'searing-winds';
-const SEARING_WINDS_DURATION_TICKS = 10;
-const IMBUE_SHADOWS_ABILITY_ID = 'imbue-shadows';
-const SHADOW_TENDRILS_ABILITY_ID = 'shadow-tendrils';
 const SHADOW_IMBUED_BUFF_ID = 'shadow-imbued';
-const SHADOW_IMBUED_DURATION_TICKS = 50;
-const SHADOW_IMBUED_EXTENSION_TICKS = 6;
-const SHADOW_IMBUED_HIT_ADRENALINE_EFFECT_PREFIX = 'ranged-hit-adrenaline:+';
-const BOW_TAG = 'two-handed-bow';
-const PERFECT_EQUILIBRIUM_THRESHOLD_BUFF_ID = 'balance-by-force-buff';
-const SPLIT_SOUL_ABILITY_ID = 'split-soul';
 const SPLIT_SOUL_BUFF_ID = 'split-soul';
-const SPLIT_SOUL_DURATION_TICKS = 25;
 const VULNERABILITY_BOMB_ACTION_TYPE = 'vulnerability-bomb';
 const VULNERABILITY_BOMB_AREA_BUFF_ID = 'vulnerability-bomb-area';
 const VULNERABILITY_DEBUFF_BUFF_ID = 'vulnerability';
 const VULNERABILITY_BOMB_TRAVEL_DELAY_TICKS = 3;
 const VULNERABILITY_BOMB_AREA_DURATION_TICKS = 3;
 const VULNERABILITY_DEBUFF_DURATION_TICKS = 100;
+const RAPID_FIRE_CHANNEL_EFFECT_REF = 'rapid-fire-channel';
+const PERFECT_EQUILIBRIUM_DEFAULT_THRESHOLD = 8;
 
 export interface DeterministicRangedTimelineResult {
   adrenalineByTick: Record<number, number>;
@@ -61,10 +55,6 @@ export function resolveDeterministicRangedTimeline(
   const timelineGeneratedBuffSources: TimelineGeneratedBuffSource[] = [];
   const notes: string[] = [];
   const dracolichInfo = resolveDracolichSetInfo(config);
-  let searingWindsUntilTick = -1;
-  let generatedSearingWinds = false;
-  let shadowImbuedUntilTick = -1;
-  let generatedShadowImbued = false;
   let generatedVulnerabilityBomb = false;
   let generatedAdrenalinePotionCooldown = false;
   let generatedAdrenalineRenewal = false;
@@ -92,50 +82,20 @@ export function resolveDeterministicRangedTimeline(
     }
 
     const effectiveAbility = resolveEffectiveAbilityDefinition(config, action);
-    const abilityId = effectiveAbility?.id ?? readAbilityId(action);
-    applyBalanceByForceBuff(config, action, effectiveAbility?.id ?? null, buffTimeline, timelineGeneratedBuffSources);
-    applyDeathsSwiftnessBuff(config, action, abilityId, buffTimeline, timelineGeneratedBuffSources);
-    applySplitSoulBuff(config, action, effectiveAbility, buffTimeline, timelineGeneratedBuffSources);
-    if (abilityId === IMBUE_SHADOWS_ABILITY_ID) {
-      shadowImbuedUntilTick = applyShadowImbuedBuff(
-        config,
-        action,
-        buffTimeline,
-        shadowImbuedUntilTick,
-      );
-      generatedShadowImbued = true;
-    }
-    if (abilityId === SHADOW_TENDRILS_ABILITY_ID && shadowImbuedUntilTick >= action.tick) {
-      shadowImbuedUntilTick = extendShadowImbued(
-        config,
-        buffTimeline,
-        shadowImbuedUntilTick,
-      );
-    }
-    if (abilityId === GALESHOT_ABILITY_ID) {
-      searingWindsUntilTick = applySearingWindsFromGaleshot(
-        config,
-        action,
-        buffTimeline,
-        searingWindsUntilTick,
-      );
-      generatedSearingWinds = true;
-    }
-    if (abilityId === RAPID_FIRE_ABILITY_ID && searingWindsUntilTick >= action.tick) {
-      searingWindsUntilTick = extendSearingWindsWithRapidFire(
-        config,
-        action,
-        buffTimeline,
-        searingWindsUntilTick,
-      );
-    }
+    applyAbilityTimelineEffects({
+      config,
+      action,
+      ability: effectiveAbility,
+      buffTimeline,
+      timelineGeneratedBuffSources,
+    });
 
-    if (!dracolichInfo || abilityId !== RAPID_FIRE_ABILITY_ID) {
+    if (!dracolichInfo || !isRapidFireAbility(effectiveAbility)) {
       continue;
     }
 
-    applyRapidFireDracolichAdrenaline(config, action, dracolichInfo, adrenalineByTick);
-    applyRapidFireDracolichInfusion(config, action, dracolichInfo, buffTimeline);
+    applyRapidFireDracolichAdrenaline(config, action, effectiveAbility, dracolichInfo, adrenalineByTick);
+    applyRapidFireDracolichInfusion(config, action, effectiveAbility, dracolichInfo, buffTimeline);
   }
 
   applyTimelineHitAdrenaline(config, blockedActionIds, buffTimeline, adrenalineByTick);
@@ -165,23 +125,13 @@ export function resolveDeterministicRangedTimeline(
     notes.push('Balance by Force: applies a 50-tick buff starting on the cast tick, lowering Perfect Equilibrium to 4 stacks.');
   }
 
-  if (generatedSearingWinds) {
-    timelineGeneratedBuffSources.push({
-      buffId: SEARING_WINDS_BUFF_ID,
-      sourceType: 'ability',
-      sourceId: GALESHOT_ABILITY_ID,
-    });
+  if (Object.values(buffTimeline).some((buffIds) => buffIds.includes(SEARING_WINDS_BUFF_ID))) {
     notes.push(
       'Searing Winds: Galeshot applies a 10-tick buff starting on the cast tick, and each Rapid Fire hit extends it by 1 tick when active on cast.',
     );
   }
 
-  if (generatedShadowImbued) {
-    timelineGeneratedBuffSources.push({
-      buffId: SHADOW_IMBUED_BUFF_ID,
-      sourceType: 'ability',
-      sourceId: IMBUE_SHADOWS_ABILITY_ID,
-    });
+  if (Object.values(buffTimeline).some((buffIds) => buffIds.includes(SHADOW_IMBUED_BUFF_ID))) {
     notes.push(
       'Shadow Imbued: Imbue: Shadows applies a 50-tick buff starting on the cast tick, and Shadow Tendrils extends it by 6 ticks.',
     );
@@ -306,128 +256,6 @@ function applyAdrenalinePotionBuffs(
   };
 }
 
-function applyBalanceByForceBuff(
-  config: SimulationConfig,
-  action: RotationAction,
-  effectiveAbilityId: EntityId | null,
-  buffTimeline: Record<number, EntityId[]>,
-  timelineGeneratedBuffSources: TimelineGeneratedBuffSource[],
-): void {
-  if (effectiveAbilityId !== BALANCE_BY_FORCE_ABILITY_ID || action.tick >= config.rotationPlan.tickCount) {
-    return;
-  }
-
-  markBuffRange(
-    buffTimeline,
-    BALANCE_BY_FORCE_BUFF_ID,
-    action.tick,
-    action.tick + BALANCE_BY_FORCE_DURATION_TICKS - 1,
-    config.rotationPlan.tickCount,
-  );
-
-  if (!timelineGeneratedBuffSources.some((entry) => entry.buffId === BALANCE_BY_FORCE_BUFF_ID)) {
-    timelineGeneratedBuffSources.push({
-      buffId: BALANCE_BY_FORCE_BUFF_ID,
-      sourceType: 'ability',
-      sourceId: BALANCE_BY_FORCE_ABILITY_ID,
-    });
-  }
-}
-
-function applySearingWindsFromGaleshot(
-  config: SimulationConfig,
-  action: RotationAction,
-  buffTimeline: Record<number, EntityId[]>,
-  currentUntilTick: number,
-): number {
-  const nextUntilTick = Math.max(currentUntilTick, action.tick + SEARING_WINDS_DURATION_TICKS - 1);
-  markBuffRange(
-    buffTimeline,
-    SEARING_WINDS_BUFF_ID,
-    Math.max(action.tick, currentUntilTick + 1),
-    nextUntilTick,
-    config.rotationPlan.tickCount,
-  );
-  return nextUntilTick;
-}
-
-function applyShadowImbuedBuff(
-  config: SimulationConfig,
-  action: RotationAction,
-  buffTimeline: Record<number, EntityId[]>,
-  currentUntilTick: number,
-): number {
-  const nextUntilTick = Math.max(currentUntilTick, action.tick + SHADOW_IMBUED_DURATION_TICKS - 1);
-  markBuffRange(
-    buffTimeline,
-    SHADOW_IMBUED_BUFF_ID,
-    Math.max(action.tick, currentUntilTick + 1),
-    nextUntilTick,
-    config.rotationPlan.tickCount,
-  );
-  return nextUntilTick;
-}
-
-function extendShadowImbued(
-  config: SimulationConfig,
-  buffTimeline: Record<number, EntityId[]>,
-  currentUntilTick: number,
-): number {
-  const nextUntilTick = currentUntilTick + SHADOW_IMBUED_EXTENSION_TICKS;
-  markBuffRange(
-    buffTimeline,
-    SHADOW_IMBUED_BUFF_ID,
-    currentUntilTick + 1,
-    nextUntilTick,
-    config.rotationPlan.tickCount,
-  );
-  return nextUntilTick;
-}
-
-function extendSearingWindsWithRapidFire(
-  config: SimulationConfig,
-  action: RotationAction,
-  buffTimeline: Record<number, EntityId[]>,
-  currentUntilTick: number,
-): number {
-  const rapidFire = config.gameData.abilities[RAPID_FIRE_ABILITY_ID];
-  const extensionTicks = resolveRapidFireSearingWindsExtensionTicks(rapidFire);
-
-  if (extensionTicks <= 0) {
-    return currentUntilTick;
-  }
-
-  const nextUntilTick = currentUntilTick + extensionTicks;
-  markBuffRange(
-    buffTimeline,
-    SEARING_WINDS_BUFF_ID,
-    currentUntilTick + 1,
-    nextUntilTick,
-    config.rotationPlan.tickCount,
-  );
-  return nextUntilTick;
-}
-
-function resolveRapidFireSearingWindsExtensionTicks(
-  rapidFire: { hitSchedule?: Array<unknown>; channelDurationTicks?: number } | undefined,
-): number {
-  if (!rapidFire) {
-    return 0;
-  }
-
-  const hitCount = rapidFire.hitSchedule?.length ?? 0;
-  const channelTicks = rapidFire.channelDurationTicks ?? 0;
-  const baseExtension = Math.max(hitCount, channelTicks);
-
-  if (baseExtension <= 0) {
-    return 0;
-  }
-
-  // Preserve the final GCD-aligned cast window after the channel so Searing Winds
-  // still covers the same number of post-Galeshot ability starts in planner timing.
-  return baseExtension + 1;
-}
-
 interface DracolichSetInfo {
   effectRef: string;
   label: string;
@@ -477,11 +305,9 @@ function calculateInfusionDurationTicks(pieces: number): number {
   }
 
   let durationTicks = 5;
-
   if (pieces >= 4) {
     durationTicks += 3;
   }
-
   if (pieces >= 5) {
     durationTicks += 3;
   }
@@ -492,20 +318,17 @@ function calculateInfusionDurationTicks(pieces: number): number {
 function applyRapidFireDracolichAdrenaline(
   config: SimulationConfig,
   action: RotationAction,
+  ability: NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>>,
   dracolichInfo: DracolichSetInfo,
   adrenalineByTick: Record<number, number>,
 ): void {
-  const rapidFire = config.gameData.abilities[RAPID_FIRE_ABILITY_ID];
-
-  if (!rapidFire?.isChanneled || !rapidFire.channelDurationTicks || dracolichInfo.pieces <= 0) {
+  if (!ability.isChanneled || !ability.channelDurationTicks || dracolichInfo.pieces <= 0) {
     return;
   }
 
   const gainPerTick = dracolichInfo.pieces * dracolichInfo.adrenalinePerPiecePerTick;
-
-  for (let offset = 0; offset < rapidFire.channelDurationTicks; offset += 1) {
+  for (let offset = 0; offset < ability.channelDurationTicks; offset += 1) {
     const tick = action.tick + offset;
-
     if (tick < 0 || tick >= config.rotationPlan.tickCount) {
       continue;
     }
@@ -517,71 +340,26 @@ function applyRapidFireDracolichAdrenaline(
 function applyRapidFireDracolichInfusion(
   config: SimulationConfig,
   action: RotationAction,
+  ability: NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>>,
   dracolichInfo: DracolichSetInfo,
   buffTimeline: Record<number, EntityId[]>,
 ): void {
-  const rapidFire = config.gameData.abilities[RAPID_FIRE_ABILITY_ID];
-
-  if (
-    !rapidFire?.isChanneled ||
-    !rapidFire.channelDurationTicks ||
-    dracolichInfo.infusionDurationTicks <= 0 ||
-    !isBowEquipped(config)
-  ) {
+  if (!ability.isChanneled || !ability.channelDurationTicks || dracolichInfo.infusionDurationTicks <= 0 || !isBowEquipped(config)) {
     return;
   }
 
-  const buffStartTick = action.tick + rapidFire.channelDurationTicks + 1;
-
+  const buffStartTick = action.tick + ability.channelDurationTicks + 1;
   if (buffStartTick >= config.rotationPlan.tickCount) {
     return;
   }
 
-  for (let offset = 0; offset < dracolichInfo.infusionDurationTicks; offset += 1) {
-    const tick = buffStartTick + offset;
-
-    if (tick < 0 || tick >= config.rotationPlan.tickCount) {
-      continue;
-    }
-
-    buffTimeline[tick].push(dracolichInfo.infusionBuffId);
-  }
-}
-
-function applyDeathsSwiftnessBuff(
-  config: SimulationConfig,
-  action: RotationAction,
-  abilityId: EntityId | null,
-  buffTimeline: Record<number, EntityId[]>,
-  timelineGeneratedBuffSources: TimelineGeneratedBuffSource[],
-): void {
-  if (abilityId !== DEATHS_SWIFTNESS_ABILITY_ID) {
-    return;
-  }
-
-  const ability = config.gameData.abilities[DEATHS_SWIFTNESS_ABILITY_ID];
-
-  if (!ability || action.tick >= config.rotationPlan.tickCount) {
-    return;
-  }
-
-  for (let offset = 0; offset < DEATHS_SWIFTNESS_DURATION_TICKS; offset += 1) {
-    const tick = action.tick + offset;
-
-    if (tick < 0 || tick >= config.rotationPlan.tickCount) {
-      continue;
-    }
-
-    buffTimeline[tick].push(DEATHS_SWIFTNESS_BUFF_ID);
-  }
-
-  if (!timelineGeneratedBuffSources.some((entry) => entry.buffId === DEATHS_SWIFTNESS_BUFF_ID)) {
-    timelineGeneratedBuffSources.push({
-      buffId: DEATHS_SWIFTNESS_BUFF_ID,
-      sourceType: 'ability',
-      sourceId: ability.id,
-    });
-  }
+  markBuffRange(
+    buffTimeline,
+    dracolichInfo.infusionBuffId,
+    buffStartTick,
+    buffStartTick + dracolichInfo.infusionDurationTicks - 1,
+    config.rotationPlan.tickCount,
+  );
 }
 
 function applyTimelineHitAdrenaline(
@@ -592,7 +370,6 @@ function applyTimelineHitAdrenaline(
 ): void {
   const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
   let perfectEquilibriumStacks = 0;
-  const hasBolgPassive = hasBolgEquipped(config);
 
   for (const action of abilityActions) {
     if (blockedActionIds.has(action.id)) {
@@ -615,84 +392,21 @@ function applyTimelineHitAdrenaline(
         adrenalineByTick[hitTick] += hitAdrenaline;
       }
 
-      if (
-        hasBolgPassive &&
-        ability.style === 'ranged' &&
-        !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)
-      ) {
-        perfectEquilibriumStacks += 1;
-        const perfectEquilibriumThreshold = (buffTimeline[hitTick] ?? []).includes(PERFECT_EQUILIBRIUM_THRESHOLD_BUFF_ID)
-          ? 4
-          : 8;
+      const projectedConfig = projectSimulationConfigAtTick(config, hitTick);
+      if (!hasBolgEquipped(projectedConfig)) {
+        continue;
+      }
 
-        if (perfectEquilibriumStacks >= perfectEquilibriumThreshold) {
-          perfectEquilibriumStacks = 0;
-          if (hitAdrenaline > 0) {
-            adrenalineByTick[hitTick] += hitAdrenaline;
-          }
+      perfectEquilibriumStacks += 1;
+      const perfectEquilibriumThreshold = resolvePerfectEquilibriumThreshold(config, buffTimeline[hitTick] ?? []);
+      if (perfectEquilibriumStacks >= perfectEquilibriumThreshold) {
+        perfectEquilibriumStacks = 0;
+        if (hitAdrenaline > 0) {
+          adrenalineByTick[hitTick] += hitAdrenaline;
         }
       }
     }
   }
-}
-
-function applySplitSoulBuff(
-  config: SimulationConfig,
-  action: RotationAction,
-  effectiveAbility: { id: EntityId; effectRefs?: string[] } | null,
-  buffTimeline: Record<number, EntityId[]>,
-  timelineGeneratedBuffSources: TimelineGeneratedBuffSource[],
-): void {
-  if (!isSplitSoulAbility(effectiveAbility) || action.tick >= config.rotationPlan.tickCount) {
-    return;
-  }
-
-  const endTick = resolveSplitSoulEndTick(config, action.tick);
-  markBuffRange(
-    buffTimeline,
-    SPLIT_SOUL_BUFF_ID,
-    action.tick,
-    endTick,
-    config.rotationPlan.tickCount,
-  );
-
-  if (!timelineGeneratedBuffSources.some((entry) => entry.buffId === SPLIT_SOUL_BUFF_ID)) {
-    timelineGeneratedBuffSources.push({
-      buffId: SPLIT_SOUL_BUFF_ID,
-      sourceType: 'ability',
-      sourceId: SPLIT_SOUL_ABILITY_ID,
-    });
-  }
-}
-
-function isSplitSoulAbility(
-  ability: { id: EntityId; effectRefs?: string[] } | null,
-): boolean {
-  if (!ability) {
-    return false;
-  }
-
-  return (
-    ability.id === SPLIT_SOUL_ABILITY_ID ||
-    (ability.effectRefs?.includes(EFFECT_REF_IDS.weaponSpecialSplitSoul) ?? false)
-  );
-}
-
-function resolveSplitSoulEndTick(config: SimulationConfig, castTick: number): number {
-  const naturalEndTick = castTick + SPLIT_SOUL_DURATION_TICKS - 1;
-  const firstWeaponSwapTick = [...config.rotationPlan.nonGcdActions]
-    .filter((action) => action.actionType === 'gear-swap' && action.tick >= castTick)
-    .map((action) => ({
-      tick: action.tick,
-      slot: readStringPayload(action, 'slot'),
-    }))
-    .find((entry) => entry.slot === 'weapon')?.tick;
-
-  if (typeof firstWeaponSwapTick !== 'number') {
-    return naturalEndTick;
-  }
-
-  return Math.min(naturalEndTick, firstWeaponSwapTick);
 }
 
 function resolveTimelineHitAdrenalineGain(
@@ -701,46 +415,42 @@ function resolveTimelineHitAdrenalineGain(
 ): number {
   return activeBuffIds
     .flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? [])
-    .reduce((total, effectRef) => total + parseHitAdrenalineGain(effectRef), 0);
+    .reduce((total, effectRef) => total + parseRangedHitAdrenalineGain(effectRef), 0);
 }
 
-function parseHitAdrenalineGain(effectRef: string): number {
-  if (!effectRef.startsWith(SHADOW_IMBUED_HIT_ADRENALINE_EFFECT_PREFIX) || !effectRef.endsWith('%')) {
-    return 0;
-  }
+function resolvePerfectEquilibriumThreshold(
+  config: SimulationConfig,
+  activeBuffIds: EntityId[],
+): number {
+  return activeBuffIds
+    .flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? [])
+    .map((effectRef) => parsePerfectEquilibriumThreshold(effectRef))
+    .find((value): value is number => typeof value === 'number') ?? PERFECT_EQUILIBRIUM_DEFAULT_THRESHOLD;
+}
 
-  const value = effectRef
-    .slice(SHADOW_IMBUED_HIT_ADRENALINE_EFFECT_PREFIX.length, -1)
-    .trim();
-  const parsed = Number.parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+function isRapidFireAbility(
+  ability: ReturnType<typeof resolveEffectiveAbilityDefinition>,
+): ability is NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>> {
+  return Boolean(ability?.effectRefs?.includes(RAPID_FIRE_CHANNEL_EFFECT_REF));
 }
 
 function isBowEquipped(config: SimulationConfig): boolean {
   const equippedWeapon = config.gearSetup.equipment.weapon;
-
   if (!equippedWeapon) {
     return false;
   }
 
   const definition = config.gameData.items[equippedWeapon.definitionId];
-  return definition?.requirements?.requiredEquipmentTags?.includes(BOW_TAG) ?? false;
+  return definition?.requirements?.requiredEquipmentTags?.includes('two-handed-bow') ?? false;
 }
 
 function hasBolgEquipped(config: SimulationConfig): boolean {
   const equippedWeapon = config.gearSetup.equipment.weapon;
-
   if (!equippedWeapon) {
     return false;
   }
 
-  const definition = config.gameData.items[equippedWeapon.definitionId];
-  return definition?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
-}
-
-function readAbilityId(action: RotationAction): EntityId | null {
-  const abilityId = action.payload['abilityId'];
-  return typeof abilityId === 'string' && abilityId.length > 0 ? abilityId : null;
+  return config.gameData.items[equippedWeapon.definitionId]?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
 }
 
 function readStringPayload(action: RotationAction, key: string): string | null {
@@ -750,26 +460,4 @@ function readStringPayload(action: RotationAction, key: string): string | null {
 
 function createEmptyAdrenalineTimeline(tickCount: number): Record<number, number> {
   return Object.fromEntries(Array.from({ length: tickCount }, (_, tick) => [tick, 0]));
-}
-
-function createEmptyBuffTimeline(tickCount: number): Record<number, EntityId[]> {
-  return Object.fromEntries(Array.from({ length: tickCount }, (_, tick) => [tick, []]));
-}
-
-function markBuffRange(
-  buffTimeline: Record<number, EntityId[]>,
-  buffId: EntityId,
-  startTick: number,
-  endTick: number,
-  tickCount: number,
-): void {
-  for (let tick = startTick; tick <= endTick; tick += 1) {
-    if (tick < 0 || tick >= tickCount) {
-      continue;
-    }
-
-    if (!buffTimeline[tick].includes(buffId)) {
-      buffTimeline[tick].push(buffId);
-    }
-  }
 }

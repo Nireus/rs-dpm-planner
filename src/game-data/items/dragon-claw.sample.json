@@ -1,0 +1,21 @@
+{
+  "id": "dragon-claw",
+  "name": "Dragon claw",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dragon_claw.png",
+  "wikiUrl": "https://runescape.wiki/w/Dragon_claw",
+  "combatStyleTags": ["melee"],
+  "tier": 60,
+  "offensiveStats": {
+    "damageTier": 60,
+    "accuracyTier": 60
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 60
+    }
+  },
+  "effectRefs": ["weapon-special:slice-and-dice"],
+  "implementationNotes": "Curated main-hand melee weapon from the live Dragon claw page. Wiki-verified with Playwright for slot, tier, Attack requirement, and the Slice and Dice special attack. The live page requires both claws for the special, so generic weapon-special availability is intentionally deferred until paired-special validation exists."
+}

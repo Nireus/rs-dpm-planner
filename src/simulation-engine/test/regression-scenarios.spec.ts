@@ -174,6 +174,7 @@ describe('simulation regression scenarios', () => {
       category: 'weapon',
       slot: 'weapon',
       combatStyleTags: ['ranged'],
+      specialAbilityId: 'balance-by-force',
       effectRefs: [
         EFFECT_REF_IDS.bolgPassive,
         EFFECT_REF_IDS.weaponSpecialAccess,
@@ -206,6 +207,28 @@ describe('simulation regression scenarios', () => {
             adrenalineGain: 0,
             hitSchedule: [],
             baseDamage: { min: 0, max: 0 },
+            specialDispatch: {
+              source: 'equipped-weapon',
+            },
+          }),
+          'balance-by-force': createAbilityDefinition({
+            id: 'balance-by-force',
+            name: 'Balance by Force',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineCost: 30,
+            adrenalineGain: 0,
+            hitSchedule: [{ id: 'balance-by-force-hit', tickOffset: 0, damage: { min: 235, max: 255 } }],
+            baseDamage: { min: 235, max: 255 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'balance-by-force-buff',
+              },
+            ],
+            displayHints: {
+              hiddenFromUi: true,
+            },
           }),
         },
         buffs: {
@@ -214,6 +237,7 @@ describe('simulation regression scenarios', () => {
             name: 'Balance by Force',
             category: 'temporary',
             sourceType: 'ability',
+            durationTicks: 50,
             effectRefs: ['perfect-equilibrium-threshold:4'],
           },
         },
@@ -289,5 +313,709 @@ describe('simulation regression scenarios', () => {
     expect(buffedResult.totalDamage.min).toBe(baselineResult.totalDamage.min);
     expect(buffedResult.totalDamage.max).toBe(baselineResult.totalDamage.max);
     expect(buffedResult.totalDamage.avg).toBeGreaterThan(baselineResult.totalDamage.avg);
+  });
+
+  it('supports a first playable two-handed melee rotation with Berserk buffed damage', () => {
+    const twoHander: ItemDefinition = {
+      id: 'masterwork-2h-sword',
+      name: 'Masterwork 2h Sword',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+      tier: 99,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 99,
+        meleeBonus: 125,
+      },
+    };
+
+    const hurricane = createAbilityDefinition({
+      id: 'hurricane',
+      name: 'Hurricane',
+      style: 'melee',
+      subtype: 'enhanced',
+      cooldownTicks: 34,
+      adrenalineCost: 25,
+      requires: {
+        requiredEquipmentTags: ['melee-two-handed'],
+      },
+      hitSchedule: [
+        { id: 'hurricane-hit-1', tickOffset: 0, damage: { min: 135, max: 165 } },
+        { id: 'hurricane-hit-2', tickOffset: 1, damage: { min: 155, max: 185 } },
+      ],
+      baseDamage: { min: 290, max: 350 },
+    });
+    const overpower = createAbilityDefinition({
+      id: 'overpower',
+      name: 'Overpower',
+      style: 'melee',
+      subtype: 'ultimate',
+      cooldownTicks: 50,
+      adrenalineCost: 60,
+      requires: {
+        requiredEquipmentTags: ['melee-weapon'],
+      },
+      hitSchedule: [{ id: 'overpower-hit', tickOffset: 3, damage: { min: 520, max: 570 } }],
+      baseDamage: { min: 520, max: 570 },
+    });
+
+    const unbuffedResult = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          hurricane,
+          overpower,
+        },
+        items: {
+          [twoHander.id]: twoHander,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'twohander-1',
+            definitionId: twoHander.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('hurricane-action', 0, 'hurricane'),
+          createAbilityAction('overpower-action', 3, 'overpower'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 10,
+      }),
+    );
+
+    const buffedResult = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          hurricane,
+          overpower,
+          berserk: createAbilityDefinition({
+            id: 'berserk',
+            name: 'Berserk',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 0,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'berserk-buff',
+              },
+            ],
+            stackEffects: [
+              {
+                buffId: 'bloodlust',
+                operation: 'add',
+                stacks: 2,
+              },
+            ],
+          }),
+        },
+        buffs: {
+          'berserk-buff': {
+            id: 'berserk-buff',
+            name: 'Berserk',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 33,
+            effectRefs: ['melee-damage-multiplier:+75%'],
+          },
+        },
+        items: {
+          [twoHander.id]: twoHander,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'twohander-1',
+            definitionId: twoHander.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('berserk-action', 0, 'berserk'),
+          createAbilityAction('hurricane-action', 3, 'hurricane'),
+          createAbilityAction('overpower-action', 6, 'overpower'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 12,
+      }),
+    );
+
+    expect(unbuffedResult.isValid).toBe(true);
+    expect(buffedResult.isValid).toBe(true);
+    expect(buffedResult.buffTimeline[3]).toContain('berserk-buff');
+    expect(
+      buffedResult.explainability.damageBreakdowns
+        .filter((entry) => entry.abilityId === 'hurricane' || entry.abilityId === 'overpower')
+        .every((entry) =>
+          entry.multiplicativeModifiers.some((modifier) => modifier.sourceId === 'melee-damage-multiplier:+75%'),
+        ),
+    ).toBe(true);
+    expect(buffedResult.totalDamage.avg).toBeGreaterThan(unbuffedResult.totalDamage.avg);
+  });
+
+  it('supports a first playable dual-wield melee rotation with bleed and channel hits', () => {
+    const mainHand: ItemDefinition = {
+      id: 'abyssal-scourge',
+      name: 'Abyssal scourge',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        meleeBonus: 98,
+      },
+    };
+    const offHand: ItemDefinition = {
+      id: 'dark-sliver-of-leng',
+      name: 'Dark Sliver of Leng',
+      category: 'weapon',
+      slot: 'offHand',
+      combatStyleTags: ['melee'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        meleeBonus: 49,
+      },
+    };
+
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          fury: createAbilityDefinition({
+            id: 'fury',
+            name: 'Fury',
+            style: 'melee',
+            cooldownTicks: 25,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'fury-hit', tickOffset: 0, damage: { min: 110, max: 130 } }],
+            baseDamage: { min: 110, max: 130 },
+          }),
+          dismember: createAbilityDefinition({
+            id: 'dismember',
+            name: 'Dismember',
+            style: 'melee',
+            subtype: 'enhanced',
+            cooldownTicks: 40,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `dismember-hit-${index + 1}`,
+              tickOffset: index * 2,
+              damage: { min: 25, max: 31 },
+            })),
+            baseDamage: { min: 200, max: 248 },
+            effectRefs: [EFFECT_REF_IDS.damageOverTime],
+          }),
+          assault: createAbilityDefinition({
+            id: 'assault',
+            name: 'Assault',
+            style: 'melee',
+            subtype: 'enhanced',
+            cooldownTicks: 10,
+            adrenalineCost: 25,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            isChanneled: true,
+            channelDurationTicks: 8,
+            hitSchedule: [
+              { id: 'assault-hit-1', tickOffset: 1, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-2', tickOffset: 3, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-3', tickOffset: 5, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-4', tickOffset: 7, damage: { min: 130, max: 150 } },
+            ],
+            baseDamage: { min: 520, max: 600 },
+          }),
+        },
+        items: {
+          [mainHand.id]: mainHand,
+          [offHand.id]: offHand,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'mainhand-1',
+            definitionId: mainHand.id,
+          },
+          offHand: {
+            instanceId: 'offhand-1',
+            definitionId: offHand.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('fury-action', 0, 'fury'),
+          createAbilityAction('dismember-action', 3, 'dismember'),
+          createAbilityAction('assault-action', 6, 'assault'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 20,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.damageByAbility.map((entry) => entry.abilityId)).toEqual(['assault', 'dismember', 'fury']);
+    expect(result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'dismember')).toHaveLength(8);
+    expect(result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'assault')).toHaveLength(4);
+    expect(result.totalDamage.avg).toBeGreaterThan(0);
+  });
+
+  it('keeps first-pass melee gear synergies stable across bleed, crit, adrenaline, and Berserk extension', () => {
+    const weapon: ItemDefinition = {
+      id: 'abyssal-scourge',
+      name: 'Abyssal scourge',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        meleeBonus: 98,
+      },
+      effectRefs: ['abyssal-parasite'],
+    };
+    const offHand: ItemDefinition = {
+      id: 'dark-sliver-of-leng',
+      name: 'Dark Sliver of Leng',
+      category: 'weapon',
+      slot: 'offHand',
+      combatStyleTags: ['melee'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        meleeBonus: 49,
+      },
+    };
+
+    const baseline = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          berserk: createAbilityDefinition({
+            id: 'berserk',
+            name: 'Berserk',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 0,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'berserk-buff',
+              },
+            ],
+            stackEffects: [
+              {
+                buffId: 'bloodlust',
+                operation: 'add',
+                stacks: 2,
+              },
+            ],
+          }),
+          rend: createAbilityDefinition({
+            id: 'rend',
+            name: 'Rend',
+            style: 'melee',
+            cooldownTicks: 17,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'rend-hit', tickOffset: 0, damage: { min: 135, max: 165 } }],
+            baseDamage: { min: 135, max: 165 },
+          }),
+          fury: createAbilityDefinition({
+            id: 'fury',
+            name: 'Fury',
+            style: 'melee',
+            cooldownTicks: 25,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'fury-hit', tickOffset: 0, damage: { min: 110, max: 130 } }],
+            baseDamage: { min: 110, max: 130 },
+          }),
+          dismember: createAbilityDefinition({
+            id: 'dismember',
+            name: 'Dismember',
+            style: 'melee',
+            subtype: 'enhanced',
+            cooldownTicks: 40,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `dismember-hit-${index + 1}`,
+              tickOffset: index * 2,
+              damage: { min: 25, max: 31 },
+            })),
+            baseDamage: { min: 200, max: 248 },
+            effectRefs: [EFFECT_REF_IDS.damageOverTime],
+          }),
+          overpower: createAbilityDefinition({
+            id: 'overpower',
+            name: 'Overpower',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 50,
+            adrenalineCost: 0,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'overpower-hit', tickOffset: 3, damage: { min: 520, max: 570 } }],
+            baseDamage: { min: 520, max: 570 },
+          }),
+        },
+        buffs: {
+          'berserk-buff': {
+            id: 'berserk-buff',
+            name: 'Berserk',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 33,
+            effectRefs: ['melee-damage-multiplier:+75%'],
+          },
+        },
+        items: {
+          [weapon.id]: weapon,
+          [offHand.id]: offHand,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: weapon.id,
+          },
+          offHand: {
+            instanceId: 'offhand-1',
+            definitionId: offHand.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('berserk-action', 0, 'berserk'),
+          createAbilityAction('rend-action', 3, 'rend'),
+          createAbilityAction('dismember-action', 6, 'dismember'),
+          createAbilityAction('fury-action', 9, 'fury'),
+          createAbilityAction('overpower-action', 40, 'overpower'),
+        ],
+        startingAdrenaline: 0,
+        tickCount: 50,
+      }),
+    );
+
+    const buffed = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: baseline.damageByAbility.length >= 0 ? {
+          berserk: createAbilityDefinition({
+            id: 'berserk',
+            name: 'Berserk',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 0,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'berserk-buff',
+              },
+            ],
+            stackEffects: [
+              {
+                buffId: 'bloodlust',
+                operation: 'add',
+                stacks: 2,
+              },
+            ],
+          }),
+          rend: createAbilityDefinition({
+            id: 'rend',
+            name: 'Rend',
+            style: 'melee',
+            cooldownTicks: 17,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'rend-hit', tickOffset: 0, damage: { min: 135, max: 165 } }],
+            baseDamage: { min: 135, max: 165 },
+          }),
+          fury: createAbilityDefinition({
+            id: 'fury',
+            name: 'Fury',
+            style: 'melee',
+            cooldownTicks: 25,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'fury-hit', tickOffset: 0, damage: { min: 110, max: 130 } }],
+            baseDamage: { min: 110, max: 130 },
+          }),
+          dismember: createAbilityDefinition({
+            id: 'dismember',
+            name: 'Dismember',
+            style: 'melee',
+            subtype: 'enhanced',
+            cooldownTicks: 40,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `dismember-hit-${index + 1}`,
+              tickOffset: index * 2,
+              damage: { min: 25, max: 31 },
+            })),
+            baseDamage: { min: 200, max: 248 },
+            effectRefs: [EFFECT_REF_IDS.damageOverTime],
+          }),
+          overpower: createAbilityDefinition({
+            id: 'overpower',
+            name: 'Overpower',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 50,
+            adrenalineCost: 0,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'overpower-hit', tickOffset: 3, damage: { min: 520, max: 570 } }],
+            baseDamage: { min: 520, max: 570 },
+          }),
+        } : {},
+        buffs: {
+          'berserk-buff': {
+            id: 'berserk-buff',
+            name: 'Berserk',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 33,
+            effectRefs: ['melee-damage-multiplier:+75%'],
+          },
+        },
+        items: {
+          [weapon.id]: weapon,
+          [offHand.id]: offHand,
+          'champions-ring': {
+            id: 'champions-ring',
+            name: "Champion's ring",
+            category: 'jewellery',
+            slot: 'ring',
+            combatStyleTags: ['melee'],
+            effectRefs: ['crimson-strikes'],
+          },
+          'jaws-of-the-abyss': {
+            id: 'jaws-of-the-abyss',
+            name: 'Jaws of the Abyss',
+            category: 'armor',
+            slot: 'head',
+            combatStyleTags: ['melee'],
+            effectRefs: ['jaws-of-the-abyss-passive', 'vestments-of-havoc-set'],
+          },
+          'gloves-of-passage': {
+            id: 'gloves-of-passage',
+            name: 'Gloves of passage',
+            category: 'armor',
+            slot: 'hands',
+            combatStyleTags: ['melee'],
+            effectRefs: ['enduring-ruin'],
+          },
+          'vestments-body': {
+            id: 'vestments-body',
+            name: 'Vestments body',
+            category: 'armor',
+            slot: 'body',
+            combatStyleTags: ['melee'],
+            effectRefs: ['vestments-of-havoc-set'],
+          },
+          'vestments-legs': {
+            id: 'vestments-legs',
+            name: 'Vestments legs',
+            category: 'armor',
+            slot: 'legs',
+            combatStyleTags: ['melee'],
+            effectRefs: ['vestments-of-havoc-set'],
+          },
+          'enchantment-of-heroism': {
+            id: 'enchantment-of-heroism',
+            name: 'Enchantment of heroism',
+            category: 'other',
+            combatStyleTags: ['melee'],
+            effectRefs: ['enchantment-of-heroism'],
+          },
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: weapon.id,
+          },
+          offHand: {
+            instanceId: 'offhand-1',
+            definitionId: offHand.id,
+          },
+          ring: {
+            instanceId: 'ring-1',
+            definitionId: 'champions-ring',
+          },
+          head: {
+            instanceId: 'head-1',
+            definitionId: 'jaws-of-the-abyss',
+          },
+          hands: {
+            instanceId: 'hands-1',
+            definitionId: 'gloves-of-passage',
+          },
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'vestments-body',
+          },
+          legs: {
+            instanceId: 'legs-1',
+            definitionId: 'vestments-legs',
+          },
+        },
+        inventoryItems: [
+          {
+            instanceId: 'heroism-1',
+            definitionId: 'enchantment-of-heroism',
+          },
+        ],
+        abilityActions: [
+          createAbilityAction('berserk-action', 0, 'berserk'),
+          createAbilityAction('rend-action', 3, 'rend'),
+          createAbilityAction('dismember-action', 6, 'dismember'),
+          createAbilityAction('fury-action', 9, 'fury'),
+          createAbilityAction('overpower-action', 40, 'overpower'),
+        ],
+        startingAdrenaline: 0,
+        tickCount: 50,
+      }),
+    );
+
+    expect(buffed.isValid).toBe(true);
+    expect(buffed.totalDamage.avg).toBeGreaterThan(baseline.totalDamage.avg);
+    expect(buffed.adrenalineTimeline[9]).toBeGreaterThan(baseline.adrenalineTimeline[9]);
+    expect(
+      buffed.explainability.damageBreakdowns.some(
+        (entry) =>
+          entry.abilityId === 'dismember' &&
+          entry.multiplicativeModifiers.some((modifier) => modifier.sourceId === 'corrupted-wounds'),
+      ),
+    ).toBe(true);
+    expect(
+      buffed.explainability.damageBreakdowns.some(
+        (entry) =>
+          entry.abilityId === 'fury' &&
+          entry.expectedValueModifiers.some((modifier) => modifier.sourceId === 'critical-strike-chance-bonus'),
+      ),
+    ).toBe(true);
+    expect(buffed.totalDamage.avg - baseline.totalDamage.avg).toBeGreaterThan(0);
+  });
+
+  it('keeps Meteor Strike buff behavior stable in the playable melee loop', () => {
+    const twoHander: ItemDefinition = {
+      id: 'masterwork-2h-sword',
+      name: 'Masterwork 2h Sword',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+      tier: 99,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 99,
+        meleeBonus: 125,
+      },
+    };
+
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          'meteor-strike': createAbilityDefinition({
+            id: 'meteor-strike',
+            name: 'Meteor Strike',
+            style: 'melee',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 60,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'meteor-strike-hit-1', tickOffset: 0, damage: { min: 220, max: 250 } }],
+            baseDamage: { min: 220, max: 250 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'meteor-strike-buff',
+              },
+              {
+                kind: 'grant-adrenaline',
+                amount: 4.5,
+                timing: 'per-tick-window',
+                durationTicks: 50,
+                requiresWeaponStyle: 'melee',
+              },
+            ],
+          }),
+          attack: createAbilityDefinition({
+            id: 'attack',
+            name: 'Attack',
+            style: 'melee',
+            subtype: 'basic',
+            cooldownTicks: 3,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [{ id: 'attack-hit-1', tickOffset: 0, damage: { min: 110, max: 130 } }],
+            baseDamage: { min: 110, max: 130 },
+          }),
+        },
+        buffs: {
+          'meteor-strike-buff': {
+            id: 'meteor-strike-buff',
+            name: 'Meteor Strike',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 50,
+            effectRefs: ['basic-adrenaline:+50%'],
+          },
+        },
+        items: {
+          [twoHander.id]: twoHander,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'twohander-1',
+            definitionId: twoHander.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('meteor-action', 0, 'meteor-strike'),
+          createAbilityAction('attack-action', 1, 'attack'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 4,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.buffTimeline[0]).toContain('meteor-strike-buff');
+    expect(result.buffTimeline[3]).toContain('meteor-strike-buff');
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'meteor-strike-buff',
+      sourceType: 'ability',
+      sourceId: 'meteor-strike',
+    });
+    expect(result.adrenalineTimeline).toEqual([44.5, 62.5, 67, 71.5]);
   });
 });

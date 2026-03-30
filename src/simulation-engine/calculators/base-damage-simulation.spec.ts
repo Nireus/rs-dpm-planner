@@ -46,17 +46,17 @@ describe('simulateBaseDamage', () => {
 
     expect(result.isValid).toBe(true);
     expect(result.totalDamage).toEqual({
-      min: 11988,
-      avg: 13499.86,
-      max: 20589,
+      min: 12170,
+      avg: 13703.56,
+      max: 20898,
     });
     expect(result.damageByAbility.map((entry) => [entry.abilityId, entry.avg])).toEqual([
-      ['rapid-fire', 11676],
-      ['piercing-shot', 1823.86],
+      ['rapid-fire', 11852.4],
+      ['piercing-shot', 1851.16],
     ]);
-    expect(result.damageByTick[0]?.avg).toBe(911.93);
-    expect(result.damageByTick[1]?.avg).toBe(911.93);
-    expect(result.damageByTick[10]?.avg).toBe(1459.5);
+    expect(result.damageByTick[0]?.avg).toBe(925.58);
+    expect(result.damageByTick[1]?.avg).toBe(925.58);
+    expect(result.damageByTick[10]?.avg).toBe(1481.55);
     expect(result.explainability.damageBreakdowns).toHaveLength(10);
   });
 
@@ -86,9 +86,9 @@ describe('simulateBaseDamage', () => {
 
     expect(result.isValid).toBe(false);
     expect(result.totalDamage).toEqual({
-      min: 1824,
-      avg: 2097.9,
-      max: 3258,
+      min: 1852,
+      avg: 2129.93,
+      max: 3307.5,
     });
     expect(result.validationIssues.some((issue) => issue.code === 'ability.cooldown_conflict')).toBe(true);
     expect(result.explainability.damageBreakdowns).toHaveLength(1);
@@ -109,6 +109,12 @@ describe('simulateBaseDamage', () => {
           adrenalineCost: 100,
           hitSchedule: [],
           baseDamage: { min: 0, max: 0 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'deaths-swiftness-buff',
+            },
+          ],
         }),
         'piercing-shot': createAbilityDefinition({
           id: 'piercing-shot',
@@ -137,12 +143,12 @@ describe('simulateBaseDamage', () => {
     const result = simulateBaseDamage(config);
 
     expect(result.totalDamage).toEqual({
-      min: 2607,
-      avg: 2737.35,
-      max: 3910.5,
+      min: 2646,
+      avg: 2778.3,
+      max: 3969,
     });
     expect(result.damageByAbility.map((entry) => [entry.abilityId, entry.avg])).toEqual([
-      ['piercing-shot', 2737.35],
+      ['piercing-shot', 2778.3],
     ]);
     expect(result.buffTimeline[0]).toEqual(['deaths-swiftness-buff']);
     expect(result.buffTimeline[9]).toEqual(['deaths-swiftness-buff']);
@@ -164,6 +170,12 @@ describe('simulateBaseDamage', () => {
             { id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 120 } },
           ],
           baseDamage: { min: 100, max: 120 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
           effectRefs: ['searing-winds'],
         }),
         'piercing-shot': createAbilityDefinition({
@@ -203,14 +215,14 @@ describe('simulateBaseDamage', () => {
       {
         sourceId: 'ranged-hit-flat-bonus-ability-damage:+20%:cast-snapshot',
         label: 'Ranged hit bonus +20% ability damage',
-        value: 347.6,
+        value: 352.8,
       },
     ]);
     expect(piercingBreakdowns[1].additiveModifiers).toEqual([
       {
         sourceId: 'ranged-hit-flat-bonus-ability-damage:+20%:cast-snapshot',
         label: 'Ranged hit bonus +20% ability damage',
-        value: 347.6,
+        value: 352.8,
       },
     ]);
   });
@@ -228,6 +240,12 @@ describe('simulateBaseDamage', () => {
             { id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 120 } },
           ],
           baseDamage: { min: 100, max: 120 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
           effectRefs: ['searing-winds'],
         }),
       },
@@ -269,6 +287,12 @@ describe('simulateBaseDamage', () => {
             { id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 120 } },
           ],
           baseDamage: { min: 100, max: 120 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
           effectRefs: ['searing-winds'],
         }),
         'rapid-fire': createAbilityDefinition({
@@ -284,6 +308,16 @@ describe('simulateBaseDamage', () => {
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
+          timelineEffects: [
+            {
+              kind: 'extend-buff',
+              buffId: 'searing-winds',
+              requiresActive: true,
+              durationFromAbility: 'max-hit-count-or-channel-duration',
+              bonusTicks: 1,
+            },
+          ],
+          effectRefs: ['rapid-fire-channel'],
         }),
         'piercing-shot': createAbilityDefinition({
           id: 'piercing-shot',
@@ -475,7 +509,7 @@ describe('simulateBaseDamage', () => {
     expect(gricoBreakdowns[0]?.additiveModifiers[0]).toEqual({
       sourceId: 'perk:caroming:4',
       label: 'Caroming 4 +16% ability damage',
-      value: 278.08,
+      value: 282.24,
     });
   });
 
@@ -508,6 +542,9 @@ describe('simulateBaseDamage', () => {
           adrenalineGain: 0,
           hitSchedule: [],
           baseDamage: { min: 0, max: 0 },
+          specialDispatch: {
+            source: 'equipped-weapon',
+          },
         }),
       },
       buffs: {
@@ -699,6 +736,12 @@ describe('simulateBaseDamage', () => {
           adrenalineCost: 100,
           hitSchedule: [],
           baseDamage: { min: 0, max: 0 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'deaths-swiftness-buff',
+            },
+          ],
         }),
         galeshot: createAbilityDefinition({
           id: 'galeshot',
@@ -709,6 +752,12 @@ describe('simulateBaseDamage', () => {
             { id: 'galeshot-hit', tickOffset: 0, damage: { min: 90, max: 110 } },
           ],
           baseDamage: { min: 90, max: 110 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
           effectRefs: ['searing-winds'],
         }),
         'corruption-shot': createAbilityDefinition({
@@ -882,6 +931,12 @@ describe('simulateBaseDamage', () => {
           adrenalineCost: 100,
           hitSchedule: [],
           baseDamage: { min: 0, max: 0 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'deaths-swiftness-buff',
+            },
+          ],
         }),
         'piercing-shot': createAbilityDefinition({
           id: 'piercing-shot',
@@ -955,6 +1010,12 @@ describe('simulateBaseDamage', () => {
                   adrenalineCost: 100,
                   hitSchedule: [],
                   baseDamage: { min: 0, max: 0 },
+                  timelineEffects: [
+                    {
+                      kind: 'apply-buff',
+                      buffId: 'deaths-swiftness-buff',
+                    },
+                  ],
                 }),
               }
             : {}),
@@ -965,6 +1026,12 @@ describe('simulateBaseDamage', () => {
             adrenalineGain: 9,
             hitSchedule: [{ id: 'galeshot-hit', tickOffset: 0, damage: { min: 90, max: 110 } }],
             baseDamage: { min: 90, max: 110 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'searing-winds',
+              },
+            ],
             effectRefs: ['searing-winds'],
           }),
           'piercing-shot': createAbilityDefinition({
@@ -1108,6 +1175,12 @@ describe('simulateBaseDamage', () => {
                   adrenalineCost: 100,
                   hitSchedule: [],
                   baseDamage: { min: 0, max: 0 },
+                  timelineEffects: [
+                    {
+                      kind: 'apply-buff',
+                      buffId: 'deaths-swiftness-buff',
+                    },
+                  ],
                 }),
               }
             : {}),
@@ -1443,9 +1516,9 @@ describe('simulateBaseDamage', () => {
     expect(aftershockHits[0]?.tick).toBe(6);
     expect(aftershockHits[0]?.expectedValueModifiers).toEqual([]);
     expect(aftershockHits[0]?.baseDamage).toEqual({
-      min: 1668.48,
-      avg: 2210.73,
-      max: 2752.99,
+      min: 1693.44,
+      avg: 2243.81,
+      max: 2794.18,
     });
   });
 
@@ -1504,7 +1577,7 @@ describe('simulateBaseDamage', () => {
     expect(perfectEquilibriumHit).toBeTruthy();
     expect(cracklingHits).toHaveLength(1);
     expect(aftershockHits).toHaveLength(1);
-    expect(aftershockHits[0]?.tick).toBe(10);
+    expect(aftershockHits[0]?.tick).toBe(9);
   });
 
   it('resets Aftershock stored damage when swapping to a weapon without the perk', () => {
@@ -1660,6 +1733,7 @@ describe('simulateBaseDamage', () => {
           category: 'weapon',
           slot: 'weapon',
           combatStyleTags: ['ranged'],
+          specialAbilityId: 'split-soul',
           tier: 92,
           offensiveStats: {
             damageTier: 92,
@@ -1683,6 +1757,9 @@ describe('simulateBaseDamage', () => {
           adrenalineCost: 25,
           hitSchedule: [],
           baseDamage: { min: 0, max: 0 },
+          specialDispatch: {
+            source: 'equipped-weapon',
+          },
         }),
         'piercing-shot': createAbilityDefinition({
           id: 'piercing-shot',
@@ -1746,6 +1823,7 @@ describe('simulateBaseDamage', () => {
             category: 'weapon',
             slot: 'weapon',
             combatStyleTags: ['ranged'],
+            specialAbilityId: 'split-soul',
             tier: 92,
             offensiveStats: {
               damageTier: 92,
@@ -1793,6 +1871,9 @@ describe('simulateBaseDamage', () => {
             adrenalineCost: 25,
             hitSchedule: [],
             baseDamage: { min: 0, max: 0 },
+            specialDispatch: {
+              source: 'equipped-weapon',
+            },
           }),
           ranged: createAbilityDefinition({
             id: 'ranged',
@@ -1881,6 +1962,7 @@ function createConfig(input: {
           category: 'weapon',
           slot: 'weapon',
           combatStyleTags: ['ranged'],
+          specialAbilityId: 'balance-by-force',
           tier: 95,
           offensiveStats: {
             damageTier: 95,
@@ -1889,8 +1971,106 @@ function createConfig(input: {
         ...(input.items ?? {}),
       },
       ammo: {},
-      abilities: input.abilities,
-      buffs: input.buffs ?? {},
+      abilities: {
+        'balance-by-force': createAbilityDefinition({
+          id: 'balance-by-force',
+          name: 'Balance by Force',
+          subtype: 'special',
+          cooldownTicks: 0,
+          adrenalineCost: 30,
+          adrenalineGain: 0,
+          hitSchedule: [{ id: 'balance-by-force-hit', tickOffset: 0, damage: { min: 235, max: 255 } }],
+          baseDamage: { min: 235, max: 255 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'balance-by-force-buff',
+            },
+          ],
+          displayHints: {
+            hiddenFromUi: true,
+          },
+        }),
+        'split-soul': createAbilityDefinition({
+          id: 'split-soul',
+          name: 'Split Soul',
+          subtype: 'special',
+          cooldownTicks: 0,
+          adrenalineCost: 25,
+          adrenalineGain: 0,
+          hitSchedule: [],
+          baseDamage: { min: 0, max: 0 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'split-soul',
+              endsOnWeaponSwap: true,
+            },
+          ],
+          displayHints: {
+            hiddenFromUi: true,
+          },
+        }),
+        ...input.abilities,
+      },
+      buffs: {
+        'balance-by-force-buff': {
+          id: 'balance-by-force-buff',
+          name: 'Balance by Force',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 50,
+          effectRefs: ['perfect-equilibrium-threshold:4'],
+        },
+        'deaths-swiftness-buff': {
+          id: 'deaths-swiftness-buff',
+          name: "Death's Swiftness",
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 63,
+          effectRefs: ['ranged-damage-multiplier:+50%'],
+        },
+        'searing-winds': {
+          id: 'searing-winds',
+          name: 'Searing Winds',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 10,
+          effectRefs: ['ranged-hit-flat-bonus-ability-damage:+20%:cast-snapshot'],
+        },
+        'shadow-imbued': {
+          id: 'shadow-imbued',
+          name: 'Shadow Imbued',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 50,
+          effectRefs: ['ranged-hit-adrenaline:+5%'],
+        },
+        'split-soul': {
+          id: 'split-soul',
+          name: 'Split Soul',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 25,
+        },
+        'berserk-buff': {
+          id: 'berserk-buff',
+          name: 'Berserk',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 33,
+          effectRefs: ['melee-damage-multiplier:+75%'],
+        },
+        'meteor-strike-buff': {
+          id: 'meteor-strike-buff',
+          name: 'Meteor Strike',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 50,
+          effectRefs: ['basic-adrenaline:+50%'],
+        },
+        ...mergeTestBuffs(input.buffs ?? {}),
+      },
       perks: input.perks ?? {},
       relics: {},
       eofSpecs: {},
@@ -1929,4 +2109,42 @@ function calculateExpectedSplitSoulDamage(sourceDamage: number): number {
   const thirdBracket = Math.max(sourceDamage - 4000, 0) * 0.0125;
 
   return Math.round((firstBracket + secondBracket + thirdBracket) * 4 * 100) / 100;
+}
+
+function mergeTestBuffs(
+  overrides: Record<string, BuffDefinition>,
+): Record<string, BuffDefinition> {
+  const defaults: Record<string, Partial<BuffDefinition>> = {
+    'balance-by-force-buff': {
+      durationTicks: 50,
+    },
+    'deaths-swiftness-buff': {
+      durationTicks: 63,
+    },
+    'searing-winds': {
+      durationTicks: 10,
+    },
+    'shadow-imbued': {
+      durationTicks: 50,
+    },
+    'split-soul': {
+      durationTicks: 25,
+    },
+    'berserk-buff': {
+      durationTicks: 33,
+    },
+    'meteor-strike-buff': {
+      durationTicks: 50,
+    },
+  };
+
+  return Object.fromEntries(
+    Object.entries(overrides).map(([buffId, definition]) => [
+      buffId,
+      {
+        ...(defaults[buffId] ?? {}),
+        ...definition,
+      },
+    ]),
+  );
 }

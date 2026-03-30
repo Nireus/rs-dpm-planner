@@ -11,6 +11,39 @@ const rangedWeapon: ItemDefinition = {
   combatStyleTags: ['ranged'],
 };
 
+const rangedOffHand: ItemDefinition = {
+  id: 'sample-crossbow-off-hand',
+  name: 'Sample Off-hand Crossbow',
+  category: 'weapon',
+  slot: 'offHand',
+  combatStyleTags: ['ranged'],
+};
+
+const meleeMainHand: ItemDefinition = {
+  id: 'sample-scourge',
+  name: 'Sample Scourge',
+  category: 'weapon',
+  slot: 'weapon',
+  combatStyleTags: ['melee'],
+};
+
+const meleeOffHand: ItemDefinition = {
+  id: 'sample-sliver',
+  name: 'Sample Sliver',
+  category: 'weapon',
+  slot: 'offHand',
+  combatStyleTags: ['melee'],
+};
+
+const meleeTwoHander: ItemDefinition = {
+  id: 'sample-zgs',
+  name: 'Sample Godsword',
+  category: 'weapon',
+  slot: 'weapon',
+  combatStyleTags: ['melee'],
+  equipBehavior: 'two-handed',
+};
+
 const specialWeapon: ItemDefinition = {
   id: 'special-bow',
   name: 'Special Bow',
@@ -187,5 +220,140 @@ describe('evaluateAbilityAvailability', () => {
         inventoryItems: [],
       }).isAvailable,
     ).toBe(true);
+  });
+
+  it('supports ranged dual-wield availability from equipped weapon topology', () => {
+    const ability: AbilityDefinition = {
+      id: 'needle-strike',
+      name: 'Needle Strike',
+      style: 'ranged',
+      subtype: 'basic',
+      cooldownTicks: 6,
+      hitSchedule: [],
+      baseDamage: { min: 1, max: 2 },
+      requires: {
+        requiredEquipmentTags: ['ranged-dual-wield'],
+      },
+    };
+
+    expect(
+      evaluateAbilityAvailability(ability, {
+        playerStats: baseStats,
+        equippedItems: [rangedWeapon, rangedOffHand],
+        inventoryItems: [],
+      }).isAvailable,
+    ).toBe(true);
+  });
+
+  it('supports melee weapon topology requirement tags', () => {
+    const dualWieldAbility: AbilityDefinition = {
+      id: 'fury',
+      name: 'Fury',
+      style: 'melee',
+      subtype: 'basic',
+      cooldownTicks: 6,
+      hitSchedule: [],
+      baseDamage: { min: 1, max: 2 },
+      requires: {
+        requiredEquipmentTags: ['melee-dual-wield', 'melee-off-hand'],
+      },
+    };
+
+    const twoHandedAbility: AbilityDefinition = {
+      id: 'hurricane',
+      name: 'Hurricane',
+      style: 'melee',
+      subtype: 'enhanced',
+      cooldownTicks: 17,
+      hitSchedule: [],
+      baseDamage: { min: 1, max: 2 },
+      requires: {
+        requiredEquipmentTags: ['melee-weapon', 'melee-two-handed'],
+      },
+    };
+
+    expect(
+      evaluateAbilityAvailability(dualWieldAbility, {
+        playerStats: {
+          attackLevel: 99,
+          strengthLevel: 99,
+          defenceLevel: 99,
+          prayerLevel: 99,
+          rangedLevel: 99,
+          magicLevel: 99,
+          necromancyLevel: 99,
+        },
+        equippedItems: [meleeMainHand, meleeOffHand],
+        inventoryItems: [],
+      }).isAvailable,
+    ).toBe(true);
+
+    expect(
+      evaluateAbilityAvailability(twoHandedAbility, {
+        playerStats: {
+          attackLevel: 99,
+          strengthLevel: 99,
+          defenceLevel: 99,
+          prayerLevel: 99,
+          rangedLevel: 99,
+          magicLevel: 99,
+          necromancyLevel: 99,
+        },
+        equippedItems: [meleeTwoHander],
+        inventoryItems: [],
+      }).isAvailable,
+    ).toBe(true);
+  });
+
+  it('does not satisfy melee weapon requirements from inventory-only or off-hand-only items', () => {
+    const ability: AbilityDefinition = {
+      id: 'attack',
+      name: 'Attack',
+      style: 'melee',
+      subtype: 'basic',
+      cooldownTicks: 6,
+      hitSchedule: [],
+      baseDamage: { min: 1, max: 2 },
+      requires: {
+        requiredEquipmentTags: ['melee-weapon'],
+      },
+    };
+
+    const inventoryOnlyResult = evaluateAbilityAvailability(ability, {
+      playerStats: {
+        attackLevel: 99,
+        strengthLevel: 99,
+        defenceLevel: 99,
+        prayerLevel: 99,
+        rangedLevel: 99,
+        magicLevel: 99,
+        necromancyLevel: 99,
+      },
+      equippedItems: [],
+      inventoryItems: [meleeMainHand],
+    });
+
+    const offHandOnlyResult = evaluateAbilityAvailability(ability, {
+      playerStats: {
+        attackLevel: 99,
+        strengthLevel: 99,
+        defenceLevel: 99,
+        prayerLevel: 99,
+        rangedLevel: 99,
+        magicLevel: 99,
+        necromancyLevel: 99,
+      },
+      equippedItems: [meleeOffHand],
+      inventoryItems: [],
+    });
+
+    expect(inventoryOnlyResult.issues).toContainEqual({
+      code: 'missing-tag',
+      message: 'Requires an equipped melee weapon.',
+    });
+    expect(offHandOnlyResult.issues).toContainEqual({
+      code: 'missing-tag',
+      message: 'Requires an equipped melee weapon.',
+    });
   });
 });

@@ -1,0 +1,36 @@
+{
+  "id": "fury",
+  "name": "Fury",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 21
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "fury-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 110,
+        "max": 130
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 110,
+    "max": 130
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Swing your weapon at the target with fury. Your next melee attack has +25% critical strike chance."
+}

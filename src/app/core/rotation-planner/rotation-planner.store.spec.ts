@@ -36,7 +36,47 @@ const RANGED_ABILITY: AbilityDefinition = {
 };
 
 const CATALOG: GameDataCatalog = {
-  items: {},
+  items: {
+    'masterwork-2h-sword': {
+      id: 'masterwork-2h-sword',
+      name: 'Masterwork 2h Sword',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['melee'],
+    },
+    'vestments-of-havoc-hood': {
+      id: 'vestments-of-havoc-hood',
+      name: 'Vestments of Havoc Hood',
+      category: 'armor',
+      slot: 'head',
+      combatStyleTags: ['melee'],
+      effectRefs: ['vestments-of-havoc-set'],
+    },
+    'vestments-of-havoc-robe-top': {
+      id: 'vestments-of-havoc-robe-top',
+      name: 'Vestments of Havoc Robe Top',
+      category: 'armor',
+      slot: 'body',
+      combatStyleTags: ['melee'],
+      effectRefs: ['vestments-of-havoc-set'],
+    },
+    'vestments-of-havoc-robe-bottom': {
+      id: 'vestments-of-havoc-robe-bottom',
+      name: 'Vestments of Havoc Robe Bottom',
+      category: 'armor',
+      slot: 'legs',
+      combatStyleTags: ['melee'],
+      effectRefs: ['vestments-of-havoc-set'],
+    },
+    'vestments-of-havoc-boots': {
+      id: 'vestments-of-havoc-boots',
+      name: 'Vestments of Havoc Boots',
+      category: 'armor',
+      slot: 'feet',
+      combatStyleTags: ['melee'],
+      effectRefs: ['vestments-of-havoc-set'],
+    },
+  },
   ammo: {},
   abilities: {
     [RANGED_ABILITY.id]: RANGED_ABILITY,
@@ -58,11 +98,13 @@ class MockGameDataStoreService {
 }
 
 class MockGearBuilderStore {
+  readonly gearState = signal({
+    equipment: {},
+    inventory: [],
+  });
+
   snapshot() {
-    return {
-      equipment: {},
-      inventory: [],
-    };
+    return this.gearState();
   }
 }
 
@@ -107,6 +149,7 @@ class MockWorkspaceRepositoryService {
 
 describe('RotationPlannerStore', () => {
   let store: RotationPlannerStore;
+  let gearBuilderStore: MockGearBuilderStore;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -121,6 +164,7 @@ describe('RotationPlannerStore', () => {
     });
 
     store = TestBed.inject(RotationPlannerStore);
+    gearBuilderStore = TestBed.inject(GearBuilderStore) as unknown as MockGearBuilderStore;
   });
 
   it('uses GCD counts and supports a 600-tick visible window', () => {
@@ -189,5 +233,35 @@ describe('RotationPlannerStore', () => {
       deathsporeStacks: 11,
       perfectEquilibriumStacks: 0,
     });
+  });
+
+  it('raises max starting adrenaline to 120 with full Vestments of Havoc and a melee weapon', () => {
+    gearBuilderStore.gearState.set({
+      equipment: {
+        weapon: {
+          instanceId: 'weapon-1',
+          definitionId: 'masterwork-2h-sword',
+        },
+        head: {
+          instanceId: 'head-1',
+          definitionId: 'vestments-of-havoc-hood',
+        },
+        body: {
+          instanceId: 'body-1',
+          definitionId: 'vestments-of-havoc-robe-top',
+        },
+        legs: {
+          instanceId: 'legs-1',
+          definitionId: 'vestments-of-havoc-robe-bottom',
+        },
+        feet: {
+          instanceId: 'feet-1',
+          definitionId: 'vestments-of-havoc-boots',
+        },
+      },
+      inventory: [],
+    });
+
+    expect(store.maxStartingAdrenaline()).toBe(120);
   });
 });

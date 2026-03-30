@@ -1,0 +1,22 @@
+{
+  "id": "terrasaur-maul",
+  "name": "Terrasaur maul",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Terrasaur_maul.png",
+  "wikiUrl": "https://runescape.wiki/w/Terrasaur_maul",
+  "combatStyleTags": ["melee"],
+  "tier": 80,
+  "offensiveStats": {
+    "damageTier": 80,
+    "accuracyTier": 80
+  },
+  "requirements": {
+    "levelRequirements": {
+      "strength": 80
+    }
+  },
+  "effectRefs": ["primal-savagery"],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Terrasaur maul page. Wiki-verified with Playwright for tier, Strength requirement, and the Primal Savagery passive."
+}

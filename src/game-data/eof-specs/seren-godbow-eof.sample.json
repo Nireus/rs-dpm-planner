@@ -10,31 +10,9 @@
   ],
   "wikiUrl": "https://runescape.wiki/w/Seren_godbow",
   "weaponOrigin": "seren-godbow",
+  "abilityId": "seren-godbow-eof",
   "requires": {
     "requiredEquipmentTags": ["eof-special:seren-godbow"]
-  },
-  "adrenalineCost": 30,
-  "hitSchedule": [
-    {
-      "id": "seren-godbow-eof-hit-1",
-      "tickOffset": 0,
-      "damage": {
-        "min": 100,
-        "max": 160
-      }
-    },
-    {
-      "id": "seren-godbow-eof-hit-2",
-      "tickOffset": 2,
-      "damage": {
-        "min": 100,
-        "max": 160
-      }
-    }
-  ],
-  "baseDamage": {
-    "min": 200,
-    "max": 320
   },
   "effectRefs": ["eof-seren-godbow-spec"],
   "description": "Curated EOF special access entry for the Seren godbow special attack."

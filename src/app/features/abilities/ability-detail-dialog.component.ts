@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { combatStyleLabel } from '../../../game-data/conventions/combat-styles';
 
 export interface AbilityDetailEntry {
   id: string;
@@ -27,6 +28,10 @@ export interface AbilityDetailEntry {
     };
   }[];
   effectRefs?: string[];
+  displayHitCountLabel?: string;
+  displayDamageRangeLabel?: string;
+  displayHitScheduleSummary?: string;
+  displayHoverSummary?: string;
 }
 
 export interface DetailAvailabilityState {
@@ -64,11 +69,7 @@ export class AbilityDetailDialogComponent {
   }
 
   protected styleLabel(style: string): string {
-    if (style === 'constitution') {
-      return 'Constitution';
-    }
-
-    return style.charAt(0).toUpperCase() + style.slice(1);
+    return combatStyleLabel(style);
   }
 
   protected cooldownLabel(): string {
@@ -96,6 +97,10 @@ export class AbilityDetailDialogComponent {
   }
 
   protected damageRangeLabel(): string {
+    if (this.entry.displayDamageRangeLabel) {
+      return this.entry.displayDamageRangeLabel;
+    }
+
     if (!this.entry.baseDamage) {
       return 'Varies';
     }
@@ -110,6 +115,10 @@ export class AbilityDetailDialogComponent {
   }
 
   protected hitScheduleSummary(): string {
+    if (this.entry.displayHitScheduleSummary) {
+      return this.entry.displayHitScheduleSummary;
+    }
+
     const schedule = this.entry.hitSchedule ?? [];
 
     if (schedule.length === 0) {

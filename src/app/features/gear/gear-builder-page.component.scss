@@ -358,6 +358,36 @@ li,
   color: var(--text-strong);
 }
 
+.catalog-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+.catalog-tab {
+  padding: 0.48rem 0.72rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(8, 14, 6, 0.9);
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  cursor: pointer;
+}
+
+.catalog-tab:hover {
+  transform: translateY(-1px);
+}
+
+.catalog-tab-active {
+  border-color: rgba(123, 144, 75, 0.72);
+  background: rgba(25, 36, 15, 0.95);
+  color: var(--text-strong);
+}
+
 .catalog-panel {
   position: sticky;
   top: 1rem;

@@ -1,0 +1,30 @@
+{
+  "id": "tumekens-light",
+  "name": "Tumeken's Light",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Tumeken%27s_Light.png",
+  "wikiUrl": "https://runescape.wiki/w/Tumeken%27s_Light",
+  "combatStyleTags": ["melee"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 95
+    }
+  },
+  "effectRefs": ["purifying-light", "lesser-purifying-light", "weapon-special-access", "weapon-special:sunfall-slam"],
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee halberd from the live Tumeken's Light page. Wiki-verified with Playwright for Attack requirement, combat stats, Purifying Light passive, and the Sunfall Slam special attack."
+}

@@ -1,4 +1,7 @@
+import { isRecognizedStyleTopologyRequirementTag } from './equipment-requirement-tags';
+
 export const CONFIG_OPTION_IDS = {
+  genesisEnchanted: 'genesis-enchanted',
   loadedAmmo: 'loaded-ammo',
   storedSpecial: 'stored-special',
 } as const;
@@ -11,6 +14,7 @@ export const REQUIREMENT_TAGS = {
 
 export const EFFECT_REF_IDS = {
   aftershock: 'aftershock',
+  abyssalParasite: 'abyssal-parasite',
   biting: 'biting',
   bolgPassive: 'bolg-passive',
   caroming: 'caroming',
@@ -35,10 +39,26 @@ export const EFFECT_REF_IDS = {
   guaranteedCriticalStrikeChance: 'critical-strike-chance:+100%',
   gloomfireDarkfang: 'gloomfire-darkfang',
   heightenedSenses: 'heightened-senses',
+  igneousKalKetPassive: 'igneous-kal-ket-passive',
   igneousKalXilPassive: 'igneous-kal-xil-passive',
   igneousKalZukPassive: 'igneous-kal-zuk-passive',
   impatient: 'impatient',
   invigorating: 'invigorating',
+  jawsOfTheAbyssPassive: 'jaws-of-the-abyss-passive',
+  lacerationBootsPassive: 'blade-master',
+  tumekensLightPassive: 'purifying-light',
+  tumekensLightSpecialStatus: 'lesser-purifying-light',
+  terrasaurMaulPassive: 'primal-savagery',
+  laniakeasSpearPassive: 'toxic-fang',
+  masterworkSpearOfAnnihilationPassive: 'masterwork-spear-of-annihilation-passive',
+  amHejPassive: 'am-hej-passive',
+  ekZekKilPassive: 'ashen-vow',
+  endlessFrost: 'endless-frost',
+  frostblades: 'frostblades',
+  glovesOfPassagePassive: 'enduring-ruin',
+  championsRingPassive: 'crimson-strikes',
+  enchantmentOfHeroism: 'enchantment-of-heroism',
+  vestmentsOfHavocSet: 'vestments-of-havoc-set',
   precise: 'precise',
   quiverPassive: 'quiver-passive',
   shadowImbuedHitAdrenaline: 'ranged-hit-adrenaline:+5%',
@@ -50,7 +70,10 @@ export const EFFECT_REF_IDS = {
   weaponSpecialAccess: 'weapon-special-access',
   weaponClassCrossbow: 'weapon-class:crossbow',
   weaponSpecialBalanceByForce: 'weapon-special:balance-by-force',
+  weaponSpecialGravitate: 'weapon-special:gravitate',
+  weaponSpecialSliceAndDice: 'weapon-special:slice-and-dice',
   weaponSpecialSplitSoul: 'weapon-special:split-soul',
+  weaponSpecialTheFinalFlurry: 'weapon-special:the-final-flurry',
   weaponSpecialShadowfall: 'weapon-special:shadowfall',
 } as const;
 
@@ -137,6 +160,7 @@ const PARAMETERIZED_EFFECT_REF_PREFIXES = [
   'target-damage-taken:',
   'eof-',
   'hit-chance:',
+  'melee-damage-multiplier:',
   'overload-tier-',
   'perfect-equilibrium-threshold:',
   'piercing-shot-snipe-reduction:',
@@ -156,9 +180,11 @@ export function isRecognizedEffectRef(effectRef: string): boolean {
 
 export function isRecognizedRequirementTag(tag: string): boolean {
   return (
+    isRecognizedStyleTopologyRequirementTag(tag) ||
     tag === REQUIREMENT_TAGS.equippedWeaponSpecialAccess ||
     tag === REQUIREMENT_TAGS.equippedEofSpecialAccess ||
     tag === REQUIREMENT_TAGS.eofStoredSpecialConfigured ||
+    tag.startsWith('eof-special:') ||
     tag.startsWith('equipped-effect:')
   );
 }

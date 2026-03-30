@@ -1,5 +1,10 @@
+import {
+  collectEquippedStyleTopologyTags,
+  formatStyleTopologyRequirementTag,
+} from '../../game-data/conventions/equipment-requirement-tags';
 import { CONFIG_OPTION_IDS, REQUIREMENT_TAGS } from '../../game-data/conventions/mechanics';
-import type { AbilityDefinition, ItemDefinition } from '../../game-data/types';
+import type { AbilityDefinition, ItemDefinition, RequirementSet } from '../../game-data/types';
+import { isTwoHandedItem } from '../gear/equipment-topology';
 import type { PlayerStats } from '../models';
 import type { ItemInstanceConfig } from '../models';
 
@@ -25,10 +30,23 @@ export function evaluateAbilityAvailability(
   ability: AbilityDefinition,
   context: AbilityAvailabilityContext,
 ): AbilityAvailabilityResult {
+  const issues = evaluateRequirementSet(ability.requires, context);
+
+  return {
+    abilityId: ability.id,
+    isAvailable: issues.length === 0,
+    issues,
+  };
+}
+
+export function evaluateRequirementSet(
+  requirements: RequirementSet | undefined,
+  context: AbilityAvailabilityContext,
+): AbilityAvailabilityIssue[] {
   const issues: AbilityAvailabilityIssue[] = [];
   const availableTags = collectAvailabilityTags(context);
 
-  for (const [stat, requiredValue] of Object.entries(ability.requires?.levelRequirements ?? {})) {
+  for (const [stat, requiredValue] of Object.entries(requirements?.levelRequirements ?? {})) {
     if (typeof requiredValue !== 'number') {
       continue;
     }
@@ -43,7 +61,7 @@ export function evaluateAbilityAvailability(
     }
   }
 
-  for (const tag of ability.requires?.requiredEquipmentTags ?? []) {
+  for (const tag of requirements?.requiredEquipmentTags ?? []) {
     if (!availableTags.has(tag)) {
       issues.push({
         code: 'missing-tag',
@@ -52,7 +70,7 @@ export function evaluateAbilityAvailability(
     }
   }
 
-  for (const tag of ability.requires?.blockedEquipmentTags ?? []) {
+  for (const tag of requirements?.blockedEquipmentTags ?? []) {
     if (availableTags.has(tag)) {
       issues.push({
         code: 'blocked-tag',
@@ -61,11 +79,14 @@ export function evaluateAbilityAvailability(
     }
   }
 
-  return {
-    abilityId: ability.id,
-    isAvailable: issues.length === 0,
-    issues,
-  };
+  return issues;
+}
+
+export function requirementSetMatches(
+  requirements: RequirementSet | undefined,
+  context: AbilityAvailabilityContext,
+): boolean {
+  return evaluateRequirementSet(requirements, context).length === 0;
 }
 
 export function collectAvailabilityTags(context: AbilityAvailabilityContext): Set<string> {
@@ -77,6 +98,10 @@ export function collectAvailabilityTags(context: AbilityAvailabilityContext): Se
 
   for (const item of context.inventoryItems) {
     addDefinitionTags(tags, item, 'inventory');
+  }
+
+  for (const tag of collectEquippedStyleTopologyTags(context.equippedItems, isTwoHandedItem)) {
+    tags.add(tag);
   }
 
   const eofItem = context.equippedItems.find((item) => item.id === 'essence-of-finality');
@@ -106,32 +131,33 @@ function addDefinitionTags(tags: Set<string>, item: ItemDefinition, source: 'equ
 
   for (const style of item.combatStyleTags) {
     tags.add(`${style}-item`);
-
-    if (item.category === 'weapon') {
-      tags.add(`${style}-weapon`);
-    }
   }
 
   for (const effectRef of item.effectRefs ?? []) {
     tags.add(effectRef);
     tags.add(`${source}-effect:${effectRef}`);
   }
-
-  if (item.category === 'weapon' && item.equipBehavior === 'two-handed') {
-    tags.add('ranged-two-handed');
-  }
 }
 
 function resolvePlayerStat(playerStats: PlayerStats, stat: string): number {
-  if (stat === 'ranged') {
-    return playerStats.rangedLevel;
+  switch (stat) {
+    case 'attack':
+      return playerStats.attackLevel ?? 0;
+    case 'strength':
+      return playerStats.strengthLevel ?? 0;
+    case 'defence':
+      return playerStats.defenceLevel ?? 0;
+    case 'ranged':
+      return playerStats.rangedLevel;
+    case 'magic':
+      return playerStats.magicLevel ?? 0;
+    case 'necromancy':
+      return playerStats.necromancyLevel ?? 0;
+    case 'prayer':
+      return playerStats.prayerLevel ?? 1;
+    default:
+      return playerStats.combatStats?.[stat] ?? 0;
   }
-
-  if (stat === 'prayer') {
-    return playerStats.prayerLevel ?? 1;
-  }
-
-  return playerStats.combatStats?.[stat] ?? 0;
 }
 
 function formatStatName(stat: string): string {
@@ -139,15 +165,14 @@ function formatStatName(stat: string): string {
 }
 
 function formatRequiredTag(tag: string): string {
+  const styleRequirementMessage = formatStyleTopologyRequirementTag(tag);
+  if (styleRequirementMessage) {
+    return styleRequirementMessage;
+  }
+
   switch (tag) {
-    case 'ranged-weapon':
-      return 'Requires an equipped ranged weapon.';
     case 'prototype-inventory-ability':
       return 'Requires the prototype item in backpack or equipped gear.';
-    case 'ranged-two-handed':
-      return 'Requires a two-handed ranged weapon.';
-    case 'ranged-dual-wield':
-      return 'Requires dual-wield ranged weapons.';
     case REQUIREMENT_TAGS.equippedWeaponSpecialAccess:
       return 'Requires an equipped weapon with a special attack.';
     case REQUIREMENT_TAGS.equippedEofSpecialAccess:

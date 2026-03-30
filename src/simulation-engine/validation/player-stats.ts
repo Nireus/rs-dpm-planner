@@ -1,6 +1,13 @@
 import type { PlayerStats } from '../models';
 
-type PlayerLevelStatKey = 'rangedLevel' | 'prayerLevel';
+export type PlayerLevelStatKey =
+  | 'attackLevel'
+  | 'strengthLevel'
+  | 'defenceLevel'
+  | 'rangedLevel'
+  | 'magicLevel'
+  | 'necromancyLevel'
+  | 'prayerLevel';
 
 export interface PlayerStatRangeRule {
   key: PlayerLevelStatKey;
@@ -14,9 +21,49 @@ export interface PlayerStatsValidationIssue {
   message: string;
 }
 
+export const DEFAULT_PLAYER_LEVELS: Record<PlayerLevelStatKey, number> = {
+  attackLevel: 99,
+  strengthLevel: 99,
+  defenceLevel: 99,
+  rangedLevel: 99,
+  magicLevel: 99,
+  necromancyLevel: 99,
+  prayerLevel: 99,
+};
+
 export const PLAYER_STAT_RANGE_RULES: PlayerStatRangeRule[] = [
   {
+    key: 'attackLevel',
+    min: 1,
+    max: 120,
+    required: true,
+  },
+  {
+    key: 'strengthLevel',
+    min: 1,
+    max: 120,
+    required: true,
+  },
+  {
+    key: 'defenceLevel',
+    min: 1,
+    max: 120,
+    required: true,
+  },
+  {
     key: 'rangedLevel',
+    min: 1,
+    max: 120,
+    required: true,
+  },
+  {
+    key: 'magicLevel',
+    min: 1,
+    max: 120,
+    required: true,
+  },
+  {
+    key: 'necromancyLevel',
     min: 1,
     max: 120,
     required: true,
@@ -69,9 +116,7 @@ export function sanitizePlayerStats(stats: PlayerStats): PlayerStats {
     const value = nextStats[rule.key];
 
     if (value === undefined || value === null || !Number.isFinite(value)) {
-      if (rule.required) {
-        nextStats[rule.key] = rule.max as never;
-      }
+      nextStats[rule.key] = DEFAULT_PLAYER_LEVELS[rule.key] as never;
 
       continue;
     }
@@ -84,5 +129,20 @@ export function sanitizePlayerStats(stats: PlayerStats): PlayerStats {
 }
 
 function formatStatField(field: PlayerLevelStatKey): string {
-  return field === 'rangedLevel' ? 'Ranged level' : 'Prayer level';
+  switch (field) {
+    case 'attackLevel':
+      return 'Attack level';
+    case 'strengthLevel':
+      return 'Strength level';
+    case 'defenceLevel':
+      return 'Defence level';
+    case 'rangedLevel':
+      return 'Ranged level';
+    case 'magicLevel':
+      return 'Magic level';
+    case 'necromancyLevel':
+      return 'Necromancy level';
+    case 'prayerLevel':
+      return 'Prayer level';
+  }
 }

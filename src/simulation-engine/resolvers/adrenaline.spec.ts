@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { AbilityDefinition, ItemDefinition } from '../../game-data/types';
 import type { LoadedGameDataSnapshot, SimulationConfig } from '../models';
-import { HEIGHTENED_SENSES_MAX_ADRENALINE, MAX_ADRENALINE, resolveAdrenalineTimeline } from './adrenaline';
+import {
+  FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+  HEIGHTENED_SENSES_AND_FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+  HEIGHTENED_SENSES_MAX_ADRENALINE,
+  MAX_ADRENALINE,
+  resolveAdrenalineTimeline,
+} from './adrenaline';
 
 function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefinition {
   return {
@@ -39,6 +45,7 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         category: 'weapon',
         slot: 'weapon',
         combatStyleTags: ['ranged'],
+        specialAbilityId: 'balance-by-force',
         effectRefs: ['bolg-passive', 'weapon-special-access', 'weapon-special:balance-by-force'],
       } satisfies ItemDefinition,
       'deathspore-arrows': {
@@ -60,9 +67,72 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         },
         effectRefs: ['vigour-passive'],
       } satisfies ItemDefinition,
+      'masterwork-2h-sword': {
+        id: 'masterwork-2h-sword',
+        name: 'Masterwork 2h Sword',
+        category: 'weapon',
+        slot: 'weapon',
+        combatStyleTags: ['melee'],
+        tier: 99,
+        equipBehavior: 'two-handed',
+        offensiveStats: {
+          damageTier: 99,
+          meleeBonus: 125,
+        },
+      } satisfies ItemDefinition,
+      'vestments-of-havoc-hood': {
+        id: 'vestments-of-havoc-hood',
+        name: 'Vestments of Havoc Hood',
+        category: 'armor',
+        slot: 'head',
+        combatStyleTags: ['melee'],
+        effectRefs: ['vestments-of-havoc-set'],
+      } satisfies ItemDefinition,
+      'vestments-of-havoc-robe-top': {
+        id: 'vestments-of-havoc-robe-top',
+        name: 'Vestments of Havoc Robe Top',
+        category: 'armor',
+        slot: 'body',
+        combatStyleTags: ['melee'],
+        effectRefs: ['vestments-of-havoc-set'],
+      } satisfies ItemDefinition,
+      'vestments-of-havoc-robe-bottom': {
+        id: 'vestments-of-havoc-robe-bottom',
+        name: 'Vestments of Havoc Robe Bottom',
+        category: 'armor',
+        slot: 'legs',
+        combatStyleTags: ['melee'],
+        effectRefs: ['vestments-of-havoc-set'],
+      } satisfies ItemDefinition,
+      'vestments-of-havoc-boots': {
+        id: 'vestments-of-havoc-boots',
+        name: 'Vestments of Havoc Boots',
+        category: 'armor',
+        slot: 'feet',
+        combatStyleTags: ['melee'],
+        effectRefs: ['vestments-of-havoc-set'],
+      } satisfies ItemDefinition,
     },
     ammo: {},
     abilities: {
+      'balance-by-force': createAbility({
+        id: 'balance-by-force',
+        name: 'Balance by Force',
+        subtype: 'special',
+        adrenalineGain: 0,
+        adrenalineCost: 30,
+        hitSchedule: [{ id: 'balance-by-force-hit', tickOffset: 0, damage: { min: 235, max: 255 } }],
+        baseDamage: { min: 235, max: 255 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'balance-by-force-buff',
+          },
+        ],
+        displayHints: {
+          hiddenFromUi: true,
+        },
+      }),
       'basic-shot': createAbility(),
       'enhanced-shot': createAbility({
         id: 'enhanced-shot',
@@ -85,6 +155,9 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         cooldownTicks: 0,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        specialDispatch: {
+          source: 'equipped-weapon',
+        },
       }),
       'stack-builder': createAbility({
         id: 'stack-builder',
@@ -112,6 +185,12 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         adrenalineCost: 40,
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'shadow-imbued',
+          },
+        ],
       }),
       deadshot: createAbility({
         id: 'deadshot',
@@ -127,6 +206,34 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
           { id: 'deadshot-hit-4', tickOffset: 0, damage: { min: 105, max: 125 } },
         ],
         baseDamage: { min: 420, max: 500 },
+        variants: [
+          {
+            id: 'deadshot',
+            priority: 100,
+            when: {
+              requiredEquipmentTags: ['equipped-effect:igneous-kal-xil-passive'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `deadshot-igneous-hit-${index + 1}`,
+              tickOffset: 0,
+              damage: { min: 55, max: 75 },
+            })),
+            baseDamage: { min: 440, max: 600 },
+          },
+          {
+            id: 'deadshot',
+            priority: 100,
+            when: {
+              requiredEquipmentTags: ['equipped-effect:igneous-kal-zuk-passive'],
+            },
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `deadshot-igneous-hit-${index + 1}`,
+              tickOffset: 0,
+              damage: { min: 55, max: 75 },
+            })),
+            baseDamage: { min: 440, max: 600 },
+          },
+        ],
       }),
       'corruption-shot': createAbility({
         id: 'corruption-shot',
@@ -144,8 +251,65 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         baseDamage: { min: 180, max: 240 },
         effectRefs: ['damage-over-time', 'corruption-shot'],
       }),
+      attack: createAbility({
+        id: 'attack',
+        name: 'Attack',
+        style: 'melee',
+        cooldownTicks: 3,
+        adrenalineGain: 9,
+        hitSchedule: [{ id: 'attack-hit-1', tickOffset: 0, damage: { min: 110, max: 130 } }],
+        baseDamage: { min: 110, max: 130 },
+      }),
+      'meteor-strike': createAbility({
+        id: 'meteor-strike',
+        name: 'Meteor Strike',
+        style: 'melee',
+        subtype: 'ultimate',
+        cooldownTicks: 100,
+        adrenalineGain: 0,
+        adrenalineCost: 60,
+        hitSchedule: [{ id: 'meteor-strike-hit-1', tickOffset: 0, damage: { min: 220, max: 250 } }],
+        baseDamage: { min: 220, max: 250 },
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'meteor-strike-buff',
+          },
+          {
+            kind: 'grant-adrenaline',
+            amount: 4.5,
+            timing: 'per-tick-window',
+            durationTicks: 50,
+            requiresWeaponStyle: 'melee',
+          },
+        ],
+      }),
     },
-    buffs: {},
+    buffs: {
+      'balance-by-force-buff': {
+        id: 'balance-by-force-buff',
+        name: 'Balance by Force',
+        category: 'temporary',
+        sourceType: 'ability',
+        effectRefs: ['perfect-equilibrium-threshold:4'],
+      },
+      'shadow-imbued': {
+        id: 'shadow-imbued',
+        name: 'Shadow Imbued',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 50,
+        effectRefs: ['ranged-hit-adrenaline:+5%'],
+      },
+      'meteor-strike-buff': {
+        id: 'meteor-strike-buff',
+        name: 'Meteor Strike',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 50,
+        effectRefs: ['basic-adrenaline:+50%'],
+      },
+    },
     perks: {},
     relics: {
       'fury-of-the-small': {
@@ -313,6 +477,175 @@ describe('resolveAdrenalineTimeline', () => {
 
     expect(result.startingAdrenaline).toBe(109);
     expect(result.adrenalineTimeline).toEqual([109, HEIGHTENED_SENSES_MAX_ADRENALINE, HEIGHTENED_SENSES_MAX_ADRENALINE]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
+  it('raises the adrenaline cap to 120 with full Vestments of Havoc and a melee weapon', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'masterwork-2h-sword',
+          },
+          head: {
+            instanceId: 'head-1',
+            definitionId: 'vestments-of-havoc-hood',
+          },
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'vestments-of-havoc-robe-top',
+          },
+          legs: {
+            instanceId: 'legs-1',
+            definitionId: 'vestments-of-havoc-robe-bottom',
+          },
+          feet: {
+            instanceId: 'feet-1',
+            definitionId: 'vestments-of-havoc-boots',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 119,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'overflow-basic-with-vestments',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'huge-basic' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.startingAdrenaline).toBe(119);
+    expect(result.adrenalineTimeline).toEqual([
+      119,
+      FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+      FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+    ]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
+  it('raises the adrenaline cap to 130 with Heightened Senses and full Vestments of Havoc', () => {
+    const config = createConfig({
+      persistentBuffConfig: {
+        relicIds: ['heightened-senses'],
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'masterwork-2h-sword',
+          },
+          head: {
+            instanceId: 'head-1',
+            definitionId: 'vestments-of-havoc-hood',
+          },
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'vestments-of-havoc-robe-top',
+          },
+          legs: {
+            instanceId: 'legs-1',
+            definitionId: 'vestments-of-havoc-robe-bottom',
+          },
+          feet: {
+            instanceId: 'feet-1',
+            definitionId: 'vestments-of-havoc-boots',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 129,
+        tickCount: 3,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'overflow-basic-with-vestments-and-heightened-senses',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'huge-basic' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.startingAdrenaline).toBe(129);
+    expect(result.adrenalineTimeline).toEqual([
+      129,
+      HEIGHTENED_SENSES_AND_FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+      HEIGHTENED_SENSES_AND_FULL_VESTMENTS_OF_HAVOC_MAX_ADRENALINE,
+    ]);
+    expect(result.validationIssues).toEqual([]);
+  });
+
+  it('clamps adrenaline down after swapping away from a full Vestments of Havoc melee setup', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'masterwork-2h-sword',
+          },
+          head: {
+            instanceId: 'head-1',
+            definitionId: 'vestments-of-havoc-hood',
+          },
+          body: {
+            instanceId: 'body-1',
+            definitionId: 'vestments-of-havoc-robe-top',
+          },
+          legs: {
+            instanceId: 'legs-1',
+            definitionId: 'vestments-of-havoc-robe-bottom',
+          },
+          feet: {
+            instanceId: 'feet-1',
+            definitionId: 'vestments-of-havoc-boots',
+          },
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'weapon-2',
+            definitionId: 'bolg',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 120,
+        tickCount: 3,
+        nonGcdActions: [
+          {
+            id: 'swap-to-bolg',
+            tick: 0,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'weapon-2',
+              slot: 'weapon',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.startingAdrenaline).toBe(120);
+    expect(result.adrenalineTimeline).toEqual([120, MAX_ADRENALINE, MAX_ADRENALINE]);
     expect(result.validationIssues).toEqual([]);
   });
 
@@ -702,6 +1035,7 @@ describe('resolveAdrenalineTimeline', () => {
             name: 'Shadow Imbued',
             category: 'temporary',
             sourceType: 'ability',
+            durationTicks: 50,
             effectRefs: ['ranged-hit-adrenaline:+5%'],
           },
         },
@@ -775,6 +1109,7 @@ describe('resolveAdrenalineTimeline', () => {
             name: 'Shadow Imbued',
             category: 'temporary',
             sourceType: 'ability',
+            durationTicks: 50,
             effectRefs: ['ranged-hit-adrenaline:+5%'],
           },
         },
@@ -837,6 +1172,7 @@ describe('resolveAdrenalineTimeline', () => {
             name: 'Shadow Imbued',
             category: 'temporary',
             sourceType: 'ability',
+            durationTicks: 50,
             effectRefs: ['ranged-hit-adrenaline:+5%'],
           },
         },
@@ -1105,5 +1441,44 @@ describe('resolveAdrenalineTimeline', () => {
     );
     expect(result.adrenalineTimeline[0]).toBe(25);
     expect(result.adrenalineTimeline[100]).toBe(25);
+  });
+
+  it('applies Meteor Strike passive and boosted melee basic adrenaline while a melee weapon is equipped', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'masterwork-2h-sword',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 4,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'meteor-1',
+            tick: 0,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'meteor-strike' },
+          },
+          {
+            id: 'attack-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'attack' },
+          },
+        ],
+      },
+    });
+
+    const result = resolveAdrenalineTimeline(config);
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.adrenalineTimeline).toEqual([44.5, 62.5, 67, 71.5]);
   });
 });

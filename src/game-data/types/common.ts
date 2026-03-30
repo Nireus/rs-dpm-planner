@@ -1,7 +1,7 @@
 export type EntityId = string;
 export type EffectRef = string;
 export type RequirementTag = string;
-export type CombatStyle = 'ranged' | 'constitution';
+export type CombatStyle = 'ranged' | 'melee' | 'magic' | 'necromancy' | 'constitution';
 
 export type ItemCategory =
   | 'weapon'
@@ -14,6 +14,7 @@ export type ItemCategory =
 
 export type EquipmentSlot =
   | 'weapon'
+  | 'offHand'
   | 'ammo'
   | 'head'
   | 'body'
@@ -74,4 +75,9 @@ export type StackRules = {
   maxStacks?: number;
   refreshesDuration?: boolean;
   consumesOnTrigger?: boolean;
+  conditionalModifiers?: Array<{
+    whenBuffActive: EntityId;
+    maxStacks?: number;
+    gainMultiplier?: number;
+  }>;
 };

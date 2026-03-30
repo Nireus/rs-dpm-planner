@@ -100,6 +100,70 @@ h1 {
   white-space: nowrap;
 }
 
+.style-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.style-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.5rem 0.78rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(12, 20, 8, 0.88);
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.style-tab-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  object-fit: contain;
+}
+
+.white-tint-icon {
+  filter: brightness(0) invert(1);
+}
+
+.style-tab:hover {
+  transform: translateY(-1px);
+}
+
+.style-tab-active {
+  color: var(--text-strong);
+}
+
+.style-tab.style-ranged.style-tab-active {
+  border-color: rgba(123, 144, 75, 0.72);
+  background: rgba(25, 36, 15, 0.95);
+}
+
+.style-tab.style-melee.style-tab-active {
+  border-color: rgba(212, 141, 72, 0.55);
+  background: rgba(41, 27, 13, 0.95);
+}
+
+.style-tab.style-magic.style-tab-active {
+  border-color: rgba(104, 165, 235, 0.55);
+  background: rgba(15, 25, 38, 0.95);
+}
+
+.style-tab.style-necromancy.style-tab-active {
+  border-color: rgba(149, 128, 226, 0.55);
+  background: rgba(20, 17, 34, 0.95);
+}
+
+.style-tab.style-constitution.style-tab-active {
+  border-color: rgba(176, 96, 80, 0.52);
+  background: rgba(35, 18, 15, 0.95);
+}
+
 .panel {
   padding: 1rem 1.1rem;
 }
@@ -170,12 +234,55 @@ h1 {
     box-shadow 140ms ease;
 }
 
-.ability-card.ranged-card {
+.section-heading.style-ranged .eyebrow,
+.ability-card.style-ranged .card-corner {
+  color: #b7da7f;
+}
+
+.section-heading.style-melee .eyebrow,
+.ability-card.style-melee .card-corner {
+  color: #f0b46f;
+}
+
+.section-heading.style-magic .eyebrow,
+.ability-card.style-magic .card-corner {
+  color: #90c8ff;
+}
+
+.section-heading.style-necromancy .eyebrow,
+.ability-card.style-necromancy .card-corner {
+  color: #b7a6ff;
+}
+
+.section-heading.style-constitution .eyebrow,
+.ability-card.style-constitution .card-corner {
+  color: #d4a497;
+}
+
+.ability-card.style-ranged {
   background:
     linear-gradient(180deg, rgba(18, 31, 14, 0.98), rgba(10, 18, 8, 0.96));
 }
 
-.ability-card.constitution-card {
+.ability-card.style-melee {
+  border-color: rgba(137, 93, 46, 0.28);
+  background:
+    linear-gradient(180deg, rgba(38, 24, 12, 0.98), rgba(18, 11, 6, 0.96));
+}
+
+.ability-card.style-magic {
+  border-color: rgba(67, 112, 170, 0.28);
+  background:
+    linear-gradient(180deg, rgba(14, 24, 37, 0.98), rgba(8, 12, 20, 0.96));
+}
+
+.ability-card.style-necromancy {
+  border-color: rgba(90, 80, 148, 0.28);
+  background:
+    linear-gradient(180deg, rgba(21, 18, 35, 0.98), rgba(10, 8, 18, 0.96));
+}
+
+.ability-card.style-constitution {
   border-color: rgba(124, 73, 62, 0.24);
   background:
     linear-gradient(180deg, rgba(34, 18, 14, 0.98), rgba(18, 10, 8, 0.96));
@@ -187,7 +294,19 @@ h1 {
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
 }
 
-.ability-card.constitution-card:hover {
+.ability-card.style-melee:hover {
+  border-color: rgba(212, 141, 72, 0.45);
+}
+
+.ability-card.style-magic:hover {
+  border-color: rgba(104, 165, 235, 0.45);
+}
+
+.ability-card.style-necromancy:hover {
+  border-color: rgba(149, 128, 226, 0.45);
+}
+
+.ability-card.style-constitution:hover {
   border-color: rgba(176, 96, 80, 0.44);
 }
 

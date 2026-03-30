@@ -23,5 +23,6 @@
     }
   },
   "effectRefs": ["weapon-special-access", "weapon-special:split-soul", "weapon-class:crossbow"],
+  "specialAbilityId": "split-soul",
   "equipBehavior": "two-handed"
 }

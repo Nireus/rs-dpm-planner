@@ -1,0 +1,36 @@
+{
+  "id": "bladed-dive",
+  "name": "Bladed Dive",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 34,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 65
+    },
+    "requiredEquipmentTags": ["melee-dual-wield"]
+  },
+  "hitSchedule": [
+    {
+      "id": "bladed-dive-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 75,
+        "max": 95
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 75,
+    "max": 95
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Dash forward and strike nearby enemies. Live behavior can be used during GCD, but that utility timing still needs dedicated action-model support."
+}

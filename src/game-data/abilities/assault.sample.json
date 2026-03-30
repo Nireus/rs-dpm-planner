@@ -1,0 +1,62 @@
+{
+  "id": "assault",
+  "name": "Assault",
+  "style": "melee",
+  "subtype": "enhanced",
+  "cooldownTicks": 10,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "attack": 3
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 8,
+  "hitSchedule": [
+    {
+      "id": "assault-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 130,
+        "max": 150
+      }
+    },
+    {
+      "id": "assault-hit-2",
+      "tickOffset": 3,
+      "damage": {
+        "min": 130,
+        "max": 150
+      }
+    },
+    {
+      "id": "assault-hit-3",
+      "tickOffset": 5,
+      "damage": {
+        "min": 130,
+        "max": 150
+      }
+    },
+    {
+      "id": "assault-hit-4",
+      "tickOffset": 7,
+      "damage": {
+        "min": 130,
+        "max": 150
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 520,
+    "max": 600
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "spend",
+      "stacks": 4
+    }
+  ],
+  "description": "Channelled melee attack that lands 4 hits at live wiki timings. Bloodlust empowerment remains descriptive only until melee buff mechanics are implemented."
+}

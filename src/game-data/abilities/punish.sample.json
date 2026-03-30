@@ -1,0 +1,36 @@
+{
+  "id": "punish",
+  "name": "Punish",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 40,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 60
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "punish-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 110,
+        "max": 130
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 110,
+    "max": 130
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Slash at the target unexpectedly. Deals 2.5x damage if the target is below 50% life points."
+}

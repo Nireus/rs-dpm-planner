@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { AbilityDefinition } from '../../../game-data/types';
 import type { RotationAction } from '../../../simulation-engine/models';
 import {
+  buildAbilityPlacementTicks,
   buildAbilityGapControls,
   collapseAbilityGap,
   canPlaceAbilityAtTick,
@@ -90,16 +91,16 @@ function createAbilityAction(id: string, tick: number, abilityId = 'rapid-fire')
 
 describe('rotation planner utils', () => {
   it('recognizes GCD-aligned ability ticks', () => {
-    expect(isAbilityPlacementTick(0)).toBe(true);
-    expect(isAbilityPlacementTick(3)).toBe(true);
-    expect(isAbilityPlacementTick(4)).toBe(false);
+    expect(isAbilityPlacementTick([], ABILITY_DEFINITIONS, 12, 0)).toBe(true);
+    expect(isAbilityPlacementTick([], ABILITY_DEFINITIONS, 12, 3)).toBe(true);
+    expect(isAbilityPlacementTick([], ABILITY_DEFINITIONS, 12, 4)).toBe(false);
   });
 
   it('snaps any tick inside a gcd window to that window start', () => {
-    expect(snapTickToAbilityWindowStart(0)).toBe(0);
-    expect(snapTickToAbilityWindowStart(1)).toBe(0);
-    expect(snapTickToAbilityWindowStart(2)).toBe(0);
-    expect(snapTickToAbilityWindowStart(5)).toBe(3);
+    expect(snapTickToAbilityWindowStart([], ABILITY_DEFINITIONS, 12, 0)).toBe(0);
+    expect(snapTickToAbilityWindowStart([], ABILITY_DEFINITIONS, 12, 1)).toBe(0);
+    expect(snapTickToAbilityWindowStart([], ABILITY_DEFINITIONS, 12, 2)).toBe(0);
+    expect(snapTickToAbilityWindowStart([], ABILITY_DEFINITIONS, 12, 5)).toBe(3);
   });
 
   it('blocks illegal ability placement on non-GCD ticks', () => {
@@ -134,7 +135,7 @@ describe('rotation planner utils', () => {
 
   it('calculates timeline span from gcd or channel duration', () => {
     expect(getAbilityTimelineSpan(BASIC_ABILITY)).toBe(3);
-    expect(getAbilityTimelineSpan(CHANNELED_ABILITY)).toBe(9);
+    expect(getAbilityTimelineSpan(CHANNELED_ABILITY)).toBe(8);
     expect(getAbilityTimelineSpan(COMPLETION_CHANNEL_ABILITY)).toBe(3);
   });
 
@@ -143,8 +144,40 @@ describe('rotation planner utils', () => {
 
     expect(getAbilitySegment(action, CHANNELED_ABILITY, 6)).toBe('start');
     expect(getAbilitySegment(action, CHANNELED_ABILITY, 9)).toBe('middle');
-    expect(getAbilitySegment(action, CHANNELED_ABILITY, 14)).toBe('end');
-    expect(getAbilitySegment(action, CHANNELED_ABILITY, 15)).toBeNull();
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 13)).toBe('end');
+    expect(getAbilitySegment(action, CHANNELED_ABILITY, 14)).toBeNull();
+  });
+
+  it('tracks post-channel placement windows from the real finish tick', () => {
+    const assaultAbility: AbilityDefinition = {
+      ...BASIC_ABILITY,
+      id: 'assault',
+      name: 'Assault',
+      style: 'melee',
+      isChanneled: true,
+      channelDurationTicks: 8,
+      hitSchedule: [
+        { id: 'assault-hit-1', tickOffset: 1, damage: { min: 130, max: 150 } },
+        { id: 'assault-hit-2', tickOffset: 3, damage: { min: 130, max: 150 } },
+        { id: 'assault-hit-3', tickOffset: 5, damage: { min: 130, max: 150 } },
+        { id: 'assault-hit-4', tickOffset: 7, damage: { min: 130, max: 150 } },
+      ],
+      baseDamage: {
+        min: 520,
+        max: 600,
+      },
+    };
+    const abilityDefinitions = {
+      ...ABILITY_DEFINITIONS,
+      assault: assaultAbility,
+    };
+    const actions = [createAbilityAction('assault-action', 0, 'assault')];
+
+    expect(getAbilityTimelineSpan(assaultAbility)).toBe(7);
+    expect(buildAbilityPlacementTicks(actions, abilityDefinitions, 18)).toEqual([0, 7, 10, 13, 16]);
+    expect(snapTickToAbilityWindowStart(actions, abilityDefinitions, 18, 8)).toBe(7);
+    expect(isAbilityPlacementTick(actions, abilityDefinitions, 18, 7)).toBe(true);
+    expect(isAbilityPlacementTick(actions, abilityDefinitions, 18, 9)).toBe(false);
   });
 
   it('adds a new ability action for catalog drops', () => {

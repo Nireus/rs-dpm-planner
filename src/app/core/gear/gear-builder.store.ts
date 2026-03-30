@@ -6,6 +6,7 @@ import type { GearBuilderState } from './gear-state';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 import type { GearBuilderWorkspaceState } from '../workspace/workspace.models';
 import {
+  applyGearBuilderPlacement,
   canEquipItemInSlot,
   formatEquipmentSlot,
   sortGearCatalogItems,
@@ -101,6 +102,7 @@ export class GearBuilderStore {
   equipDefinition(definitionId: string, slot?: EquipmentSlot): string | null {
     const definition = this.findDefinition(definitionId);
     const targetSlot = slot ?? definition?.slot;
+    const definitions = this.gameDataStore.snapshot().catalog?.items ?? {};
 
     if (!definition || !targetSlot || !canEquipItemInSlot(definition, targetSlot)) {
       return null;
@@ -109,16 +111,7 @@ export class GearBuilderStore {
     const nextInstance = this.createInstance(definition);
 
     this.state.update((current) => {
-      const previous = current.equipment[targetSlot];
-      const inventory = previous ? [...current.inventory, previous] : [...current.inventory];
-
-      return {
-        equipment: {
-          ...current.equipment,
-          [targetSlot]: nextInstance,
-        },
-        inventory,
-      };
+      return applyGearBuilderPlacement(current, nextInstance, targetSlot, definitions);
     });
 
     return nextInstance.instanceId;
@@ -168,6 +161,7 @@ export class GearBuilderStore {
 
   equipInventoryItem(instanceId: string, slot: EquipmentSlot): string | null {
     const current = this.state();
+    const definitions = this.gameDataStore.snapshot().catalog?.items ?? {};
     const instance = current.inventory.find((entry) => entry.instanceId === instanceId);
 
     if (!instance) {
@@ -180,22 +174,7 @@ export class GearBuilderStore {
       return null;
     }
 
-    this.state.update((latest) => {
-      const currentEquipped = latest.equipment[slot];
-      const nextInventory = latest.inventory.filter((entry) => entry.instanceId !== instanceId);
-
-      if (currentEquipped) {
-        nextInventory.push(currentEquipped);
-      }
-
-      return {
-        equipment: {
-          ...latest.equipment,
-          [slot]: instance,
-        },
-        inventory: nextInventory,
-      };
-    });
+    this.state.update((latest) => applyGearBuilderPlacement(latest, instance, slot, definitions));
 
     return instance.instanceId;
   }
@@ -206,6 +185,7 @@ export class GearBuilderStore {
     }
 
     const current = this.state();
+    const definitions = this.gameDataStore.snapshot().catalog?.items ?? {};
     const sourceInstance = current.equipment[sourceSlot];
 
     if (!sourceInstance) {
@@ -220,21 +200,11 @@ export class GearBuilderStore {
 
     this.state.update((latest) => {
       const activeSource = latest.equipment[sourceSlot];
-
       if (!activeSource) {
         return latest;
       }
 
-      const nextEquipment = { ...latest.equipment };
-      const displaced = nextEquipment[targetSlot];
-
-      delete nextEquipment[sourceSlot];
-      nextEquipment[targetSlot] = activeSource;
-
-      return {
-        equipment: nextEquipment,
-        inventory: displaced ? [...latest.inventory, displaced] : [...latest.inventory],
-      };
+      return applyGearBuilderPlacement(latest, activeSource, targetSlot, definitions, sourceSlot);
     });
 
     return sourceInstance.instanceId;

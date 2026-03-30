@@ -2,6 +2,7 @@ import {
   PORTABLE_CONFIG_SCHEMA_VERSION,
   type PortableConfigDocument,
 } from '../models/portable-config';
+import { sanitizePlayerStats } from './player-stats';
 
 export type PortableConfigValidationCode =
   | 'invalid-root'
@@ -165,7 +166,9 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
     success: true,
     data: {
       schemaVersion: PORTABLE_CONFIG_SCHEMA_VERSION,
-      playerStats: playerStats as unknown as PortableConfigDocument['playerStats'],
+      playerStats: sanitizePlayerStats(
+        playerStats as unknown as PortableConfigDocument['playerStats'],
+      ),
       gearSetup: gearSetup as unknown as PortableConfigDocument['gearSetup'],
       inventory: inventory as unknown as PortableConfigDocument['inventory'],
       persistentBuffConfig:

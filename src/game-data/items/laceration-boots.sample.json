@@ -1,0 +1,20 @@
+{
+  "id": "laceration-boots",
+  "name": "Laceration boots",
+  "category": "armor",
+  "slot": "feet",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Laceration_boots.png",
+  "wikiUrl": "https://runescape.wiki/w/Laceration_boots",
+  "combatStyleTags": ["melee"],
+  "tier": 80,
+  "offensiveStats": {
+    "meleeBonus": 12.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 80
+    }
+  },
+  "effectRefs": ["blade-master"],
+  "implementationNotes": "Curated melee boots from the live Laceration boots page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and the Blade Master passive."
+}

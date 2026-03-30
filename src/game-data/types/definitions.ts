@@ -16,12 +16,97 @@ import type {
   StatModifierMap,
 } from './common';
 
+export interface AbilityDisplayHints {
+  hitTickMode?: 'cast' | 'resolved';
+  hitCountLabel?: string;
+  damageRangeLabel?: string;
+  hitScheduleSummary?: string;
+  hoverSummary?: string;
+  hiddenFromUi?: boolean;
+}
+
+export interface AbilitySpecialDispatch {
+  source: 'equipped-weapon' | 'equipped-eof';
+}
+
+export interface AbilityTimelineEffectDurationBonus {
+  requiredEquippedEffect: EffectRef;
+  minCount?: number;
+  bonusTicks: number;
+}
+
+export interface AbilityApplyBuffTimelineEffect {
+  kind: 'apply-buff';
+  buffId: EntityId;
+  startTickOffset?: number;
+  durationTicks?: number;
+  endsOnWeaponSwap?: boolean;
+  conditionalDurationBonuses?: AbilityTimelineEffectDurationBonus[];
+}
+
+export interface AbilityExtendBuffTimelineEffect {
+  kind: 'extend-buff';
+  buffId: EntityId;
+  requiresActive?: boolean;
+  durationTicks?: number;
+  durationFromAbility?: 'hit-count' | 'channel-duration' | 'max-hit-count-or-channel-duration';
+  bonusTicks?: number;
+}
+
+export interface AbilityGrantAdrenalineTimelineEffect {
+  kind: 'grant-adrenaline';
+  amount: number;
+  timing: 'per-tick-window';
+  startTickOffset?: number;
+  durationTicks?: number;
+  durationFromAbility?: 'channel-duration';
+  requiresWeaponStyle?: CombatStyle;
+}
+
+export type AbilityTimelineEffect =
+  | AbilityApplyBuffTimelineEffect
+  | AbilityExtendBuffTimelineEffect
+  | AbilityGrantAdrenalineTimelineEffect;
+
+export interface AbilityStackEffect {
+  buffId: EntityId;
+  operation: 'add' | 'spend';
+  stacks: number;
+}
+
+export interface AbilityVariantDefinition {
+  id: EntityId;
+  priority?: number;
+  when?: RequirementSet;
+  name?: string;
+  iconPath?: string;
+  hoverSummary?: string;
+  detailLines?: string[];
+  wikiUrl?: string;
+  style?: CombatStyle;
+  subtype?: AbilitySubtype;
+  cooldownTicks?: number;
+  adrenalineCost?: number;
+  adrenalineGain?: number;
+  requires?: RequirementSet;
+  isChanneled?: boolean;
+  channelDurationTicks?: number;
+  hitSchedule?: HitDefinition[];
+  baseDamage?: DamageRange;
+  effectRefs?: EffectRef[];
+  description?: string;
+  timelineEffects?: AbilityTimelineEffect[];
+  stackEffects?: AbilityStackEffect[];
+  displayHints?: AbilityDisplayHints;
+}
+
 export interface ItemDefinition {
   id: EntityId;
   name: string;
   category: ItemCategory;
   slot?: EquipmentSlot;
   iconPath?: string;
+  wikiUrl?: string;
   dyeVariantIconPaths?: Partial<Record<string, string>>;
   hoverSummary?: string;
   detailLines?: string[];
@@ -30,6 +115,7 @@ export interface ItemDefinition {
   offensiveStats?: StatModifierMap;
   requirements?: RequirementSet;
   effectRefs?: EffectRef[];
+  specialAbilityId?: EntityId;
   configOptions?: ConfigOptionDefinition[];
   inventoryOnlyBehavior?: string;
   equipBehavior?: string;
@@ -64,6 +150,11 @@ export interface AbilityDefinition {
   hitSchedule: HitDefinition[];
   baseDamage: DamageRange;
   effectRefs?: EffectRef[];
+  specialDispatch?: AbilitySpecialDispatch;
+  variants?: AbilityVariantDefinition[];
+  timelineEffects?: AbilityTimelineEffect[];
+  stackEffects?: AbilityStackEffect[];
+  displayHints?: AbilityDisplayHints;
   description?: string;
 }
 
@@ -110,10 +201,8 @@ export interface EofSpecDefinition {
   detailLines?: string[];
   wikiUrl?: string;
   weaponOrigin: EntityId;
+  abilityId: EntityId;
   requires?: RequirementSet;
-  adrenalineCost: number;
-  hitSchedule: HitDefinition[];
-  baseDamage: DamageRange;
   effectRefs?: EffectRef[];
   description?: string;
 }

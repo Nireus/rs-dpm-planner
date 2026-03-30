@@ -11,31 +11,9 @@
   ],
   "wikiUrl": "https://runescape.wiki/w/Dark_Bow",
   "weaponOrigin": "dark-bow",
+  "abilityId": "dark-bow-eof",
   "requires": {
     "requiredEquipmentTags": ["eof-special:dark-bow"]
-  },
-  "adrenalineCost": 65,
-  "hitSchedule": [
-    {
-      "id": "dark-bow-eof-hit-1",
-      "tickOffset": 0,
-      "damage": {
-        "min": 190,
-        "max": 230
-      }
-    },
-    {
-      "id": "dark-bow-eof-hit-2",
-      "tickOffset": 0,
-      "damage": {
-        "min": 190,
-        "max": 230
-      }
-    }
-  ],
-  "baseDamage": {
-    "min": 380,
-    "max": 460
   },
   "effectRefs": ["eof-dark-bow-spec"],
   "description": "Stored Dark bow special attack for Essence of Finality. Strikes twice for 190%-230% ability damage per hit."

@@ -1,0 +1,30 @@
+{
+  "id": "ek-zekkil",
+  "name": "Ek-ZekKil",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Ek-ZekKil.png",
+  "wikiUrl": "https://runescape.wiki/w/Ek-ZekKil",
+  "combatStyleTags": ["melee"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "strength": 95
+    }
+  },
+  "effectRefs": ["ashen-vow", "weapon-special-access", "weapon-special:igneous-showdown"],
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated two-handed melee weapon from the live Ek-ZekKil page. Wiki-verified with Playwright for tier, Strength requirement, and the Igneous Showdown/Ashen Vow effects."
+}

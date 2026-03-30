@@ -1,9 +1,11 @@
-import type { EquipmentSlot } from '../../../game-data/types';
+import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import { applyEquipmentPlacement } from '../../../simulation-engine/gear/equipment-topology';
 import type { RotationAction } from '../../../simulation-engine/models';
 import type { GearBuilderState } from './gear-state';
 
 export function projectGearStateAtTick(
   gearState: GearBuilderState,
+  definitions: Record<string, ItemDefinition>,
   nonGcdActions: RotationAction[],
   tick: number,
 ): GearBuilderState {
@@ -18,7 +20,7 @@ export function projectGearStateAtTick(
     }
 
     if (action.actionType === 'gear-swap') {
-      projectedState = applyProjectedGearSwap(projectedState, action);
+      projectedState = applyProjectedGearSwap(projectedState, definitions, action);
     }
   }
 
@@ -27,6 +29,7 @@ export function projectGearStateAtTick(
 
 export function applyProjectedGearSwap(
   state: GearBuilderState,
+  definitions: Record<string, ItemDefinition>,
   action: RotationAction,
 ): GearBuilderState {
   const instanceId = readStringPayload(action, 'instanceId');
@@ -41,20 +44,7 @@ export function applyProjectedGearSwap(
     return state;
   }
 
-  const displaced = state.equipment[slot];
-  const nextInventory = state.inventory.filter((item) => item.instanceId !== instanceId);
-
-  if (displaced) {
-    nextInventory.push(displaced);
-  }
-
-  return {
-    equipment: {
-      ...state.equipment,
-      [slot]: inventoryInstance,
-    },
-    inventory: nextInventory,
-  };
+  return applyEquipmentPlacement(state, inventoryInstance, slot, definitions);
 }
 
 function readStringPayload(action: RotationAction, key: string): string | null {

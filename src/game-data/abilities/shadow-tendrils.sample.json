@@ -24,6 +24,14 @@
     "min": 200,
     "max": 270
   },
+  "timelineEffects": [
+    {
+      "kind": "extend-buff",
+      "buffId": "shadow-imbued",
+      "requiresActive": true,
+      "durationTicks": 6
+    }
+  ],
   "effectRefs": ["critical-strike-chance:+100%", "shadow-tendrils"],
   "description": "Guaranteed critical strike that damages the target and extends Shadow Imbued."
 }

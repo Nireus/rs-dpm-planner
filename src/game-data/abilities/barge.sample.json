@@ -1,0 +1,36 @@
+{
+  "id": "barge",
+  "name": "Barge",
+  "style": "melee",
+  "subtype": "basic",
+  "cooldownTicks": 34,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "attack": 65
+    },
+    "requiredEquipmentTags": ["melee-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "barge-hit-1",
+      "tickOffset": 1,
+      "damage": {
+        "min": 75,
+        "max": 95
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 75,
+    "max": 95
+  },
+  "stackEffects": [
+    {
+      "buffId": "bloodlust",
+      "operation": "add",
+      "stacks": 1
+    }
+  ],
+  "description": "Run up and ram the target. Moves up to 10 tiles, clears binds, and binds the target for 6.6s."
+}

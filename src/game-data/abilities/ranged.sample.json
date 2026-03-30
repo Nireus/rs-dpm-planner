@@ -24,5 +24,37 @@
     "min": 90,
     "max": 110
   },
+  "variants": [
+    {
+      "id": "ranged",
+      "priority": 100,
+      "when": {
+        "requiredEquipmentTags": ["equipped-effect:gloomfire-darkfang"]
+      },
+      "hitSchedule": [
+        {
+          "id": "ranged-darkfang-hit-1",
+          "tickOffset": 0,
+          "damage": {
+            "min": 45,
+            "max": 55
+          }
+        },
+        {
+          "id": "ranged-darkfang-hit-2",
+          "tickOffset": 0,
+          "damage": {
+            "min": 45,
+            "max": 55
+          }
+        }
+      ],
+      "baseDamage": {
+        "min": 90,
+        "max": 110
+      },
+      "effectRefs": ["gloomfire-darkfang"]
+    }
+  ],
   "description": "Attack the target with the default ranged basic attack."
 }

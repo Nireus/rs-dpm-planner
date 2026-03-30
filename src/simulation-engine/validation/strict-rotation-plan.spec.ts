@@ -59,6 +59,17 @@ function createArmor(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
   };
 }
 
+function createOffHand(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
+  return {
+    id: 'test-off-hand',
+    name: 'Test Off-hand',
+    category: 'weapon',
+    slot: 'offHand',
+    combatStyleTags: ['melee'],
+    ...overrides,
+  };
+}
+
 function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConfig {
   const weapon = createWeapon();
   const armor = createArmor();
@@ -89,6 +100,16 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
       baseDamage: { min: 0, max: 0 },
       requires: {
         requiredEquipmentTags: ['equipped-effect:weapon-special-access'],
+      },
+    }),
+    fury: createAbility({
+      id: 'fury',
+      name: 'Fury',
+      style: 'melee',
+      subtype: 'basic',
+      cooldownTicks: 6,
+      requires: {
+        requiredEquipmentTags: ['melee-dual-wield'],
       },
     }),
   };
@@ -278,6 +299,145 @@ describe('validateStrictRotationPlan', () => {
     expect(issues.some((issue) => issue.code === 'action.invalid_slot')).toBe(true);
   });
 
+  it('allows off-hand gear swaps while a two-handed weapon is equipped', () => {
+    const offHand = createOffHand();
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          [offHand.id]: offHand,
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'off-hand-instance',
+            definitionId: offHand.id,
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'bad-off-hand-swap',
+            tick: 1,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'off-hand-instance',
+              definitionId: offHand.id,
+              slot: 'offHand',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.some(
+        (issue) =>
+          issue.relatedActionId === 'bad-off-hand-swap' &&
+          issue.code === 'action.invalid_slot',
+      ),
+    ).toBe(false);
+  });
+
+  it('uses projected melee weapon topology when validating later ability availability', () => {
+    const meleeMainHand = createWeapon({
+      id: 'abyssal-scourge',
+      name: 'Abyssal scourge',
+      combatStyleTags: ['melee'],
+      equipBehavior: undefined,
+    });
+    const meleeOffHand = createOffHand({
+      id: 'dark-sliver-of-leng',
+      name: 'Dark Sliver of Leng',
+      combatStyleTags: ['melee'],
+    });
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          'abyssal-scourge': meleeMainHand,
+          'test-body': createArmor(),
+          'dark-sliver-of-leng': meleeOffHand,
+        },
+        ammo: {},
+        abilities: {
+          ...createConfig().gameData.abilities,
+          'test-shot': createAbility({
+            id: 'test-shot',
+            name: 'Test Shot',
+            style: 'melee',
+            requires: {
+              requiredEquipmentTags: ['melee-dual-wield'],
+            },
+          }),
+        },
+        buffs: {},
+        perks: {},
+        relics: {},
+        eofSpecs: {},
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'main-hand-instance',
+            definitionId: 'abyssal-scourge',
+          },
+        },
+      },
+      inventory: {
+        items: [
+          {
+            instanceId: 'off-hand-instance',
+            definitionId: 'dark-sliver-of-leng',
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'equip-off-hand',
+            tick: 1,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'off-hand-instance',
+              definitionId: 'dark-sliver-of-leng',
+              slot: 'offHand',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'use-fury',
+            tick: 2,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'test-shot' },
+          },
+        ],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.some(
+        (issue) => issue.relatedActionId === 'use-fury' && issue.code === 'ability.unavailable',
+      ),
+    ).toBe(false);
+  });
+
   it('resolves the equipped BoLG special without raising a stale strict-validation adrenaline issue', () => {
     const config = createConfig({
       gameData: {
@@ -342,5 +502,93 @@ describe('validateStrictRotationPlan', () => {
     const issues = validateStrictRotationPlan(config);
 
     expect(issues.some((issue) => issue.code === 'ability.insufficient_adrenaline')).toBe(false);
+  });
+
+  it('allows an ability immediately after assault finishes on its live hit-timing window', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          'test-bow': createWeapon({
+            id: 'test-melee-weapon',
+            name: 'Test Melee Weapon',
+            combatStyleTags: ['melee'],
+            equipBehavior: undefined,
+          }),
+          'test-body': createArmor(),
+        },
+        abilities: {
+          ...createConfig().gameData.abilities,
+          assault: createAbility({
+            id: 'assault',
+            name: 'Assault',
+            style: 'melee',
+            subtype: 'enhanced',
+            adrenalineCost: 25,
+            cooldownTicks: 10,
+            isChanneled: true,
+            channelDurationTicks: 8,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+            hitSchedule: [
+              { id: 'assault-hit-1', tickOffset: 1, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-2', tickOffset: 3, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-3', tickOffset: 5, damage: { min: 130, max: 150 } },
+              { id: 'assault-hit-4', tickOffset: 7, damage: { min: 130, max: 150 } },
+            ],
+            baseDamage: { min: 520, max: 600 },
+          }),
+          followup: createAbility({
+            id: 'followup',
+            name: 'Followup',
+            style: 'melee',
+            subtype: 'basic',
+            cooldownTicks: 3,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['melee-weapon'],
+            },
+          }),
+        },
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-instance',
+            definitionId: 'test-melee-weapon',
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 30,
+        nonGcdActions: [],
+        abilityActions: [
+          {
+            id: 'assault-1',
+            tick: 9,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'assault' },
+          },
+          {
+            id: 'followup-1',
+            tick: 16,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'followup' },
+          },
+        ],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.some(
+        (issue) => issue.relatedActionId === 'followup-1' && issue.code === 'ability.channel_conflict',
+      ),
+    ).toBe(false);
   });
 });

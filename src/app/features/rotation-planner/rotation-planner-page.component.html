@@ -49,30 +49,68 @@
           <p>Drag a ready icon into a valid GCD window.</p>
         </div>
 
-        <div class="palette-grid icon-palette-grid">
-          @for (entry of abilityPaletteEntries(); track entry.definition.id) {
+        <div class="style-tabs palette-style-tabs" role="tablist" aria-label="Planner ability styles">
+          @for (tab of abilityPaletteStyleTabs; track tab.id) {
             <button
               type="button"
-              class="ability-chip icon-only-chip"
-              [attr.data-testid]="'ability-palette-' + entry.definition.id"
-              [class.blocked-chip]="entry.availabilityIssue"
-              [title]="abilityPaletteEntryTitle(entry)"
-              [attr.draggable]="entry.availabilityIssue ? null : 'true'"
-              (dragstart)="onCatalogAbilityDragStart(entry)"
-              (dragend)="onAbilityDragEnd()"
+              class="style-tab"
+              [class]=" 'style-tab ' + tab.themeClass"
+              [class.style-tab-active]="selectedAbilityPaletteStyle() === tab.id"
+              role="tab"
+              [attr.aria-selected]="selectedAbilityPaletteStyle() === tab.id"
+              (click)="selectAbilityPaletteStyle(tab.id)"
             >
-              @if (entry.definition.iconPath) {
+              @if (tab.iconPath) {
                 <img
-                  class="ability-chip-icon"
-                  [src]="entry.definition.iconPath"
-                  [alt]="entry.definition.name"
+                  class="style-tab-icon"
+                  [class.white-tint-icon]="tab.iconTint === 'white'"
+                  [src]="tab.iconPath"
+                  [alt]="tab.label"
                 />
-              } @else {
-                <span class="ability-chip-fallback">{{ abilityShortLabel(entry.definition) }}</span>
               }
+              {{ tab.label }}
             </button>
           }
         </div>
+
+        @if (groupedAbilityPaletteEntries().length) {
+          <div class="palette-inline-groups">
+            @for (category of groupedAbilityPaletteEntries(); track category.key) {
+              <section class="palette-inline-group" [attr.aria-label]="category.label">
+                <div class="palette-grid icon-palette-grid">
+                  @for (entry of category.abilities; track entry.definition.id) {
+                    <button
+                      type="button"
+                      class="ability-chip icon-only-chip"
+                      [class]=" 'ability-chip icon-only-chip ' + entry.themeClass"
+                      [attr.data-testid]="'ability-palette-' + entry.definition.id"
+                      [class.blocked-chip]="entry.availabilityIssue"
+                      [title]="abilityPaletteEntryTitle(entry)"
+                      [attr.draggable]="entry.availabilityIssue ? null : 'true'"
+                      (dragstart)="onCatalogAbilityDragStart(entry)"
+                      (dragend)="onAbilityDragEnd()"
+                    >
+                      @if (entry.definition.iconPath) {
+                        <img
+                          class="ability-chip-icon"
+                          [src]="entry.definition.iconPath"
+                          [alt]="entry.definition.name"
+                        />
+                      } @else {
+                        <span class="ability-chip-fallback">{{ abilityShortLabel(entry.definition) }}</span>
+                      }
+                    </button>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        } @else {
+          <article class="palette-empty-state">
+            <h3>Coming Soon</h3>
+            <p>{{ abilityPaletteEmptyCopy() }}</p>
+          </article>
+        }
       </section>
 
       <section class="ability-palette half-palette">
@@ -175,7 +213,7 @@
                 [class.cooldown-cell]="lane.key === 'cooldown'"
                 [class.ability-cell]="lane.key === 'ability'"
                 [class.non-gcd-cell]="lane.key === 'non-gcd'"
-                [class.major-tick-cell]="isMajorTick(tickIndex)"
+                [class.major-tick-cell]="lane.key === 'ability' && isMajorTick(tickIndex)"
                 [class.gcd-slot]="lane.key === 'ability' && isAbilityPlacementTick(tickIndex)"
                 [class.off-gcd-slot]="lane.key === 'ability' && !isAbilityPlacementTick(tickIndex)"
                 [class.drop-ready]="(lane.key === 'ability' && canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && canDropNonGcd(tickIndex))"
@@ -257,6 +295,11 @@
                       <div
                         class="buff-bar"
                         [class.warning-buff-bar]="bar.isWarning"
+                        [class.style-ranged]="bar.themeClass === 'style-ranged'"
+                        [class.style-melee]="bar.themeClass === 'style-melee'"
+                        [class.style-magic]="bar.themeClass === 'style-magic'"
+                        [class.style-necromancy]="bar.themeClass === 'style-necromancy'"
+                        [class.style-constitution]="bar.themeClass === 'style-constitution'"
                         [style.--buff-span]="bar.span"
                         [style.--buff-row]="bar.row"
                         [title]="buffBarTitle(bar)"
@@ -292,7 +335,7 @@
                   @if (occupancy.segment === 'start' || occupancy.segment === 'single') {
                     <div
                       class="placed-ability"
-                      [class]=" 'placed-ability ' + abilitySegmentClass(occupancy.segment)"
+                      [class]=" 'placed-ability ' + abilitySegmentClass(occupancy.segment) + ' ' + placedAbilityThemeClass(occupancy.definition)"
                       [class.invalid-action]="actionValidationSummary(occupancy.action)"
                       [class.preview-inserted]="occupancy.previewState === 'inserted'"
                       [class.preview-shifted]="occupancy.previewState === 'shifted'"
@@ -334,6 +377,26 @@
                                 class="placed-ability-proc-fallback"
                                 [style.left]="perfectEquilibriumProcLeft(occupancy.action, marker)"
                               >PE</span>
+                            }
+                          }
+                        </span>
+                      }
+
+                      @if (bloodlustSpendMarkers(occupancy.action).length) {
+                        <span class="placed-ability-proc-markers" title="Consumes 4 Bloodlust stacks">
+                          @for (marker of bloodlustSpendMarkers(occupancy.action); track marker.tickOffset + ':' + marker.indexAtTick) {
+                            @if (bloodlustIconPath(); as procIconPath) {
+                              <img
+                                class="placed-ability-proc-icon bloodlust-spend-icon"
+                                [src]="procIconPath"
+                                alt="Bloodlust spend"
+                                [style.left]="bloodlustSpendLeft(occupancy.action, marker)"
+                              />
+                            } @else {
+                              <span
+                                class="placed-ability-proc-fallback bloodlust-spend-fallback"
+                                [style.left]="bloodlustSpendLeft(occupancy.action, marker)"
+                              >BL</span>
                             }
                           }
                         </span>
@@ -446,6 +509,49 @@
       @if (configurationPanelExpanded()) {
         <div class="configuration-panel-body">
           <label class="control-field compact-field">
+            <span>Attack</span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().attackLevel ?? ''"
+              (ngModelChange)="updateAttackLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span>Strength</span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().strengthLevel ?? ''"
+              (ngModelChange)="updateStrengthLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span class="control-field-label with-icon">
+              <img
+                class="control-field-icon white-tint-icon"
+                src="https://runescape.wiki/w/Special:FilePath/Defence-icon.png"
+                alt="Defence"
+              />
+              <span>Defence</span>
+            </span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().defenceLevel ?? ''"
+              (ngModelChange)="updateDefenceLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
             <span class="control-field-label with-icon">
               <img
                 class="control-field-icon"
@@ -461,6 +567,30 @@
               step="1"
               [ngModel]="playerStats().rangedLevel"
               (ngModelChange)="updateRangedLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span>Magic</span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().magicLevel ?? ''"
+              (ngModelChange)="updateMagicLevel($event)"
+            />
+          </label>
+
+          <label class="control-field compact-field">
+            <span>Necromancy</span>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              step="1"
+              [ngModel]="playerStats().necromancyLevel ?? ''"
+              (ngModelChange)="updateNecromancyLevel($event)"
             />
           </label>
 

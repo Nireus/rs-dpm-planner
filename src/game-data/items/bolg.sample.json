@@ -25,6 +25,7 @@
     "requiredEquipmentTags": ["two-handed-bow"]
   },
   "effectRefs": ["bolg-passive", "weapon-special-access", "weapon-special:balance-by-force"],
+  "specialAbilityId": "balance-by-force",
   "configOptions": [
     {
       "id": "genesis-enchanted",

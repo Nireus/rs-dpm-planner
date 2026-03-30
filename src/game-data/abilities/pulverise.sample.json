@@ -1,0 +1,29 @@
+{
+  "id": "pulverise",
+  "name": "Pulverise",
+  "style": "melee",
+  "subtype": "ultimate",
+  "cooldownTicks": 100,
+  "adrenalineCost": 60,
+  "requires": {
+    "levelRequirements": {
+      "attack": 71
+    },
+    "requiredEquipmentTags": ["melee-two-handed"]
+  },
+  "hitSchedule": [
+    {
+      "id": "pulverise-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 300,
+        "max": 340
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 300,
+    "max": 340
+  },
+  "description": "Charge up a massive strike and pulverise the target. Applies Pulverised for 30s."
+}

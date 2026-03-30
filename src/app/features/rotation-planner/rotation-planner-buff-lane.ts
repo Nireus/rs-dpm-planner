@@ -1,10 +1,13 @@
 import type { BuffDefinition, EntityId } from '../../../game-data/types';
+import type { AbilityDefinition } from '../../../game-data/types';
+import type { TimelineGeneratedBuffSource } from '../../../simulation-engine/models';
 
 export interface PlannerBuffLaneBar {
   buffId: EntityId;
   name: string;
   iconPath?: string;
   isWarning?: boolean;
+  themeClass?: string;
   startTick: number;
   endTick: number;
   span: number;
@@ -16,6 +19,8 @@ interface BuildPlannerBuffLaneBarsInput {
   tickCount: number;
   buffTimeline: Record<number, EntityId[]>;
   buffDefinitions: Record<EntityId, BuffDefinition>;
+  timelineGeneratedBuffSources?: TimelineGeneratedBuffSource[];
+  abilityDefinitions?: Record<EntityId, AbilityDefinition>;
 }
 
 interface PendingBuffRun {
@@ -57,6 +62,7 @@ export function buildPlannerBuffLaneBars(
         name: definition?.name ?? segment.buffId,
         iconPath: definition?.iconPath,
         isWarning: isWarningLikeBuff(definition),
+        themeClass: resolveBuffThemeClass(segment.buffId, input.timelineGeneratedBuffSources, input.abilityDefinitions),
         startTick: segment.startTick,
         endTick: segment.endTick,
         span: segment.endTick - segment.startTick + 1,
@@ -84,7 +90,7 @@ function collectTimelineBuffIds(
 
   for (let tick = 0; tick < tickCount; tick += 1) {
     for (const buffId of buffTimeline[tick] ?? []) {
-      if (isCooldownLikeBuff(buffDefinitions[buffId])) {
+      if (isCooldownLikeBuff(buffDefinitions[buffId]) || buffId === 'bloodlust') {
         continue;
       }
 
@@ -101,6 +107,20 @@ function isCooldownLikeBuff(definition: BuffDefinition | undefined): boolean {
 
 function isWarningLikeBuff(definition: BuffDefinition | undefined): boolean {
   return definition?.effectRefs?.includes('equilibrium-lock') ?? false;
+}
+
+function resolveBuffThemeClass(
+  buffId: EntityId,
+  timelineGeneratedBuffSources?: TimelineGeneratedBuffSource[],
+  abilityDefinitions?: Record<EntityId, AbilityDefinition>,
+): string | undefined {
+  const source = timelineGeneratedBuffSources?.find((entry) => entry.buffId === buffId && entry.sourceType === 'ability');
+  if (!source?.sourceId) {
+    return undefined;
+  }
+
+  const style = abilityDefinitions?.[source.sourceId]?.style;
+  return style ? `style-${style}` : undefined;
 }
 
 function buildSegmentsForBuff(

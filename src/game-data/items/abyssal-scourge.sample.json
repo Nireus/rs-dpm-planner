@@ -1,0 +1,21 @@
+{
+  "id": "abyssal-scourge",
+  "name": "Abyssal scourge",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Abyssal_scourge.png",
+  "wikiUrl": "https://runescape.wiki/w/Abyssal_scourge",
+  "combatStyleTags": ["melee"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 92
+    }
+  },
+  "effectRefs": ["abyssal-parasite"],
+  "implementationNotes": "Curated main-hand melee weapon from the live Abyssal scourge page. Wiki-verified with Playwright for slot, Attack requirement, combat stats, and the Abyssal Parasite passive."
+}
