@@ -3,7 +3,7 @@
   "name": "Annihilation",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Annihilation.png",
+  "iconPath": "/icons/wiki/annihilation.png",
   "wikiUrl": "https://runescape.wiki/w/Annihilation",
   "combatStyleTags": ["melee"],
   "tier": 87,

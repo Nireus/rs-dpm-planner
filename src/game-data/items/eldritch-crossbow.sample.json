@@ -3,7 +3,7 @@
   "name": "Eldritch crossbow",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Eldritch_crossbow.png",
+  "iconPath": "/icons/wiki/eldritch-crossbow.png",
   "hoverSummary": "Tier 92 two-handed crossbow. 1324.8 ability damage, 2577 accuracy, range 9, speed 6.",
   "detailLines": [
     "Requires level 92 Ranged to wield.",

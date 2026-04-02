@@ -1,7 +1,7 @@
 {
   "id": "equilibrium-cooldown",
   "name": "Equilibrium cooldown",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Equilibrium.png",
+  "iconPath": "/icons/wiki/equilibrium.png",
   "wikiUrl": "https://runescape.wiki/w/Equilibrium_cooldown",
   "category": "temporary",
   "sourceType": "perk",

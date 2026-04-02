@@ -3,7 +3,7 @@
   "name": "Seren godbow",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/images/Seren_godbow.png",
+  "iconPath": "/icons/wiki/seren-godbow.png",
   "hoverSummary": "Tier 92 crystal godbow with its own ammo and a high-impact special attack.",
   "detailLines": [
     "Examine: An intricate bow of pure crystal.",

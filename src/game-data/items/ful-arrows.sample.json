@@ -3,7 +3,7 @@
   "name": "Ful arrows",
   "category": "ammo",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/images/Ful_arrow_5.png?5b226",
+  "iconPath": "/icons/wiki/ful-arrow-5.png",
   "combatStyleTags": ["ranged"],
   "tier": 95,
   "offensiveStats": {

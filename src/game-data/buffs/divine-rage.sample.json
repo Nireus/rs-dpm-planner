@@ -1,7 +1,7 @@
 {
   "id": "divine-rage",
   "name": "Divine Rage",
-  "iconPath": "https://runescape.wiki/images/thumb/Divine_Rage.png/30px-Divine_Rage.png?fe3bb",
+  "iconPath": "/icons/wiki/divine-rage.png",
   "wikiUrl": "https://runescape.wiki/w/Prayer",
   "category": "prayer",
   "sourceType": "player-config",

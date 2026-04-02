@@ -1,7 +1,7 @@
 {
   "id": "warped-gem",
   "name": "Warped gem",
-  "iconPath": "https://runescape.wiki/images/Warped_gem.png",
+  "iconPath": "/icons/wiki/warped-gem.png",
   "wikiUrl": "https://runescape.wiki/w/Warped_gem",
   "category": "miscellaneous",
   "sourceType": "player-config",

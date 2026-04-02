@@ -3,7 +3,7 @@
   "name": "Gloomfire bow",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Gloomfire_bow.png",
+  "iconPath": "/icons/wiki/gloomfire-bow.png",
   "hoverSummary": "Tier 90 two-handed bow. 1296 ability damage, 2458 accuracy, range 9, 7.2s speed.",
   "detailLines": [
     "Requires level 90 Ranged to wield.",

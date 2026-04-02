@@ -3,7 +3,7 @@
   "name": "Dracolich hauberk",
   "category": "armor",
   "slot": "body",
-  "iconPath": "https://runescape.wiki/images/Dracolich_hauberk.png",
+  "iconPath": "/icons/wiki/dracolich-hauberk.png",
   "combatStyleTags": ["ranged"],
   "tier": 90,
   "offensiveStats": {

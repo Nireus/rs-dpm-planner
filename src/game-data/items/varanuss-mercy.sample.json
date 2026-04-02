@@ -3,7 +3,7 @@
   "name": "Varanus's Mercy",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Varanus%27s_Mercy.png",
+  "iconPath": "/icons/wiki/varanuss-mercy.png",
   "wikiUrl": "https://runescape.wiki/w/Varanus%27s_Mercy",
   "combatStyleTags": ["melee"],
   "tier": 90,

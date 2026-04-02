@@ -3,7 +3,7 @@
   "name": "Scripture of Ful",
   "category": "pocket",
   "slot": "pocket",
-  "iconPath": "https://runescape.wiki/images/Scripture_of_Ful.png",
+  "iconPath": "/icons/wiki/scripture-of-ful.png",
   "hoverSummary": "Pocket-slot god book aligned with Ful.",
   "detailLines": [
     "Examine: A collection of manuscripts detailing as much as is known about the Elder God, Ful.",

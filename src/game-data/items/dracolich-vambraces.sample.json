@@ -3,7 +3,7 @@
   "name": "Dracolich vambraces",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/images/Dracolich_vambraces.png",
+  "iconPath": "/icons/wiki/dracolich-vambraces.png",
   "combatStyleTags": ["ranged"],
   "tier": 85,
   "offensiveStats": {

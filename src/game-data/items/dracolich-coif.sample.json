@@ -3,7 +3,7 @@
   "name": "Dracolich coif",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/images/Dracolich_coif.png",
+  "iconPath": "/icons/wiki/dracolich-coif.png",
   "combatStyleTags": ["ranged"],
   "tier": 90,
   "offensiveStats": {

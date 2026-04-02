@@ -1,7 +1,7 @@
 {
   "id": "balance-by-force-buff",
   "name": "Balance by Force",
-  "iconPath": "https://runescape.wiki/images/Augmented_Bow_of_the_Last_Guardian.png",
+  "iconPath": "/icons/wiki/augmented-bow-of-the-last-guardian.png",
   "wikiUrl": "https://runescape.wiki/w/Bow_of_the_Last_Guardian",
   "category": "temporary",
   "sourceType": "ability",

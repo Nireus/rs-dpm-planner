@@ -3,7 +3,7 @@
   "name": "Elite sirenic chaps",
   "category": "armor",
   "slot": "legs",
-  "iconPath": "https://runescape.wiki/images/Elite_sirenic_chaps.png",
+  "iconPath": "/icons/wiki/elite-sirenic-chaps.png",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "offensiveStats": {

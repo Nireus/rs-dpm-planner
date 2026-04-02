@@ -1,7 +1,7 @@
 {
   "id": "crackling",
   "name": "Crackling",
-  "iconPath": "https://runescape.wiki/images/thumb/Crackling.png/25px-Crackling.png?5ccf0",
+  "iconPath": "/icons/wiki/crackling.png",
   "wikiUrl": "https://runescape.wiki/w/Crackling",
   "effectRefs": ["crackling"],
   "description": "After its cooldown ends, your next hit also zaps the target for 50% weapon damage per rank."

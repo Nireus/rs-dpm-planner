@@ -1,7 +1,7 @@
 {
   "id": "berserkers-fury",
   "name": "Berserker's Fury",
-  "iconPath": "https://runescape.wiki/images/thumb/Berserker%27s_Fury.png/40px-Berserker%27s_Fury.png?4ffbf",
+  "iconPath": "/icons/wiki/berserkers-fury.png",
   "wikiUrl": "https://runescape.wiki/w/Berserker%27s_Fury",
   "monolithEnergy": 250,
   "effectRefs": ["berserkers-fury"],

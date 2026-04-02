@@ -1,7 +1,7 @@
 {
   "id": "berserk-buff",
   "name": "Berserk",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Berserk.png",
+  "iconPath": "/icons/wiki/berserk.png",
   "wikiUrl": "https://runescape.wiki/w/Berserk",
   "category": "temporary",
   "sourceType": "ability",

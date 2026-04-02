@@ -1,7 +1,7 @@
 {
   "id": "gloomfire-bow-eof",
   "name": "Gloomfire Bow (EOF)",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Gloomfire_bow.png",
+  "iconPath": "/icons/wiki/gloomfire-bow.png",
   "hoverSummary": "EOF special | -65% adrenaline | 3 hits",
   "detailLines": [
     "Stored Gloomfire bow special attack for Essence of Finality.",

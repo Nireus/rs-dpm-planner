@@ -7,7 +7,7 @@ export interface CuratedAbilityUiMetadata {
 
 export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
   attack: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Attack_(ability).png',
+    iconPath: '/icons/wiki/attack-ability.png',
     hoverSummary: 'Basic | 3 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '110%-130% melee damage.',
@@ -17,7 +17,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Attack_(ability)',
   },
   'adaptive-strike': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Adaptive_Strike.png',
+    iconPath: '/icons/wiki/adaptive-strike.png',
     hoverSummary: 'Basic | 9 ticks | 1 hit | +12% adrenaline',
     detailLines: [
       'Main-hand-only and two-handed setups deal a single 120%-140% hit.',
@@ -28,7 +28,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Adaptive_Strike',
   },
   assault: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Assault.png',
+    iconPath: '/icons/wiki/assault.png',
     hoverSummary: 'Enhanced | 10 ticks | 4 hits | -25% adrenaline',
     detailLines: [
       '130%-150% melee damage per hit every 1.2s.',
@@ -38,7 +38,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Assault',
   },
   'essence-of-finality': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Essence_of_Finality.png',
+    iconPath: '/icons/wiki/essence-of-finality.png',
     hoverSummary: 'Constitution | Special | 0 ticks | Adrenaline varies',
     detailLines: [
       'Harnesses the special attack stored inside an equipped Essence of Finality amulet.',
@@ -48,7 +48,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Essence_of_Finality',
   },
   ranged: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Ranged_(ability).png',
+    iconPath: '/icons/wiki/ranged-ability.png',
     hoverSummary: 'Basic | 3 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '90%-110% ranged damage.',
@@ -58,7 +58,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Ranged_(ability)',
   },
   'binding-shot': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Binding_Shot.png',
+    iconPath: '/icons/wiki/binding-shot.png',
     hoverSummary: 'Basic | 25 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '65%-75% ranged damage.',
@@ -69,7 +69,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Binding_Shot',
   },
   backhand: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Backhand.png',
+    iconPath: '/icons/wiki/backhand.png',
     hoverSummary: 'Basic | 25 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '95%-105% melee damage.',
@@ -79,7 +79,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Backhand',
   },
   barge: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Barge.png',
+    iconPath: '/icons/wiki/barge.png',
     hoverSummary: 'Basic | 34 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '75%-95% melee damage.',
@@ -89,7 +89,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Barge',
   },
   berserk: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Berserk.png',
+    iconPath: '/icons/wiki/berserk.png',
     hoverSummary: 'Ultimate | 100 ticks | Self-target | -100% adrenaline',
     detailLines: [
       'Empowers melee attacks for 19.8s.',
@@ -99,7 +99,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Berserk',
   },
   bombardment: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Bombardment.png',
+    iconPath: '/icons/wiki/bombardment.png',
     hoverSummary: 'Enhanced | 0 ticks | 1 hit | -25% adrenaline',
     detailLines: [
       '220%-260% ranged damage to the target and nearby enemies.',
@@ -109,7 +109,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Bombardment',
   },
   'bladed-dive': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Bladed_Dive.png',
+    iconPath: '/icons/wiki/bladed-dive.png',
     hoverSummary: 'Basic | 34 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '75%-95% melee damage in the current curated baseline.',
@@ -119,7 +119,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Bladed_Dive',
   },
   'chaos-roar': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Chaos_Roar.png',
+    iconPath: '/icons/wiki/chaos-roar.png',
     hoverSummary: 'Basic | 100 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '100%-120% melee damage.',
@@ -129,7 +129,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Chaos_Roar',
   },
   dive: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Dive.png',
+    iconPath: '/icons/wiki/dive.png',
     hoverSummary: 'Utility | 34 ticks | Self-target | 0% adrenaline',
     detailLines: [
       'Moves up to 10 tiles toward the targeted tile.',
@@ -139,7 +139,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Dive',
   },
   'corruption-shot': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Corruption_Shot.png',
+    iconPath: '/icons/wiki/corruption-shot.png',
     hoverSummary: 'Basic | 25 ticks | 5 hits | +8% adrenaline',
     detailLines: [
       '60%-80% ranged damage, then 80%, 60%, 40%, and 20% of that hit every 1.2s.',
@@ -149,7 +149,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Corruption_Shot',
   },
   dismember: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Dismember.png',
+    iconPath: '/icons/wiki/dismember.png',
     hoverSummary: 'Enhanced | 40 ticks | 8 hits | 0% adrenaline',
     detailLines: [
       '25%-31% melee damage per hit every 1.2s.',
@@ -159,7 +159,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Dismember',
   },
   deadshot: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Deadshot.png',
+    iconPath: '/icons/wiki/deadshot.png',
     hoverSummary: 'Ultimate | 50 ticks | 4 hits | -60% adrenaline',
     detailLines: [
       'Base version: 105%-125% ranged damage per hit for 4 near-instant hits.',
@@ -169,7 +169,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Deadshot',
   },
   flurry: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Flurry.png',
+    iconPath: '/icons/wiki/flurry.png',
     hoverSummary: 'Enhanced | 34 ticks | 8 hits | -25% adrenaline',
     detailLines: [
       '60%-70% melee damage per hit every 0.6s.',
@@ -179,7 +179,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Flurry',
   },
   fury: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Fury.png',
+    iconPath: '/icons/wiki/fury.png',
     hoverSummary: 'Basic | 25 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '110%-130% melee damage.',
@@ -189,7 +189,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Fury',
   },
   'deaths-swiftness': {
-    iconPath: "https://runescape.wiki/w/Special:FilePath/Death's_Swiftness.png",
+    iconPath: "/icons/wiki/deaths-swiftness.png",
     hoverSummary: 'Ultimate | 100 ticks | 1 hit | -100% adrenaline',
     detailLines: [
       'Creates a shroud of death for 30s.',
@@ -199,7 +199,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: "https://runescape.wiki/w/Death's_Swiftness",
   },
   galeshot: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Galeshot.png',
+    iconPath: '/icons/wiki/galeshot.png',
     hoverSummary: 'Basic | 34 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '100%-120% ranged damage.',
@@ -209,7 +209,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Galeshot',
   },
   'greater-ricochet': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Greater_Ricochet.png',
+    iconPath: '/icons/wiki/greater-ricochet.png',
     hoverSummary: 'Basic | 17 ticks | 7 hits | +9% adrenaline',
     detailLines: [
       'Against a single target: 75%-85%, then 15%-20% twice, then 4%-6% four times.',
@@ -219,7 +219,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Greater_Ricochet',
   },
   'greater-flurry': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Greater_Flurry.png',
+    iconPath: '/icons/wiki/greater-flurry.png',
     hoverSummary: 'Enhanced | 34 ticks | 8 hits | -25% adrenaline',
     detailLines: [
       '60%-70% melee damage per hit every 0.6s.',
@@ -229,7 +229,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Greater_Flurry',
   },
   'greater-barge': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Greater_Barge.png',
+    iconPath: '/icons/wiki/greater-barge.png',
     hoverSummary: 'Basic | 34 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '75%-95% melee damage.',
@@ -239,7 +239,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Greater_Barge',
   },
   'greater-fury': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Greater_Fury.png',
+    iconPath: '/icons/wiki/greater-fury.png',
     hoverSummary: 'Basic | 25 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '120%-140% melee damage.',
@@ -249,7 +249,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Greater_Fury',
   },
   hurricane: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Hurricane.png',
+    iconPath: '/icons/wiki/hurricane.png',
     hoverSummary: 'Enhanced | 34 ticks | 2 hits | -25% adrenaline',
     detailLines: [
       '135%-165%, then 155%-185% melee damage to the main target.',
@@ -259,7 +259,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Hurricane',
   },
   'meteor-strike': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Meteor_Strike.png',
+    iconPath: '/icons/wiki/meteor-strike.png',
     hoverSummary: 'Ultimate | 100 ticks | 1 hit | -60% adrenaline',
     detailLines: [
       '220%-250% melee damage to the target and nearby enemies.',
@@ -270,7 +270,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Meteor_Strike',
   },
   massacre: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Massacre.png',
+    iconPath: '/icons/wiki/massacre.png',
     hoverSummary: 'Enhanced | Recast bleed | 7 hits | -25% adrenaline',
     detailLines: [
       '110%-130% melee damage, then six 100% bleed hits every 2.4s.',
@@ -280,7 +280,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Massacre',
   },
   overpower: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Overpower.png',
+    iconPath: '/icons/wiki/overpower.png',
     hoverSummary: 'Ultimate | 50 ticks | 1 hit | -60% adrenaline',
     detailLines: [
       '520%-570% melee damage.',
@@ -290,7 +290,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Overpower',
   },
   punish: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Punish.png',
+    iconPath: '/icons/wiki/punish.png',
     hoverSummary: 'Basic | 40 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '110%-130% melee damage.',
@@ -300,7 +300,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Punish',
   },
   pulverise: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Pulverise.png',
+    iconPath: '/icons/wiki/pulverise.png',
     hoverSummary: 'Ultimate | 100 ticks | 1 hit | -60% adrenaline',
     detailLines: [
       '300%-340% melee damage.',
@@ -310,7 +310,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Pulverise',
   },
   slaughter: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Slaughter.png',
+    iconPath: '/icons/wiki/slaughter.png',
     hoverSummary: 'Enhanced | Recast bleed | 6 hits | -25% adrenaline',
     detailLines: [
       '80%-100% melee damage per hit every 1.8s.',
@@ -320,7 +320,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Slaughter',
   },
   'imbue-shadows': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Imbue-_Shadows.png',
+    iconPath: '/icons/wiki/imbue-shadows.png',
     hoverSummary: 'Enhanced | 100 ticks | Self-target | -40% adrenaline',
     detailLines: [
       'Applies Shadow Imbued for 30s.',
@@ -331,7 +331,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Imbue:_Shadows',
   },
   'piercing-shot': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Piercing_Shot.png',
+    iconPath: '/icons/wiki/piercing-shot.png',
     hoverSummary: 'Basic | 5 ticks | 2 hits | +9% adrenaline',
     detailLines: [
       '45%-55% ranged damage per hit.',
@@ -342,7 +342,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Piercing_Shot',
   },
   'rapid-fire': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Rapid_Fire.png',
+    iconPath: '/icons/wiki/rapid-fire.png',
     hoverSummary: 'Enhanced | 34 ticks | 8 hits | -25% adrenaline',
     detailLines: [
       '75%-85% ranged damage per hit every 0.6s.',
@@ -352,7 +352,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Rapid_Fire',
   },
   rend: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Rend.png',
+    iconPath: '/icons/wiki/rend.png',
     hoverSummary: 'Basic | 17 ticks | 1 hit | +9% adrenaline',
     detailLines: [
       '135%-165% melee damage.',
@@ -362,7 +362,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Rend',
   },
   ricochet: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Ricochet.png',
+    iconPath: '/icons/wiki/ricochet.png',
     hoverSummary: 'Basic | 17 ticks | 3 hits | +9% adrenaline',
     detailLines: [
       'Against a single target: 75%-85%, then 15%-20% twice.',
@@ -372,7 +372,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Ricochet',
   },
   'shadow-tendrils': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Shadow_Tendrils.png',
+    iconPath: '/icons/wiki/shadow-tendrils.png',
     hoverSummary: 'Enhanced | 75 ticks | 1 hit | 0% adrenaline',
     detailLines: [
       '200%-270% ranged damage.',
@@ -382,7 +382,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Shadow_Tendrils',
   },
   'snap-shot': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Snap_Shot.png',
+    iconPath: '/icons/wiki/snap-shot.png',
     hoverSummary: 'Enhanced | 0 ticks | 2 hits | -25% adrenaline',
     detailLines: [
       '135%-155% ranged damage per hit.',
@@ -392,7 +392,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Snap_Shot',
   },
   snipe: {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Snipe.png',
+    iconPath: '/icons/wiki/snipe.png',
     hoverSummary: 'Enhanced | 100 ticks | 1 hit | 0% adrenaline',
     detailLines: [
       '300%-360% ranged damage after 1.8s.',
@@ -402,7 +402,7 @@ export const CURATED_ABILITY_UI: Record<string, CuratedAbilityUiMetadata> = {
     wikiUrl: 'https://runescape.wiki/w/Snipe',
   },
   'weapon-special-attack': {
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Weapon_Special_Attack.png',
+    iconPath: '/icons/wiki/weapon-special-attack.png',
     hoverSummary: 'Constitution | Special | 0 ticks | Adrenaline varies',
     detailLines: [
       'Generic special attack ability for equipped weapons that support one.',

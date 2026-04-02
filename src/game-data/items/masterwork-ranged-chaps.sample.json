@@ -3,7 +3,7 @@
   "name": "Masterwork ranged chaps",
   "category": "armor",
   "slot": "legs",
-  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_chaps.png",
+  "iconPath": "/icons/wiki/masterwork-ranged-chaps.png",
   "combatStyleTags": ["ranged"],
   "tier": 100,
   "offensiveStats": {

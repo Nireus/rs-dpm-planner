@@ -1,7 +1,7 @@
 {
   "id": "eclipsed-soul",
   "name": "Eclipsed Soul",
-  "iconPath": "https://runescape.wiki/images/thumb/Eclipsed_Soul.png/30px-Eclipsed_Soul.png?a8742",
+  "iconPath": "/icons/wiki/eclipsed-soul.png",
   "wikiUrl": "https://runescape.wiki/w/Prayer",
   "category": "prayer",
   "sourceType": "player-config",

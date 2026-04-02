@@ -3,7 +3,7 @@
   "name": "Khopesh of Elidinis",
   "category": "weapon",
   "slot": "offHand",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Khopesh_of_Elidinis.png",
+  "iconPath": "/icons/wiki/khopesh-of-elidinis.png",
   "wikiUrl": "https://runescape.wiki/w/Khopesh_of_Elidinis",
   "combatStyleTags": ["melee"],
   "tier": 92,

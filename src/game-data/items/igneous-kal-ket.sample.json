@@ -3,7 +3,7 @@
   "name": "Igneous Kal-Ket",
   "category": "armor",
   "slot": "cape",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Igneous_Kal-Ket.png",
+  "iconPath": "/icons/wiki/igneous-kal-ket.png",
   "wikiUrl": "https://runescape.wiki/w/Igneous_Kal-Ket",
   "combatStyleTags": ["melee"],
   "tier": 85,

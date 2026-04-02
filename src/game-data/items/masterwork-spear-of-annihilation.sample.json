@@ -3,7 +3,7 @@
   "name": "Masterwork Spear of Annihilation",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_Spear_of_Annihilation.png",
+  "iconPath": "/icons/wiki/masterwork-spear-of-annihilation.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_Spear_of_Annihilation",
   "combatStyleTags": ["melee"],
   "tier": 92,

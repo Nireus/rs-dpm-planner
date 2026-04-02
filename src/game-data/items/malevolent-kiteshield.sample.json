@@ -3,7 +3,7 @@
   "name": "Malevolent kiteshield",
   "category": "armor",
   "slot": "offHand",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Malevolent_kiteshield.png",
+  "iconPath": "/icons/wiki/malevolent-kiteshield.png",
   "wikiUrl": "https://runescape.wiki/w/Malevolent_kiteshield",
   "combatStyleTags": ["melee"],
   "tier": 90,

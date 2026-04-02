@@ -3,7 +3,7 @@
   "name": "Vestments of havoc boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Vestments_of_havoc_boots.png",
+  "iconPath": "/icons/wiki/vestments-of-havoc-boots.png",
   "wikiUrl": "https://runescape.wiki/w/Vestments_of_havoc_armour",
   "combatStyleTags": ["melee"],
   "tier": 95,

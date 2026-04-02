@@ -1,7 +1,7 @@
 {
   "id": "invigorating",
   "name": "Invigorating",
-  "iconPath": "https://runescape.wiki/images/thumb/Invigorating.png/25px-Invigorating.png?a7f1c",
+  "iconPath": "/icons/wiki/invigorating.png",
   "wikiUrl": "https://runescape.wiki/w/Invigorating",
   "effectRefs": ["invigorating"],
   "description": "Increases adrenaline gained from basic abilities by 5% per rank."

@@ -1,7 +1,7 @@
 {
   "id": "shadows-grace",
   "name": "Shadow's Grace",
-  "iconPath": "https://runescape.wiki/images/thumb/Shadow%27s_Grace.png/40px-Shadow%27s_Grace.png?e1256",
+  "iconPath": "/icons/wiki/shadows-grace.png",
   "wikiUrl": "https://runescape.wiki/w/Shadow%27s_Grace",
   "monolithEnergy": 50,
   "effectRefs": ["shadows-grace"],

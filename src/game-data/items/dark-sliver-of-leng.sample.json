@@ -3,7 +3,7 @@
   "name": "Dark Sliver of Leng",
   "category": "weapon",
   "slot": "offHand",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Sliver_of_Leng.png",
+  "iconPath": "/icons/wiki/dark-sliver-of-leng.png",
   "wikiUrl": "https://runescape.wiki/w/Dark_Sliver_of_Leng",
   "combatStyleTags": ["melee"],
   "tier": 95,

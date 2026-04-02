@@ -3,7 +3,7 @@
   "name": "Abyssal scourge",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Abyssal_scourge.png",
+  "iconPath": "/icons/wiki/abyssal-scourge.png",
   "wikiUrl": "https://runescape.wiki/w/Abyssal_scourge",
   "combatStyleTags": ["melee"],
   "tier": 92,

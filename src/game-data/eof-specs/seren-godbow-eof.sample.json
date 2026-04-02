@@ -1,7 +1,7 @@
 {
   "id": "seren-godbow-eof",
   "name": "Seren Godbow (EOF)",
-  "iconPath": "https://runescape.wiki/images/Seren_godbow.png",
+  "iconPath": "/icons/wiki/seren-godbow.png",
   "hoverSummary": "EOF special | -30% adrenaline | 2 hits",
   "detailLines": [
     "Stored Seren godbow special attack for Essence of Finality.",

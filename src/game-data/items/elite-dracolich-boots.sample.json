@@ -3,7 +3,7 @@
   "name": "Elite dracolich boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_boots.png",
+  "iconPath": "/icons/wiki/elite-dracolich-boots.png",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "offensiveStats": {

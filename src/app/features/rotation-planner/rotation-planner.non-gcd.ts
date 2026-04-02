@@ -20,7 +20,7 @@ export const PLANNER_NON_GCD_TEMPLATES: readonly PlannerNonGcdTemplate[] = [
     id: 'vulnerability-bomb',
     label: 'Vulnerability Bomb',
     shortLabel: 'Vuln',
-    iconPath: 'https://runescape.wiki/w/Special:FilePath/Vulnerability%20bomb.png',
+    iconPath: '/icons/wiki/vulnerability-bomb.png',
     actionType: 'vulnerability-bomb',
   },
 ];

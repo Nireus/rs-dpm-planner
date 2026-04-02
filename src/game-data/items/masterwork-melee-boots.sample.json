@@ -3,7 +3,7 @@
   "name": "Masterwork melee boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_boots.png",
+  "iconPath": "/icons/wiki/masterwork-melee-boots.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
   "combatStyleTags": ["melee"],
   "tier": 90,

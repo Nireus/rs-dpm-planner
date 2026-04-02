@@ -3,7 +3,7 @@
   "name": "Nightmare gauntlets",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/images/Nightmare_gauntlets.png?abe64",
+  "iconPath": "/icons/wiki/nightmare-gauntlets.png",
   "combatStyleTags": ["ranged"],
   "tier": 85,
   "offensiveStats": {

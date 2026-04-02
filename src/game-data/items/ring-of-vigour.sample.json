@@ -3,7 +3,7 @@
   "name": "Ring of vigour",
   "category": "jewellery",
   "slot": "ring",
-  "iconPath": "https://runescape.wiki/images/Ring_of_vigour.png",
+  "iconPath": "/icons/wiki/ring-of-vigour.png",
   "hoverSummary": "Utility ring that reduces ultimate and special attack adrenaline costs.",
   "detailLines": [
     "Retains 10% adrenaline after using an ultimate ability.",

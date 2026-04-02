@@ -36,7 +36,7 @@ const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 })
 export class GearBuilderPageComponent {
   private readonly genesisShardIconPath =
-    'https://runescape.wiki/w/Special:FilePath/Shard_of_Genesis_Essence.png';
+    '/icons/wiki/shard-of-genesis-essence.png';
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
 

@@ -1,7 +1,7 @@
 {
   "id": "fury-of-the-small",
   "name": "Fury of the Small",
-  "iconPath": "https://runescape.wiki/images/thumb/Fury_of_the_Small.png/40px-Fury_of_the_Small.png?c5827",
+  "iconPath": "/icons/wiki/fury-of-the-small.png",
   "wikiUrl": "https://runescape.wiki/w/Fury_of_the_Small",
   "monolithEnergy": 150,
   "effectRefs": ["fury-of-the-small"],

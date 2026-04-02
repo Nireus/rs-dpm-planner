@@ -1,7 +1,7 @@
 {
   "id": "rigour",
   "name": "Rigour",
-  "iconPath": "https://runescape.wiki/images/Rigour.png?017fa",
+  "iconPath": "/icons/wiki/rigour.png",
   "wikiUrl": "https://runescape.wiki/w/Prayer",
   "category": "prayer",
   "sourceType": "player-config",

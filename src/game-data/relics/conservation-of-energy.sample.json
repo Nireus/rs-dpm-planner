@@ -1,7 +1,7 @@
 {
   "id": "conservation-of-energy",
   "name": "Conservation of Energy",
-  "iconPath": "https://runescape.wiki/images/thumb/Conservation_of_Energy.png/40px-Conservation_of_Energy.png?0854b",
+  "iconPath": "/icons/wiki/conservation-of-energy.png",
   "wikiUrl": "https://runescape.wiki/w/Conservation_of_Energy",
   "monolithEnergy": 350,
   "effectRefs": ["conservation-of-energy"],

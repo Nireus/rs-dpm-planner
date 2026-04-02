@@ -3,7 +3,7 @@
   "name": "Masterwork melee platelegs",
   "category": "armor",
   "slot": "legs",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_platelegs.png",
+  "iconPath": "/icons/wiki/masterwork-melee-platelegs.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
   "combatStyleTags": ["melee"],
   "tier": 90,

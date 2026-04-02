@@ -1,7 +1,7 @@
 {
   "id": "undead-slayer-active",
   "name": "Undead Slayer active",
-  "iconPath": "https://runescape.wiki/images/thumb/Undead_Slayer.png/25px-Undead_Slayer.png?48365",
+  "iconPath": "/icons/wiki/undead-slayer.png",
   "wikiUrl": "https://runescape.wiki/w/Undead_Slayer",
   "category": "passive",
   "sourceType": "perk",

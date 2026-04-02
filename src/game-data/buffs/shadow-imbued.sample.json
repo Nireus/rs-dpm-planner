@@ -1,7 +1,7 @@
 {
   "id": "shadow-imbued",
   "name": "Shadow Imbued",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Imbue-_Shadows.png",
+  "iconPath": "/icons/wiki/imbue-shadows.png",
   "wikiUrl": "https://runescape.wiki/w/Imbue:_Shadows",
   "category": "temporary",
   "sourceType": "ability",

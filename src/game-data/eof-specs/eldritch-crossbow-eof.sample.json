@@ -1,7 +1,7 @@
 {
   "id": "eldritch-crossbow-eof",
   "name": "Eldritch Crossbow (EOF)",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Eldritch_crossbow.png",
+  "iconPath": "/icons/wiki/eldritch-crossbow.png",
   "hoverSummary": "EOF special | -25% adrenaline | 25-tick Split Soul buff",
   "detailLines": [
     "Stored Eldritch crossbow special attack for Essence of Finality.",

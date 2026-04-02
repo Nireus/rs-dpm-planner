@@ -3,7 +3,7 @@
   "name": "Jas dragonbane arrows",
   "category": "ammo",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/images/Jas_dragonbane_arrow_4.png",
+  "iconPath": "/icons/wiki/jas-dragonbane-arrow-4.png",
   "combatStyleTags": ["ranged"],
   "tier": 95,
   "offensiveStats": {

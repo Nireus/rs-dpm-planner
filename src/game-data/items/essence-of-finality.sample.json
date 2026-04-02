@@ -3,15 +3,15 @@
   "name": "Essence of Finality amulet",
   "category": "jewellery",
   "slot": "amulet",
-  "iconPath": "https://runescape.wiki/images/Essence_of_Finality_amulet.png",
+  "iconPath": "/icons/wiki/essence-of-finality-amulet.png",
   "dyeVariantIconPaths": {
-    "red": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(red).png",
-    "blue": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(blue).png",
-    "yellow": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(yellow).png",
-    "green": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(green).png",
-    "purple": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(purple).png",
-    "pink": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(pink).png",
-    "black": "https://runescape.wiki/w/Special:FilePath/Essence_of_Finality_amulet_(black).png"
+    "red": "/icons/wiki/essence-of-finality-amulet-red.png",
+    "blue": "/icons/wiki/essence-of-finality-amulet-blue.png",
+    "yellow": "/icons/wiki/essence-of-finality-amulet-yellow.png",
+    "green": "/icons/wiki/essence-of-finality-amulet-green.png",
+    "purple": "/icons/wiki/essence-of-finality-amulet-purple.png",
+    "pink": "/icons/wiki/essence-of-finality-amulet-pink.png",
+    "black": "/icons/wiki/essence-of-finality-amulet-black.png"
   },
   "hoverSummary": "High-end amulet that stores a special attack and combines Reaper necklace and Amulet of souls effects.",
   "detailLines": [

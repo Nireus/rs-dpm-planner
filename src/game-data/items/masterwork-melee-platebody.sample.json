@@ -3,7 +3,7 @@
   "name": "Masterwork melee platebody",
   "category": "armor",
   "slot": "body",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_platebody.png",
+  "iconPath": "/icons/wiki/masterwork-melee-platebody.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
   "combatStyleTags": ["melee"],
   "tier": 90,

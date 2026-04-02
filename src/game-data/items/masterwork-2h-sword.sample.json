@@ -3,7 +3,7 @@
   "name": "Masterwork 2h sword",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_2h_sword.png",
+  "iconPath": "/icons/wiki/masterwork-2h-sword.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_2h_sword",
   "combatStyleTags": ["melee"],
   "tier": 99,

@@ -3,7 +3,7 @@
   "name": "Bakriminel bolts",
   "category": "ammo",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Bakriminel_bolts_5.png",
+  "iconPath": "/icons/wiki/bakriminel-bolts-5.png",
   "hoverSummary": "Level 80 bolt ammo for crossbows. Uses the bakriminel bolt family base damage profile.",
   "detailLines": [
     "Requires level 80 Ranged to use.",

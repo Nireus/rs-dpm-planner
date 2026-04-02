@@ -3,7 +3,7 @@
   "name": "Gloves of passage",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Gloves_of_passage.png",
+  "iconPath": "/icons/wiki/gloves-of-passage.png",
   "wikiUrl": "https://runescape.wiki/w/Gloves_of_passage",
   "combatStyleTags": ["melee"],
   "tier": 85,

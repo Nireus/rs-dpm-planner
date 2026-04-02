@@ -3,7 +3,7 @@
   "name": "Terrasaur maul",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Terrasaur_maul.png",
+  "iconPath": "/icons/wiki/terrasaur-maul.png",
   "wikiUrl": "https://runescape.wiki/w/Terrasaur_maul",
   "combatStyleTags": ["melee"],
   "tier": 80,

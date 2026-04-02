@@ -3,7 +3,7 @@
   "name": "Elite dracolich chaps",
   "category": "armor",
   "slot": "legs",
-  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_chaps.png?11a80",
+  "iconPath": "/icons/wiki/elite-dracolich-chaps.png",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "offensiveStats": {

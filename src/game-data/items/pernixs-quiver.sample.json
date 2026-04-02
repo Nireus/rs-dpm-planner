@@ -3,15 +3,15 @@
   "name": "Pernix's quiver",
   "category": "armor",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/images/Pernix%27s_quiver.png",
+  "iconPath": "/icons/wiki/pernixs-quiver.png",
   "dyeVariantIconPaths": {
-    "red": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(red).png",
-    "orange": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(orange).png",
-    "yellow": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(yellow).png",
-    "green": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(green).png",
-    "blue": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(blue).png",
-    "purple": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(purple).png",
-    "black": "https://runescape.wiki/w/Special:FilePath/Pernix%27s_quiver_(black).png"
+    "red": "/icons/wiki/pernixs-quiver-red.png",
+    "orange": "/icons/wiki/pernixs-quiver-orange.png",
+    "yellow": "/icons/wiki/pernixs-quiver-yellow.png",
+    "green": "/icons/wiki/pernixs-quiver-green.png",
+    "blue": "/icons/wiki/pernixs-quiver-blue.png",
+    "purple": "/icons/wiki/pernixs-quiver-purple.png",
+    "black": "/icons/wiki/pernixs-quiver-black.png"
   },
   "hoverSummary": "Ammunition-slot quiver once belonging to Pernix. High-end ranged support item.",
   "detailLines": [

@@ -27,7 +27,7 @@ export const ABILITY_STYLE_TABS: AbilityStyleTabDefinition[] = COMBAT_STYLE_ORDE
   themeClass: combatStyleThemeClass(style),
   iconPath:
     style === 'constitution'
-      ? 'https://runescape.wiki/w/Special:FilePath/Constitution-icon.png'
+      ? '/icons/wiki/constitution-icon.png'
       : undefined,
   iconTint: style === 'constitution' ? 'white' : 'default',
 }));

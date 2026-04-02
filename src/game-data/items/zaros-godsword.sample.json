@@ -3,7 +3,7 @@
   "name": "Zaros godsword",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Zaros_godsword.png",
+  "iconPath": "/icons/wiki/zaros-godsword.png",
   "wikiUrl": "https://runescape.wiki/w/Zaros_godsword",
   "combatStyleTags": ["melee"],
   "tier": 92,

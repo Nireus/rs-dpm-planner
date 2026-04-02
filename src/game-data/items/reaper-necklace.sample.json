@@ -3,7 +3,7 @@
   "name": "Reaper necklace",
   "category": "jewellery",
   "slot": "amulet",
-  "iconPath": "https://runescape.wiki/images/Reaper_necklace.png",
+  "iconPath": "/icons/wiki/reaper-necklace.png",
   "hoverSummary": "Stacking hit-chance necklace that builds a reaper buff on successful hits.",
   "detailLines": [
     "Examine: When wearing this necklace each hit will grant a stacking reaper buff. Each stack gives a 0.1% attack bonus in all styles, capping at 30 stacks.",

@@ -19,15 +19,15 @@ const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 })
 export class GearItemConfigPanelComponent {
   private readonly genesisShardIconPath =
-    'https://runescape.wiki/w/Special:FilePath/Shard_of_Genesis_Essence.png';
+    '/icons/wiki/shard-of-genesis-essence.png';
   private readonly dyeIconPaths: Record<string, string> = {
-    red: 'https://runescape.wiki/w/Special:FilePath/Red_dye.png',
-    orange: 'https://runescape.wiki/w/Special:FilePath/Orange_dye.png',
-    yellow: 'https://runescape.wiki/w/Special:FilePath/Yellow_dye.png',
-    green: 'https://runescape.wiki/w/Special:FilePath/Green_dye.png',
-    blue: 'https://runescape.wiki/w/Special:FilePath/Blue_dye.png',
-    purple: 'https://runescape.wiki/w/Special:FilePath/Purple_dye.png',
-    black: 'https://runescape.wiki/w/Special:FilePath/Black_mushroom_ink.png',
+    red: '/icons/wiki/red-dye.png',
+    orange: '/icons/wiki/orange-dye.png',
+    yellow: '/icons/wiki/yellow-dye.png',
+    green: '/icons/wiki/green-dye.png',
+    blue: '/icons/wiki/blue-dye.png',
+    purple: '/icons/wiki/purple-dye.png',
+    black: '/icons/wiki/black-mushroom-ink.png',
   };
   private readonly gameDataStore = inject(GameDataStoreService);
   @Input({ required: true }) item!: ItemDefinition;

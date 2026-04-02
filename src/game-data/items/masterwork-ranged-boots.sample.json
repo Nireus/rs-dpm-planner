@@ -3,7 +3,7 @@
   "name": "Masterwork ranged boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_boots.png",
+  "iconPath": "/icons/wiki/masterwork-ranged-boots.png",
   "combatStyleTags": ["ranged"],
   "tier": 100,
   "offensiveStats": {

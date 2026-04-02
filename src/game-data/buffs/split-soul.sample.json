@@ -1,7 +1,7 @@
 {
   "id": "split-soul",
   "name": "Split Soul",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Split_Soul.png",
+  "iconPath": "/icons/wiki/split-soul.png",
   "wikiUrl": "https://runescape.wiki/w/Eldritch_crossbow",
   "category": "temporary",
   "sourceType": "ability",

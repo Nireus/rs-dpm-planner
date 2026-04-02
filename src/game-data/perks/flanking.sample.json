@@ -1,7 +1,7 @@
 {
   "id": "flanking",
   "name": "Flanking",
-  "iconPath": "https://runescape.wiki/images/thumb/Flanking.png/25px-Flanking.png?02b16",
+  "iconPath": "/icons/wiki/flanking.png",
   "wikiUrl": "https://runescape.wiki/w/Flanking",
   "effectRefs": ["flanking"],
   "description": "Binding Shot gains extra damage against targets that are not facing you."

@@ -3,7 +3,7 @@
   "name": "Dark Shard of Leng",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Shard_of_Leng.png",
+  "iconPath": "/icons/wiki/dark-shard-of-leng.png",
   "wikiUrl": "https://runescape.wiki/w/Dark_Shard_of_Leng",
   "combatStyleTags": ["melee"],
   "tier": 95,

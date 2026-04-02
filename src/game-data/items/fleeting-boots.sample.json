@@ -3,7 +3,7 @@
   "name": "Fleeting boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/images/Fleeting_boots.png?7249d",
+  "iconPath": "/icons/wiki/fleeting-boots.png",
   "combatStyleTags": ["ranged"],
   "tier": 90,
   "offensiveStats": {

@@ -1,7 +1,7 @@
 {
   "id": "impatient",
   "name": "Impatient",
-  "iconPath": "https://runescape.wiki/images/thumb/Impatient.png/25px-Impatient.png?56fec",
+  "iconPath": "/icons/wiki/impatient.png",
   "wikiUrl": "https://runescape.wiki/w/Impatient",
   "effectRefs": ["impatient"],
   "description": "Basic abilities have a 9% chance per rank to generate 3 extra adrenaline."

@@ -3,7 +3,7 @@
   "name": "Sirenic hauberk",
   "category": "armor",
   "slot": "body",
-  "iconPath": "https://runescape.wiki/images/Sirenic_hauberk.png",
+  "iconPath": "/icons/wiki/sirenic-hauberk.png",
   "combatStyleTags": ["ranged"],
   "tier": 90,
   "offensiveStats": {

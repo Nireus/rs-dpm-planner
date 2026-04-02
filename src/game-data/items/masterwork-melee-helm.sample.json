@@ -3,7 +3,7 @@
   "name": "Masterwork melee helm",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_helm.png",
+  "iconPath": "/icons/wiki/masterwork-melee-helm.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
   "combatStyleTags": ["melee"],
   "tier": 90,

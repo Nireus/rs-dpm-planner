@@ -1,7 +1,7 @@
 {
   "id": "meteor-strike-buff",
   "name": "Meteor Strike",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Meteor_Strike.png",
+  "iconPath": "/icons/wiki/meteor-strike.png",
   "wikiUrl": "https://runescape.wiki/w/Meteor_Strike",
   "category": "temporary",
   "sourceType": "ability",

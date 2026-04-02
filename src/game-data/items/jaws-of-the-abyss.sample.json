@@ -3,7 +3,7 @@
   "name": "Jaws of the Abyss",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Jaws_of_the_Abyss.png",
+  "iconPath": "/icons/wiki/jaws-of-the-abyss.png",
   "wikiUrl": "https://runescape.wiki/w/Jaws_of_the_Abyss",
   "combatStyleTags": ["melee"],
   "tier": 85,

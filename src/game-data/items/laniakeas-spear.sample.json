@@ -3,7 +3,7 @@
   "name": "Laniakea's spear",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Laniakea%27s_spear.png",
+  "iconPath": "/icons/wiki/laniakeas-spear.png",
   "wikiUrl": "https://runescape.wiki/w/Laniakea%27s_spear",
   "combatStyleTags": ["melee"],
   "tier": 82,

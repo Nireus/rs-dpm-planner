@@ -1,7 +1,7 @@
 {
   "id": "death-ward",
   "name": "Death Ward",
-  "iconPath": "https://runescape.wiki/images/thumb/Death_Ward.png/40px-Death_Ward.png?47966",
+  "iconPath": "/icons/wiki/death-ward.png",
   "wikiUrl": "https://runescape.wiki/w/Death_Ward",
   "monolithEnergy": 150,
   "effectRefs": ["death-ward"],

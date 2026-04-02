@@ -3,7 +3,7 @@
   "name": "Elite sirenic hauberk",
   "category": "armor",
   "slot": "body",
-  "iconPath": "https://runescape.wiki/images/Elite_sirenic_hauberk.png",
+  "iconPath": "/icons/wiki/elite-sirenic-hauberk.png",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "offensiveStats": {

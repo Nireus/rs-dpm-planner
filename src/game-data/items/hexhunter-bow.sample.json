@@ -3,7 +3,7 @@
   "name": "Hexhunter bow",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/images/Hexhunter_bow.png",
+  "iconPath": "/icons/wiki/hexhunter-bow.png",
   "hoverSummary": "Bow that is stronger against targets with magical powers.",
   "detailLines": [
     "Examine: It is stronger against targets with magical powers.",

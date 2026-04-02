@@ -3,7 +3,7 @@
   "name": "Dragon claw",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dragon_claw.png",
+  "iconPath": "/icons/wiki/dragon-claw.png",
   "wikiUrl": "https://runescape.wiki/w/Dragon_claw",
   "combatStyleTags": ["melee"],
   "tier": 60,

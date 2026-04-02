@@ -3,7 +3,7 @@
   "name": "Igneous Kal-Xil",
   "category": "armor",
   "slot": "cape",
-  "iconPath": "https://runescape.wiki/images/Igneous_Kal-Xil.png",
+  "iconPath": "/icons/wiki/igneous-kal-xil.png",
   "hoverSummary": "Tier 85 ranged cape that upgrades Deadshot into an 8-hit version at 60% adrenaline.",
   "detailLines": [
     "Examine: A cape made of ancient, enchanted obsidian, infused with igneous energy.",

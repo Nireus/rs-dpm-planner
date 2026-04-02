@@ -2,7 +2,7 @@
   "id": "enchantment-of-heroism",
   "name": "Enchantment of heroism",
   "category": "other",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Enchantment_of_heroism.png",
+  "iconPath": "/icons/wiki/enchantment-of-heroism.png",
   "wikiUrl": "https://runescape.wiki/w/Enchantment_of_heroism",
   "combatStyleTags": ["melee"],
   "effectRefs": ["enchantment-of-heroism"],

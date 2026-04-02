@@ -3,7 +3,7 @@
   "name": "Masterwork ranged cowl",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_cowl.png",
+  "iconPath": "/icons/wiki/masterwork-ranged-cowl.png",
   "combatStyleTags": ["ranged"],
   "tier": 100,
   "offensiveStats": {

@@ -3,7 +3,7 @@
   "name": "Vestments of havoc robe bottom",
   "category": "armor",
   "slot": "legs",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Vestments_of_havoc_robe_bottom.png",
+  "iconPath": "/icons/wiki/vestments-of-havoc-robe-bottom.png",
   "wikiUrl": "https://runescape.wiki/w/Vestments_of_havoc_armour",
   "combatStyleTags": ["melee"],
   "tier": 95,

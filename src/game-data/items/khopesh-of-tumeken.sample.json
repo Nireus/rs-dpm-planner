@@ -3,7 +3,7 @@
   "name": "Khopesh of Tumeken",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Khopesh_of_Tumeken.png",
+  "iconPath": "/icons/wiki/khopesh-of-tumeken.png",
   "wikiUrl": "https://runescape.wiki/w/Khopesh_of_Tumeken",
   "combatStyleTags": ["melee"],
   "tier": 92,

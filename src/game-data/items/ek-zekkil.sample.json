@@ -3,7 +3,7 @@
   "name": "Ek-ZekKil",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Ek-ZekKil.png",
+  "iconPath": "/icons/wiki/ek-zekkil.png",
   "wikiUrl": "https://runescape.wiki/w/Ek-ZekKil",
   "combatStyleTags": ["melee"],
   "tier": 95,

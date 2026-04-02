@@ -3,7 +3,7 @@
   "name": "Masterwork ranged vambraces",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/images/Masterwork_ranged_vambraces.png",
+  "iconPath": "/icons/wiki/masterwork-ranged-vambraces.png",
   "combatStyleTags": ["ranged"],
   "tier": 100,
   "offensiveStats": {

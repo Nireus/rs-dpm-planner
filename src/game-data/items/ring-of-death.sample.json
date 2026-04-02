@@ -3,7 +3,7 @@
   "name": "Ring of death",
   "category": "jewellery",
   "slot": "ring",
-  "iconPath": "https://runescape.wiki/images/Ring_of_death.png",
+  "iconPath": "/icons/wiki/ring-of-death.png",
   "hoverSummary": "Hydrix ring with survival and adrenaline-on-kill effects.",
   "detailLines": [
     "Examine: When wearing this ring, you will revive but take increasing damage over time, and have a chance to gain adrenaline upon killing your enemy.",

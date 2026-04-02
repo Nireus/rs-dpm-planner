@@ -3,7 +3,7 @@
   "name": "Noxious scythe",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Noxious_scythe.png",
+  "iconPath": "/icons/wiki/noxious-scythe.png",
   "wikiUrl": "https://runescape.wiki/w/Noxious_scythe",
   "combatStyleTags": ["melee"],
   "tier": 90,

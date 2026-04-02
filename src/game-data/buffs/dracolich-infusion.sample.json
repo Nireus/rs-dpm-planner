@@ -1,7 +1,7 @@
 {
   "id": "dracolich-infusion",
   "name": "Dracolich infusion",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dracolich_hauberk.png",
+  "iconPath": "/icons/wiki/dracolich-hauberk.png",
   "wikiUrl": "https://runescape.wiki/w/Dracolich_armour",
   "category": "temporary",
   "sourceType": "item",

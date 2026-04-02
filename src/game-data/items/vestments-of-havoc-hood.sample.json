@@ -3,7 +3,7 @@
   "name": "Vestments of havoc hood",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Vestments_of_havoc_hood.png",
+  "iconPath": "/icons/wiki/vestments-of-havoc-hood.png",
   "wikiUrl": "https://runescape.wiki/w/Vestments_of_havoc_armour",
   "combatStyleTags": ["melee"],
   "tier": 95,

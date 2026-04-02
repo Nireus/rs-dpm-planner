@@ -1,7 +1,7 @@
 {
   "id": "searing-winds",
   "name": "Searing Winds",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Galeshot.png",
+  "iconPath": "/icons/wiki/galeshot.png",
   "wikiUrl": "https://runescape.wiki/w/Galeshot",
   "category": "temporary",
   "sourceType": "ability",

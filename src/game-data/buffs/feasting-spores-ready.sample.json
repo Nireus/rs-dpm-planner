@@ -1,7 +1,7 @@
 {
   "id": "feasting-spores-ready",
   "name": "Feasting Spores",
-  "iconPath": "https://runescape.wiki/images/Deathspore_arrows_5.png?cfd6d",
+  "iconPath": "/icons/wiki/deathspore-arrows-5.png",
   "wikiUrl": "https://runescape.wiki/w/Deathspore_arrows",
   "category": "temporary",
   "sourceType": "item",

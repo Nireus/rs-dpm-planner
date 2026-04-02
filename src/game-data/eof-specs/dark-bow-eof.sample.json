@@ -1,7 +1,7 @@
 {
   "id": "dark-bow-eof",
   "name": "Dark Bow (EOF)",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dark_Bow.png",
+  "iconPath": "/icons/wiki/dark-bow.png",
   "hoverSummary": "EOF special | -25% adrenaline | 2 hits",
   "detailLines": [
     "Stored Dark Bow special attack for Essence of Finality.",

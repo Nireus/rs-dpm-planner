@@ -3,7 +3,7 @@
   "name": "Tumeken's Light",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Tumeken%27s_Light.png",
+  "iconPath": "/icons/wiki/tumekens-light.png",
   "wikiUrl": "https://runescape.wiki/w/Tumeken%27s_Light",
   "combatStyleTags": ["melee"],
   "tier": 95,

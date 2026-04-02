@@ -3,7 +3,7 @@
   "name": "Off-hand dragon claw",
   "category": "weapon",
   "slot": "offHand",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Off-hand_dragon_claw.png",
+  "iconPath": "/icons/wiki/off-hand-dragon-claw.png",
   "wikiUrl": "https://runescape.wiki/w/Off-hand_dragon_claw",
   "combatStyleTags": ["melee"],
   "tier": 60,

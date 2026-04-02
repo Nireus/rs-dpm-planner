@@ -3,7 +3,7 @@
   "name": "Bow of the Last Guardian",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/images/Augmented_Bow_of_the_Last_Guardian.png",
+  "iconPath": "/icons/wiki/augmented-bow-of-the-last-guardian.png",
   "hoverSummary": "Tier 95 two-handed shortbow. 1368 ability damage, 2765 accuracy, 6-tick speed, range 9.",
   "detailLines": [
     "Requires level 95 Ranged to wield.",

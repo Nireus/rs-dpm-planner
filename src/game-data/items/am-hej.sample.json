@@ -3,7 +3,7 @@
   "name": "Am-hej",
   "category": "jewellery",
   "slot": "amulet",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Am-hej.png",
+  "iconPath": "/icons/wiki/am-hej.png",
   "wikiUrl": "https://runescape.wiki/w/Am-hej",
   "combatStyleTags": ["melee"],
   "offensiveStats": {

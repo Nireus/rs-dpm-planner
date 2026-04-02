@@ -8,11 +8,10 @@ import { formatEquipmentSlot } from '../../core/gear/gear-builder.utils';
 import type { PlannerBuffLaneBar } from './rotation-planner-buff-lane';
 import type { PlannerCooldownLaneBar } from './rotation-planner-cooldown-lane';
 import { getAbilitySegment, getAbilityTimelineSpan } from '../../core/rotation-planner/rotation-planner.utils';
-
 export const PERFECT_EQUILIBRIUM_ICON_PATH =
-  'https://runescape.wiki/images/Perfect_Equilibrium_%28self_status%29.png';
+  '/icons/wiki/equilibrium.png';
 export const BLOODLUST_ICON_PATH =
-  'https://runescape.wiki/images/Bloodlust_%28max_stacks%29.png?59e1f';
+  '/icons/wiki/bloodlust-max-stacks.png';
 const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 const HEADER_ROW_HEIGHT_REM = 2.7;
@@ -736,3 +735,4 @@ function spendsBloodlustStacks(definition: AbilityDefinition): boolean {
     effect.stacks > 0
   ) ?? false;
 }
+

@@ -3,7 +3,7 @@
   "name": "Sirenic mask",
   "category": "armor",
   "slot": "head",
-  "iconPath": "https://runescape.wiki/images/Sirenic_mask.png",
+  "iconPath": "/icons/wiki/sirenic-mask.png",
   "combatStyleTags": ["ranged"],
   "tier": 90,
   "offensiveStats": {

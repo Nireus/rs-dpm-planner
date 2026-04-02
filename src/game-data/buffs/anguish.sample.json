@@ -1,7 +1,7 @@
 {
   "id": "anguish",
   "name": "Anguish",
-  "iconPath": "https://runescape.wiki/images/Anguish.png?b3cf2",
+  "iconPath": "/icons/wiki/anguish.png",
   "wikiUrl": "https://runescape.wiki/w/Prayer",
   "category": "prayer",
   "sourceType": "player-config",

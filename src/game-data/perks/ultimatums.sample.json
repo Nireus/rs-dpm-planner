@@ -1,7 +1,7 @@
 {
   "id": "ultimatums",
   "name": "Ultimatums",
-  "iconPath": "https://runescape.wiki/images/thumb/Ultimatums.png/25px-Ultimatums.png?ce2d1",
+  "iconPath": "/icons/wiki/ultimatums.png",
   "wikiUrl": "https://runescape.wiki/w/Ultimatums",
   "effectRefs": ["ultimatums"],
   "description": "Ultimate abilities gain 3% + 1% base damage per rank."

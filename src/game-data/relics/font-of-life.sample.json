@@ -1,7 +1,7 @@
 {
   "id": "font-of-life",
   "name": "Font of Life",
-  "iconPath": "https://runescape.wiki/images/thumb/Font_of_Life.png/40px-Font_of_Life.png?05fb8",
+  "iconPath": "/icons/wiki/font-of-life.png",
   "wikiUrl": "https://runescape.wiki/w/Font_of_Life",
   "monolithEnergy": 50,
   "effectRefs": ["font-of-life"],

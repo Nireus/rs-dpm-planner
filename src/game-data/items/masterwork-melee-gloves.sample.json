@@ -3,7 +3,7 @@
   "name": "Masterwork melee gloves",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Masterwork_melee_gloves.png",
+  "iconPath": "/icons/wiki/masterwork-melee-gloves.png",
   "wikiUrl": "https://runescape.wiki/w/Masterwork_melee_equipment",
   "combatStyleTags": ["melee"],
   "tier": 90,

@@ -3,7 +3,7 @@
   "name": "Laceration boots",
   "category": "armor",
   "slot": "feet",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Laceration_boots.png",
+  "iconPath": "/icons/wiki/laceration-boots.png",
   "wikiUrl": "https://runescape.wiki/w/Laceration_boots",
   "combatStyleTags": ["melee"],
   "tier": 80,

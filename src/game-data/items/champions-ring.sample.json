@@ -3,7 +3,7 @@
   "name": "Champion's ring",
   "category": "jewellery",
   "slot": "ring",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Champion%27s_ring.png",
+  "iconPath": "/icons/wiki/champions-ring.png",
   "wikiUrl": "https://runescape.wiki/w/Champion%27s_ring",
   "combatStyleTags": ["melee"],
   "offensiveStats": {

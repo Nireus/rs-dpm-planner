@@ -3,7 +3,7 @@
   "name": "Masterwork bow",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/images/Masterwork_bow.png",
+  "iconPath": "/icons/wiki/masterwork-bow.png",
   "combatStyleTags": ["ranged"],
   "tier": 99,
   "offensiveStats": {

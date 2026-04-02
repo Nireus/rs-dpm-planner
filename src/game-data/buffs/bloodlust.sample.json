@@ -1,7 +1,7 @@
 {
   "id": "bloodlust",
   "name": "Bloodlust",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Bloodlust.png",
+  "iconPath": "/icons/wiki/bloodlust.png",
   "wikiUrl": "https://runescape.wiki/w/Bloodlust",
   "category": "temporary",
   "sourceType": "ability",

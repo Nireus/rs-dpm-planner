@@ -3,7 +3,7 @@
   "name": "Wen arrows",
   "category": "ammo",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/images/Wen_arrow_5.png",
+  "iconPath": "/icons/wiki/wen-arrow-5.png",
   "combatStyleTags": ["ranged"],
   "tier": 95,
   "offensiveStats": {

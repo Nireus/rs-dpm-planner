@@ -3,7 +3,7 @@
   "name": "Reaver's ring",
   "category": "jewellery",
   "slot": "ring",
-  "iconPath": "https://runescape.wiki/images/Reaver%27s_ring.png",
+  "iconPath": "/icons/wiki/reavers-ring.png",
   "hoverSummary": "High-offense ring often used in PvM setups.",
   "detailLines": [
     "High-offense hybrid ring often favored in damage-focused setups.",

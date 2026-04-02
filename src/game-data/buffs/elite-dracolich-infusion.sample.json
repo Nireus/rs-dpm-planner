@@ -1,7 +1,7 @@
 {
   "id": "elite-dracolich-infusion",
   "name": "Elite Dracolich infusion",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Elite_Dracolich_hauberk.png",
+  "iconPath": "/icons/wiki/elite-dracolich-hauberk.png",
   "wikiUrl": "https://runescape.wiki/w/Elite_Dracolich_armour",
   "category": "temporary",
   "sourceType": "item",

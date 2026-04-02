@@ -3,7 +3,7 @@
   "name": "Elite dracolich vambraces",
   "category": "armor",
   "slot": "hands",
-  "iconPath": "https://runescape.wiki/images/Elite_Dracolich_vambraces.png",
+  "iconPath": "/icons/wiki/elite-dracolich-vambraces.png",
   "combatStyleTags": ["ranged"],
   "tier": 92,
   "offensiveStats": {
