@@ -32,6 +32,17 @@
     "min": 90,
     "max": 110
   },
-  "effectRefs": ["piercing-shot"],
-  "description": "Fire two piercing shots. Each hit reduces Snipe cooldown by 2.4 seconds."
+  "effectRefs": [
+    "piercing-shot"
+  ],
+  "description": "Fire two piercing shots. Each hit reduces Snipe cooldown by 2.4 seconds.",
+  "iconPath": "/icons/wiki/piercing-shot.png",
+  "hoverSummary": "Basic | 5 ticks | 2 hits | +9% adrenaline",
+  "detailLines": [
+    "45%-55% ranged damage per hit.",
+    "2 hits.",
+    "Each hit reduces Snipe cooldown by 2.4s.",
+    "Fleeting boots increase that reduction by 1.2s per hit."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Piercing_Shot"
 }

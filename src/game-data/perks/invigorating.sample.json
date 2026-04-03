@@ -3,6 +3,10 @@
   "name": "Invigorating",
   "iconPath": "/icons/wiki/invigorating.png",
   "wikiUrl": "https://runescape.wiki/w/Invigorating",
-  "effectRefs": ["invigorating"],
-  "description": "Increases adrenaline gained from basic abilities by 5% per rank."
+  "effectRefs": [
+    "invigorating"
+  ],
+  "description": "Increases adrenaline gained from basic abilities by 5% per rank.",
+  "maxRank": 4,
+  "shortCode": "In"
 }

@@ -3,6 +3,10 @@
   "name": "Precise",
   "iconPath": "/icons/wiki/precise.png",
   "wikiUrl": "https://runescape.wiki/w/Precise",
-  "effectRefs": ["precise"],
-  "description": "Increases minimum damage by 1.5% per rank of maximum damage."
+  "effectRefs": [
+    "precise"
+  ],
+  "description": "Increases minimum damage by 1.5% per rank of maximum damage.",
+  "maxRank": 6,
+  "shortCode": "P"
 }

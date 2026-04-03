@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 15
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -25,5 +27,13 @@
     "min": 520,
     "max": 570
   },
-  "description": "Strike the target with a massive overhead swing."
+  "description": "Strike the target with a massive overhead swing.",
+  "iconPath": "/icons/wiki/overpower.png",
+  "hoverSummary": "Ultimate | 50 ticks | 1 hit | -60% adrenaline",
+  "detailLines": [
+    "520%-570% melee damage.",
+    "Hits 3 ticks after cast.",
+    "Igneous capes upgrade it to a stronger two-hit version."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Overpower"
 }

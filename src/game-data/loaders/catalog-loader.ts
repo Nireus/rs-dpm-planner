@@ -47,6 +47,15 @@ export type GameDataLoadResult =
 
 export type TextFileLoader = (path: string) => Promise<string>;
 
+export interface BundledGameDataDocument {
+  items: unknown[];
+  abilities: unknown[];
+  buffs: unknown[];
+  eofSpecs: unknown[];
+  perks: unknown[];
+  relics: unknown[];
+}
+
 async function loadDefinitions<T>(
   paths: readonly string[],
   loadText: TextFileLoader,
@@ -85,6 +94,35 @@ async function loadDefinitions<T>(
   return { definitions, issues };
 }
 
+function loadDefinitionsFromDocuments<T>(
+  entries: unknown[],
+  category: keyof BundledGameDataDocument,
+  validate: (
+    input: unknown,
+  ) => { success: true; data: T } | { success: false; errors: { path: string; message: string }[] },
+): { definitions: T[]; issues: GameDataLoadIssue[] } {
+  const definitions: T[] = [];
+  const issues: GameDataLoadIssue[] = [];
+
+  entries.forEach((entry, index) => {
+    const result = validate(entry);
+
+    if (!result.success) {
+      issues.push(
+        ...result.errors.map((error) => ({
+          path: `bundle.${category}[${index}]:${error.path}`,
+          message: error.message,
+        })),
+      );
+      return;
+    }
+
+    definitions.push(result.data);
+  });
+
+  return { definitions, issues };
+}
+
 export async function loadSampleGameData(
   manifest: SampleGameDataManifest,
   loadText: TextFileLoader,
@@ -97,6 +135,49 @@ export async function loadSampleGameData(
     loadDefinitions(manifest.perks, loadText, validatePerkDefinition),
     loadDefinitions(manifest.relics, loadText, validateRelicDefinition),
   ]);
+
+  return finalizeGameDataLoad({
+    itemLoad,
+    abilityLoad,
+    buffLoad,
+    eofSpecLoad,
+    perkLoad,
+    relicLoad,
+  });
+}
+
+export function loadBundledGameData(document: unknown): GameDataLoadResult {
+  if (!isBundledGameDataDocument(document)) {
+    return {
+      success: false,
+      issues: [
+        {
+          path: 'bundle',
+          message: 'Expected bundled game-data document with array sections for items, abilities, buffs, eofSpecs, perks, and relics.',
+        },
+      ],
+    };
+  }
+
+  return finalizeGameDataLoad({
+    itemLoad: loadDefinitionsFromDocuments(document.items, 'items', validateItemDefinition),
+    abilityLoad: loadDefinitionsFromDocuments(document.abilities, 'abilities', validateAbilityDefinition),
+    buffLoad: loadDefinitionsFromDocuments(document.buffs, 'buffs', validateBuffDefinition),
+    eofSpecLoad: loadDefinitionsFromDocuments(document.eofSpecs, 'eofSpecs', validateEofSpecDefinition),
+    perkLoad: loadDefinitionsFromDocuments(document.perks, 'perks', validatePerkDefinition),
+    relicLoad: loadDefinitionsFromDocuments(document.relics, 'relics', validateRelicDefinition),
+  });
+}
+
+function finalizeGameDataLoad(input: {
+  itemLoad: { definitions: ItemDefinition[]; issues: GameDataLoadIssue[] };
+  abilityLoad: { definitions: AbilityDefinition[]; issues: GameDataLoadIssue[] };
+  buffLoad: { definitions: BuffDefinition[]; issues: GameDataLoadIssue[] };
+  eofSpecLoad: { definitions: EofSpecDefinition[]; issues: GameDataLoadIssue[] };
+  perkLoad: { definitions: PerkDefinition[]; issues: GameDataLoadIssue[] };
+  relicLoad: { definitions: RelicDefinition[]; issues: GameDataLoadIssue[] };
+}): GameDataLoadResult {
+  const { itemLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad } = input;
 
   const itemNormalization = normalizeById(itemLoad.definitions);
   const abilityNormalization = normalizeById(abilityLoad.definitions);
@@ -162,6 +243,22 @@ export async function loadSampleGameData(
     data: normalizedCatalog,
     issues: [],
   };
+}
+
+function isBundledGameDataDocument(input: unknown): input is BundledGameDataDocument {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    return false;
+  }
+
+  const record = input as Record<string, unknown>;
+  return (
+    Array.isArray(record['items']) &&
+    Array.isArray(record['abilities']) &&
+    Array.isArray(record['buffs']) &&
+    Array.isArray(record['eofSpecs']) &&
+    Array.isArray(record['perks']) &&
+    Array.isArray(record['relics'])
+  );
 }
 
 function validateCatalogReferences(catalog: GameDataCatalog): GameDataLoadIssue[] {

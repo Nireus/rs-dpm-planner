@@ -41,6 +41,7 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+/public/game-data/catalog.sample.json
 
 /.npm-cache
 

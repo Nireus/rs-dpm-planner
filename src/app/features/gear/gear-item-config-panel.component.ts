@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
-import type { ItemDefinition } from '../../../game-data/types';
-import type { CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
+import type { ItemDefinition, PerkDefinition } from '../../../game-data/types';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import type { ResolvedItemInstanceViewModel } from './gear-builder.store';
 import { isAugmentableSlot } from './gear-builder.utils';
@@ -31,7 +30,7 @@ export class GearItemConfigPanelComponent {
   };
   private readonly gameDataStore = inject(GameDataStoreService);
   @Input({ required: true }) item!: ItemDefinition;
-  @Input({ required: true }) perkOptions: CuratedPerkOption[] = [];
+  @Input({ required: true }) perkOptions: PerkDefinition[] = [];
   @Input() resolvedInstance: ResolvedItemInstanceViewModel | null = null;
 
   @Output() updateSocketPerks = new EventEmitter<{ socketIndex: number; perkIds: string[] }>();
@@ -58,12 +57,12 @@ export class GearItemConfigPanelComponent {
     return this.selectedSocketPerkIds(socketIndex).includes(perkId);
   }
 
-  selectedSocketPerks(socketIndex: number): CuratedPerkOption[] {
+  selectedSocketPerks(socketIndex: number): PerkDefinition[] {
     const selectedIds = this.selectedSocketPerkIds(socketIndex);
     return this.perkOptions.filter((perk) => selectedIds.includes(perk.id));
   }
 
-  selectedSocketPerkAt(socketIndex: number, selectionIndex: number): CuratedPerkOption | null {
+  selectedSocketPerkAt(socketIndex: number, selectionIndex: number): PerkDefinition | null {
     return this.selectedSocketPerks(socketIndex)[selectionIndex] ?? null;
   }
 
@@ -90,10 +89,10 @@ export class GearItemConfigPanelComponent {
       return 'Choose up to 2 perks';
     }
 
-    return selected.map((perk) => perk.label).join(', ');
+    return selected.map((perk) => perk.name).join(', ');
   }
 
-  filteredPerkOptions(socketIndex: number): CuratedPerkOption[] {
+  filteredPerkOptions(socketIndex: number): PerkDefinition[] {
     const query = this.perkSearchQuery(socketIndex).trim().toLowerCase();
 
     if (!query) {
@@ -101,7 +100,7 @@ export class GearItemConfigPanelComponent {
     }
 
     return this.perkOptions.filter((perk) =>
-      `${perk.label} ${perk.shortCode} ${perk.id}`.toLowerCase().includes(query),
+      `${perk.name} ${perk.shortCode ?? ''} ${perk.id}`.toLowerCase().includes(query),
     );
   }
 

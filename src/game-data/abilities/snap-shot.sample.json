@@ -32,5 +32,13 @@
     "min": 270,
     "max": 310
   },
-  "description": "Burst enhanced ability with two quick hits."
+  "description": "Burst enhanced ability with two quick hits.",
+  "iconPath": "/icons/wiki/snap-shot.png",
+  "hoverSummary": "Enhanced | 0 ticks | 2 hits | -25% adrenaline",
+  "detailLines": [
+    "135%-155% ranged damage per hit.",
+    "2-hit single-target enhanced ability.",
+    "Damage is 60% effective in PvP."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Snap_Shot"
 }

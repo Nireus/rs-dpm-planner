@@ -10,5 +10,13 @@
     "min": 0,
     "max": 0
   },
-  "description": "Dive forward. Move up to 10 tiles towards the targeted tile."
+  "description": "Dive forward. Move up to 10 tiles towards the targeted tile.",
+  "iconPath": "/icons/wiki/dive.png",
+  "hoverSummary": "Utility | 34 ticks | Self-target | 0% adrenaline",
+  "detailLines": [
+    "Moves up to 10 tiles toward the targeted tile.",
+    "Can be cast during the global cooldown.",
+    "Requires level 5 Agility on the live game page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Dive"
 }

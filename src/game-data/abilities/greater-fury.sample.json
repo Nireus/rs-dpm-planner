@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 21
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Strike at the target with unmatched fury. Your next melee attack within 15s is guaranteed to critically strike."
+  "description": "Strike at the target with unmatched fury. Your next melee attack within 15s is guaranteed to critically strike.",
+  "iconPath": "/icons/wiki/greater-fury.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "120%-140% melee damage.",
+    "Your next melee attack within 15s is guaranteed to critically strike.",
+    "Upgraded version of Fury."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Fury"
 }

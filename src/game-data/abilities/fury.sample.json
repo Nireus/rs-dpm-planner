@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 21
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Swing your weapon at the target with fury. Your next melee attack has +25% critical strike chance."
+  "description": "Swing your weapon at the target with fury. Your next melee attack has +25% critical strike chance.",
+  "iconPath": "/icons/wiki/fury.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "110%-130% melee damage.",
+    "Your next melee attack gains +25% critical strike chance.",
+    "Core dual-wield-capable melee basic."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Fury"
 }

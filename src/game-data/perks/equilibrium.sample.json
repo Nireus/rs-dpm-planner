@@ -3,6 +3,10 @@
   "name": "Equilibrium",
   "iconPath": "/icons/wiki/equilibrium.png",
   "wikiUrl": "https://runescape.wiki/w/Equilibrium",
-  "effectRefs": ["equilibrium"],
-  "description": "Ability damage is increased by 10%, plus an additional 1% per rank, but prevents critically striking."
+  "effectRefs": [
+    "equilibrium"
+  ],
+  "description": "Ability damage is increased by 10%, plus an additional 1% per rank, but prevents critically striking.",
+  "maxRank": 4,
+  "shortCode": "Eq"
 }

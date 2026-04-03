@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
-import type { CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
+import type { EquipmentSlot, ItemDefinition, PerkDefinition } from '../../../game-data/types';
 import type { ResolvedItemInstanceViewModel } from './gear-builder.store';
 import { GearItemConfigPanelComponent } from './gear-item-config-panel.component';
 
@@ -16,7 +15,7 @@ export class GearItemDetailDialogComponent {
   @Input({ required: true }) item!: ItemDefinition;
   @Input() resolvedInstance: ResolvedItemInstanceViewModel | null = null;
   @Input() resolvedIconPath: string | null = null;
-  @Input() perkOptions: CuratedPerkOption[] = [];
+  @Input() perkOptions: PerkDefinition[] = [];
   @Input() detailLines: string[] = [];
   @Input({ required: true }) formatSlot!: (slot: EquipmentSlot) => string;
   @Input({ required: true }) defaultSummary!: (item: ItemDefinition) => string;

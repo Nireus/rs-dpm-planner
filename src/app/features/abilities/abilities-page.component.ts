@@ -8,7 +8,6 @@ import {
   groupAbilitiesBySubtype,
 } from '../../core/abilities/ability-style-tabs';
 import type { AbilityDefinition, CombatStyle } from '../../../game-data/types';
-import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
@@ -70,8 +69,8 @@ export class AbilitiesPageComponent {
     return Object.values(catalog.abilities)
       .filter((ability) => !ability.displayHints?.hiddenFromUi)
       .map((ability) =>
-        buildAbilityBrowserEntry(simulationConfig, ability, (resolvedAbility, curatedDetailLines) =>
-        this.buildAbilityDetailLines(resolvedAbility, curatedDetailLines),
+        buildAbilityBrowserEntry(simulationConfig, ability, (resolvedAbility) =>
+          this.buildAbilityDetailLines(resolvedAbility),
         ),
       );
   });
@@ -223,10 +222,9 @@ export class AbilitiesPageComponent {
 
   private buildAbilityDetailLines(
     ability: AbilityDefinition,
-    curatedDetailLines?: string[],
   ): string[] {
-    if (curatedDetailLines?.length) {
-      return curatedDetailLines;
+    if (ability.detailLines?.length) {
+      return ability.detailLines;
     }
 
     const lines = [
@@ -244,7 +242,7 @@ export class AbilitiesPageComponent {
 export function buildAbilityBrowserEntry(
   simulationConfig: Parameters<typeof resolveEffectiveAbilityDefinition>[0],
   ability: AbilityDefinition,
-  buildDetailLines: (ability: AbilityDefinition, curatedDetailLines?: string[]) => string[],
+  buildDetailLines: (ability: AbilityDefinition) => string[],
 ): AbilityBrowserEntry {
   const resolvedAbility = resolveEffectiveAbilityDefinition(simulationConfig, {
     id: `ability-browser:${ability.id}`,
@@ -255,15 +253,11 @@ export function buildAbilityBrowserEntry(
       abilityId: ability.id,
     },
   }) ?? ability;
-  const curatedUi = CURATED_ABILITY_UI[ability.id];
   const displayHints = resolvedAbility.displayHints;
 
   return {
     ...resolvedAbility,
-    iconPath: curatedUi?.iconPath ?? resolvedAbility.iconPath,
-    hoverSummary: curatedUi?.hoverSummary ?? resolvedAbility.hoverSummary,
-    wikiUrl: curatedUi?.wikiUrl ?? resolvedAbility.wikiUrl,
-    detailLines: buildDetailLines(resolvedAbility, curatedUi?.detailLines),
+    detailLines: buildDetailLines(resolvedAbility),
     hitCount: resolvedAbility.hitSchedule.length,
     displayHoverSummary: displayHints?.hoverSummary,
     displayHitCountLabel: displayHints?.hitCountLabel,

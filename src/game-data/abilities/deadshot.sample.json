@@ -53,7 +53,9 @@
       "id": "deadshot",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["equipped-effect:igneous-kal-xil-passive"]
+        "requiredEquipmentTags": [
+          "equipped-effect:igneous-kal-xil-passive"
+        ]
       },
       "hitSchedule": [
         {
@@ -130,7 +132,9 @@
       "id": "deadshot",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["equipped-effect:igneous-kal-zuk-passive"]
+        "requiredEquipmentTags": [
+          "equipped-effect:igneous-kal-zuk-passive"
+        ]
       },
       "hitSchedule": [
         {
@@ -204,5 +208,13 @@
       }
     }
   ],
-  "description": "Fire an enchanted shot at the target, striking them multiple times. Igneous capes change it into an 8-hit version with lower per-hit damage."
+  "description": "Fire an enchanted shot at the target, striking them multiple times. Igneous capes change it into an 8-hit version with lower per-hit damage.",
+  "iconPath": "/icons/wiki/deadshot.png",
+  "hoverSummary": "Ultimate | 50 ticks | 4 hits | -60% adrenaline",
+  "detailLines": [
+    "Base version: 105%-125% ranged damage per hit for 4 near-instant hits.",
+    "Igneous capes change it to 55%-75% per hit for 8 near-instant hits.",
+    "Damage is 60% effective in PvP."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Deadshot"
 }

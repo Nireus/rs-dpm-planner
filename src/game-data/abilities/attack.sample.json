@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 1
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Attack the target. Generates 1 Bloodlust stack."
+  "description": "Attack the target. Generates 1 Bloodlust stack.",
+  "iconPath": "/icons/wiki/attack-ability.png",
+  "hoverSummary": "Basic | 3 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "110%-130% melee damage.",
+    "Default melee basic attack.",
+    "Generates 1 Bloodlust stack on the live page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Attack_(ability)"
 }

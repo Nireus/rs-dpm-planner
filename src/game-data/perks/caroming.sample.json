@@ -3,6 +3,10 @@
   "name": "Caroming",
   "iconPath": "/icons/wiki/caroming.png",
   "wikiUrl": "https://runescape.wiki/w/Caroming",
-  "effectRefs": ["caroming"],
-  "description": "Ricochet and Greater Ricochet deal additional ability damage per rank."
+  "effectRefs": [
+    "caroming"
+  ],
+  "description": "Ricochet and Greater Ricochet deal additional ability damage per rank.",
+  "maxRank": 4,
+  "shortCode": "C"
 }

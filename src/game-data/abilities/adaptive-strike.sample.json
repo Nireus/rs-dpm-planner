@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 7
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -30,7 +32,9 @@
       "id": "adaptive-strike",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["melee-dual-wield"]
+        "requiredEquipmentTags": [
+          "melee-dual-wield"
+        ]
       },
       "hitSchedule": [
         {
@@ -69,5 +73,14 @@
     "damageRangeLabel": "120%-140% (main-hand / 2h), or 2 x 60%-75% (dual-wield)",
     "hitScheduleSummary": "1 hit at tick 0, or 2 same-tick hits while dual-wielding."
   },
-  "description": "Channel your weapons into an adaptive strike. Main-hand-only and two-handed setups use one hit, while dual-wield uses two hits."
+  "description": "Channel your weapons into an adaptive strike. Main-hand-only and two-handed setups use one hit, while dual-wield uses two hits.",
+  "iconPath": "/icons/wiki/adaptive-strike.png",
+  "hoverSummary": "Basic | 9 ticks | 1 hit | +12% adrenaline",
+  "detailLines": [
+    "Main-hand-only and two-handed setups deal a single 120%-140% hit.",
+    "Dual-wield setups deal two hits of 60%-75% each.",
+    "Requires a melee weapon.",
+    "Two-handed live behavior also gains cone AoE, which remains descriptive-only in the single-target simulator."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Adaptive_Strike"
 }

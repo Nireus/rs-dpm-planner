@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 76
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [],
   "baseDamage": {
@@ -36,5 +38,13 @@
       "stacks": 2
     }
   ],
-  "description": "Go berserk, empowering yourself. Melee attacks deal 1.75x damage for 19.8s, but you take 25% more damage."
+  "description": "Go berserk, empowering yourself. Melee attacks deal 1.75x damage for 19.8s, but you take 25% more damage.",
+  "iconPath": "/icons/wiki/berserk.png",
+  "hoverSummary": "Ultimate | 100 ticks | Self-target | -100% adrenaline",
+  "detailLines": [
+    "Empowers melee attacks for 19.8s.",
+    "Melee damage dealt is multiplied by 1.75x.",
+    "Damage taken is increased by 25%."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Berserk"
 }

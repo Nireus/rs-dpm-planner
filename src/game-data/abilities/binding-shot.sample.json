@@ -24,6 +24,17 @@
     "min": 65,
     "max": 75
   },
-  "effectRefs": ["binding-shot-bind"],
-  "description": "Fire a binding shot that stuns, binds, and can knock targets back with Scare Tactics."
+  "effectRefs": [
+    "binding-shot-bind"
+  ],
+  "description": "Fire a binding shot that stuns, binds, and can knock targets back with Scare Tactics.",
+  "iconPath": "/icons/wiki/binding-shot.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "65%-75% ranged damage.",
+    "Stuns the target for 1.2s and binds for 9.6s.",
+    "Generates 9% adrenaline.",
+    "Can gain an extra charge after Scare Tactics."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Binding_Shot"
 }

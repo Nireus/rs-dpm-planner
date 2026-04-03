@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 31
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Strike the target with the back of the hand. Stuns and binds the target for 1.8s."
+  "description": "Strike the target with the back of the hand. Stuns and binds the target for 1.8s.",
+  "iconPath": "/icons/wiki/backhand.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "95%-105% melee damage.",
+    "Stuns and binds the target for 1.8s.",
+    "Single-hit melee control basic."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Backhand"
 }

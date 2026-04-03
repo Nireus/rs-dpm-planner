@@ -72,6 +72,16 @@
     "min": 121,
     "max": 149
   },
-  "effectRefs": ["greater-ricochet"],
-  "description": "Upgraded Ricochet."
+  "effectRefs": [
+    "greater-ricochet"
+  ],
+  "description": "Upgraded Ricochet.",
+  "iconPath": "/icons/wiki/greater-ricochet.png",
+  "hoverSummary": "Basic | 17 ticks | 7 hits | +9% adrenaline",
+  "detailLines": [
+    "Against a single target: 75%-85%, then 15%-20% twice, then 4%-6% four times.",
+    "All returning hits land one tick after the initial shot.",
+    "Caroming adds +4% ability damage per rank to every hit."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Ricochet"
 }

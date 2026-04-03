@@ -224,6 +224,14 @@ export function validatePerkDefinition(input: unknown): GameDataValidationResult
     pushError(errors, 'wikiUrl', 'Expected "wikiUrl" to be a string when present.');
   }
 
+  if (input['maxRank'] !== undefined && typeof input['maxRank'] !== 'number') {
+    pushError(errors, 'maxRank', 'Expected "maxRank" to be a number when present.');
+  }
+
+  if (input['shortCode'] !== undefined && typeof input['shortCode'] !== 'string') {
+    pushError(errors, 'shortCode', 'Expected "shortCode" to be a string when present.');
+  }
+
   if (errors.length > 0) {
     return { success: false, errors };
   }

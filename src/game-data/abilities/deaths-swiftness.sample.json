@@ -21,6 +21,16 @@
       "buffId": "deaths-swiftness-buff"
     }
   ],
-  "effectRefs": ["deaths-swiftness"],
-  "description": "Create a shroud of death that amplifies ranged damage while active."
+  "effectRefs": [
+    "deaths-swiftness"
+  ],
+  "description": "Create a shroud of death that amplifies ranged damage while active.",
+  "iconPath": "/icons/wiki/deaths-swiftness.png",
+  "hoverSummary": "Ultimate | 100 ticks | 1 hit | -100% adrenaline",
+  "detailLines": [
+    "Creates a shroud of death for 30s.",
+    "Ranged attacks deal 2.5x damage while inside.",
+    "Members-only ultimate."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Death's_Swiftness"
 }

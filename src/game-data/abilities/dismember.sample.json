@@ -8,7 +8,9 @@
     "levelRequirements": {
       "attack": 50
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -85,7 +87,9 @@
       "id": "dismember",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["equipped-effect:masterwork-spear-of-annihilation-passive"]
+        "requiredEquipmentTags": [
+          "equipped-effect:masterwork-spear-of-annihilation-passive"
+        ]
       },
       "hitSchedule": [
         {
@@ -191,6 +195,16 @@
       }
     }
   ],
-  "effectRefs": ["damage-over-time"],
-  "description": "Enhanced melee bleed with 8 live-timed hits and healing on dealt damage. The live recast chain into Slaughter and Massacre is not modeled yet."
+  "effectRefs": [
+    "damage-over-time"
+  ],
+  "description": "Enhanced melee bleed with 8 live-timed hits and healing on dealt damage. The live recast chain into Slaughter and Massacre is not modeled yet.",
+  "iconPath": "/icons/wiki/dismember.png",
+  "hoverSummary": "Enhanced | 40 ticks | 8 hits | 0% adrenaline",
+  "detailLines": [
+    "25%-31% melee damage per hit every 1.2s.",
+    "8-hit bleed with healing based on damage dealt.",
+    "Live recast chaining into Slaughter and Massacre is not modeled yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Dismember"
 }

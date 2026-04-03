@@ -3,6 +3,10 @@
   "name": "Aftershock",
   "iconPath": "/icons/wiki/aftershock.png",
   "wikiUrl": "https://runescape.wiki/w/Aftershock",
-  "effectRefs": ["aftershock"],
-  "description": "After dealing 50,000 damage, create an explosion centered on your current target."
+  "effectRefs": [
+    "aftershock"
+  ],
+  "description": "After dealing 50,000 damage, create an explosion centered on your current target.",
+  "maxRank": 4,
+  "shortCode": "A"
 }

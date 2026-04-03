@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 37
     },
-    "requiredEquipmentTags": ["melee-two-handed"]
+    "requiredEquipmentTags": [
+      "melee-two-handed"
+    ]
   },
   "hitSchedule": [
     {
@@ -40,5 +42,13 @@
       "stacks": 4
     }
   ],
-  "description": "Two-handed melee spin with a stronger follow-up area hit. Live cooldown reduction per enemy hit and Bloodlust extra hit are not simulated yet."
+  "description": "Two-handed melee spin with a stronger follow-up area hit. Live cooldown reduction per enemy hit and Bloodlust extra hit are not simulated yet.",
+  "iconPath": "/icons/wiki/hurricane.png",
+  "hoverSummary": "Enhanced | 34 ticks | 2 hits | -25% adrenaline",
+  "detailLines": [
+    "135%-165%, then 155%-185% melee damage to the main target.",
+    "Requires a two-handed melee weapon.",
+    "Live area hits and cooldown reduction per enemy hit are not simulated yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Hurricane"
 }

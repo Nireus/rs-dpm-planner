@@ -3,6 +3,10 @@
   "name": "Undead Slayer",
   "iconPath": "/icons/wiki/undead-slayer.png",
   "wikiUrl": "https://runescape.wiki/w/Undead_Slayer",
-  "effectRefs": ["undead-slayer"],
-  "description": "Deal 7% additional damage to undead."
+  "effectRefs": [
+    "undead-slayer"
+  ],
+  "description": "Deal 7% additional damage to undead.",
+  "maxRank": 1,
+  "shortCode": "US"
 }

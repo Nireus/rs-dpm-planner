@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 3
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "isChanneled": true,
   "channelDurationTicks": 8,
@@ -58,5 +60,13 @@
       "stacks": 4
     }
   ],
-  "description": "Channelled melee attack that lands 4 hits at live wiki timings. Bloodlust empowerment remains descriptive only until melee buff mechanics are implemented."
+  "description": "Channelled melee attack that lands 4 hits at live wiki timings. Bloodlust empowerment remains descriptive only until melee buff mechanics are implemented.",
+  "iconPath": "/icons/wiki/assault.png",
+  "hoverSummary": "Enhanced | 10 ticks | 4 hits | -25% adrenaline",
+  "detailLines": [
+    "130%-150% melee damage per hit every 1.2s.",
+    "4-hit channeled attack with live hit timings.",
+    "Bloodlust empowerment remains descriptive only for now."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Assault"
 }

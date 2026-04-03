@@ -25,5 +25,13 @@
     "min": 300,
     "max": 360
   },
-  "description": "Enhanced channeled ranged shot that resolves after 1.8 seconds."
+  "description": "Enhanced channeled ranged shot that resolves after 1.8 seconds.",
+  "iconPath": "/icons/wiki/snipe.png",
+  "hoverSummary": "Enhanced | 100 ticks | 1 hit | 0% adrenaline",
+  "detailLines": [
+    "300%-360% ranged damage after 1.8s.",
+    "Channeled precision shot.",
+    "Damage is 75% effective in PvP."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Snipe"
 }

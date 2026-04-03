@@ -109,7 +109,7 @@ describe('buildAbilityBrowserEntry', () => {
     const entry = buildAbilityBrowserEntry(
       createSimulationConfig(),
       createAbility(),
-      (_ability, curatedDetailLines) => curatedDetailLines ?? [],
+      (ability) => ability.detailLines ?? [],
     );
 
     expect(entry.hitCount).toBe(2);

@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 65
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Run up and ram the target. Moves up to 10 tiles, clears binds, and binds the target for 6.6s."
+  "description": "Run up and ram the target. Moves up to 10 tiles, clears binds, and binds the target for 6.6s.",
+  "iconPath": "/icons/wiki/barge.png",
+  "hoverSummary": "Basic | 34 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "75%-95% melee damage.",
+    "Moves up to 10 tiles to the target and clears binds.",
+    "Applies a bind on hit."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Barge"
 }

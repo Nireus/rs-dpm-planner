@@ -3,6 +3,10 @@
   "name": "Demon Slayer",
   "iconPath": "/icons/wiki/demon-slayer-perk.png",
   "wikiUrl": "https://runescape.wiki/w/Demon_Slayer_(perk)",
-  "effectRefs": ["demon-slayer"],
-  "description": "Deal 7% additional damage to demons."
+  "effectRefs": [
+    "demon-slayer"
+  ],
+  "description": "Deal 7% additional damage to demons.",
+  "maxRank": 1,
+  "shortCode": "DS"
 }

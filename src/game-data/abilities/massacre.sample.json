@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 75
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -78,7 +80,9 @@
       "id": "massacre",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["equipped-effect:masterwork-spear-of-annihilation-passive"]
+        "requiredEquipmentTags": [
+          "equipped-effect:masterwork-spear-of-annihilation-passive"
+        ]
       },
       "hitSchedule": [
         {
@@ -168,6 +172,16 @@
       }
     }
   ],
-  "effectRefs": ["damage-over-time"],
-  "description": "Curated melee bleed entry for the third live Dismember recast. It is modeled with a conservative 40-tick cooldown until recast-family support exists."
+  "effectRefs": [
+    "damage-over-time"
+  ],
+  "description": "Curated melee bleed entry for the third live Dismember recast. It is modeled with a conservative 40-tick cooldown until recast-family support exists.",
+  "iconPath": "/icons/wiki/massacre.png",
+  "hoverSummary": "Enhanced | Recast bleed | 7 hits | -25% adrenaline",
+  "detailLines": [
+    "110%-130% melee damage, then six 100% bleed hits every 2.4s.",
+    "Live version is the third Dismember recast.",
+    "Current data models it conservatively until recast-family support exists."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Massacre"
 }

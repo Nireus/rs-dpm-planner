@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CURATED_ABILITY_UI } from '../../../game-data/abilities/curated-ability-ui';
 import {
   ABILITY_STYLE_TABS,
   abilityStyleEmptyMessage,
@@ -127,17 +126,7 @@ export class RotationPlannerPageComponent {
   protected readonly nonGcdActions = this.plannerStore.nonGcdActions;
   protected readonly abilityActions = this.plannerStore.abilityActions;
   protected readonly abilityCatalog = computed<Record<string, AbilityDefinition>>(() => {
-    const abilities = this.gameDataStore.snapshot().catalog?.abilities ?? {};
-
-    return Object.fromEntries(
-      Object.values(abilities).map((definition) => [
-        definition.id,
-        {
-          ...definition,
-          ...CURATED_ABILITY_UI[definition.id],
-        },
-      ]),
-    );
+    return this.gameDataStore.snapshot().catalog?.abilities ?? {};
   });
   protected readonly validationIssues = computed(() => this.timelineResult().validationIssues);
   protected readonly actionValidationSummaryByAction = computed<Record<string, PlannerActionValidationSummary>>(() =>

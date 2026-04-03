@@ -29,7 +29,9 @@
       "id": "ranged",
       "priority": 100,
       "when": {
-        "requiredEquipmentTags": ["equipped-effect:gloomfire-darkfang"]
+        "requiredEquipmentTags": [
+          "equipped-effect:gloomfire-darkfang"
+        ]
       },
       "hitSchedule": [
         {
@@ -53,8 +55,18 @@
         "min": 90,
         "max": 110
       },
-      "effectRefs": ["gloomfire-darkfang"]
+      "effectRefs": [
+        "gloomfire-darkfang"
+      ]
     }
   ],
-  "description": "Attack the target with the default ranged basic attack."
+  "description": "Attack the target with the default ranged basic attack.",
+  "iconPath": "/icons/wiki/ranged-ability.png",
+  "hoverSummary": "Basic | 3 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "90%-110% ranged damage.",
+    "Default ranged basic attack.",
+    "Automatically triggered when auto attack is enabled."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Ranged_(ability)"
 }

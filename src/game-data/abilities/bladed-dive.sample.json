@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 65
     },
-    "requiredEquipmentTags": ["melee-dual-wield"]
+    "requiredEquipmentTags": [
+      "melee-dual-wield"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Dash forward and strike nearby enemies. Live behavior can be used during GCD, but that utility timing still needs dedicated action-model support."
+  "description": "Dash forward and strike nearby enemies. Live behavior can be used during GCD, but that utility timing still needs dedicated action-model support.",
+  "iconPath": "/icons/wiki/bladed-dive.png",
+  "hoverSummary": "Basic | 34 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "75%-95% melee damage in the current curated baseline.",
+    "Requires dual-wield melee weapons.",
+    "Live during-GCD movement utility still needs dedicated action-model support."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Bladed_Dive"
 }

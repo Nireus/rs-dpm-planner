@@ -1,4 +1,4 @@
-import { loadSampleGameData } from './catalog-loader';
+import { loadBundledGameData, loadSampleGameData } from './catalog-loader';
 import type { SampleGameDataManifest } from './sample-manifest';
 
 describe('loadSampleGameData', () => {
@@ -155,6 +155,61 @@ describe('loadSampleGameData', () => {
           '/abilities/bad-style-ability.json:style',
         ]),
       );
+    }
+  });
+});
+
+describe('loadBundledGameData', () => {
+  it('loads a bundled catalog document and keeps JSON-backed presentation metadata', () => {
+    const result = loadBundledGameData({
+      items: [{
+        id: 'bolg',
+        name: 'Bow of the Last Guardian',
+        category: 'weapon',
+        combatStyleTags: ['ranged'],
+      }],
+      abilities: [{
+        id: 'rapid-fire',
+        name: 'Rapid Fire',
+        iconPath: '/icons/wiki/rapid-fire.png',
+        hoverSummary: 'Enhanced | 34 ticks | 8 hits | -25% adrenaline',
+        detailLines: ['8-hit channeled attack.'],
+        wikiUrl: 'https://runescape.wiki/w/Rapid_Fire',
+        style: 'ranged',
+        subtype: 'enhanced',
+        cooldownTicks: 17,
+        hitSchedule: [],
+        baseDamage: {
+          min: 60,
+          max: 120,
+        },
+      }],
+      buffs: [{
+        id: 'feasting-spores-ready',
+        name: 'Feasting Spores',
+        category: 'temporary',
+        sourceType: 'item',
+      }],
+      eofSpecs: [],
+      perks: [{
+        id: 'precise',
+        name: 'Precise',
+        maxRank: 6,
+        shortCode: 'P',
+      }],
+      relics: [{
+        id: 'fury-of-the-small',
+        name: 'Fury of the Small',
+      }],
+    });
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.abilities['rapid-fire'].iconPath).toBe('/icons/wiki/rapid-fire.png');
+      expect(result.data.abilities['rapid-fire'].detailLines).toEqual(['8-hit channeled attack.']);
+      expect(result.data.perks['precise'].maxRank).toBe(6);
+      expect(result.data.perks['precise'].shortCode).toBe('P');
     }
   });
 });

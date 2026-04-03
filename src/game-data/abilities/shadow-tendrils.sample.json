@@ -32,6 +32,17 @@
       "durationTicks": 6
     }
   ],
-  "effectRefs": ["critical-strike-chance:+100%", "shadow-tendrils"],
-  "description": "Guaranteed critical strike that damages the target and extends Shadow Imbued."
+  "effectRefs": [
+    "critical-strike-chance:+100%",
+    "shadow-tendrils"
+  ],
+  "description": "Guaranteed critical strike that damages the target and extends Shadow Imbued.",
+  "iconPath": "/icons/wiki/shadow-tendrils.png",
+  "hoverSummary": "Enhanced | 75 ticks | 1 hit | 0% adrenaline",
+  "detailLines": [
+    "200%-270% ranged damage.",
+    "Deals 100%-135% self-damage.",
+    "Guaranteed critical strike and extends Shadow Imbued by 3.6s."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Shadow_Tendrils"
 }

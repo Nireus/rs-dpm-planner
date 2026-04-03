@@ -5,7 +5,9 @@
   "subtype": "special",
   "cooldownTicks": 0,
   "requires": {
-    "requiredEquipmentTags": ["equipped-effect:weapon-special-access"]
+    "requiredEquipmentTags": [
+      "equipped-effect:weapon-special-access"
+    ]
   },
   "hitSchedule": [],
   "baseDamage": {
@@ -15,5 +17,13 @@
   "specialDispatch": {
     "source": "equipped-weapon"
   },
-  "description": "Constitution special ability that activates the special attack of the currently equipped weapon."
+  "description": "Constitution special ability that activates the special attack of the currently equipped weapon.",
+  "iconPath": "/icons/wiki/weapon-special-attack.png",
+  "hoverSummary": "Constitution | Special | 0 ticks | Adrenaline varies",
+  "detailLines": [
+    "Generic special attack ability for equipped weapons that support one.",
+    "Requires an equipped weapon with a special attack.",
+    "The exact effect and adrenaline cost depend on the current weapon."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Weapon_Special_Attack"
 }

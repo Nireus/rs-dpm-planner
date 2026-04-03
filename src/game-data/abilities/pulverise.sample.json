@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 71
     },
-    "requiredEquipmentTags": ["melee-two-handed"]
+    "requiredEquipmentTags": [
+      "melee-two-handed"
+    ]
   },
   "hitSchedule": [
     {
@@ -25,5 +27,13 @@
     "min": 300,
     "max": 340
   },
-  "description": "Charge up a massive strike and pulverise the target. Applies Pulverised for 30s."
+  "description": "Charge up a massive strike and pulverise the target. Applies Pulverised for 30s.",
+  "iconPath": "/icons/wiki/pulverise.png",
+  "hoverSummary": "Ultimate | 100 ticks | 1 hit | -60% adrenaline",
+  "detailLines": [
+    "300%-340% melee damage.",
+    "Requires a two-handed melee weapon.",
+    "Applies Pulverised for 30s and can refund adrenaline on kill."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Pulverise"
 }

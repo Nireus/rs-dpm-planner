@@ -94,6 +94,16 @@
   "displayHints": {
     "hitTickMode": "resolved"
   },
-  "effectRefs": ["rapid-fire-channel"],
-  "description": "Enhanced ranged channel that fires multiple hits over its channel window."
+  "effectRefs": [
+    "rapid-fire-channel"
+  ],
+  "description": "Enhanced ranged channel that fires multiple hits over its channel window.",
+  "iconPath": "/icons/wiki/rapid-fire.png",
+  "hoverSummary": "Enhanced | 34 ticks | 8 hits | -25% adrenaline",
+  "detailLines": [
+    "75%-85% ranged damage per hit every 0.6s.",
+    "8-hit channeled attack.",
+    "Binds for 6s and extends Searing Winds by 0.6s per hit."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Rapid_Fire"
 }

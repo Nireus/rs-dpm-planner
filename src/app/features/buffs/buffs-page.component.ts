@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CURATED_PERK_OPTIONS } from '../../../game-data/perks/curated-perk-options';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
@@ -77,7 +76,6 @@ export class BuffsPageComponent {
       .flatMap((slot) =>
         (slot.instance?.configuredPerks ?? []).map((configuredPerk) => {
           const definition = perkDefinitions[configuredPerk.perkId];
-          const curated = CURATED_PERK_OPTIONS.find((option) => option.id === configuredPerk.perkId);
           const rank = configuredPerk.rank ? ` ${configuredPerk.rank}` : '';
 
           return {
@@ -87,7 +85,7 @@ export class BuffsPageComponent {
             categoryLabel: `Perk · ${slot.label}`,
             description: `Derived from equipped ${slot.definition?.name ?? 'item'} in socket ${configuredPerk.socketIndex + 1}.`,
             iconPath: definition?.iconPath,
-            effectRefs: definition?.effectRefs ?? (curated ? [curated.id] : undefined),
+            effectRefs: definition?.effectRefs,
           };
         }),
       );

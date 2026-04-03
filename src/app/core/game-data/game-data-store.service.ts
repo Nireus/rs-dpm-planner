@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { loadSampleGameData, sampleGameDataManifest, type GameDataCatalog, type GameDataLoadIssue } from '../../../game-data/loaders';
+import { loadBundledGameData, type GameDataCatalog, type GameDataLoadIssue } from '../../../game-data/loaders';
 
 export interface GameDataStoreState {
   status: 'idle' | 'loading' | 'ready' | 'error';
@@ -53,9 +53,23 @@ export class GameDataStoreService {
       issues: [],
     });
 
-    const result = await loadSampleGameData(sampleGameDataManifest, async (path) =>
-      firstValueFrom(this.http.get(path, { responseType: 'text' })),
-    );
+    let result;
+    try {
+      const bundledDocument = await firstValueFrom(
+        this.http.get('/game-data/catalog.sample.json'),
+      );
+      result = loadBundledGameData(bundledDocument);
+    } catch (error) {
+      result = {
+        success: false as const,
+        issues: [
+          {
+            path: '/game-data/catalog.sample.json',
+            message: error instanceof Error ? error.message : 'Unknown bundled game-data loading error.',
+          },
+        ],
+      };
+    }
 
     if (result.success) {
       this.state.set({

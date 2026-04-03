@@ -3,6 +3,10 @@
   "name": "Dragon Slayer",
   "iconPath": "/icons/wiki/dragon-slayer-perk.png",
   "wikiUrl": "https://runescape.wiki/w/Dragon_Slayer_(perk)",
-  "effectRefs": ["dragon-slayer"],
-  "description": "Deal 7% additional damage to dragons."
+  "effectRefs": [
+    "dragon-slayer"
+  ],
+  "description": "Deal 7% additional damage to dragons.",
+  "maxRank": 1,
+  "shortCode": "DrS"
 }

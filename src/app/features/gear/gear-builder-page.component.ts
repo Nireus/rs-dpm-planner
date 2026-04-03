@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
-import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import type { EquipmentSlot, ItemDefinition, PerkDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
-import { CURATED_PERK_OPTIONS, type CuratedPerkOption } from '../../../game-data/perks/curated-perk-options';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
@@ -49,7 +48,11 @@ export class GearBuilderPageComponent {
   protected readonly dragHint = signal('Drag items into equipment slots or the backpack.');
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly selectedInstanceId = signal<string | null>(null);
-  protected readonly perkOptions = CURATED_PERK_OPTIONS;
+  protected readonly perkOptions = computed<PerkDefinition[]>(() =>
+    Object.values(this.gameDataStore.snapshot().catalog?.perks ?? {}).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    ),
+  );
   protected readonly perkSocketIndexes = [0, 1];
   protected readonly equipmentSlots = this.gearBuilderStore.equipmentSlots;
   protected readonly equippedSlots = this.gearBuilderStore.equippedSlots;
@@ -640,7 +643,7 @@ export class GearBuilderPageComponent {
   }
 
   private perkBadgeLabel(perkId: string, rank: number | undefined): string {
-    const perk = this.perkOptions.find((option) => option.id === perkId);
+    const perk = this.perkOptions().find((option) => option.id === perkId);
     const rankSuffix = rank ?? 1;
     return `${perk?.shortCode ?? perkId.slice(0, 2).toUpperCase()}${rankSuffix}`;
   }
@@ -657,8 +660,8 @@ export class GearBuilderPageComponent {
 
     const description = socketPerks
       .map((perk) => {
-        const option = this.perkOptions.find((entry) => entry.id === perk.perkId);
-        const name = option?.label ?? perk.perkId;
+        const option = this.perkOptions().find((entry) => entry.id === perk.perkId);
+        const name = option?.name ?? perk.perkId;
         const rank = perk.rank ?? 1;
         return `${name} ${rank}`;
       })

@@ -21,6 +21,17 @@
       "buffId": "shadow-imbued"
     }
   ],
-  "effectRefs": ["shadow-imbued"],
-  "description": "Apply Shadow Imbued to yourself, causing ranged attacks to generate extra adrenaline."
+  "effectRefs": [
+    "shadow-imbued"
+  ],
+  "description": "Apply Shadow Imbued to yourself, causing ranged attacks to generate extra adrenaline.",
+  "iconPath": "/icons/wiki/imbue-shadows.png",
+  "hoverSummary": "Enhanced | 100 ticks | Self-target | -40% adrenaline",
+  "detailLines": [
+    "Applies Shadow Imbued for 30s.",
+    "Ranged attacks against your target generate 5% adrenaline with each hit.",
+    "Shadow Tendrils extends Shadow Imbued by 3.6s.",
+    "No direct hit damage."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Imbue:_Shadows"
 }

@@ -3,6 +3,10 @@
   "name": "Eruptive",
   "iconPath": "/icons/wiki/eruptive.png",
   "wikiUrl": "https://runescape.wiki/w/Eruptive",
-  "effectRefs": ["eruptive"],
-  "description": "Ability damage is increased by 0.5% per rank."
+  "effectRefs": [
+    "eruptive"
+  ],
+  "description": "Ability damage is increased by 0.5% per rank.",
+  "maxRank": 4,
+  "shortCode": "E"
 }

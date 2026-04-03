@@ -178,6 +178,8 @@ export interface PerkDefinition {
   name: string;
   iconPath?: string;
   wikiUrl?: string;
+  maxRank?: number;
+  shortCode?: string;
   effectRefs?: EffectRef[];
   configOptions?: ConfigOptionDefinition[];
   description?: string;

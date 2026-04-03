@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 90
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -38,5 +40,14 @@
       "requiresWeaponStyle": "melee"
     }
   ],
-  "description": "Jump up and strike the ground. Grants a 30s melee adrenaline-generation buff after the hit."
+  "description": "Jump up and strike the ground. Grants a 30s melee adrenaline-generation buff after the hit.",
+  "iconPath": "/icons/wiki/meteor-strike.png",
+  "hoverSummary": "Ultimate | 100 ticks | 1 hit | -60% adrenaline",
+  "detailLines": [
+    "220%-250% melee damage to the target and nearby enemies.",
+    "Applies a 30s melee-only adrenaline buff.",
+    "Melee basics gain 1.5x adrenaline and you gain 4.5% adrenaline every 0.6s while a melee weapon is equipped.",
+    "Area targeting varies with main-hand melee range."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Meteor_Strike"
 }

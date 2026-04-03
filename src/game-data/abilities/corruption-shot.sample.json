@@ -56,6 +56,17 @@
     "min": 180,
     "max": 240
   },
-  "effectRefs": ["damage-over-time", "corruption-shot"],
-  "description": "Basic ranged damage-over-time ability that corrupts the target and spreads to nearby enemies."
+  "effectRefs": [
+    "damage-over-time",
+    "corruption-shot"
+  ],
+  "description": "Basic ranged damage-over-time ability that corrupts the target and spreads to nearby enemies.",
+  "iconPath": "/icons/wiki/corruption-shot.png",
+  "hoverSummary": "Basic | 25 ticks | 5 hits | +8% adrenaline",
+  "detailLines": [
+    "60%-80% ranged damage, then 80%, 60%, 40%, and 20% of that hit every 1.2s.",
+    "Hits the target and up to 5 nearby enemies.",
+    "Damage over time effect that does not interact like a normal direct-hit ranged ability."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Corruption_Shot"
 }

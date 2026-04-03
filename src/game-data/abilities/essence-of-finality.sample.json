@@ -5,7 +5,10 @@
   "subtype": "special",
   "cooldownTicks": 0,
   "requires": {
-    "requiredEquipmentTags": ["equipped-effect:eof-special-access", "eof-stored-special-configured"]
+    "requiredEquipmentTags": [
+      "equipped-effect:eof-special-access",
+      "eof-stored-special-configured"
+    ]
   },
   "hitSchedule": [],
   "baseDamage": {
@@ -15,5 +18,13 @@
   "specialDispatch": {
     "source": "equipped-eof"
   },
-  "description": "Constitution special ability that activates the stored special attack from an equipped Essence of Finality amulet."
+  "description": "Constitution special ability that activates the stored special attack from an equipped Essence of Finality amulet.",
+  "iconPath": "/icons/wiki/essence-of-finality.png",
+  "hoverSummary": "Constitution | Special | 0 ticks | Adrenaline varies",
+  "detailLines": [
+    "Harnesses the special attack stored inside an equipped Essence of Finality amulet.",
+    "Requires an equipped Essence of Finality with a stored special attack.",
+    "Adrenaline cost and exact behavior vary with the stored weapon special."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Essence_of_Finality"
 }

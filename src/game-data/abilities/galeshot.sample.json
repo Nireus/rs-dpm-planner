@@ -30,6 +30,16 @@
       "buffId": "searing-winds"
     }
   ],
-  "effectRefs": ["searing-winds"],
-  "description": "Fire an infused shot that applies Searing Winds to the player."
+  "effectRefs": [
+    "searing-winds"
+  ],
+  "description": "Fire an infused shot that applies Searing Winds to the player.",
+  "iconPath": "/icons/wiki/galeshot.png",
+  "hoverSummary": "Basic | 34 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "100%-120% ranged damage.",
+    "Applies Searing Winds to self for 6s.",
+    "Searing Winds adds 20% bonus damage to ranged hits."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Galeshot"
 }

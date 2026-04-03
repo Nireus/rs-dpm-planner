@@ -40,5 +40,13 @@
     "min": 105,
     "max": 125
   },
-  "description": "Fire a shot which ricochets off the target."
+  "description": "Fire a shot which ricochets off the target.",
+  "iconPath": "/icons/wiki/ricochet.png",
+  "hoverSummary": "Basic | 17 ticks | 3 hits | +9% adrenaline",
+  "detailLines": [
+    "Against a single target: 75%-85%, then 15%-20% twice.",
+    "Returning hits land one tick after the initial shot.",
+    "Caroming adds +4% ability damage per rank to every hit."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Ricochet"
 }

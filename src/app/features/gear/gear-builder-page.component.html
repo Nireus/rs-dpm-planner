@@ -346,7 +346,7 @@
       <app-gear-item-detail-dialog
         [item]="item"
         [resolvedInstance]="selectedResolvedInstance()"
-        [perkOptions]="perkOptions"
+        [perkOptions]="perkOptions()"
         [detailLines]="detailLines(item)"
         [resolvedIconPath]="itemIconPath(item, selectedResolvedInstance()?.instance ?? null)"
         [formatSlot]="formatSlot.bind(this)"

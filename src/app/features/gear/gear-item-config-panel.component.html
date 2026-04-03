@@ -54,7 +54,7 @@
                         @if (perkIconPath(perk.id); as perkIconPath) {
                           <img [src]="perkIconPath" alt="" class="option-icon" />
                         }
-                        <span>{{ perk.label }}</span>
+                        <span>{{ perk.name }}</span>
                       </span>
                       @if (isPerkSelected(socketIndex, perk.id)) {
                         <span class="perk-option-state">Selected</span>
@@ -76,7 +76,7 @@
                     @if (perkIconPath(perk.id); as perkIconPath) {
                       <img [src]="perkIconPath" alt="" class="option-icon" />
                     }
-                    <span>{{ perk.label }} rank</span>
+                    <span>{{ perk.name }} rank</span>
                   </span>
                   <select
                     [ngModel]="perkRank(socketIndex, perk.id)"

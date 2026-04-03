@@ -24,5 +24,13 @@
     "min": 220,
     "max": 260
   },
-  "description": "Fire a volley of shots into the air, which come raining down."
+  "description": "Fire a volley of shots into the air, which come raining down.",
+  "iconPath": "/icons/wiki/bombardment.png",
+  "hoverSummary": "Enhanced | 0 ticks | 1 hit | -25% adrenaline",
+  "detailLines": [
+    "220%-260% ranged damage to the target and nearby enemies.",
+    "Area-target enhanced ability.",
+    "Damage is 60% effective in PvP."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Bombardment"
 }

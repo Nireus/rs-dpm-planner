@@ -9,7 +9,9 @@
     "levelRequirements": {
       "attack": 92
     },
-    "requiredEquipmentTags": ["melee-weapon"]
+    "requiredEquipmentTags": [
+      "melee-weapon"
+    ]
   },
   "hitSchedule": [
     {
@@ -32,5 +34,13 @@
       "stacks": 1
     }
   ],
-  "description": "Release a savage war cry, empowering your next strike. Your next melee ability within 7.2s deals 1.75x base damage."
+  "description": "Release a savage war cry, empowering your next strike. Your next melee ability within 7.2s deals 1.75x base damage.",
+  "iconPath": "/icons/wiki/chaos-roar.png",
+  "hoverSummary": "Basic | 100 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "100%-120% melee damage.",
+    "Empowers the next melee ability within 7.2s.",
+    "Current data keeps the empowerment descriptive outside supported mechanics."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Chaos_Roar"
 }
