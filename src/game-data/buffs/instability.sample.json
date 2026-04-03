@@ -1,0 +1,10 @@
+{
+  "id": "instability",
+  "name": "Instability",
+  "iconPath": "/icons/wiki/instability.png",
+  "wikiUrl": "https://runescape.wiki/w/Instability",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 50,
+  "displayPriority": 81
+}

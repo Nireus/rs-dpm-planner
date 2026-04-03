@@ -17,6 +17,13 @@ export const PLANNER_NON_GCD_TEMPLATES: readonly PlannerNonGcdTemplate[] = [
     actionType: 'gear-swap',
   },
   {
+    id: 'spell-swap',
+    label: 'Spell Swap',
+    shortLabel: 'Spell',
+    iconPath: 'icons/actions/gear-swap.svg',
+    actionType: 'spell-swap',
+  },
+  {
     id: 'vulnerability-bomb',
     label: 'Vulnerability Bomb',
     shortLabel: 'Vuln',

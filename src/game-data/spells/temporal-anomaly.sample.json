@@ -1,0 +1,26 @@
+{
+  "id": "temporal-anomaly",
+  "name": "Temporal Anomaly",
+  "spellbookId": "standard",
+  "role": "utility",
+  "levelRequirement": 97,
+  "tier": 0,
+  "iconPath": "/icons/wiki/temporal-anomaly.png",
+  "wikiUrl": "https://runescape.wiki/w/Temporal_Anomaly",
+  "hoverSummary": "Utility spell | 3 ticks | 1200t self buff",
+  "detailLines": [
+    "Applies Temporal Anomaly for 1200 ticks.",
+    "Support spell with no direct hit damage.",
+    "Future cooldown-reset behavior remains to do."
+  ],
+  "description": "Creates a temporal anomaly around the caster.",
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "temporal-anomaly",
+      "durationTicks": 1200
+    }
+  ]
+}
+
+

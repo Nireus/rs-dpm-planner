@@ -1,0 +1,42 @@
+{
+  "id": "combust",
+  "name": "Combust",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 30,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 38
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    { "id": "combust-hit-1", "tickOffset": 0, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-2", "tickOffset": 3, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-3", "tickOffset": 6, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-4", "tickOffset": 9, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-5", "tickOffset": 12, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-6", "tickOffset": 15, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-7", "tickOffset": 18, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-8", "tickOffset": 21, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-9", "tickOffset": 24, "damage": { "min": 27, "max": 33 } },
+    { "id": "combust-hit-10", "tickOffset": 27, "damage": { "min": 27, "max": 33 } }
+  ],
+  "baseDamage": {
+    "min": 270,
+    "max": 330
+  },
+  "effectRefs": [
+    "damage-over-time"
+  ],
+  "description": "Explode the target, causing them to burn.",
+  "iconPath": "/icons/wiki/combust.png",
+  "hoverSummary": "Basic | 30 ticks | 10 hits | +9% adrenaline",
+  "detailLines": [
+    "27%-33% magic damage per hit every 1.8 seconds.",
+    "Damage over time with 10 total hits.",
+    "Kerapac's wrist wraps, Conflagrate, and Song of Destruction interactions remain for later magic mechanics work."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Combust"
+}

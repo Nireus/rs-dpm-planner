@@ -105,4 +105,47 @@ describe('projectGearStateAtTick', () => {
     expect(projected.equipment.offHand?.instanceId).toBe('off-hand-one');
     expect(projected.inventory.map((item) => item.instanceId)).toContain('weapon-two-handed');
   });
+
+  it('moves the equipped off-hand into projected inventory when swapping to a two-handed weapon', () => {
+    const gearState: GearBuilderState = {
+      equipment: {
+        weapon: {
+          instanceId: 'main-hand-one',
+          definitionId: 'eldritch-crossbow',
+        },
+        offHand: {
+          instanceId: 'off-hand-one',
+          definitionId: 'dark-sliver-of-leng',
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'weapon-two-handed',
+          definitionId: 'bow-of-the-last-guardian',
+        },
+      ],
+    };
+
+    const nonGcdActions: RotationAction[] = [
+      {
+        id: 'gear-swap-two-handed',
+        tick: 3,
+        lane: 'non-gcd',
+        actionType: 'gear-swap',
+        payload: {
+          instanceId: 'weapon-two-handed',
+          definitionId: 'bow-of-the-last-guardian',
+          slot: 'weapon',
+        },
+      },
+    ];
+
+    const projected = projectGearStateAtTick(gearState, definitions, nonGcdActions, 6);
+
+    expect(projected.equipment.weapon?.instanceId).toBe('weapon-two-handed');
+    expect(projected.equipment.offHand).toBeUndefined();
+    expect(projected.inventory.map((item) => item.instanceId)).toEqual(
+      expect.arrayContaining(['main-hand-one', 'off-hand-one']),
+    );
+  });
 });

@@ -16,6 +16,7 @@ import {
   removeAbilityAction,
   type PlannerNonGcdTemplate,
   snapTickToAbilityWindowStart,
+  upsertNonGcdAbilityAction,
   upsertNonGcdAction,
   upsertAbilityAction,
 } from './rotation-planner.utils';
@@ -326,6 +327,39 @@ describe('rotation planner utils', () => {
 
     expect(getNonGcdActionsAtTick(actions, 6)).toHaveLength(0);
     expect(getNonGcdActionsAtTick(actions, 9)).toHaveLength(1);
+  });
+
+  it('adds a utility ability onto the non-gcd lane', () => {
+    const surge: AbilityDefinition = {
+      id: 'surge',
+      name: 'Surge',
+      style: 'magic',
+      subtype: 'utility',
+      cooldownTicks: 17,
+      hitSchedule: [],
+      baseDamage: {
+        min: 0,
+        max: 0,
+      },
+    };
+
+    const actions = upsertNonGcdAbilityAction([], surge, 6);
+
+    expect(actions).toEqual([
+      {
+        id: 'non-gcd-ability-surge-6-1',
+        tick: 6,
+        lane: 'non-gcd',
+        actionType: 'ability-use',
+        payload: {
+          templateId: 'ability-use',
+          abilityId: 'surge',
+          label: 'Surge',
+          shortLabel: 'S',
+          iconPath: undefined,
+        },
+      },
+    ]);
   });
 
   it('removes non-gcd actions by id', () => {

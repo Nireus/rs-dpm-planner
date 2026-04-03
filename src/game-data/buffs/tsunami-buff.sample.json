@@ -1,0 +1,10 @@
+{
+  "id": "tsunami-buff",
+  "name": "Tsunami",
+  "iconPath": "/icons/wiki/tsunami.png",
+  "wikiUrl": "https://runescape.wiki/w/Tsunami",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 51,
+  "displayPriority": 76
+}

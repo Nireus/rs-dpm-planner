@@ -1,0 +1,27 @@
+{
+  "id": "ode-to-deceit",
+  "name": "Ode to Deceit",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "/icons/wiki/ode-to-deceit.png",
+  "wikiUrl": "https://runescape.wiki/w/Ode_to_Deceit",
+  "hoverSummary": "Tier 95 off-hand magic weapon with 456 ability damage and 2765 accuracy.",
+  "detailLines": [
+    "Requires level 95 Magic to wield.",
+    "Off-hand magic weapon with 4-tick speed and range 8.",
+    "Shares the Song of Destruction set bonus with Roar of Awakening.",
+    "Song of Destruction powers Essence Corruption and magic damage over time synergy."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 95
+    }
+  },
+  "implementationNotes": "Curated off-hand magic weapon from the live Ode to Deceit page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and Song of Destruction set text."
+}

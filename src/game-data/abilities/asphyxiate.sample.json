@@ -1,0 +1,42 @@
+{
+  "id": "asphyxiate",
+  "name": "Asphyxiate",
+  "style": "magic",
+  "subtype": "enhanced",
+  "cooldownTicks": 34,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "magic": 59
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 7,
+  "hitSchedule": [
+    { "id": "asphyxiate-hit-1", "tickOffset": 0, "damage": { "min": 120, "max": 140 } },
+    { "id": "asphyxiate-hit-2", "tickOffset": 2, "damage": { "min": 120, "max": 140 } },
+    { "id": "asphyxiate-hit-3", "tickOffset": 4, "damage": { "min": 120, "max": 140 } },
+    { "id": "asphyxiate-hit-4", "tickOffset": 6, "damage": { "min": 120, "max": 140 } }
+  ],
+  "baseDamage": {
+    "min": 480,
+    "max": 560
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "channelled-might",
+      "startTickOffset": 7
+    }
+  ],
+  "description": "Reach out with magical force and choke the target.",
+  "iconPath": "/icons/wiki/asphyxiate.png",
+  "hoverSummary": "Enhanced | 34 ticks | 4 hits | -25% adrenaline",
+  "detailLines": [
+    "120%-140% magic damage per hit every 1.2 seconds.",
+    "4-hit channeled attack that stuns and binds the target.",
+    "Completing the channel applies Channelled Might for 3.6 seconds."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Asphyxiate"
+}

@@ -1,0 +1,34 @@
+{
+  "id": "instability",
+  "name": "Instability",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 100,
+  "adrenalineCost": 50,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "instability-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 120,
+        "max": 140
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 140
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "instability"
+    }
+  ],
+  "effectRefs": ["weapon-special:instability"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Fractured Staff of Armadyl special attack. Strikes for 120%-140% ability damage and applies the Instability buff for 30 seconds."
+}

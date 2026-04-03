@@ -9,6 +9,8 @@ import type {
   ItemDefinition,
   PerkDefinition,
   RelicDefinition,
+  SpellDefinition,
+  SpellbookId,
 } from '../../game-data/types';
 import type { StartingStackState } from './starting-stacks';
 
@@ -55,6 +57,15 @@ export interface PersistentBuffConfig {
   pocketEffectItemIds?: EntityId[];
 }
 
+export interface MagicCombatChoices {
+  spellbookId: SpellbookId;
+  activeSpellId: EntityId;
+}
+
+export interface CombatChoices {
+  magic: MagicCombatChoices;
+}
+
 export interface TimelineGeneratedBuffSource {
   buffId: EntityId;
   sourceType: 'ability' | 'item' | 'event';
@@ -66,6 +77,7 @@ export type RotationActionType =
   | 'adrenaline-potion'
   | 'ammo-swap'
   | 'gear-swap'
+  | 'spell-swap'
   | 'vulnerability-bomb'
   | 'eof-special'
   | 'other';
@@ -91,6 +103,7 @@ export interface RotationPlan {
 export interface LoadedGameDataSnapshot {
   items: Record<EntityId, ItemDefinition>;
   ammo: Record<EntityId, AmmoDefinition>;
+  spells?: Record<EntityId, SpellDefinition>;
   abilities: Record<EntityId, AbilityDefinition>;
   buffs: Record<EntityId, BuffDefinition>;
   perks: Record<EntityId, PerkDefinition>;
@@ -104,6 +117,7 @@ export interface SimulationModeFlags {
 
 export interface SimulationConfig {
   playerStats: PlayerStats;
+  combatChoices?: CombatChoices;
   gearSetup: GearSetup;
   inventory: InventoryState;
   persistentBuffConfig: PersistentBuffConfig;

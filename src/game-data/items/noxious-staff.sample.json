@@ -1,0 +1,30 @@
+{
+  "id": "noxious-staff",
+  "name": "Noxious staff",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/noxious-staff.png",
+  "wikiUrl": "https://runescape.wiki/w/Noxious_staff",
+  "hoverSummary": "Tier 90 two-handed magic staff with 1296 ability damage and 2458 accuracy.",
+  "detailLines": [
+    "Requires level 90 Magic to wield.",
+    "Two-handed magic weapon with 6-tick speed and range 8.",
+    "Live special attack: Mirrorback.",
+    "Examine: A noxious staff, made from the leg of Araxxi."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 90
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:mirrorback"],
+  "specialAbilityId": "mirrorback",
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated magic 2h staff from the live Noxious staff page. Wiki-verified with Playwright for tier, damage, accuracy, speed, and special attack presence."
+}

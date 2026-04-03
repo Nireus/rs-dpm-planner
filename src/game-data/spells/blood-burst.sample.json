@@ -1,0 +1,15 @@
+{
+  "id": "blood-burst",
+  "name": "Blood Burst",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 68,
+  "tier": 68,
+  "iconPath": "/icons/wiki/blood-burst.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 68 | Tier 68",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

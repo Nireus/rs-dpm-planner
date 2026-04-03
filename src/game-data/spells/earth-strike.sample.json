@@ -1,0 +1,15 @@
+{
+  "id": "earth-strike",
+  "name": "Earth Strike",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 9,
+  "tier": 9,
+  "iconPath": "/icons/wiki/earth-strike.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 9 | Tier 9",
+  "description": "Basic Standard spell used for magic ability damage selection."
+}
+
+
+

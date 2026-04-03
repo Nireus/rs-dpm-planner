@@ -1,0 +1,9 @@
+{
+  "id": "guthix-staff-affinity-debuff",
+  "name": "Guthix Staff Affinity Debuff",
+  "wikiUrl": "https://runescape.wiki/w/Guthix_staff",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 100,
+  "displayPriority": 73
+}

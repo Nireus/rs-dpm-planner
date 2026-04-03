@@ -1,0 +1,15 @@
+{
+  "id": "blood-rush",
+  "name": "Blood Rush",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 56,
+  "tier": 56,
+  "iconPath": "/icons/wiki/blood-rush.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 56 | Tier 56",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

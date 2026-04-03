@@ -1,0 +1,28 @@
+{
+  "id": "devour",
+  "name": "Devour",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 50,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "devour-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 200,
+        "max": 240
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 240
+  },
+  "effectRefs": ["weapon-special:devour"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Obliteration special attack. Strikes for 200%-240% ability damage and halves the target's healing for 15 seconds."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "shadow-blitz",
+  "name": "Shadow Blitz",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 76,
+  "tier": 76,
+  "iconPath": "/icons/wiki/shadow-blitz.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 76 | Tier 76",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

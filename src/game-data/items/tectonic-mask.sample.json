@@ -1,0 +1,25 @@
+{
+  "id": "tectonic-mask",
+  "name": "Tectonic mask",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "/icons/wiki/tectonic-mask.png",
+  "wikiUrl": "https://runescape.wiki/w/Tectonic_mask",
+  "hoverSummary": "Tier 90 magic power helm with 22.5 magic damage bonus.",
+  "detailLines": [
+    "Requires level 90 Defence to wear.",
+    "Tectonic power armour piece.",
+    "Live set bonus: Fracture Point grants 1% critical strike chance per piece worn."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 90,
+  "offensiveStats": {
+    "magicBonus": 22.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 90
+    }
+  },
+  "implementationNotes": "Curated magic helm from the live Tectonic mask page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

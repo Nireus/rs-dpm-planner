@@ -1,0 +1,10 @@
+{
+  "id": "conflagrate",
+  "name": "Conflagrate",
+  "iconPath": "/icons/wiki/conflagrate.png",
+  "wikiUrl": "https://runescape.wiki/w/Conflagrate",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 25,
+  "displayPriority": 75
+}

@@ -1,0 +1,28 @@
+{
+  "id": "cast-spell",
+  "name": "Cast Spell",
+  "style": "magic",
+  "subtype": "utility",
+  "cooldownTicks": 3,
+  "adrenalineGain": 0,
+  "requires": {
+    "levelRequirements": {
+      "magic": 1
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Cast a selected spell without changing your baseline active combat spell.",
+  "iconPath": "/icons/wiki/magic-ability.png",
+  "hoverSummary": "Utility | 3 ticks | Spell-specific behavior",
+  "detailLines": [
+    "Choose a combat or utility spell from the selected spellbook.",
+    "Combat spells behave like a one-off Magic basic with that spell.",
+    "Utility spells consume 1 GCD and apply their support buff."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells"
+}

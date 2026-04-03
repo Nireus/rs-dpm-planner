@@ -1,0 +1,15 @@
+{
+  "id": "water-surge",
+  "name": "Water Surge",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 85,
+  "tier": 85,
+  "iconPath": "/icons/wiki/water-surge.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 85 | Tier 85",
+  "description": "High-tier Standard combat spell used for magic ability damage selection."
+}
+
+
+

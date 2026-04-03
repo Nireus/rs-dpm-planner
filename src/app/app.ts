@@ -4,6 +4,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { BuffConfigurationStoreService } from './core/buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from './core/combat-choices/combat-choices-store.service';
 import { PlayerStatsStoreService } from './core/player-stats/player-stats-store.service';
 import { GearBuilderStore } from './features/gear/gear-builder.store';
 import { RotationPlannerStore } from './features/rotation-planner/rotation-planner.store';
@@ -21,6 +22,7 @@ export class App {
   private readonly plannerStore = inject(RotationPlannerStore);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
   private readonly currentRouteData = toSignal(
     this.router.events.pipe(
@@ -38,6 +40,7 @@ export class App {
     { label: 'Gear', path: '/gear' },
     { label: 'Buffs', path: '/buffs' },
     { label: 'Abilities', path: '/abilities' },
+    { label: 'Spellbook', path: '/spellbook' },
     { label: 'Rotation Planner', path: '/rotation-planner' },
     { label: 'Results', path: '/results' },
     { label: 'Import / Export', path: '/import-export' },
@@ -74,6 +77,7 @@ export class App {
     this.plannerStore.reset();
     this.gearBuilderStore.reset();
     this.buffConfigurationStore.reset();
+    this.combatChoicesStore.reset();
     this.playerStatsStore.reset();
   }
 

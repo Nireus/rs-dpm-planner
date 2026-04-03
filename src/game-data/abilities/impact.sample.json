@@ -1,0 +1,37 @@
+{
+  "id": "impact",
+  "name": "Impact",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 31
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "impact-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 65,
+        "max": 75
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 65,
+    "max": 75
+  },
+  "description": "Smash the target with a burst of earth energy.",
+  "iconPath": "/icons/wiki/impact.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "65%-75% magic damage.",
+    "Stuns and binds the target for 1.8 seconds.",
+    "Charge handling and Scare Tactics knockback remain descriptive-only."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Impact"
+}

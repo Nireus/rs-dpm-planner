@@ -24,10 +24,12 @@ export interface CriticalStrikeComputation {
 
 export function applyExpectedValueCriticalStrike(
   config: SimulationConfig,
-  ability: { effectRefs?: EffectRef[] },
+  ability: { effectRefs?: EffectRef[]; style?: string },
   baseDamage: DamageSummary,
   hitTick: number,
   timelineBuffs: Record<number, EntityId[]>,
+  actionCritChanceBonus = 0,
+  hitCritChanceBonus = 0,
 ): CriticalStrikeComputation {
   if (ability.effectRefs?.includes(DOT_EFFECT_REF)) {
     return {
@@ -65,8 +67,10 @@ export function applyExpectedValueCriticalStrike(
     hasHeroismChampionRingBonus(config, hitTick) && activeBleeds > 0
       ? activeBleeds * 0.015
       : 0;
-  const baseCritDamageBonus = resolveBaseCriticalStrikeDamageBonus(config.playerStats.rangedLevel);
-  const totalChance = clampProbability(BASE_CRIT_CHANCE + critChanceBonus + championRingChanceBonus);
+  const baseCritDamageBonus = resolveBaseCriticalStrikeDamageBonus(config.playerStats.rangedLevel, config.playerStats.magicLevel, ability);
+  const totalChance = clampProbability(
+    BASE_CRIT_CHANCE + critChanceBonus + championRingChanceBonus + actionCritChanceBonus + hitCritChanceBonus,
+  );
   const totalDamageBonus = Math.max(0, baseCritDamageBonus + critDamageBonus + championRingDamageBonus);
 
   if (totalChance <= 0 || totalDamageBonus <= 0) {
@@ -135,36 +139,42 @@ function parseCriticalStrikeDamageBonus(effectRef: EffectRef): number {
   return match ? Number.parseFloat(match[1]) / 100 : 0;
 }
 
-function resolveBaseCriticalStrikeDamageBonus(rangedLevel: number): number {
-  if (rangedLevel >= 90) {
+function resolveBaseCriticalStrikeDamageBonus(
+  rangedLevel: number | undefined,
+  magicLevel: number | undefined,
+  ability: { style?: string },
+): number {
+  const level = ability.style === 'magic' ? (magicLevel ?? 0) : (rangedLevel ?? 0);
+
+  if (level >= 90) {
     return 0.5;
   }
 
-  if (rangedLevel >= 80) {
+  if (level >= 80) {
     return 0.45;
   }
 
-  if (rangedLevel >= 70) {
+  if (level >= 70) {
     return 0.4;
   }
 
-  if (rangedLevel >= 60) {
+  if (level >= 60) {
     return 0.35;
   }
 
-  if (rangedLevel >= 50) {
+  if (level >= 50) {
     return 0.3;
   }
 
-  if (rangedLevel >= 40) {
+  if (level >= 40) {
     return 0.25;
   }
 
-  if (rangedLevel >= 30) {
+  if (level >= 30) {
     return 0.2;
   }
 
-  if (rangedLevel >= 20) {
+  if (level >= 20) {
     return 0.15;
   }
 

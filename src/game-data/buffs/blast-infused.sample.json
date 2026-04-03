@@ -1,0 +1,10 @@
+{
+  "id": "blast-infused",
+  "name": "Blast Infused",
+  "iconPath": "/icons/wiki/blast-infused.png",
+  "wikiUrl": "https://runescape.wiki/w/Blast_Infused",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 10,
+  "displayPriority": 77
+}

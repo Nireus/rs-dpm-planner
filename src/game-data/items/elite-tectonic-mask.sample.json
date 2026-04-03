@@ -1,0 +1,25 @@
+{
+  "id": "elite-tectonic-mask",
+  "name": "Elite tectonic mask",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "/icons/wiki/elite-tectonic-mask.png",
+  "wikiUrl": "https://runescape.wiki/w/Elite_tectonic_mask",
+  "hoverSummary": "Tier 92 magic power helm with 23.0 magic damage bonus.",
+  "detailLines": [
+    "Requires level 92 Defence to wear.",
+    "Elite tectonic power armour piece.",
+    "Live set bonus: Elite Fracture Point grants 2% critical strike chance per piece worn."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "magicBonus": 23.0
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 92
+    }
+  },
+  "implementationNotes": "Curated elite magic helm from the live Elite tectonic mask page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

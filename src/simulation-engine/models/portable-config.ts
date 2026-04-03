@@ -1,15 +1,17 @@
 import type {
+  CombatChoices,
   GearSetup,
   InventoryState,
   PersistentBuffConfig,
   PlayerStats,
   RotationPlan,
 } from './config';
+import { normalizeCombatChoices } from '../spells/magic-combat-choices';
 
-export const PORTABLE_CONFIG_SCHEMA_VERSION = 1;
+export const PORTABLE_CONFIG_SCHEMA_VERSION = 2;
 
 export interface PortableConfigDocumentV1 {
-  schemaVersion: typeof PORTABLE_CONFIG_SCHEMA_VERSION;
+  schemaVersion: 1;
   playerStats: PlayerStats;
   gearSetup: GearSetup;
   inventory: InventoryState;
@@ -17,10 +19,21 @@ export interface PortableConfigDocumentV1 {
   rotationPlan: RotationPlan;
 }
 
-export type PortableConfigDocument = PortableConfigDocumentV1;
+export interface PortableConfigDocumentV2 {
+  schemaVersion: typeof PORTABLE_CONFIG_SCHEMA_VERSION;
+  playerStats: PlayerStats;
+  combatChoices: CombatChoices;
+  gearSetup: GearSetup;
+  inventory: InventoryState;
+  persistentBuffConfig: PersistentBuffConfig;
+  rotationPlan: RotationPlan;
+}
+
+export type PortableConfigDocument = PortableConfigDocumentV2;
 
 export interface ExportableSimulationState {
   playerStats: PlayerStats;
+  combatChoices?: CombatChoices;
   gearSetup: GearSetup;
   inventory: InventoryState;
   persistentBuffConfig: PersistentBuffConfig;
@@ -33,6 +46,7 @@ export function createPortableConfigDocument(
   return {
     schemaVersion: PORTABLE_CONFIG_SCHEMA_VERSION,
     playerStats: state.playerStats,
+    combatChoices: normalizeCombatChoices(state.playerStats, state.combatChoices),
     gearSetup: state.gearSetup,
     inventory: state.inventory,
     persistentBuffConfig: state.persistentBuffConfig,

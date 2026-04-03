@@ -1,0 +1,15 @@
+{
+  "id": "water-strike",
+  "name": "Water Strike",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 5,
+  "tier": 5,
+  "iconPath": "/icons/wiki/water-strike.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 5 | Tier 5",
+  "description": "Basic Standard spell used for magic ability damage selection."
+}
+
+
+

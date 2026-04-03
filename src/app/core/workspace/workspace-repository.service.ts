@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import type { BuffDefinition } from '../../../game-data/types';
-import type { ItemInstanceConfig, PlayerStats } from '../../../simulation-engine/models';
+import type { CombatChoices, ItemInstanceConfig, PlayerStats } from '../../../simulation-engine/models';
 import type { PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
+import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import type { BuffSelectionState } from '../buffs/persistent-buff-config';
 import {
   buildBuffSelectionStateFromPersistentConfig,
@@ -46,6 +47,15 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
 
     return (this.readLegacyJson(LEGACY_PLAYER_STATS_STORAGE_KEY) as PlayerStats | null)
       ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.playerStats;
+  }
+
+  readCombatChoices(): CombatChoices {
+    const storedDocument = this.readWorkspaceDocumentFromStorage();
+    if (storedDocument) {
+      return storedDocument.portableConfig.combatChoices;
+    }
+
+    return DEFAULT_WORKSPACE_DOCUMENT.portableConfig.combatChoices;
   }
 
   readGearBuilderState(): GearBuilderWorkspaceState {
@@ -127,6 +137,16 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
       portableConfig: {
         ...current.portableConfig,
         playerStats,
+      },
+    }));
+  }
+
+  updateCombatChoices(combatChoices: CombatChoices): void {
+    this.updateDocument((current) => ({
+      ...current,
+      portableConfig: {
+        ...current.portableConfig,
+        combatChoices,
       },
     }));
   }
@@ -218,7 +238,19 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
       }
 
       const parsed = JSON.parse(raw);
-      return isWorkspaceDocument(parsed) ? parsed : null;
+      if (!isWorkspaceDocument(parsed)) {
+        return null;
+      }
+
+      const portableConfigResult = parsePortableConfigDocument(parsed.portableConfig);
+      if (!portableConfigResult.success) {
+        return null;
+      }
+
+      return {
+        ...parsed,
+        portableConfig: portableConfigResult.data,
+      };
     } catch {
       return null;
     }

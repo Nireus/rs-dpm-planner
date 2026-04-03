@@ -257,4 +257,37 @@ describe('applyExpectedValueCriticalStrike', () => {
     expect(result.finalDamage.avg).toBe(107.21);
     expect(result.finalDamage.max).toBe(151.5);
   });
+
+  it('uses Magic level for base critical strike expected value on magic abilities', () => {
+    const config = createConfig({
+      playerStats: {
+        rangedLevel: 1,
+        magicLevel: 99,
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: 'bolg',
+          },
+        },
+      },
+    });
+
+    const result = applyExpectedValueCriticalStrike(
+      config,
+      createAbility({
+        style: 'magic',
+      }),
+      { min: 100, avg: 100, max: 100 },
+      0,
+      {},
+    );
+
+    expect(result.finalDamage).toEqual({
+      min: 100,
+      avg: 105,
+      max: 150,
+    });
+  });
 });

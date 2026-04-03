@@ -7,8 +7,9 @@ import {
   groupAbilitiesBySubtype,
 } from '../../core/abilities/ability-style-tabs';
 import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
-import type { AbilityDefinition, CombatStyle, EquipmentSlot } from '../../../game-data/types';
+import type { AbilityDefinition, CombatStyle, EquipmentSlot, SpellDefinition } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from '../../core/combat-choices/combat-choices-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
@@ -63,6 +64,7 @@ import {
   buildCooldownBarTitle,
   buildPerfectEquilibriumProcMarkersByAction,
   buildPlannerGearSwapOptions,
+  buildPlacedAbilityDisplayName,
   buildPlacedAbilityTitle,
   buildPlacedAbilityThemeClass,
   buildSelectedTickOverlayLeft,
@@ -88,9 +90,28 @@ import {
   shortLabelForGearSwap,
   shouldUseResolvedHitTickInPlanner,
 } from './rotation-planner-page.helpers';
+import { evaluateAbilityAvailability } from '../../../simulation-engine/rules/ability-availability';
 import { RotationPlannerTickInspectorComponent } from './rotation-planner-tick-inspector.component';
 import { RotationPlannerGearSwapDialogComponent } from './rotation-planner-gear-swap-dialog.component';
 import { RotationPlannerAdrenalinePotionDialogComponent } from './rotation-planner-adrenaline-potion-dialog.component';
+import {
+  RotationPlannerSpellSwapDialogComponent,
+  type RotationPlannerSpellSwapOption,
+} from './rotation-planner-spell-swap-dialog.component';
+import {
+  RotationPlannerCastSpellDialogComponent,
+  type RotationPlannerCastSpellOption,
+} from './rotation-planner-cast-spell-dialog.component';
+
+interface PlannerMagicSpellOption {
+  spellId: string;
+  name: string;
+  role: SpellDefinition['role'];
+  levelRequirement: number;
+  tier: number;
+  optionLabel: string;
+  iconPath?: string;
+}
 
 @Component({
   selector: 'app-rotation-planner-page',
@@ -100,6 +121,8 @@ import { RotationPlannerAdrenalinePotionDialogComponent } from './rotation-plann
     RotationPlannerTickInspectorComponent,
     RotationPlannerGearSwapDialogComponent,
     RotationPlannerAdrenalinePotionDialogComponent,
+    RotationPlannerSpellSwapDialogComponent,
+    RotationPlannerCastSpellDialogComponent,
   ],
   templateUrl: './rotation-planner-page.component.html',
   styleUrl: './rotation-planner-page.component.scss',
@@ -113,6 +136,7 @@ export class RotationPlannerPageComponent {
   private readonly resultsSimulationService = inject(SimulationSessionService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
 
   protected readonly startingAdrenaline = this.plannerStore.startingAdrenaline;
@@ -121,6 +145,8 @@ export class RotationPlannerPageComponent {
   protected readonly gcdCount = this.plannerStore.gcdCount;
   protected readonly tickCount = this.plannerStore.tickCount;
   protected readonly playerStats = this.playerStatsStore.stats;
+  protected readonly combatChoices = this.combatChoicesStore.combatChoices;
+  protected readonly magicChoices = this.combatChoicesStore.magicChoices;
   protected readonly timelineResult = this.plannerStore.timelineResult;
   protected readonly tickIndexes = this.plannerStore.tickIndexes;
   protected readonly nonGcdActions = this.plannerStore.nonGcdActions;
@@ -155,6 +181,12 @@ export class RotationPlannerPageComponent {
   protected readonly adrenalinePotionDialogActionId = signal<string | null>(null);
   protected readonly adrenalinePotionDialogRemovesOnCancel = signal(false);
   protected readonly selectedAdrenalinePotionVariantId = signal<AdrenalinePotionVariantId | null>(null);
+  protected readonly spellSwapDialogActionId = signal<string | null>(null);
+  protected readonly spellSwapDialogRemovesOnCancel = signal(false);
+  protected readonly selectedSpellSwapSpellId = signal<string | null>(null);
+  protected readonly castSpellDialogActionId = signal<string | null>(null);
+  protected readonly castSpellDialogRemovesOnCancel = signal(false);
+  protected readonly selectedCastSpellSpellId = signal<string | null>(null);
   protected readonly activeGearSwapAction = computed(() => {
     const actionId = this.gearSwapDialogActionId();
     if (!actionId) {
@@ -170,6 +202,22 @@ export class RotationPlannerPageComponent {
     }
 
     return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+  });
+  protected readonly activeSpellSwapAction = computed(() => {
+    const actionId = this.spellSwapDialogActionId();
+    if (!actionId) {
+      return null;
+    }
+
+    return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+  });
+  protected readonly activeCastSpellAction = computed(() => {
+    const actionId = this.castSpellDialogActionId();
+    if (!actionId) {
+      return null;
+    }
+
+    return this.abilityActions().find((action) => action.id === actionId) ?? null;
   });
   protected readonly gearSwapOptions = computed<PlannerGearSwapOption[]>(() => {
     const catalog = this.gameDataStore.snapshot().catalog;
@@ -192,6 +240,20 @@ export class RotationPlannerPageComponent {
 
     return buildPlannerGearSwapOptions(projectedGearState.inventory, catalog);
   });
+  protected readonly spellSwapOptions = computed<RotationPlannerSpellSwapOption[]>(() =>
+    buildPlannerSpellSwapOptions(
+      this.gameDataStore.snapshot().catalog?.spells ?? {},
+      this.playerStats().magicLevel ?? 0,
+      this.magicChoices().spellbookId,
+    ),
+  );
+  protected readonly castSpellOptions = computed<RotationPlannerCastSpellOption[]>(() =>
+    buildPlannerCastSpellOptions(
+      this.gameDataStore.snapshot().catalog?.spells ?? {},
+      this.playerStats().magicLevel ?? 0,
+      this.magicChoices().spellbookId,
+    ),
+  );
   protected readonly abilityPreviewActionOriginalTicks = computed<Record<string, number>>(() =>
     Object.fromEntries(this.abilityActions().map((action) => [action.id, action.tick])),
   );
@@ -231,6 +293,7 @@ export class RotationPlannerPageComponent {
       tick: this.selectedTick(),
       catalog,
       playerStats: this.playerStatsStore.stats(),
+      combatChoices: this.combatChoicesStore.combatChoices(),
       gearState: this.gearBuilderStore.snapshot(),
       buffState: this.buffConfigurationStore.state(),
       rotationPlan: this.plannerStore.rotationPlan(),
@@ -508,7 +571,45 @@ export class RotationPlannerPageComponent {
   }
 
   protected canDropNonGcd(tickIndex: number): boolean {
+    const draggedAbility = this.draggedAbilityPayload;
+    if (draggedAbility) {
+      const definition = this.abilityCatalog()[draggedAbility.abilityId];
+      return Boolean(definition?.subtype === 'utility') && this.canPlaceUtilityAbilityOnNonGcd(definition, tickIndex);
+    }
+
     return Boolean(this.draggedNonGcdPayload) && this.plannerStore.canPlaceNonGcdActionAtTick(tickIndex);
+  }
+
+  private canPlaceUtilityAbilityOnNonGcd(definition: AbilityDefinition, tickIndex: number): boolean {
+    if (!this.plannerStore.canPlaceNonGcdActionAtTick(tickIndex)) {
+      return false;
+    }
+
+    const catalog = this.gameDataStore.snapshot().catalog;
+    if (!catalog) {
+      return false;
+    }
+
+    const projectedGearState = projectGearStateAtTick(
+      this.gearBuilderStore.snapshot(),
+      catalog.items,
+      this.nonGcdActions(),
+      tickIndex,
+    );
+    const availability = evaluateAbilityAvailability(definition, {
+      playerStats: this.playerStatsStore.stats(),
+      equippedItems: Object.values(projectedGearState.equipment)
+        .filter((item): item is NonNullable<(typeof projectedGearState.equipment)[EquipmentSlot]> => Boolean(item))
+        .map((item) => catalog.items[item.definitionId])
+        .filter((item): item is NonNullable<typeof catalog.items[string]> => Boolean(item)),
+      inventoryItems: projectedGearState.inventory
+        .map((item) => catalog.items[item.definitionId])
+        .filter((item): item is NonNullable<typeof catalog.items[string]> => Boolean(item)),
+      equippedInstances: Object.values(projectedGearState.equipment)
+        .filter((item): item is NonNullable<(typeof projectedGearState.equipment)[EquipmentSlot]> => Boolean(item)),
+    });
+
+    return availability.isAvailable;
   }
 
   protected canRemoveDraggedNonGcd(): boolean {
@@ -607,6 +708,22 @@ export class RotationPlannerPageComponent {
   }
 
   protected placedAbilityTitle(action: RotationAction | null): string {
+    if (action?.payload['abilityId'] === 'cast-spell') {
+      const spellLabel = typeof action.payload['label'] === 'string' ? action.payload['label'] : 'Cast Spell';
+      const summary = action ? this.actionValidationSummary(action) : null;
+      const lines = [
+        spellLabel,
+        `Tick ${action.tick}`,
+        'Drag to move or use remove to clear.',
+      ];
+
+      if (summary?.issues.length) {
+        lines.push('', ...summary.issues.map((issue) => `Issue: ${issue.message}`));
+      }
+
+      return lines.join('\n');
+    }
+
     return buildPlacedAbilityTitle(
       action,
       this.abilityDefinitionForAction(action),
@@ -628,6 +745,35 @@ export class RotationPlannerPageComponent {
 
   protected abilityShortLabel(definition: AbilityDefinition): string {
     return buildAbilityShortLabel(definition);
+  }
+
+  protected placedAbilityLabel(action: RotationAction, definition: AbilityDefinition): string {
+    if (action.payload['abilityId'] !== 'cast-spell') {
+      return buildPlacedAbilityDisplayName(definition.name);
+    }
+
+    const label = action.payload['label'];
+    return typeof label === 'string' && label
+      ? buildPlacedAbilityDisplayName(label)
+      : buildPlacedAbilityDisplayName(definition.name);
+  }
+
+  protected placedAbilityMeta(action: RotationAction, definition: AbilityDefinition): string {
+    if (action.payload['abilityId'] !== 'cast-spell') {
+      return definition.subtype;
+    }
+
+    const role = action.payload['spellRole'];
+    return role === 'utility' ? 'utility spell' : 'combat spell';
+  }
+
+  protected placedAbilityIconPath(action: RotationAction, definition: AbilityDefinition): string | null {
+    if (action.payload['abilityId'] !== 'cast-spell') {
+      return definition.iconPath ?? null;
+    }
+
+    const iconPath = action.payload['iconPath'];
+    return typeof iconPath === 'string' && iconPath ? iconPath : definition.iconPath ?? null;
   }
 
   protected perfectEquilibriumProcMarkers(
@@ -665,10 +811,20 @@ export class RotationPlannerPageComponent {
   }
 
   protected nonGcdShortLabel(action: RotationAction): string {
+    if (action.actionType === 'ability-use') {
+      return this.abilityDefinitionForAction(action)
+        ? buildAbilityShortLabel(this.abilityDefinitionForAction(action)!)
+        : 'Abi';
+    }
+
     return buildNonGcdShortLabel(action);
   }
 
   protected nonGcdLabel(action: RotationAction): string {
+    if (action.actionType === 'ability-use') {
+      return this.abilityDefinitionForAction(action)?.name ?? buildNonGcdLabel(action);
+    }
+
     return buildNonGcdLabel(action);
   }
 
@@ -681,6 +837,10 @@ export class RotationPlannerPageComponent {
   }
 
   protected nonGcdIconPath(action: RotationAction): string | null {
+    if (action.actionType === 'ability-use') {
+      return this.abilityDefinitionForAction(action)?.iconPath ?? null;
+    }
+
     return buildNonGcdIconPath(action);
   }
 
@@ -712,6 +872,19 @@ export class RotationPlannerPageComponent {
   }
 
   protected onTimelineNonGcdDragStart(action: RotationAction, event: DragEvent): void {
+    if (action.actionType === 'ability-use') {
+      const abilityId = action.payload['abilityId'];
+      this.draggedNonGcdPayload = {
+        sourceType: 'timeline',
+        templateId: 'ability-use',
+        actionId: action.id,
+        abilityId: typeof abilityId === 'string' ? abilityId : undefined,
+      };
+      this.draggedNonGcdAction = action;
+      this.applyCompactNonGcdDragPreview(event, this.nonGcdIconPath(action), this.nonGcdShortLabel(action));
+      return;
+    }
+
     const templateId = action.payload['templateId'];
     this.draggedNonGcdPayload = {
       sourceType: 'timeline',
@@ -761,22 +934,63 @@ export class RotationPlannerPageComponent {
       return;
     }
 
-    if (!this.plannerStore.canPlaceAbilityAtTick(definition, snappedTick, payload.actionId)) {
-      this.showPlannerWarning(describeInvalidAbilityPlacement(definition.name, undefined));
+    const placement = this.plannerStore.evaluateAbilityPlacement(definition, snappedTick, payload.actionId);
+    if (!placement.isPlaceable) {
+      this.showPlannerWarning(describeInvalidAbilityPlacement(definition.name, placement.issue));
       this.onAbilityDragEnd();
       return;
     }
 
-    this.plannerStore.placeAbility(definition, snappedTick, payload);
+    const actionId = this.plannerStore.placeAbility(definition, snappedTick, payload);
     this.clearPlannerWarning();
     this.onAbilityDragEnd();
+
+    if (definition.id === 'cast-spell' && actionId) {
+      this.openCastSpellConfig(actionId, payload.sourceType === 'catalog');
+    }
   }
 
   protected dropNonGcdOnTick(tickIndex: number, event: DragEvent): void {
     event.preventDefault();
 
+    const draggedAbility = this.draggedAbilityPayload;
+    if (draggedAbility) {
+      const definition = this.abilityCatalog()[draggedAbility.abilityId];
+      if (!definition || definition.subtype !== 'utility') {
+        return;
+      }
+
+      if (!this.canPlaceUtilityAbilityOnNonGcd(definition, tickIndex)) {
+        this.showPlannerWarning(`Cannot place ${definition.name} on that tick.`);
+        this.onAbilityDragEnd();
+        return;
+      }
+
+      this.plannerStore.placeUtilityAbilityNonGcd(definition, tickIndex, {
+        sourceType: draggedAbility.actionId ? 'timeline' : 'catalog',
+        templateId: 'ability-use',
+        actionId: draggedAbility.actionId,
+        abilityId: definition.id,
+      });
+      this.clearPlannerWarning();
+      this.onAbilityDragEnd();
+      return;
+    }
+
     const payload = this.draggedNonGcdPayload;
     if (!payload || !this.canDropNonGcd(tickIndex)) {
+      return;
+    }
+
+    if (payload.templateId === 'ability-use' && payload.abilityId) {
+      const definition = this.abilityCatalog()[payload.abilityId];
+      if (!definition) {
+        return;
+      }
+
+      this.plannerStore.placeUtilityAbilityNonGcd(definition, tickIndex, payload);
+      this.clearPlannerWarning();
+      this.onNonGcdDragEnd();
       return;
     }
 
@@ -791,6 +1005,12 @@ export class RotationPlannerPageComponent {
       return;
     }
 
+    if (template.id === 'spell-swap' && payload.sourceType === 'catalog' && !this.spellSwapOptions().length) {
+      this.showPlannerWarning('No unlocked magic combat spells are available for a spell swap.');
+      this.onNonGcdDragEnd();
+      return;
+    }
+
     const actionId = this.plannerStore.placeNonGcdAction(template, tickIndex, payload);
     if (!actionId) {
       return;
@@ -800,6 +1020,8 @@ export class RotationPlannerPageComponent {
       this.openGearSwapConfig(actionId, true);
     } else if (template.id === 'adrenaline-potion' && payload.sourceType === 'catalog') {
       this.openAdrenalinePotionConfig(actionId, true);
+    } else if (template.id === 'spell-swap' && payload.sourceType === 'catalog') {
+      this.openSpellSwapConfig(actionId, true);
     } else {
       this.clearPlannerWarning();
     }
@@ -850,7 +1072,21 @@ export class RotationPlannerPageComponent {
 
     if (action.actionType === 'adrenaline-potion') {
       this.openAdrenalinePotionConfig(action.id, false);
+      return;
     }
+
+    if (action.actionType === 'spell-swap') {
+      this.openSpellSwapConfig(action.id, false);
+    }
+  }
+
+  protected openAbilityActionConfig(action: RotationAction, event: Event): void {
+    if (action.payload['abilityId'] !== 'cast-spell') {
+      return;
+    }
+
+    event.stopPropagation();
+    this.openCastSpellConfig(action.id, false);
   }
 
   protected confirmGearSwapConfig(): void {
@@ -927,6 +1163,99 @@ export class RotationPlannerPageComponent {
 
   protected updateSelectedAdrenalinePotionVariantId(value: AdrenalinePotionVariantId | null): void {
     this.selectedAdrenalinePotionVariantId.set(value);
+  }
+
+  protected confirmSpellSwapConfig(): void {
+    const action = this.activeSpellSwapAction();
+    const option = this.spellSwapOptions().find((entry) => entry.spellId === this.selectedSpellSwapSpellId());
+
+    if (!action || !option) {
+      this.showPlannerWarning('Choose an unlocked spell for the spell swap.');
+      return;
+    }
+
+    this.plannerStore.updateNonGcdAction(action.id, {
+      spellId: option.spellId,
+      label: `Spell: ${option.name}`,
+      shortLabel: buildSpellSwapShortLabel(option.name),
+      iconPath: option.iconPath ?? 'icons/actions/gear-swap.svg',
+    });
+
+    this.closeSpellSwapConfig(false);
+  }
+
+  protected closeSpellSwapConfig(cancelled: boolean): void {
+    const actionId = this.spellSwapDialogActionId();
+    const shouldRemove = cancelled && this.spellSwapDialogRemovesOnCancel() && actionId;
+
+    this.spellSwapDialogActionId.set(null);
+    this.spellSwapDialogRemovesOnCancel.set(false);
+    this.selectedSpellSwapSpellId.set(null);
+
+    if (shouldRemove) {
+      this.plannerStore.removeNonGcdAction(actionId);
+    }
+  }
+
+  protected updateSelectedSpellSwapSpellId(value: string | null): void {
+    this.selectedSpellSwapSpellId.set(value);
+  }
+
+  protected confirmCastSpellConfig(): void {
+    const action = this.activeCastSpellAction();
+    const option = this.castSpellOptions().find((entry) => entry.spellId === this.selectedCastSpellSpellId());
+
+    if (!action || !option) {
+      this.showPlannerWarning('Choose a spell to cast.');
+      return;
+    }
+
+    this.plannerStore.updateAbilityAction(action.id, {
+      spellId: option.spellId,
+      label: option.name,
+      shortLabel: buildSpellSwapShortLabel(option.name),
+      iconPath: option.iconPath ?? null,
+      spellRole: option.role,
+    });
+
+    this.closeCastSpellConfig(false);
+  }
+
+  protected closeCastSpellConfig(cancelled: boolean): void {
+    const actionId = this.castSpellDialogActionId();
+    const shouldRemove = cancelled && this.castSpellDialogRemovesOnCancel() && actionId;
+
+    this.castSpellDialogActionId.set(null);
+    this.castSpellDialogRemovesOnCancel.set(false);
+    this.selectedCastSpellSpellId.set(null);
+
+    if (shouldRemove) {
+      this.plannerStore.removeAbility(actionId);
+    }
+  }
+
+  protected updateSelectedCastSpellSpellId(value: string | null): void {
+    this.selectedCastSpellSpellId.set(value);
+  }
+
+  protected removeCastSpellActionFromDialog(): void {
+    const actionId = this.castSpellDialogActionId();
+    if (!actionId) {
+      return;
+    }
+
+    this.closeCastSpellConfig(false);
+    this.plannerStore.removeAbility(actionId);
+  }
+
+  protected removeSpellSwapActionFromDialog(): void {
+    const actionId = this.spellSwapDialogActionId();
+    if (!actionId) {
+      return;
+    }
+
+    this.closeSpellSwapConfig(false);
+    this.plannerStore.removeNonGcdAction(actionId);
   }
 
   protected removeAdrenalinePotionActionFromDialog(): void {
@@ -1006,6 +1335,62 @@ export class RotationPlannerPageComponent {
     this.clearPlannerWarning();
   }
 
+  private openSpellSwapConfig(actionId: string, removesOnCancel: boolean): void {
+    const action = this.nonGcdActions().find((entry) => entry.id === actionId) ?? null;
+    const options = buildPlannerSpellSwapOptions(
+      this.gameDataStore.snapshot().catalog?.spells ?? {},
+      this.playerStats().magicLevel ?? 0,
+      this.magicChoices().spellbookId,
+    );
+
+    if (!options.length) {
+      this.showPlannerWarning('No unlocked magic combat spells are available for the selected spellbook.');
+      if (removesOnCancel) {
+        this.plannerStore.removeNonGcdAction(actionId);
+      }
+      return;
+    }
+
+    const currentSpellId = typeof action?.payload['spellId'] === 'string'
+      ? action.payload['spellId']
+      : this.magicChoices().activeSpellId;
+
+    this.spellSwapDialogActionId.set(actionId);
+    this.spellSwapDialogRemovesOnCancel.set(removesOnCancel);
+    this.selectedSpellSwapSpellId.set(
+      options.some((option) => option.spellId === currentSpellId)
+        ? currentSpellId
+        : options[0]?.spellId ?? null,
+    );
+    this.clearPlannerWarning();
+  }
+
+  private openCastSpellConfig(actionId: string, removesOnCancel: boolean): void {
+    const action = this.abilityActions().find((entry) => entry.id === actionId) ?? null;
+    const options = this.castSpellOptions();
+
+    if (!options.length) {
+      this.showPlannerWarning('No unlocked spells are available for Cast Spell.');
+      if (removesOnCancel) {
+        this.plannerStore.removeAbility(actionId);
+      }
+      return;
+    }
+
+    const currentSpellId = typeof action?.payload['spellId'] === 'string'
+      ? action.payload['spellId']
+      : options[0]?.spellId ?? null;
+
+    this.castSpellDialogActionId.set(actionId);
+    this.castSpellDialogRemovesOnCancel.set(removesOnCancel);
+    this.selectedCastSpellSpellId.set(
+      options.some((option) => option.spellId === currentSpellId)
+        ? currentSpellId
+        : options[0]?.spellId ?? null,
+    );
+    this.clearPlannerWarning();
+  }
+
   private parseLevel(value: string | number | null): number | undefined {
     if (value === null || value === undefined) {
       return undefined;
@@ -1080,4 +1465,53 @@ export class RotationPlannerPageComponent {
     dataTransfer.setDragImage(preview, 20, 20);
     setTimeout(() => preview.remove(), 0);
   }
+}
+
+function buildPlannerSpellSwapOptions(
+  spellDefinitions: Record<string, SpellDefinition>,
+  magicLevel: number,
+  spellbookId: SpellDefinition['spellbookId'],
+): PlannerMagicSpellOption[] {
+  return buildPlannerCastSpellOptions(spellDefinitions, magicLevel, spellbookId)
+    .filter((spell) => spell.role === 'combat')
+    .map((spell) => ({
+      ...spell,
+      optionLabel: `${spell.name} - tier ${spell.tier} - level ${spell.levelRequirement}`,
+    }));
+}
+
+function buildPlannerCastSpellOptions(
+  spellDefinitions: Record<string, SpellDefinition>,
+  magicLevel: number,
+  spellbookId: SpellDefinition['spellbookId'],
+): PlannerMagicSpellOption[] {
+  return Object.values(spellDefinitions)
+    .filter((spell) => spell.spellbookId === spellbookId && spell.levelRequirement <= magicLevel)
+    .sort((left, right) => {
+      if (left.role !== right.role) {
+        return left.role === 'combat' ? -1 : 1;
+      }
+
+      return right.tier - left.tier || left.name.localeCompare(right.name);
+    })
+    .map((spell) => ({
+      spellId: spell.id,
+      name: spell.name,
+      role: spell.role,
+      levelRequirement: spell.levelRequirement,
+      tier: spell.tier,
+      optionLabel: spell.role === 'combat'
+        ? `${spell.name} - combat - tier ${spell.tier} - level ${spell.levelRequirement}`
+        : `${spell.name} - utility - level ${spell.levelRequirement}`,
+      iconPath: spell.iconPath,
+    }));
+}
+
+function buildSpellSwapShortLabel(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'Spell';
 }

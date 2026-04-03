@@ -13,13 +13,14 @@ export interface PlannerNonGcdTemplate {
   label: string;
   shortLabel: string;
   iconPath?: string;
-  actionType: Extract<RotationAction['actionType'], 'adrenaline-potion' | 'gear-swap' | 'ammo-swap' | 'vulnerability-bomb'>;
+  actionType: Extract<RotationAction['actionType'], 'adrenaline-potion' | 'gear-swap' | 'ammo-swap' | 'spell-swap' | 'vulnerability-bomb'>;
 }
 
 export interface PlannerNonGcdDropPayload {
   sourceType: 'catalog' | 'timeline';
   templateId: string;
   actionId?: string;
+  abilityId?: EntityId;
 }
 
 export interface PlannerAbilityGapControl {
@@ -132,6 +133,24 @@ export function upsertAbilityAction(
   );
 }
 
+export function updateAbilityActionPayload(
+  abilityActions: RotationAction[],
+  actionId: string,
+  payloadUpdate: Record<string, unknown>,
+): RotationAction[] {
+  return abilityActions.map((action) =>
+    action.id === actionId
+      ? {
+          ...action,
+          payload: {
+            ...action.payload,
+            ...payloadUpdate,
+          },
+        }
+      : action,
+  );
+}
+
 export function previewAbilityActionsWithPlacement(
   abilityActions: RotationAction[],
   abilityDefinitions: Record<EntityId, AbilityDefinition>,
@@ -206,6 +225,43 @@ export function upsertNonGcdAction(
         label: template.label,
         shortLabel: template.shortLabel,
         iconPath: template.iconPath,
+      },
+    } satisfies RotationAction,
+  ].sort(comparePlannerActions);
+}
+
+export function upsertNonGcdAbilityAction(
+  nonGcdActions: RotationAction[],
+  abilityDefinition: AbilityDefinition,
+  tick: number,
+  payload?: PlannerNonGcdDropPayload,
+): RotationAction[] {
+  if (payload?.sourceType === 'timeline' && payload.actionId) {
+    return nonGcdActions
+      .map((action) =>
+        action.id === payload.actionId
+          ? {
+              ...action,
+              tick,
+            }
+          : action,
+      )
+      .sort(comparePlannerActions);
+  }
+
+  return [
+    ...nonGcdActions,
+    {
+      id: createNonGcdAbilityActionId(abilityDefinition.id, tick, nonGcdActions),
+      tick,
+      lane: 'non-gcd',
+      actionType: 'ability-use',
+      payload: {
+        templateId: 'ability-use',
+        abilityId: abilityDefinition.id,
+        label: abilityDefinition.name,
+        shortLabel: buildAbilityShortCode(abilityDefinition.name),
+        iconPath: abilityDefinition.iconPath,
       },
     } satisfies RotationAction,
   ].sort(comparePlannerActions);
@@ -478,6 +534,31 @@ function createNonGcdActionId(
   }
 
   return candidate;
+}
+
+function createNonGcdAbilityActionId(
+  abilityId: EntityId,
+  tick: number,
+  nonGcdActions: RotationAction[],
+): string {
+  let suffix = nonGcdActions.filter((action) => action.payload['abilityId'] === abilityId).length + 1;
+  let candidate = `non-gcd-ability-${abilityId}-${tick}-${suffix}`;
+
+  while (nonGcdActions.some((action) => action.id === candidate)) {
+    suffix += 1;
+    candidate = `non-gcd-ability-${abilityId}-${tick}-${suffix}`;
+  }
+
+  return candidate;
+}
+
+function buildAbilityShortCode(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'Abi';
 }
 
 function resolveAbilityDefinition(

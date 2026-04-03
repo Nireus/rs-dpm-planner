@@ -1,0 +1,35 @@
+{
+  "id": "greater-sunshine",
+  "name": "Greater Sunshine",
+  "style": "magic",
+  "subtype": "ultimate",
+  "cooldownTicks": 100,
+  "adrenalineCost": 100,
+  "requires": {
+    "levelRequirements": {
+      "magic": 76
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "greater-sunshine-buff",
+      "startTickOffset": 1
+    }
+  ],
+  "description": "Summon a greater sunbeam to shine over your location.",
+  "iconPath": "/icons/wiki/greater-sunshine.png",
+  "hoverSummary": "Ultimate | 100 ticks | Self-target | -100% adrenaline",
+  "detailLines": [
+    "Creates a 7x7 area at your location.",
+    "Magic attacks deal 1.5x damage while inside for 38.4 seconds after cast resolution.",
+    "Its beam damage-over-time and Planted Feet edge cases remain descriptive-only."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Sunshine"
+}

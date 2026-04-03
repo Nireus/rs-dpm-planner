@@ -1,0 +1,15 @@
+{
+  "id": "smoke-rush",
+  "name": "Smoke Rush",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 50,
+  "tier": 50,
+  "iconPath": "/icons/wiki/smoke-rush.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 50 | Tier 50",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

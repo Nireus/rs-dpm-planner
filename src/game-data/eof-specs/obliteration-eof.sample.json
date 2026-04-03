@@ -1,0 +1,19 @@
+{
+  "id": "obliteration-eof",
+  "name": "Obliteration (EOF)",
+  "iconPath": "/icons/wiki/obliteration.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 1 hit",
+  "detailLines": [
+    "Stored Obliteration special attack for Essence of Finality.",
+    "Strikes for 200%-240% ability damage.",
+    "Halves the target's healing for 15 seconds."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Obliteration",
+  "weaponOrigin": "obliteration",
+  "abilityId": "devour",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:obliteration"]
+  },
+  "effectRefs": ["eof-obliteration-spec"],
+  "description": "Stored Obliteration special attack for Essence of Finality."
+}

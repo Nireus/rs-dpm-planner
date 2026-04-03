@@ -1,0 +1,37 @@
+{
+  "id": "magma-tempest",
+  "name": "Magma Tempest",
+  "style": "magic",
+  "subtype": "enhanced",
+  "cooldownTicks": 35,
+  "adrenalineCost": 20,
+  "requires": {
+    "levelRequirements": {
+      "magic": 85
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    { "id": "magma-tempest-hit-1", "tickOffset": 0, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-2", "tickOffset": 2, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-3", "tickOffset": 4, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-4", "tickOffset": 6, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-5", "tickOffset": 8, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-6", "tickOffset": 10, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-7", "tickOffset": 12, "damage": { "min": 35, "max": 45 } },
+    { "id": "magma-tempest-hit-8", "tickOffset": 14, "damage": { "min": 35, "max": 45 } }
+  ],
+  "baseDamage": {
+    "min": 280,
+    "max": 360
+  },
+  "description": "Create a storm of fire and earth around the target.",
+  "iconPath": "/icons/wiki/magma-tempest.png",
+  "hoverSummary": "Enhanced | 35 ticks | 8 hits | -20% adrenaline",
+  "detailLines": [
+    "35%-45% magic damage per hit every 1.2 seconds for 8 hits.",
+    "Creates a persistent 5x5 area around the target location.",
+    "Its area persistence, line-of-sight behavior, and no-critical-strike rule remain descriptive-only for now."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Magma_Tempest"
+}

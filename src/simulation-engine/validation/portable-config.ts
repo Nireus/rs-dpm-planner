@@ -1,7 +1,9 @@
 import {
   PORTABLE_CONFIG_SCHEMA_VERSION,
+  type PortableConfigDocumentV1,
   type PortableConfigDocument,
 } from '../models/portable-config';
+import { normalizeCombatChoices } from '../spells/magic-combat-choices';
 import { sanitizePlayerStats } from './player-stats';
 
 export type PortableConfigValidationCode =
@@ -116,12 +118,12 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
 
   if (typeof schemaVersion !== 'number' || Number.isNaN(schemaVersion)) {
     pushError(errors, 'invalid-type', 'schemaVersion', 'Expected "schemaVersion" to be a number.');
-  } else if (schemaVersion !== PORTABLE_CONFIG_SCHEMA_VERSION) {
+  } else if (schemaVersion !== 1 && schemaVersion !== PORTABLE_CONFIG_SCHEMA_VERSION) {
     pushError(
       errors,
       'unsupported-schema-version',
       'schemaVersion',
-      `Unsupported schemaVersion ${schemaVersion}. Expected ${PORTABLE_CONFIG_SCHEMA_VERSION}.`,
+      `Unsupported schemaVersion ${schemaVersion}. Expected 1 or ${PORTABLE_CONFIG_SCHEMA_VERSION}.`,
     );
   }
 
@@ -162,13 +164,22 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
     };
   }
 
+  const normalizedPlayerStats = sanitizePlayerStats(
+    playerStats as unknown as PortableConfigDocument['playerStats'],
+  );
+  const combatChoices = normalizeCombatChoices(
+    normalizedPlayerStats,
+    (schemaVersion === 1
+      ? undefined
+      : (input['combatChoices'] as PortableConfigDocument['combatChoices'] | undefined)),
+  );
+
   return {
     success: true,
     data: {
       schemaVersion: PORTABLE_CONFIG_SCHEMA_VERSION,
-      playerStats: sanitizePlayerStats(
-        playerStats as unknown as PortableConfigDocument['playerStats'],
-      ),
+      playerStats: normalizedPlayerStats,
+      combatChoices,
       gearSetup: gearSetup as unknown as PortableConfigDocument['gearSetup'],
       inventory: inventory as unknown as PortableConfigDocument['inventory'],
       persistentBuffConfig:

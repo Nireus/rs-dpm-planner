@@ -1,0 +1,30 @@
+{
+  "id": "staff-of-sliske",
+  "name": "Staff of Sliske",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/staff-of-sliske.png",
+  "wikiUrl": "https://runescape.wiki/w/Staff_of_Sliske",
+  "hoverSummary": "Tier 92 two-handed magic staff with 1324.8 ability damage and 2577 accuracy.",
+  "detailLines": [
+    "Requires level 92 Magic to wield.",
+    "Two-handed magic weapon with 6-tick speed and range 8.",
+    "Live special attack: From the Shadows.",
+    "Examine: An imitation of the Staff of Armadyl, designed by Sliske."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 92
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:from-the-shadows"],
+  "specialAbilityId": "from-the-shadows",
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated magic 2h staff from the live Staff of Sliske page. Wiki-verified with Playwright for tier, damage, accuracy, speed, and special attack presence."
+}

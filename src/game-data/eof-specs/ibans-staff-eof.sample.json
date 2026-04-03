@@ -1,0 +1,19 @@
+{
+  "id": "ibans-staff-eof",
+  "name": "Iban's Staff (EOF)",
+  "iconPath": "/icons/wiki/ibans-staff.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 1 hit",
+  "detailLines": [
+    "Stored Iban's staff special attack for Essence of Finality.",
+    "Strikes for 340%-390% ability damage.",
+    "Uses the live Iban Blast damage profile."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Iban%27s_staff",
+  "weaponOrigin": "ibans-staff",
+  "abilityId": "ibans-staff-eof",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:ibans-staff"]
+  },
+  "effectRefs": ["eof-ibans-staff-spec"],
+  "description": "Stored Iban's staff special attack for Essence of Finality."
+}

@@ -1,0 +1,19 @@
+{
+  "id": "roar-of-awakening-eof",
+  "name": "Roar of Awakening (EOF)",
+  "iconPath": "/icons/wiki/roar-of-awakening.png",
+  "hoverSummary": "EOF special | -35% adrenaline | hit + burn",
+  "detailLines": [
+    "Stored Roar of Awakening special attack for Essence of Finality.",
+    "Deals an initial 130%-160% hit, then six 170%-200% burn hits.",
+    "Applies the live Soulfire and Conflagrate state described on the weapon page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Roar_of_Awakening",
+  "weaponOrigin": "roar-of-awakening",
+  "abilityId": "soulfire",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:roar-of-awakening"]
+  },
+  "effectRefs": ["eof-roar-of-awakening-spec"],
+  "description": "Stored Roar of Awakening special attack for Essence of Finality."
+}

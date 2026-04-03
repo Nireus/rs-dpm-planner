@@ -1018,4 +1018,501 @@ describe('simulation regression scenarios', () => {
     });
     expect(result.adrenalineTimeline).toEqual([44.5, 62.5, 67, 71.5]);
   });
+
+  it('supports the first playable Ancient magic loop with Incite Fear reducing Tsunami cost', () => {
+    const staff: ItemDefinition = {
+      id: 'magic-staff',
+      name: 'Magic Staff',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+      requirements: {
+        requiredEquipmentTags: ['magic-two-handed'],
+      },
+    };
+
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        spells: {
+          'incite-fear': {
+            id: 'incite-fear',
+            name: 'Incite Fear',
+            spellbookId: 'ancient',
+            role: 'combat',
+            levelRequirement: 98,
+            tier: 16,
+            iconPath: '/icons/wiki/incite-fear.png',
+          },
+        },
+        combatChoices: {
+          magic: {
+            spellbookId: 'ancient',
+            activeSpellId: 'incite-fear',
+          },
+        },
+        abilities: {
+          magic: createAbilityDefinition({
+            id: 'magic',
+            name: 'Magic',
+            style: 'magic',
+            cooldownTicks: 3,
+            adrenalineGain: 8,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+            baseDamage: { min: 95, max: 105 },
+          }),
+          tsunami: createAbilityDefinition({
+            id: 'tsunami',
+            name: 'Tsunami',
+            style: 'magic',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 60,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: [{ id: 'tsunami-hit', tickOffset: 0, damage: { min: 225, max: 275 } }],
+            baseDamage: { min: 225, max: 275 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'tsunami-buff',
+              },
+            ],
+          }),
+        },
+        buffs: {
+          'glacial-embrace': {
+            id: 'glacial-embrace',
+            name: 'Glacial Embrace',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 34,
+            stackRules: {
+              maxStacks: 5,
+            },
+          },
+          'tsunami-buff': {
+            id: 'tsunami-buff',
+            name: 'Tsunami',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 50,
+          },
+        },
+        items: {
+          [staff.id]: staff,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'staff-1',
+            definitionId: staff.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('magic-1', 0, 'magic'),
+          createAbilityAction('magic-2', 3, 'magic'),
+          createAbilityAction('magic-3', 6, 'magic'),
+          createAbilityAction('magic-4', 9, 'magic'),
+          createAbilityAction('magic-5', 12, 'magic'),
+          createAbilityAction('tsunami-1', 15, 'tsunami'),
+        ],
+        startingAdrenaline: 0,
+        tickCount: 20,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.validationIssues.some((issue) => issue.code === 'ability.insufficient_adrenaline')).toBe(false);
+    expect(result.buffTimeline[15].filter((buffId) => buffId === 'glacial-embrace')).toHaveLength(5);
+    expect(result.buffTimeline[15]).toContain('tsunami-buff');
+    expect(result.adrenalineTimeline[14]).toBe(40);
+    expect(result.adrenalineTimeline[15]).toBeGreaterThanOrEqual(16);
+  });
+
+  it('supports the first playable magic empowerment flow with Runic Charge into Dragon Breath', () => {
+    const staff: ItemDefinition = {
+      id: 'magic-staff',
+      name: 'Magic Staff',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+      requirements: {
+        requiredEquipmentTags: ['magic-two-handed'],
+      },
+    };
+
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        spells: {
+          'fire-surge': {
+            id: 'fire-surge',
+            name: 'Fire Surge',
+            spellbookId: 'standard',
+            role: 'combat',
+            levelRequirement: 95,
+            tier: 16,
+            iconPath: '/icons/wiki/fire-surge.png',
+          },
+        },
+        combatChoices: {
+          magic: {
+            spellbookId: 'standard',
+            activeSpellId: 'fire-surge',
+          },
+        },
+        abilities: {
+          'runic-charge': createAbilityDefinition({
+            id: 'runic-charge',
+            name: 'Runic Charge',
+            style: 'magic',
+            subtype: 'utility',
+            cooldownTicks: 50,
+            adrenalineGain: 0,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'anima-charged',
+              },
+            ],
+          }),
+          'dragon-breath': createAbilityDefinition({
+            id: 'dragon-breath',
+            name: 'Dragon Breath',
+            style: 'magic',
+            cooldownTicks: 17,
+            adrenalineGain: 8,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: [{ id: 'dragon-breath-hit', tickOffset: 0, damage: { min: 150, max: 180 } }],
+            baseDamage: { min: 150, max: 180 },
+          }),
+        },
+        buffs: {
+          'anima-charged': {
+            id: 'anima-charged',
+            name: 'Anima Charged',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 25,
+          },
+        },
+        items: {
+          [staff.id]: staff,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'staff-1',
+            definitionId: staff.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('runic-charge-1', 0, 'runic-charge'),
+          createAbilityAction('dragon-breath-1', 3, 'dragon-breath'),
+        ],
+        startingAdrenaline: 0,
+        tickCount: 8,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.buffTimeline[0]).toContain('anima-charged');
+    const dragonBreathHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'dragon-breath');
+    expect(dragonBreathHits).toHaveLength(1);
+    expect(dragonBreathHits[0]?.baseDamage.min).toBeGreaterThanOrEqual(260);
+    expect(dragonBreathHits[0]?.baseDamage.max).toBeGreaterThanOrEqual(310);
+  });
+
+  it('fires an expected-value Lightning Surge while Instability is active', () => {
+    const staff: ItemDefinition = {
+      id: 'fractured-staff-of-armadyl',
+      name: 'Fractured Staff of Armadyl',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+    };
+
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          instability: createAbilityDefinition({
+            id: 'instability',
+            name: 'Instability',
+            style: 'magic',
+            subtype: 'special',
+            cooldownTicks: 100,
+            adrenalineCost: 50,
+            hitSchedule: [{ id: 'instability-hit', tickOffset: 0, damage: { min: 120, max: 140 } }],
+            baseDamage: { min: 120, max: 140 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'instability',
+              },
+            ],
+          }),
+          magic: createAbilityDefinition({
+            id: 'magic',
+            name: 'Magic',
+            style: 'magic',
+            cooldownTicks: 3,
+            adrenalineGain: 8,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            effectRefs: ['critical-strike-chance:+100%'],
+            hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 100, max: 120 } }],
+            baseDamage: { min: 100, max: 120 },
+          }),
+        },
+        buffs: {
+          instability: {
+            id: 'instability',
+            name: 'Instability',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 50,
+          },
+        },
+        items: {
+          [staff.id]: staff,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'staff-1',
+            definitionId: staff.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('instability-1', 0, 'instability'),
+          createAbilityAction('magic-1', 3, 'magic'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 8,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.explainability.damageBreakdowns.some((entry) => entry.abilityId === 'lightning-surge')).toBe(true);
+    expect(
+      result.explainability.damageBreakdowns.some(
+        (entry) => entry.abilityId === 'lightning-surge' && entry.tick === 4,
+      ),
+    ).toBe(true);
+  });
+
+  it('uses Soulfire to build Essence Corruption and amplify the next Combust', () => {
+    const roar: ItemDefinition = {
+      id: 'roar-of-awakening',
+      name: 'Roar of Awakening',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 55,
+      },
+    };
+    const ode: ItemDefinition = {
+      id: 'ode-to-deceit',
+      name: 'Ode to Deceit',
+      category: 'weapon',
+      slot: 'offHand',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 55,
+      },
+    };
+
+    const createMagicSetConfig = (includeSoulfire: boolean) =>
+      createScenarioConfig({
+        spells: {
+          'fire-surge': {
+            id: 'fire-surge',
+            name: 'Fire Surge',
+            spellbookId: 'standard',
+            role: 'combat',
+            levelRequirement: 95,
+            tier: 16,
+          },
+        },
+        combatChoices: {
+          magic: {
+            spellbookId: 'standard',
+            activeSpellId: 'fire-surge',
+          },
+        },
+        abilities: {
+          soulfire: createAbilityDefinition({
+            id: 'soulfire',
+            name: 'Soulfire',
+            style: 'magic',
+            subtype: 'special',
+            cooldownTicks: 75,
+            adrenalineCost: 35,
+            hitSchedule: [
+              { id: 'soulfire-hit', tickOffset: 0, damage: { min: 130, max: 160 } },
+              { id: 'soulfire-burn-1', tickOffset: 3, damage: { min: 170, max: 200 } },
+              { id: 'soulfire-burn-2', tickOffset: 6, damage: { min: 170, max: 200 } },
+              { id: 'soulfire-burn-3', tickOffset: 9, damage: { min: 170, max: 200 } },
+              { id: 'soulfire-burn-4', tickOffset: 12, damage: { min: 170, max: 200 } },
+              { id: 'soulfire-burn-5', tickOffset: 15, damage: { min: 170, max: 200 } },
+              { id: 'soulfire-burn-6', tickOffset: 18, damage: { min: 170, max: 200 } },
+            ],
+            baseDamage: { min: 1150, max: 1360 },
+            effectRefs: [EFFECT_REF_IDS.damageOverTime],
+            timelineEffects: [
+              { kind: 'apply-buff', buffId: 'soulfire' },
+              { kind: 'apply-buff', buffId: 'conflagrate' },
+            ],
+          }),
+          combust: createAbilityDefinition({
+            id: 'combust',
+            name: 'Combust',
+            style: 'magic',
+            cooldownTicks: 30,
+            adrenalineGain: 9,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: Array.from({ length: 10 }, (_, index) => ({
+              id: `combust-hit-${index + 1}`,
+              tickOffset: index * 3,
+              damage: { min: 27, max: 33 },
+            })),
+            baseDamage: { min: 270, max: 330 },
+            effectRefs: [EFFECT_REF_IDS.damageOverTime],
+          }),
+        },
+        buffs: {
+          soulfire: {
+            id: 'soulfire',
+            name: 'Soulfire',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 18,
+          },
+          conflagrate: {
+            id: 'conflagrate',
+            name: 'Conflagrate',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 25,
+          },
+          'essence-corruption': {
+            id: 'essence-corruption',
+            name: 'Essence Corruption',
+            category: 'temporary',
+            sourceType: 'item',
+            durationTicks: 50,
+            stackRules: {
+              maxStacks: 100,
+              refreshesDuration: true,
+            },
+          },
+        },
+        items: {
+          [roar.id]: roar,
+          [ode.id]: ode,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'roar-1',
+            definitionId: roar.id,
+          },
+          offHand: {
+            instanceId: 'ode-1',
+            definitionId: ode.id,
+          },
+        },
+        abilityActions: [
+          ...(includeSoulfire ? [createAbilityAction('soulfire-1', 0, 'soulfire')] : []),
+          createAbilityAction('combust-1', 21, 'combust'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 55,
+      });
+
+    const baseline = simulateBaseDamage(createMagicSetConfig(false));
+    const buffed = simulateBaseDamage(createMagicSetConfig(true));
+
+    expect(buffed.isValid).toBe(true);
+    expect(buffed.buffTimeline[21].filter((buffId) => buffId === 'essence-corruption')).toHaveLength(8);
+    expect(buffed.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'combust')?.finalDamage.avg).toBeGreaterThan(
+      baseline.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'combust')?.finalDamage.avg ?? 0,
+    );
+  });
+
+  it('applies the Guthix staff EOF affinity debuff state', () => {
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          'guthix-staff-eof': createAbilityDefinition({
+            id: 'guthix-staff-eof',
+            name: 'Guthix Staff (EOF)',
+            style: 'magic',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineCost: 25,
+            hitSchedule: [{ id: 'guthix-hit', tickOffset: 0, damage: { min: 200, max: 240 } }],
+            baseDamage: { min: 200, max: 240 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'guthix-staff-affinity-debuff',
+              },
+            ],
+          }),
+        },
+        buffs: {
+          'guthix-staff-affinity-debuff': {
+            id: 'guthix-staff-affinity-debuff',
+            name: 'Guthix Staff Affinity Debuff',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 100,
+          },
+        },
+        abilityActions: [createAbilityAction('guthix-1', 0, 'guthix-staff-eof')],
+        startingAdrenaline: 100,
+        tickCount: 8,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.timelineGeneratedBuffSources).toContainEqual({
+      buffId: 'guthix-staff-affinity-debuff',
+      sourceType: 'ability',
+      sourceId: 'guthix-staff-eof',
+    });
+  });
 });

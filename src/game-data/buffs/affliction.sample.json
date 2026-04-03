@@ -1,0 +1,12 @@
+{
+  "id": "affliction",
+  "name": "Affliction",
+  "iconPath": "/icons/wiki/affliction.png",
+  "wikiUrl": "https://runescape.wiki/w/Affliction",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["affliction", "magic-damage-multiplier:+12%"],
+  "displayPriority": 11
+}

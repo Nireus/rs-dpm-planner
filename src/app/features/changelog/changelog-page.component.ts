@@ -10,6 +10,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 export class ChangelogPageComponent {
   protected readonly entries = [
     {
+      date: '04.04.2026',
+      change:
+        'Magic expansion is now live in the planner with spellbook selection, combat and utility spell support, non-GCD Spell Swap, Cast Spell actions, first-pass magic abilities/gear/buffs/specials, spell-aware damage and inspection, and a dedicated Spellbook page for choosing the starting combat spell.',
+    },
+    {
       date: '30.03.2026',
       change: "Initial melee abilities and gear added to tool. Ready for testing individual interactions.",
     },

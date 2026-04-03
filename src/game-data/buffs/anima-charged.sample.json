@@ -1,0 +1,10 @@
+{
+  "id": "anima-charged",
+  "name": "Anima Charged",
+  "iconPath": "/icons/wiki/runic-charge.png",
+  "wikiUrl": "https://runescape.wiki/w/Runic_Charge",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 25,
+  "displayPriority": 74
+}

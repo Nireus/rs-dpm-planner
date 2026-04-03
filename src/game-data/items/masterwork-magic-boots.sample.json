@@ -1,0 +1,25 @@
+{
+  "id": "masterwork-magic-boots",
+  "name": "Masterwork magic boots",
+  "category": "armor",
+  "slot": "feet",
+  "iconPath": "/icons/wiki/masterwork-magic-boots.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_magic_boots",
+  "hoverSummary": "Tier 100 magic power boots with 15.6 magic damage bonus.",
+  "detailLines": [
+    "Requires level 99 Defence to wear.",
+    "Masterwork magic power armour foot piece.",
+    "Live set bonus: Masterwork Magic Set delays incoming damage over time."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 100,
+  "offensiveStats": {
+    "magicBonus": 15.6
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "implementationNotes": "Curated masterwork magic boots from the live Masterwork magic boots page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

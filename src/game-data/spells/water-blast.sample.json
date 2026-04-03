@@ -1,0 +1,15 @@
+{
+  "id": "water-blast",
+  "name": "Water Blast",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 47,
+  "tier": 47,
+  "iconPath": "/icons/wiki/water-blast.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 47 | Tier 47",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

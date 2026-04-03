@@ -267,6 +267,27 @@ This rule applies whenever the user provides a web page URL, even if the agent b
 - Keep import/export schema versioned and portable.
 - Keep JSON game data curated and human-maintainable.
 
+### Curated UI/data expectations
+
+When adding new curated game content, update the canonical JSON definitions so the
+relevant page sections pick it up correctly.
+
+#### Gear additions
+- New items must land in the correct catalog category for the Gear page.
+- Items should sort correctly with stronger/higher-tier entries appearing before lower-tier ones within their category.
+- Every item should have an `iconPath`. It may initially point to a live wiki asset, but should later be migrated to a local static icon when the repo asset pass catches up.
+- Items in augmentable slots should expose the correct augmentable/perk-capable configuration instead of silently missing augmentation support.
+- Items that can be upgraded by Shard of Genesis Essence should expose the correct upgrade/config option in data.
+
+#### Buff additions
+- New buffs must land in the correct Buffs page category.
+- Every buff should have an `iconPath`. It may initially point to a live wiki asset, but should later be migrated to a local static icon when available.
+
+#### Ability additions
+- New abilities must land in the correct Abilities page/planner category.
+- Every ability should have an `iconPath`. It may initially point to a live wiki asset, but should later be migrated to a local static icon when available.
+- Every ability should include the metadata needed for the detail panel, including a usable summary/detail description shown when the user inspects or clicks the ability.
+
 ### Unsupported cases
 If a mechanic or edge case is not yet supported:
 - fail clearly

@@ -2,6 +2,8 @@ export type EntityId = string;
 export type EffectRef = string;
 export type RequirementTag = string;
 export type CombatStyle = 'ranged' | 'melee' | 'magic' | 'necromancy' | 'constitution';
+export type SpellbookId = 'standard' | 'ancient';
+export type SpellRole = 'combat' | 'utility';
 
 export type ItemCategory =
   | 'weapon'
@@ -26,7 +28,7 @@ export type EquipmentSlot =
   | 'cape'
   | 'pocket';
 
-export type AbilitySubtype = 'basic' | 'enhanced' | 'ultimate' | 'special' | 'other';
+export type AbilitySubtype = 'basic' | 'enhanced' | 'ultimate' | 'special' | 'utility' | 'other';
 
 export type AmmoType = 'arrow';
 

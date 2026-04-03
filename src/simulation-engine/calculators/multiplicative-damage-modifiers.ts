@@ -6,6 +6,7 @@ import type {
   SimulationConfig,
 } from '../models';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
+import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import { collectActiveEffectRefs } from './active-effect-refs';
 import {
   getCorruptedWoundsBleedBonus,
@@ -27,6 +28,7 @@ export function applyMultiplicativeDamageModifiers(
   timelineBuffs: Record<number, EntityId[]>,
 ): MultiplicativeDamageComputation {
   const effectRefs = collectActiveEffectRefs(config, ability, hitTick, timelineBuffs);
+  const projectedConfig = projectSimulationConfigAtTick(config, castTick);
   const isDamageOverTime = ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime) ?? false;
   const modifiers = effectRefs
     .map((effectRef) => parseMultiplicativeModifier(effectRef, effectRefs, ability, hit, config))
@@ -50,6 +52,24 @@ export function applyMultiplicativeDamageModifiers(
     });
   }
 
+  if (ability.id === 'combust' && (timelineBuffs[castTick] ?? []).includes('conflagrate')) {
+    modifiers.push({
+      sourceId: 'conflagrate',
+      label: 'Conflagrate x1.40',
+      value: 0,
+      multiplier: 1.4,
+    });
+  }
+
+  if (hasSongOfDestructionSetEquipped(projectedConfig) && isSongOfDestructionAbility(ability.id)) {
+    modifiers.push({
+      sourceId: 'song-of-destruction:set-2',
+      label: 'Song of Destruction x1.30',
+      value: 0,
+      multiplier: 1.3,
+    });
+  }
+
   if (!modifiers.length) {
     return {
       finalDamage: baseDamage,
@@ -66,6 +86,15 @@ export function applyMultiplicativeDamageModifiers(
       value: roundValue(baseDamage.avg * (entryMultiplier - 1)),
     })),
   };
+}
+
+function hasSongOfDestructionSetEquipped(config: SimulationConfig): boolean {
+  return config.gearSetup.equipment.weapon?.definitionId === 'roar-of-awakening' &&
+    config.gearSetup.equipment.offHand?.definitionId === 'ode-to-deceit';
+}
+
+function isSongOfDestructionAbility(abilityId: string | undefined): boolean {
+  return abilityId === 'combust' || abilityId === 'corruption-blast' || abilityId === 'soulfire';
 }
 
 function parseMultiplicativeModifier(
@@ -148,6 +177,7 @@ function parseMultiplicativeModifier(
 
   const match = /^ranged-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
   const meleeMatch = /^melee-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
+  const magicMatch = /^magic-damage-multiplier:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
   const targetDamageTakenMatch = /^target-damage-taken:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
 
   if (targetDamageTakenMatch) {
@@ -173,6 +203,22 @@ function parseMultiplicativeModifier(
     return {
       sourceId: effectRef,
       label: `Melee damage x${roundValue(multiplier).toFixed(2)}`,
+      value: 0,
+      multiplier,
+    };
+  }
+
+  if (magicMatch) {
+    if (ability.style !== 'magic' || isDamageOverTime) {
+      return null;
+    }
+
+    const percent = Number.parseFloat(magicMatch[1]);
+    const multiplier = 1 + percent / 100;
+
+    return {
+      sourceId: effectRef,
+      label: `Magic damage x${roundValue(multiplier).toFixed(2)}`,
       value: 0,
       multiplier,
     };

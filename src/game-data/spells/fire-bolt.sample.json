@@ -1,0 +1,15 @@
+{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 35,
+  "tier": 35,
+  "iconPath": "/icons/wiki/fire-bolt.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 35 | Tier 35",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

@@ -1,0 +1,26 @@
+{
+  "id": "seismic-singularity",
+  "name": "Seismic singularity",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "/icons/wiki/seismic-singularity.png",
+  "wikiUrl": "https://runescape.wiki/w/Seismic_singularity",
+  "hoverSummary": "Tier 90 off-hand magic weapon with 432 ability damage and 2458 accuracy.",
+  "detailLines": [
+    "Requires level 90 Magic to wield.",
+    "Off-hand magic weapon with 4-tick speed and range 8.",
+    "Curated as part of the dual-wield magic batch."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 90
+    }
+  },
+  "implementationNotes": "Curated off-hand magic weapon from the live Seismic singularity page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and range."
+}

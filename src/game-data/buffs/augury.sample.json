@@ -1,0 +1,12 @@
+{
+  "id": "augury",
+  "name": "Augury",
+  "iconPath": "/icons/wiki/augury.png",
+  "wikiUrl": "https://runescape.wiki/w/Augury",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["augury", "magic-damage-multiplier:+8%"],
+  "displayPriority": 19
+}

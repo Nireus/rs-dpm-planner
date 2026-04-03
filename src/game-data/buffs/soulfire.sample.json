@@ -1,0 +1,10 @@
+{
+  "id": "soulfire",
+  "name": "Soulfire",
+  "iconPath": "/icons/wiki/soulfire.gif",
+  "wikiUrl": "https://runescape.wiki/w/Soulfire",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 18,
+  "displayPriority": 76
+}

@@ -1,0 +1,13 @@
+{
+  "id": "greater-sunshine-buff",
+  "name": "Greater Sunshine",
+  "iconPath": "/icons/wiki/greater-sunshine.png",
+  "wikiUrl": "https://runescape.wiki/w/Greater_Sunshine",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 64,
+  "effectRefs": [
+    "magic-damage-multiplier:+50%"
+  ],
+  "displayPriority": 96
+}

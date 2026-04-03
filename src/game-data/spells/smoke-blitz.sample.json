@@ -1,0 +1,15 @@
+{
+  "id": "smoke-blitz",
+  "name": "Smoke Blitz",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 74,
+  "tier": 74,
+  "iconPath": "/icons/wiki/smoke-blitz.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 74 | Tier 74",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

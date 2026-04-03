@@ -1,0 +1,15 @@
+{
+  "id": "water-wave",
+  "name": "Water Wave",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 65,
+  "tier": 65,
+  "iconPath": "/icons/wiki/water-wave.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 65 | Tier 65",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

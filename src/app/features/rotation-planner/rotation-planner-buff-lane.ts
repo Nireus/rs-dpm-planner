@@ -90,7 +90,12 @@ function collectTimelineBuffIds(
 
   for (let tick = 0; tick < tickCount; tick += 1) {
     for (const buffId of buffTimeline[tick] ?? []) {
-      if (isCooldownLikeBuff(buffDefinitions[buffId]) || buffId === 'bloodlust') {
+      if (
+        buffId === 'bloodlust' ||
+        buffId === 'glacial-embrace' ||
+        buffId === 'essence-corruption' ||
+        isCooldownLikeBuff(buffDefinitions[buffId])
+      ) {
         continue;
       }
 

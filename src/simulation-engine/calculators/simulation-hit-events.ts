@@ -26,6 +26,7 @@ export interface SimulationHitEvent {
 export function buildSimulationHitEvents(
   config: SimulationConfig,
   blockingActionIds: ReadonlySet<string>,
+  resolvedAbilityOverridesByActionId: Record<string, { hitSchedule: HitDefinition[]; baseDamage: DamageRange; adrenalineCost?: number; effectRefs?: string[]; id: EntityId; style?: string; subtype?: string }> = {},
 ): SimulationHitEvent[] {
   const events: SimulationHitEvent[] = [];
 
@@ -34,7 +35,7 @@ export function buildSimulationHitEvents(
       continue;
     }
 
-    const ability = resolveEffectiveAbilityDefinition(config, action);
+    const ability = resolvedAbilityOverridesByActionId[action.id] ?? resolveEffectiveAbilityDefinition(config, action);
     if (!ability) {
       continue;
     }

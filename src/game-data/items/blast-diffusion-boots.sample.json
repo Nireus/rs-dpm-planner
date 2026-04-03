@@ -1,0 +1,25 @@
+{
+  "id": "blast-diffusion-boots",
+  "name": "Blast diffusion boots",
+  "category": "armor",
+  "slot": "feet",
+  "iconPath": "/icons/wiki/blast-diffusion-boots.png",
+  "wikiUrl": "https://runescape.wiki/w/Blast_diffusion_boots",
+  "hoverSummary": "Tier 80 magic boots with 12.5 magic damage bonus and Wild Magic synergy.",
+  "detailLines": [
+    "Requires level 80 Defence to wear.",
+    "Using Wild Magic applies Blast Infused for 10 ticks.",
+    "Blast Infused causes basic magic abilities to gain +8% base damage."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 80,
+  "offensiveStats": {
+    "magicBonus": 12.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 80
+    }
+  },
+  "implementationNotes": "Curated magic boots from the live Blast diffusion boots page. Wiki-verified with Playwright for tier, style bonus, and Inner Wrath passive text."
+}

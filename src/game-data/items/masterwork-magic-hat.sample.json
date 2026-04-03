@@ -1,0 +1,25 @@
+{
+  "id": "masterwork-magic-hat",
+  "name": "Masterwork magic hat",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "/icons/wiki/masterwork-magic-hat.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_magic_hat",
+  "hoverSummary": "Tier 100 magic power helm with 25.0 magic damage bonus.",
+  "detailLines": [
+    "Requires level 99 Defence to wear.",
+    "Masterwork magic power armour piece.",
+    "Live set bonus: Masterwork Magic Set delays incoming damage over time."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 100,
+  "offensiveStats": {
+    "magicBonus": 25.0
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "implementationNotes": "Curated masterwork magic helm from the live Masterwork magic hat page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

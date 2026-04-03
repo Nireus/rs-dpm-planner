@@ -12,6 +12,8 @@ import type {
   HitDefinition,
   ItemCategory,
   RequirementSet,
+  SpellRole,
+  SpellbookId,
   StackRules,
   StatModifierMap,
 } from './common';
@@ -130,6 +132,22 @@ export interface AmmoDefinition {
   effectRefs?: EffectRef[];
   requirements?: RequirementSet;
   implementationNotes?: string;
+}
+
+export interface SpellDefinition {
+  id: EntityId;
+  name: string;
+  spellbookId: SpellbookId;
+  role: SpellRole;
+  levelRequirement: number;
+  tier: number;
+  iconPath?: string;
+  wikiUrl?: string;
+  effectRefs?: EffectRef[];
+  hoverSummary?: string;
+  detailLines?: string[];
+  description?: string;
+  timelineEffects?: AbilityTimelineEffect[];
 }
 
 export interface AbilityDefinition {

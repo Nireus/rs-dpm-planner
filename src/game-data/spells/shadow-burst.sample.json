@@ -1,0 +1,15 @@
+{
+  "id": "shadow-burst",
+  "name": "Shadow Burst",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 64,
+  "tier": 64,
+  "iconPath": "/icons/wiki/shadow-burst.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 64 | Tier 64",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

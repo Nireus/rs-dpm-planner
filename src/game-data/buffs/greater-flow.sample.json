@@ -1,0 +1,10 @@
+{
+  "id": "greater-flow",
+  "name": "Greater Flow",
+  "iconPath": "/icons/wiki/greater-flow.png",
+  "wikiUrl": "https://runescape.wiki/w/Greater_Sonic_Wave",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 15,
+  "displayPriority": 73
+}

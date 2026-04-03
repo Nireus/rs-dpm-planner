@@ -1,0 +1,15 @@
+{
+  "id": "ice-burst",
+  "name": "Ice Burst",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 70,
+  "tier": 70,
+  "iconPath": "/icons/wiki/ice-burst.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 70 | Tier 70",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

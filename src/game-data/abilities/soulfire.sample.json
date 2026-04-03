@@ -1,0 +1,86 @@
+{
+  "id": "soulfire",
+  "name": "Soulfire",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 75,
+  "adrenalineCost": 35,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "soulfire-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 130,
+        "max": 160
+      }
+    },
+    {
+      "id": "soulfire-burn-1",
+      "tickOffset": 3,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    },
+    {
+      "id": "soulfire-burn-2",
+      "tickOffset": 6,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    },
+    {
+      "id": "soulfire-burn-3",
+      "tickOffset": 9,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    },
+    {
+      "id": "soulfire-burn-4",
+      "tickOffset": 12,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    },
+    {
+      "id": "soulfire-burn-5",
+      "tickOffset": 15,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    },
+    {
+      "id": "soulfire-burn-6",
+      "tickOffset": 18,
+      "damage": {
+        "min": 170,
+        "max": 200
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 1150,
+    "max": 1360
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "soulfire"
+    },
+    {
+      "kind": "apply-buff",
+      "buffId": "conflagrate"
+    }
+  ],
+  "effectRefs": ["weapon-special:soulfire", "damage-over-time"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Roar of Awakening special attack. Deals an initial hit, six burn hits over time, and applies Soulfire/Conflagrate state described by the live page."
+}

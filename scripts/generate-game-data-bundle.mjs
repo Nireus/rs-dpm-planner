@@ -4,7 +4,7 @@ import path from 'node:path';
 const repoRoot = process.cwd();
 const manifestPath = path.join(repoRoot, 'src/game-data/loaders/sample-manifest.ts');
 const outputPath = path.join(repoRoot, 'public/game-data/catalog.sample.json');
-const categoryKeys = ['items', 'abilities', 'buffs', 'eofSpecs', 'perks', 'relics'];
+const categoryKeys = ['items', 'spells', 'abilities', 'buffs', 'eofSpecs', 'perks', 'relics'];
 
 async function main() {
   const manifestSource = await fs.readFile(manifestPath, 'utf8');
@@ -46,3 +46,4 @@ function parseManifestSource(source) {
 }
 
 await main();
+

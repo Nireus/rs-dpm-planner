@@ -1,0 +1,30 @@
+{
+  "id": "obliteration",
+  "name": "Obliteration",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/obliteration.png",
+  "wikiUrl": "https://runescape.wiki/w/Obliteration",
+  "hoverSummary": "Tier 87 two-handed magic staff with 1252.8 ability damage and 2287 accuracy.",
+  "detailLines": [
+    "Requires level 87 Magic to wield.",
+    "Two-handed magic weapon with 6-tick speed and range 8.",
+    "Live special attack: Devour.",
+    "Examine: A mage weapon of incredible power."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 87,
+  "offensiveStats": {
+    "damageTier": 87,
+    "accuracyTier": 87
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 87
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:devour"],
+  "specialAbilityId": "devour",
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated magic 2h staff from the live Obliteration page. Wiki-verified with Playwright for tier, weapon class, damage, accuracy, attack speed, and special attack presence."
+}

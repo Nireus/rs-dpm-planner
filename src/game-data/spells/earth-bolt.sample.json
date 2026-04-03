@@ -1,0 +1,15 @@
+{
+  "id": "earth-bolt",
+  "name": "Earth Bolt",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 29,
+  "tier": 29,
+  "iconPath": "/icons/wiki/earth-bolt.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 29 | Tier 29",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

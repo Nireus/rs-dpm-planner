@@ -78,6 +78,7 @@ const CATALOG: GameDataCatalog = {
     },
   },
   ammo: {},
+  spells: {},
   abilities: {
     [RANGED_ABILITY.id]: RANGED_ABILITY,
   },

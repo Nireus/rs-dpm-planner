@@ -1,0 +1,15 @@
+{
+  "id": "water-bolt",
+  "name": "Water Bolt",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 23,
+  "tier": 23,
+  "iconPath": "/icons/wiki/water-bolt.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 23 | Tier 23",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

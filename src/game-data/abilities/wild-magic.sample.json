@@ -1,0 +1,35 @@
+{
+  "id": "wild-magic",
+  "name": "Wild Magic",
+  "style": "magic",
+  "subtype": "enhanced",
+  "cooldownTicks": 9,
+  "adrenalineCost": 25,
+  "requires": {
+    "levelRequirements": {
+      "magic": 3
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    { "id": "wild-magic-hit-1", "tickOffset": 0, "damage": { "min": 125, "max": 155 } },
+    { "id": "wild-magic-hit-2", "tickOffset": 1, "damage": { "min": 125, "max": 155 } }
+  ],
+  "baseDamage": {
+    "min": 250,
+    "max": 310
+  },
+  "effectRefs": [
+    "critical-strike-chance:+10%",
+    "critical-strike-damage:+20%"
+  ],
+  "description": "Fire an unpredictable double magical attack at the target.",
+  "iconPath": "/icons/wiki/wild-magic.png",
+  "hoverSummary": "Enhanced | 9 ticks | 2 hits | -25% adrenaline",
+  "detailLines": [
+    "125%-155% magic damage per hit.",
+    "Each hit has +10% critical strike chance and +20% critical strike damage.",
+    "Blast diffusion boots interaction remains for the next magic mechanics pass."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Wild_Magic"
+}

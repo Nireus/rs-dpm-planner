@@ -1,0 +1,15 @@
+{
+  "id": "incite-fear",
+  "name": "Incite Fear",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 98,
+  "tier": 98,
+  "iconPath": "/icons/wiki/incite-fear.png",
+  "wikiUrl": "https://runescape.wiki/w/Incite_Fear",
+  "hoverSummary": "Ancient spell | Level 98 | Tier 98",
+  "description": "Ancient Senntisten combat spell that also drives Glacial Embrace and Tsunami support."
+}
+
+
+

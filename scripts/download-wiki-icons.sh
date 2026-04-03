@@ -64,6 +64,8 @@ sanitize_filename() {
     stem="${source_name%.*}"
   fi
 
+  stem="${stem%_icon}"
+
   decoded="$(printf '%s' "$stem" | perl -MURI::Escape -ne 'print uri_unescape($_)')"
   decoded="${decoded//\'/}"
   decoded="${decoded//&/ and }"
@@ -75,6 +77,38 @@ sanitize_filename() {
   fi
 
   printf '%s%s' "$decoded" "$extension"
+}
+
+resolve_download_url() {
+  local url="$1"
+
+  case "$url" in
+    "https://runescape.wiki/w/Special:FilePath/Glacial_Embrace.png")
+      printf '%s' "https://runescape.wiki/images/Glacial_Embrace_%28self_status%29.png"
+      ;;
+    "https://runescape.wiki/w/Special:FilePath/Instability.png")
+      printf '%s' "https://runescape.wiki/images/Instability_%28self_status%29.png"
+      ;;
+    "https://runescape.wiki/w/Special:FilePath/Soulfire.png")
+      printf '%s' "https://runescape.wiki/images/Soulfire.gif"
+      ;;
+    *)
+      printf '%s' "$url"
+      ;;
+  esac
+}
+
+resolve_local_filename() {
+  local source_url="$1"
+
+  case "$source_url" in
+    "https://runescape.wiki/w/Special:FilePath/Soulfire.png")
+      printf '%s' "soulfire.gif"
+      ;;
+    *)
+      sanitize_filename "$source_url"
+      ;;
+  esac
 }
 
 download_icon() {
@@ -154,11 +188,12 @@ main() {
   local failed_count=0
 
   for source_url in "${wiki_urls[@]}"; do
-    local_name="$(sanitize_filename "$source_url")"
+    download_url="$(resolve_download_url "$source_url")"
+    local_name="$(resolve_local_filename "$source_url")"
     local_relative_path="/icons/wiki/${local_name}"
     local_destination="$ROOT_DIR/public${local_relative_path}"
 
-    if download_icon "$source_url" "$local_destination"; then
+    if download_icon "$download_url" "$local_destination"; then
       printf '%s\t%s\n' "$source_url" "$local_relative_path" >> "$MANIFEST_FILE"
       downloaded_count=$((downloaded_count + 1))
     else
@@ -183,5 +218,3 @@ main() {
 }
 
 main "$@"
-
-

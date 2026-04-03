@@ -1,6 +1,7 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
+import type { CombatChoices } from '../../../simulation-engine/models';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
 import { formatEquipmentSlot } from '../gear/gear-builder.utils';
@@ -17,6 +18,8 @@ import { resolveBuffStackRuleState } from '../../../simulation-engine/buffs/buff
 import { resolveAdrenalineTimeline } from '../../../simulation-engine/resolvers/adrenaline';
 import { resolveCooldownTimeline } from '../../../simulation-engine/resolvers/cooldowns';
 import { buildBaseTimeline } from '../../../simulation-engine/timeline';
+import { projectSimulationConfigAtTick } from '../../../simulation-engine/state/projected-gear-state';
+import { resolveActiveMagicSpellDefinition } from '../../../simulation-engine/spells/selected-spell';
 import {
   buildRotationPlannerSimulationConfig,
   collectPersistentBuffIds,
@@ -31,10 +34,18 @@ export interface RotationPlannerTickInspection {
     start: number;
     end: number;
   };
+  activeSpell: {
+    name: string;
+    spellbookId: string;
+  } | null;
   deathsporeStacks: number | null;
   perfectEquilibriumStacks: number | null;
   bloodlustStacks: number | null;
   bloodlustMaxStacks: number | null;
+  glacialEmbraceStacks: number | null;
+  glacialEmbraceMaxStacks: number | null;
+  essenceCorruptionStacks: number | null;
+  essenceCorruptionMaxStacks: number | null;
   activePersistentBuffs: string[];
   activeTemporaryBuffs: string[];
   equipmentState: Array<{
@@ -70,6 +81,7 @@ export function inspectRotationPlannerTick(input: {
   tick: number;
   catalog: GameDataCatalog;
   playerStats: PlayerStats;
+  combatChoices?: CombatChoices;
   gearState: GearBuilderState;
   buffState: PlannerBuffStateSnapshot;
   rotationPlan: RotationPlan;
@@ -87,6 +99,8 @@ export function inspectRotationPlannerTick(input: {
   const adrenalineTickState = adrenalineResult.tickStates[clampedTick];
   const cooldownTickState = cooldownResult.tickStates[clampedTick];
   const simulatedTickState = simulationResult.tickStates[clampedTick];
+  const projectedConfig = projectSimulationConfigAtTick(simulationConfig, clampedTick);
+  const activeSpell = resolveActiveMagicSpellDefinition(projectedConfig);
   const persistentBuffIds = simulatedTickState?.activePersistentBuffIds ?? collectPersistentBuffIds(input.buffState, input.catalog);
   const temporaryBuffIds = (simulatedTickState?.activeTimelineBuffIds ?? []).filter(
     (buffId) => !isCooldownLikeBuff(input.catalog.buffs[buffId]),
@@ -105,6 +119,16 @@ export function inspectRotationPlannerTick(input: {
     input.catalog.buffs['bloodlust'],
     simulatedTickState?.activeTimelineBuffIds ?? [],
   );
+  const glacialEmbraceStacks = countBuffStacks(simulatedTickState?.activeTimelineBuffIds ?? [], 'glacial-embrace');
+  const glacialEmbraceStackState = resolveBuffStackRuleState(
+    input.catalog.buffs['glacial-embrace'],
+    simulatedTickState?.activeTimelineBuffIds ?? [],
+  );
+  const essenceCorruptionStacks = countBuffStacks(simulatedTickState?.activeTimelineBuffIds ?? [], 'essence-corruption');
+  const essenceCorruptionStackState = resolveBuffStackRuleState(
+    input.catalog.buffs['essence-corruption'],
+    simulatedTickState?.activeTimelineBuffIds ?? [],
+  );
 
   return {
     tick: clampedTick,
@@ -112,6 +136,12 @@ export function inspectRotationPlannerTick(input: {
       start: adrenalineTickState?.valueAtTickStart ?? input.rotationPlan.startingAdrenaline,
       end: adrenalineTickState?.valueAtTickEnd ?? input.rotationPlan.startingAdrenaline,
     },
+    activeSpell: activeSpell
+      ? {
+          name: activeSpell.name,
+          spellbookId: activeSpell.spellbookId,
+        }
+      : null,
     deathsporeStacks:
       deathsporeAmmoActive && typeof simulatedTickState?.deathsporeStacks === 'number'
         ? simulatedTickState.deathsporeStacks
@@ -122,11 +152,31 @@ export function inspectRotationPlannerTick(input: {
         : null,
     bloodlustStacks: meleeWeaponActive ? bloodlustStacks : null,
     bloodlustMaxStacks: meleeWeaponActive ? bloodlustStackState.maxStacks : null,
+    glacialEmbraceStacks:
+      activeSpell?.id === 'incite-fear' || glacialEmbraceStacks > 0
+        ? glacialEmbraceStacks
+        : null,
+    glacialEmbraceMaxStacks:
+      activeSpell?.id === 'incite-fear' || glacialEmbraceStacks > 0
+        ? glacialEmbraceStackState.maxStacks
+        : null,
+    essenceCorruptionStacks:
+      essenceCorruptionStacks > 0
+        ? essenceCorruptionStacks
+        : null,
+    essenceCorruptionMaxStacks:
+      essenceCorruptionStacks > 0
+        ? essenceCorruptionStackState.maxStacks
+        : null,
     activePersistentBuffs: persistentBuffIds.map(
       (buffId) => input.catalog.buffs[buffId]?.name ?? input.catalog.relics[buffId]?.name ?? buffId,
     ),
     activeTemporaryBuffs: temporaryBuffIds
-      .filter((buffId) => buffId !== 'bloodlust')
+      .filter((buffId) =>
+        buffId !== 'bloodlust' &&
+        buffId !== 'glacial-embrace' &&
+        buffId !== 'essence-corruption',
+      )
       .map((buffId) => input.catalog.buffs[buffId]?.name ?? buffId),
     equipmentState: Object.entries(projectedGearState.equipment)
       .filter((entry) => Boolean(entry[1]))
@@ -145,6 +195,11 @@ export function inspectRotationPlannerTick(input: {
     actionsStarting: [
       ...bucket.nonGcdActions.map((action) => readPlannerActionLabel(action)),
       ...bucket.abilityActions.map((action) => {
+        const configuredLabel = readConfiguredSpellCastLabel(action);
+        if (configuredLabel) {
+          return configuredLabel;
+        }
+
         const abilityId = action.payload['abilityId'];
         return typeof abilityId === 'string'
           ? input.catalog.abilities[abilityId]?.name ?? abilityId
@@ -314,8 +369,26 @@ function resolveStringConfigValue(
 }
 
 function readPlannerActionLabel(action: RotationAction): string {
+  if (action.actionType === 'spell-swap') {
+    const spellLabel = action.payload['label'];
+    if (typeof spellLabel === 'string' && spellLabel) {
+      return `Spell Swap: ${spellLabel.replace(/^Spell:\s*/i, '')}`;
+    }
+
+    return 'Spell Swap';
+  }
+
   const label = action.payload['label'];
   return typeof label === 'string' && label ? label : action.actionType;
+}
+
+function readConfiguredSpellCastLabel(action: RotationAction | null): string | null {
+  if (action?.payload['abilityId'] !== 'cast-spell') {
+    return null;
+  }
+
+  const label = action.payload['label'];
+  return typeof label === 'string' && label ? label : 'Cast Spell';
 }
 
 function collectResolvedHitLabelsAtTick(
@@ -327,7 +400,13 @@ function collectResolvedHitLabelsAtTick(
   return simulationResult.explainability.damageBreakdowns
     .filter((entry) => resolveDisplayedHitTick(entry, catalog, rotationPlan) === tick)
     .map((entry) => {
-      const abilityName = catalog.abilities[entry.abilityId]?.name ?? humanizeHitId(entry.abilityId);
+      const sourceActionId = entry.hitId.split(':')[0];
+      const sourceAction = sourceActionId
+        ? rotationPlan.abilityActions.find((action) => action.id === sourceActionId) ?? null
+        : null;
+      const abilityName = readConfiguredSpellCastLabel(sourceAction) ??
+        catalog.abilities[entry.abilityId]?.name ??
+        humanizeHitId(entry.abilityId);
       const hitLabel = humanizeHitId(entry.hitId.split(':').slice(1).join(':') || entry.hitId);
       return `${abilityName}: ${hitLabel} (${entry.finalDamage.min}-${entry.finalDamage.max})`;
     });
@@ -341,14 +420,21 @@ function collectDamageCalculationsAtTick(
 ): RotationPlannerTickInspection['damageCalculations'] {
   return simulationResult.explainability.damageBreakdowns
     .filter((entry) => resolveDisplayedHitTick(entry, catalog, rotationPlan) === tick)
-    .map((entry) => buildDamageCalculationEntry(entry, catalog));
+    .map((entry) => buildDamageCalculationEntry(entry, catalog, rotationPlan));
 }
 
 function buildDamageCalculationEntry(
   entry: SimulationResult['explainability']['damageBreakdowns'][number],
   catalog: GameDataCatalog,
+  rotationPlan: RotationPlan,
 ): RotationPlannerTickInspection['damageCalculations'][number] {
-  const abilityName = catalog.abilities[entry.abilityId]?.name ?? humanizeHitId(entry.abilityId);
+  const sourceActionId = entry.hitId.split(':')[0];
+  const sourceAction = sourceActionId
+    ? rotationPlan.abilityActions.find((action) => action.id === sourceActionId) ?? null
+    : null;
+  const abilityName = readConfiguredSpellCastLabel(sourceAction) ??
+    catalog.abilities[entry.abilityId]?.name ??
+    humanizeHitId(entry.abilityId);
   const hitName = humanizeHitId(entry.hitId.split(':').slice(1).join(':') || entry.hitId);
   const inheritedTriggerDamage = entry.derivedParts?.inheritedTriggerDamage;
   const ordinaryAdditiveModifiers = inheritedTriggerDamage

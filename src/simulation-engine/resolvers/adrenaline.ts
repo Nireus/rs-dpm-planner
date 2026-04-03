@@ -1,4 +1,4 @@
-import type { EntityId } from '../../game-data/types';
+import type { AbilityDefinition, EntityId } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
 import {
@@ -14,6 +14,7 @@ import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import { advanceChanceAccumulator, createChanceAccumulatorState } from '../utils/chance-accumulator';
 import { resolveDeathsporeTimeline } from './deathspore';
+import { resolveDeterministicMagicTimeline } from './magic-deterministic';
 import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
 import { resolveDeterministicMeleeTimeline } from './melee-deterministic';
 import { countActiveTrackedBleeds, hasJawsOfTheAbyssEquipped } from '../melee/melee-combat-state';
@@ -60,6 +61,7 @@ export function resolveAdrenalineTimeline(
   const groupedAdrenalinePotionActions = groupAdrenalinePotionActionsByTick(nonGcdActions);
   const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockedActionIds);
   const deterministicMeleeTimeline = resolveDeterministicMeleeTimeline(config, blockedActionIds);
+  const deterministicMagicTimeline = resolveDeterministicMagicTimeline(config, blockedActionIds);
   const deathsporeTimeline = resolveDeathsporeTimeline(
     config,
     blockedActionIds,
@@ -111,7 +113,11 @@ export function resolveAdrenalineTimeline(
         currentAdrenaline,
         deathsporeTimeline.freeCastActionIds.has(action.id),
         impatientAccumulator,
-        deterministicMeleeTimeline.buffTimeline[action.tick] ?? [],
+        [
+          ...(deterministicMeleeTimeline.buffTimeline[action.tick] ?? []),
+          ...(deterministicMagicTimeline.buffTimeline[action.tick] ?? []),
+        ],
+        deterministicMagicTimeline.resolvedAbilitiesByActionId[action.id] ?? null,
       );
 
       if (result.issue) {
@@ -130,7 +136,8 @@ export function resolveAdrenalineTimeline(
       projectedConfig,
       currentAdrenaline +
       (deterministicRangedTimeline.adrenalineByTick[tick] ?? 0) +
-      (deterministicMeleeTimeline.adrenalineByTick[tick] ?? 0),
+      (deterministicMeleeTimeline.adrenalineByTick[tick] ?? 0) +
+      (deterministicMagicTimeline.adrenalineByTick[tick] ?? 0),
     );
     if (adrenalineRenewalTicksRemaining > 0) {
       currentAdrenaline = clampAdrenaline(projectedConfig, currentAdrenaline + ADRENALINE_RENEWAL_TICK_GAIN);
@@ -173,9 +180,10 @@ function resolveAbilityActionAdrenaline(
   usesDeathsporeFreeCast: boolean,
   impatientAccumulator: ReturnType<typeof createChanceAccumulatorState>,
   activeBuffIds: EntityId[],
+  preResolvedAbility: AbilityDefinition | null,
 ): ResolveAbilityActionAdrenalineResult {
   const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
-  const ability = resolveEffectiveAbilityDefinition(projectedConfig, action);
+  const ability = preResolvedAbility ?? resolveEffectiveAbilityDefinition(projectedConfig, action);
 
   if (!ability) {
     return {

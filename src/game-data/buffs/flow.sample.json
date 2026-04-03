@@ -1,0 +1,10 @@
+{
+  "id": "flow",
+  "name": "Flow",
+  "iconPath": "/icons/wiki/flow.png",
+  "wikiUrl": "https://runescape.wiki/w/Sonic_Wave",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 15,
+  "displayPriority": 72
+}

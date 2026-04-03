@@ -1,0 +1,26 @@
+{
+  "id": "wand-of-the-praesul",
+  "name": "Wand of the praesul",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/wand-of-the-praesul.png",
+  "wikiUrl": "https://runescape.wiki/w/Wand_of_the_praesul",
+  "hoverSummary": "Tier 92 main-hand magic wand with 883.2 ability damage and 2577 accuracy.",
+  "detailLines": [
+    "Requires level 92 Magic to wield.",
+    "Main-hand magic weapon with 4-tick speed and range 8.",
+    "Curated as part of the dual-wield magic batch."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 92
+    }
+  },
+  "implementationNotes": "Curated main-hand magic weapon from the live Wand of the praesul page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and range."
+}

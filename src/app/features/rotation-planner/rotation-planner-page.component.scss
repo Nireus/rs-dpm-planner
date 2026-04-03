@@ -379,11 +379,9 @@ p {
 }
 
 .palette-inline-group .palette-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(2.6rem, 2.6rem);
-  grid-template-columns: none;
-  justify-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 0.45rem;
 }
 
@@ -461,9 +459,32 @@ p {
   border-radius: 0.8rem;
 }
 
+.cast-spell-inline-chip {
+  align-items: center;
+  width: 5.3rem;
+  min-height: 2.6rem;
+  padding: 0.38rem 0.44rem;
+  border-radius: 0.8rem;
+}
+
 .non-gcd-chip {
   background: linear-gradient(180deg, rgba(31, 25, 10, 0.98), rgba(17, 13, 7, 0.96));
   border-color: rgba(150, 128, 68, 0.28);
+}
+
+.cast-spell-inline-copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.cast-spell-inline-chip .ability-chip-name {
+  font-size: 0.62rem;
+  line-height: 1.05;
+}
+
+.cast-spell-inline-chip .ability-chip-meta {
+  font-size: 0.48rem;
 }
 
 .non-gcd-fallback {

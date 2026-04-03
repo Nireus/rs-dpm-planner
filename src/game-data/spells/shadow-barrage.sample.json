@@ -1,0 +1,15 @@
+{
+  "id": "shadow-barrage",
+  "name": "Shadow Barrage",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 88,
+  "tier": 88,
+  "iconPath": "/icons/wiki/shadow-barrage.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 88 | Tier 88",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

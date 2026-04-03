@@ -1,0 +1,34 @@
+{
+  "id": "greater-concentrated-blast",
+  "name": "Greater Concentrated Blast",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 66
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 3,
+  "hitSchedule": [
+    { "id": "greater-concentrated-blast-hit-1", "tickOffset": 0, "damage": { "min": 40, "max": 50 } },
+    { "id": "greater-concentrated-blast-hit-2", "tickOffset": 1, "damage": { "min": 40, "max": 50 } },
+    { "id": "greater-concentrated-blast-hit-3", "tickOffset": 2, "damage": { "min": 40, "max": 50 } }
+  ],
+  "baseDamage": {
+    "min": 120,
+    "max": 150
+  },
+  "description": "Blast the target with beams of concentrated energy.",
+  "iconPath": "/icons/wiki/greater-concentrated-blast.png",
+  "hoverSummary": "Basic | 9 ticks | 3 hits | +9% adrenaline",
+  "detailLines": [
+    "40%-50% magic damage per hit.",
+    "3-hit channeled basic over 1.8 seconds.",
+    "Its next-ability critical strike setup remains descriptive-only for now."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Concentrated_Blast"
+}

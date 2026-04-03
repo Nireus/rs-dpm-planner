@@ -12,6 +12,7 @@ import { normalizeStartingPerfectEquilibriumStacks } from '../models/starting-st
 import { resolveAdrenalineTimeline, resolveChannelTimeline, resolveCooldownTimeline } from '../resolvers';
 import { resolveDeathsporeTimeline } from '../resolvers/deathspore';
 import { resolveEquilibriumTimeline } from '../resolvers/equilibrium';
+import { resolveDeterministicMagicTimeline } from '../resolvers/magic-deterministic';
 import { resolveDeterministicRangedTimeline } from '../resolvers/ranged-deterministic';
 import { resolveDeterministicMeleeTimeline } from '../resolvers/melee-deterministic';
 import { applyAdditiveDamageModifiers } from './additive-damage-modifiers';
@@ -43,6 +44,7 @@ const CRACKLING_ABILITY_ID = 'crackling';
 const AFTERSHOCK_COOLDOWN_TICKS = 10;
 const AFTERSHOCK_THRESHOLD_DAMAGE = 50000;
 const AFTERSHOCK_ABILITY_ID = 'aftershock';
+const LIGHTNING_SURGE_ABILITY_ID = 'lightning-surge';
 const SPLIT_SOUL_ABILITY_ID = 'split-soul';
 const SPLIT_SOUL_BUFF_ID = 'split-soul';
 const SPLIT_SOUL_DAMAGE_CAP = 10000;
@@ -64,6 +66,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   );
   const deterministicRangedTimeline = resolveDeterministicRangedTimeline(config, blockingActionIds);
   const deterministicMeleeTimeline = resolveDeterministicMeleeTimeline(config, blockingActionIds);
+  const deterministicMagicTimeline = resolveDeterministicMagicTimeline(config, blockingActionIds);
   const deathsporeTimeline = resolveDeathsporeTimeline(
     config,
     blockingActionIds,
@@ -74,6 +77,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     config.rotationPlan.tickCount,
     deterministicRangedTimeline.buffTimeline,
     deterministicMeleeTimeline.buffTimeline,
+    deterministicMagicTimeline.buffTimeline,
     deathsporeTimeline.buffTimeline,
     equilibriumTimeline.buffTimeline,
   );
@@ -86,7 +90,11 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   const damageBreakdowns: DamageBreakdown[] = [];
   const damageByTick = createEmptyDamageByTick(config.rotationPlan.tickCount);
   const damageByAbilityMap = new Map<EntityId, DamageSummary>();
-  const hitEvents = buildSimulationHitEvents(config, blockingActionIds);
+  const hitEvents = buildSimulationHitEvents(
+    config,
+    blockingActionIds,
+    deterministicMagicTimeline.resolvedAbilitiesByActionId,
+  );
   let perfectEquilibriumStacks = normalizeStartingPerfectEquilibriumStacks(
     config.rotationPlan.startingStacks?.perfectEquilibriumStacks,
   );
@@ -102,7 +110,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   for (let index = 0; index < hitEvents.length; index += 1) {
     const event = hitEvents[index];
     const projectedConfig = projectSimulationConfigAtTick(config, event.action.tick);
-    const actionAbilityDamage = calculateAbilityDamage(projectedConfig, event.ability);
+    const actionAbilityDamage = calculateAbilityDamage(projectedConfig, event.ability, event.action);
     const aftershockRank = collectHighestEquippedPerkRank(projectedConfig, AFTERSHOCK_ABILITY_ID);
     const aftershockEquipped = aftershockRank > 0;
 
@@ -119,6 +127,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       event.hit,
       event.tick,
       mergedBuffTimeline,
+      deterministicMagicTimeline,
       event.derivedDamageParts,
     );
     damageBreakdowns.push(breakdown);
@@ -135,6 +144,16 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       event,
       breakdown,
       mergedBuffTimeline,
+    );
+    maybeAppendLightningSurgeDamage(
+      damageBreakdowns,
+      damageByTick,
+      damageByAbilityMap,
+      config,
+      event,
+      actionAbilityDamage,
+      mergedBuffTimeline,
+      deterministicMagicTimeline,
     );
 
     if (shouldContributeToAftershock(event, projectedConfig)) {
@@ -245,6 +264,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
     timelineGeneratedBuffSources: [
       ...deterministicRangedTimeline.timelineGeneratedBuffSources,
       ...deterministicMeleeTimeline.timelineGeneratedBuffSources,
+      ...deterministicMagicTimeline.timelineGeneratedBuffSources,
       ...deathsporeTimeline.timelineGeneratedBuffSources,
       ...equilibriumTimeline.timelineGeneratedBuffSources,
     ],
@@ -279,6 +299,7 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
           : []),
         ...deterministicRangedTimeline.notes,
         ...deterministicMeleeTimeline.notes,
+        ...deterministicMagicTimeline.notes,
         ...deathsporeTimeline.notes,
         ...equilibriumTimeline.notes,
       ],
@@ -293,10 +314,11 @@ function createDamageBreakdown(
   hit: SimulationHitEvent['hit'],
   hitTick: number,
   buffTimeline: Record<number, EntityId[]>,
+  deterministicMagicTimeline: ReturnType<typeof resolveDeterministicMagicTimeline>,
   derivedDamageParts?: SimulationHitEvent['derivedDamageParts'],
 ): DamageBreakdown {
   const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
-  const abilityDamage = calculateAbilityDamage(projectedConfig, ability);
+  const abilityDamage = calculateAbilityDamage(projectedConfig, ability, action);
   const baseDamage = derivedDamageParts?.scaledAbilityDamage ?? (hit.tags?.includes('direct-damage')
     ? createDirectDamageSummary(hit.damage)
     : scaleDamageRangeFromAbilityDamage(hit.damage, abilityDamage));
@@ -316,6 +338,7 @@ function createDamageBreakdown(
     ability,
     multiplicativeResult.finalDamage,
     abilityDamage,
+    hitTick,
     buffTimeline,
   );
   const postInheritedTriggerDamage = derivedDamageParts
@@ -338,6 +361,10 @@ function createDamageBreakdown(
     additiveResult.finalDamage,
     hitTick,
     buffTimeline,
+    deterministicMagicTimeline.actionCritChanceBonusByActionId[action.id] ? deterministicMagicTimeline.actionCritChanceBonusByActionId[action.id] / 100 : 0,
+    deterministicMagicTimeline.hitCritChanceBonusByActionId[action.id]?.[hit.id]
+      ? deterministicMagicTimeline.hitCritChanceBonusByActionId[action.id][hit.id] / 100
+      : 0,
   );
   const finalDamage = derivedDamageParts
     ? {
@@ -566,6 +593,69 @@ function maybeAppendSplitSoulDamage(
   damageByAbilityMap.set(SPLIT_SOUL_ABILITY_ID, abilitySummary);
 }
 
+function maybeAppendLightningSurgeDamage(
+  damageBreakdowns: DamageBreakdown[],
+  damageByTick: Record<number, DamageSummary>,
+  damageByAbilityMap: Map<EntityId, DamageSummary>,
+  config: SimulationConfig,
+  event: SimulationHitEvent,
+  actionAbilityDamage: number,
+  buffTimeline: Record<number, EntityId[]>,
+  deterministicMagicTimeline: ReturnType<typeof resolveDeterministicMagicTimeline>,
+): void {
+  const lightningTick = event.tick + 1;
+  if (
+    event.ability.id === LIGHTNING_SURGE_ABILITY_ID ||
+    event.ability.style !== 'magic' ||
+    event.ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime) ||
+    !buffTimeline[event.tick]?.includes('instability') ||
+    lightningTick < 0 ||
+    lightningTick >= config.rotationPlan.tickCount
+  ) {
+    return;
+  }
+
+  const projectedConfig = projectSimulationConfigAtTick(config, event.tick);
+  const hasMagicWeaponEquipped = ['weapon', 'offHand'].some((slot) => {
+    const instance = projectedConfig.gearSetup.equipment[slot as 'weapon' | 'offHand'];
+    if (!instance) {
+      return false;
+    }
+
+    const definition = projectedConfig.gameData.items[instance.definitionId];
+    return definition?.category === 'weapon' && (definition.combatStyleTags?.includes('magic') ?? false);
+  });
+  if (!hasMagicWeaponEquipped) {
+    return;
+  }
+
+  const expectedCritChance =
+    deterministicMagicTimeline.hitExpectedCritChanceByActionId[event.action.id]?.[event.hit.id] ?? 0;
+  if (expectedCritChance <= 0) {
+    return;
+  }
+
+  const lightningAbilityDamage = actionAbilityDamage * expectedCritChance;
+  const lightningEvent = createLightningSurgeHitEvent(event, lightningAbilityDamage);
+  const lightningBreakdown = createDamageBreakdown(
+    config,
+    lightningEvent.action,
+    lightningEvent.ability,
+    lightningEvent.hit,
+    lightningEvent.tick,
+    buffTimeline,
+    deterministicMagicTimeline,
+    lightningEvent.derivedDamageParts,
+  );
+
+  damageBreakdowns.push(lightningBreakdown);
+  addDamageSummary(damageByTick[lightningTick], lightningBreakdown.finalDamage);
+
+  const abilitySummary = damageByAbilityMap.get(LIGHTNING_SURGE_ABILITY_ID) ?? createZeroDamageSummary();
+  addDamageSummary(abilitySummary, lightningBreakdown.finalDamage);
+  damageByAbilityMap.set(LIGHTNING_SURGE_ABILITY_ID, abilitySummary);
+}
+
 function hasSplitSoulAmuletBoost(config: SimulationConfig): boolean {
   const amulet = config.gearSetup.equipment.amulet;
   if (!amulet) {
@@ -606,4 +696,30 @@ function calculateSoulSplitHeal(sourceDamage: number): number {
   const thirdBracket = Math.max(sourceDamage - 4000, 0) * 0.0125;
 
   return firstBracket + secondBracket + thirdBracket;
+}
+
+function createLightningSurgeHitEvent(
+  sourceEvent: SimulationHitEvent,
+  lightningAbilityDamage: number,
+): SimulationHitEvent {
+  return {
+    action: sourceEvent.action,
+    ability: {
+      id: LIGHTNING_SURGE_ABILITY_ID,
+      style: 'magic',
+      subtype: 'other',
+      effectRefs: undefined,
+    },
+    hit: {
+      id: `lightning-surge:${sourceEvent.hit.id}`,
+      tickOffset: 0,
+      damage: {
+        min: roundDamageValue(lightningAbilityDamage * 0.7),
+        max: roundDamageValue(lightningAbilityDamage * 0.9),
+      },
+      tags: ['derived-hit', 'direct-damage'],
+    },
+    tick: sourceEvent.tick + 1,
+    contributesToPerfectEquilibrium: false,
+  };
 }

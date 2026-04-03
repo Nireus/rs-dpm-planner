@@ -7,6 +7,7 @@ import {
   validateItemDefinition,
   validatePerkDefinition,
   validateRelicDefinition,
+  validateSpellDefinition,
 } from '../schemas';
 import type {
   AbilityDefinition,
@@ -16,12 +17,14 @@ import type {
   ItemDefinition,
   PerkDefinition,
   RelicDefinition,
+  SpellDefinition,
 } from '../types';
 import type { SampleGameDataManifest } from './sample-manifest';
 
 export interface GameDataCatalog {
   items: Record<EntityId, ItemDefinition>;
   ammo: Record<EntityId, never>;
+  spells: Record<EntityId, SpellDefinition>;
   abilities: Record<EntityId, AbilityDefinition>;
   buffs: Record<EntityId, BuffDefinition>;
   perks: Record<EntityId, PerkDefinition>;
@@ -49,6 +52,7 @@ export type TextFileLoader = (path: string) => Promise<string>;
 
 export interface BundledGameDataDocument {
   items: unknown[];
+  spells: unknown[];
   abilities: unknown[];
   buffs: unknown[];
   eofSpecs: unknown[];
@@ -127,8 +131,9 @@ export async function loadSampleGameData(
   manifest: SampleGameDataManifest,
   loadText: TextFileLoader,
 ): Promise<GameDataLoadResult> {
-  const [itemLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad] = await Promise.all([
+  const [itemLoad, spellLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad] = await Promise.all([
     loadDefinitions(manifest.items, loadText, validateItemDefinition),
+    loadDefinitions(manifest.spells, loadText, validateSpellDefinition),
     loadDefinitions(manifest.abilities, loadText, validateAbilityDefinition),
     loadDefinitions(manifest.buffs, loadText, validateBuffDefinition),
     loadDefinitions(manifest.eofSpecs, loadText, validateEofSpecDefinition),
@@ -138,6 +143,7 @@ export async function loadSampleGameData(
 
   return finalizeGameDataLoad({
     itemLoad,
+    spellLoad,
     abilityLoad,
     buffLoad,
     eofSpecLoad,
@@ -153,7 +159,7 @@ export function loadBundledGameData(document: unknown): GameDataLoadResult {
       issues: [
         {
           path: 'bundle',
-          message: 'Expected bundled game-data document with array sections for items, abilities, buffs, eofSpecs, perks, and relics.',
+          message: 'Expected bundled game-data document with array sections for items, spells, abilities, buffs, eofSpecs, perks, and relics.',
         },
       ],
     };
@@ -161,6 +167,7 @@ export function loadBundledGameData(document: unknown): GameDataLoadResult {
 
   return finalizeGameDataLoad({
     itemLoad: loadDefinitionsFromDocuments(document.items, 'items', validateItemDefinition),
+    spellLoad: loadDefinitionsFromDocuments(document.spells, 'spells', validateSpellDefinition),
     abilityLoad: loadDefinitionsFromDocuments(document.abilities, 'abilities', validateAbilityDefinition),
     buffLoad: loadDefinitionsFromDocuments(document.buffs, 'buffs', validateBuffDefinition),
     eofSpecLoad: loadDefinitionsFromDocuments(document.eofSpecs, 'eofSpecs', validateEofSpecDefinition),
@@ -171,15 +178,17 @@ export function loadBundledGameData(document: unknown): GameDataLoadResult {
 
 function finalizeGameDataLoad(input: {
   itemLoad: { definitions: ItemDefinition[]; issues: GameDataLoadIssue[] };
+  spellLoad: { definitions: SpellDefinition[]; issues: GameDataLoadIssue[] };
   abilityLoad: { definitions: AbilityDefinition[]; issues: GameDataLoadIssue[] };
   buffLoad: { definitions: BuffDefinition[]; issues: GameDataLoadIssue[] };
   eofSpecLoad: { definitions: EofSpecDefinition[]; issues: GameDataLoadIssue[] };
   perkLoad: { definitions: PerkDefinition[]; issues: GameDataLoadIssue[] };
   relicLoad: { definitions: RelicDefinition[]; issues: GameDataLoadIssue[] };
 }): GameDataLoadResult {
-  const { itemLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad } = input;
+  const { itemLoad, spellLoad, abilityLoad, buffLoad, eofSpecLoad, perkLoad, relicLoad } = input;
 
   const itemNormalization = normalizeById(itemLoad.definitions);
+  const spellNormalization = normalizeById(spellLoad.definitions);
   const abilityNormalization = normalizeById(abilityLoad.definitions);
   const buffNormalization = normalizeById(buffLoad.definitions);
   const eofSpecNormalization = normalizeById(eofSpecLoad.definitions);
@@ -188,6 +197,7 @@ function finalizeGameDataLoad(input: {
 
   const issues: GameDataLoadIssue[] = [
     ...itemLoad.issues,
+    ...spellLoad.issues,
     ...abilityLoad.issues,
     ...buffLoad.issues,
     ...eofSpecLoad.issues,
@@ -195,6 +205,10 @@ function finalizeGameDataLoad(input: {
     ...relicLoad.issues,
     ...itemNormalization.issues.map((issue) => ({
       path: `items:${issue.id}`,
+      message: issue.message,
+    })),
+    ...spellNormalization.issues.map((issue) => ({
+      path: `spells:${issue.id}`,
       message: issue.message,
     })),
     ...abilityNormalization.issues.map((issue) => ({
@@ -222,6 +236,7 @@ function finalizeGameDataLoad(input: {
   const normalizedCatalog: GameDataCatalog = {
     items: itemNormalization.records,
     ammo: {},
+    spells: spellNormalization.records,
     abilities: abilityNormalization.records,
     buffs: buffNormalization.records,
     perks: perkNormalization.records,
@@ -253,6 +268,7 @@ function isBundledGameDataDocument(input: unknown): input is BundledGameDataDocu
   const record = input as Record<string, unknown>;
   return (
     Array.isArray(record['items']) &&
+    Array.isArray(record['spells']) &&
     Array.isArray(record['abilities']) &&
     Array.isArray(record['buffs']) &&
     Array.isArray(record['eofSpecs']) &&

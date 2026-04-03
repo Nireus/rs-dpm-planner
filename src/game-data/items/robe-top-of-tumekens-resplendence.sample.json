@@ -1,0 +1,26 @@
+{
+  "id": "robe-top-of-tumekens-resplendence",
+  "name": "Robe top of Tumeken's resplendence",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "/icons/wiki/robe-top-of-tumekens-resplendence.png",
+  "wikiUrl": "https://runescape.wiki/w/Robe_top_of_Tumeken%27s_resplendence",
+  "hoverSummary": "Tier 95 magic power body with 35.6 magic damage bonus.",
+  "detailLines": [
+    "Requires level 95 Magic and 95 Defence to wear.",
+    "Tumeken's Resplendence activates after the armour pieces are worn for at least 5.4 seconds.",
+    "The set grants Sunshine crit bonuses and Asphyxiate upgrades at higher piece counts."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 95,
+  "offensiveStats": {
+    "magicBonus": 35.6
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 95,
+      "defence": 95
+    }
+  },
+  "implementationNotes": "Curated Tumeken body from the live Robe top of Tumeken's resplendence page. Wiki-verified with Playwright for tier, requirements, style bonus, and set bonus text."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "ice-barrage",
+  "name": "Ice Barrage",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 94,
+  "tier": 94,
+  "iconPath": "/icons/wiki/ice-barrage.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 94 | Tier 94",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

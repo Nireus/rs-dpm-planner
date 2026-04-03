@@ -1,0 +1,19 @@
+{
+  "id": "fractured-staff-of-armadyl-eof",
+  "name": "Fractured Staff of Armadyl (EOF)",
+  "iconPath": "/icons/wiki/fractured-staff-of-armadyl.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 1 hit | 60s cooldown",
+  "detailLines": [
+    "Stored Fractured Staff of Armadyl special attack for Essence of Finality.",
+    "Strikes for 120%-140% ability damage.",
+    "Applies the live Instability state described on the weapon page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Fractured_Staff_of_Armadyl",
+  "weaponOrigin": "fractured-staff-of-armadyl",
+  "abilityId": "instability",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:fractured-staff-of-armadyl"]
+  },
+  "effectRefs": ["eof-fractured-staff-of-armadyl-spec"],
+  "description": "Stored Fractured Staff of Armadyl special attack for Essence of Finality."
+}

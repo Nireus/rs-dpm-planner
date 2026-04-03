@@ -1,0 +1,25 @@
+{
+  "id": "masterwork-magic-robe-bottom",
+  "name": "Masterwork magic robe bottom",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "/icons/wiki/masterwork-magic-robe-bottom.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_magic_robe_bottom",
+  "hoverSummary": "Tier 100 magic power legs with 31.2 magic damage bonus.",
+  "detailLines": [
+    "Requires level 99 Defence to wear.",
+    "Masterwork magic power armour leg piece.",
+    "Live set bonus: Masterwork Magic Set delays incoming damage over time."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 100,
+  "offensiveStats": {
+    "magicBonus": 31.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "implementationNotes": "Curated masterwork magic legs from the live Masterwork magic robe bottom page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "exsanguinate",
+  "name": "Exsanguinate",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 96,
+  "tier": 96,
+  "iconPath": "/icons/wiki/exsanguinate.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 96 | Tier 96",
+  "description": "Ancient Senntisten combat spell used for magic ability damage selection."
+}
+
+
+

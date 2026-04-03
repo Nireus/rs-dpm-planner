@@ -45,9 +45,10 @@ describe('ability-style-tabs', () => {
     ]);
   });
 
-  it('uses utility copy for other subtype and coming-soon copy for empty future styles', () => {
-    expect(displayAbilitySubtypeLabel('other')).toBe('Utility');
+  it('uses utility copy for the utility subtype and only shows coming-soon copy for unsupported styles', () => {
+    expect(displayAbilitySubtypeLabel('utility')).toBe('Utility');
     expect(abilityStyleEmptyMessage('melee')).toBe('Melee abilities are coming soon.');
+    expect(abilityStyleEmptyMessage('magic')).toBe('No loaded abilities match the current search.');
     expect(styleTabThemeClass('magic')).toBe('style-magic');
   });
 });

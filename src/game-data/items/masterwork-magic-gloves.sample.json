@@ -1,0 +1,25 @@
+{
+  "id": "masterwork-magic-gloves",
+  "name": "Masterwork magic gloves",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "/icons/wiki/masterwork-magic-gloves.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_magic_gloves",
+  "hoverSummary": "Tier 100 magic power gloves with 15.6 magic damage bonus.",
+  "detailLines": [
+    "Requires level 99 Defence to wear.",
+    "Masterwork magic power armour hand piece.",
+    "Live set bonus: Masterwork Magic Set delays incoming damage over time."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 100,
+  "offensiveStats": {
+    "magicBonus": 15.6
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "implementationNotes": "Curated masterwork magic gloves from the live Masterwork magic gloves page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

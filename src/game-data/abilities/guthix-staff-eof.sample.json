@@ -1,0 +1,34 @@
+{
+  "id": "guthix-staff-eof",
+  "name": "Guthix Staff (EOF)",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 25,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "guthix-staff-eof-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 200,
+        "max": 240
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 200,
+    "max": 240
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "guthix-staff-affinity-debuff"
+    }
+  ],
+  "effectRefs": ["eof-guthix-staff-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Stored Guthix staff special attack for Essence of Finality. Strikes for 200%-240% ability damage and applies the Guthix staff defence/affinity debuff."
+}

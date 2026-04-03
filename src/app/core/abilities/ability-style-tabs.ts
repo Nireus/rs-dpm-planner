@@ -19,7 +19,7 @@ export interface GroupedAbilitySubtype<TAbility extends { subtype: AbilitySubtyp
   abilities: TAbility[];
 }
 
-const ABILITY_SUBTYPE_ORDER: AbilitySubtype[] = ['basic', 'enhanced', 'ultimate', 'special', 'other'];
+const ABILITY_SUBTYPE_ORDER: AbilitySubtype[] = ['basic', 'enhanced', 'ultimate', 'special', 'utility', 'other'];
 
 export const ABILITY_STYLE_TABS: AbilityStyleTabDefinition[] = COMBAT_STYLE_ORDER.map((style) => ({
   id: style,
@@ -80,6 +80,8 @@ export function displayAbilitySubtypeLabel(subtype: AbilitySubtype | string): st
       return 'Ultimate';
     case 'special':
       return 'Special';
+    case 'utility':
+      return 'Utility';
     default:
       return subtype === 'other' ? 'Utility' : subtype;
   }
@@ -89,13 +91,12 @@ export function abilityStyleEmptyMessage(style: CombatStyle): string {
   switch (style) {
     case 'melee':
       return 'Melee abilities are coming soon.';
-    case 'magic':
-      return 'Magic abilities are coming soon.';
     case 'necromancy':
       return 'Necromancy abilities are coming soon.';
     case 'constitution':
       return 'No loaded Constitution abilities match the current search.';
     case 'ranged':
+    case 'magic':
     default:
       return 'No loaded abilities match the current search.';
   }

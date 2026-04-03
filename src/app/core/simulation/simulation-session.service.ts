@@ -1,6 +1,7 @@
 import { computed, inject, Injectable } from '@angular/core';
 import { simulateBaseDamage } from '../../../simulation-engine/calculators';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from '../combat-choices/combat-choices-store.service';
 import { GameDataStoreService } from '../game-data/game-data-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
@@ -13,6 +14,7 @@ import { buildSimulationConfigFromAppState } from './simulation-config.builder';
 export class SimulationSessionService {
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
   private readonly rotationPlannerStore = inject(RotationPlannerStore);
@@ -26,6 +28,7 @@ export class SimulationSessionService {
     return buildSimulationConfigFromAppState({
       catalog,
       playerStats: this.playerStatsStore.stats(),
+      combatChoices: this.combatChoicesStore.combatChoices(),
       gearState: this.gearBuilderStore.snapshot(),
       buffState: this.buffConfigurationStore.state(),
       rotationPlan: this.rotationPlannerStore.rotationPlan(),

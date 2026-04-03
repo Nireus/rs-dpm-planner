@@ -1,0 +1,15 @@
+{
+  "id": "shadow-rush",
+  "name": "Shadow Rush",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 52,
+  "tier": 52,
+  "iconPath": "/icons/wiki/shadow-rush.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 52 | Tier 52",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

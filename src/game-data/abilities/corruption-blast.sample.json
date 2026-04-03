@@ -1,0 +1,37 @@
+{
+  "id": "corruption-blast",
+  "name": "Corruption Blast",
+  "style": "magic",
+  "subtype": "enhanced",
+  "cooldownTicks": 25,
+  "adrenalineCost": 20,
+  "requires": {
+    "levelRequirements": {
+      "magic": 70
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    { "id": "corruption-blast-hit-1", "tickOffset": 0, "damage": { "min": 90, "max": 110 } },
+    { "id": "corruption-blast-hit-2", "tickOffset": 2, "damage": { "min": 72, "max": 88 } },
+    { "id": "corruption-blast-hit-3", "tickOffset": 4, "damage": { "min": 54, "max": 66 } },
+    { "id": "corruption-blast-hit-4", "tickOffset": 6, "damage": { "min": 36, "max": 44 } },
+    { "id": "corruption-blast-hit-5", "tickOffset": 8, "damage": { "min": 18, "max": 22 } }
+  ],
+  "baseDamage": {
+    "min": 270,
+    "max": 330
+  },
+  "effectRefs": [
+    "damage-over-time"
+  ],
+  "description": "Blasts the target with corruption, causing them to take damage over time.",
+  "iconPath": "/icons/wiki/corruption-blast.png",
+  "hoverSummary": "Enhanced | 25 ticks | 5 hits | -20% adrenaline",
+  "detailLines": [
+    "90%-110% magic damage, then 4 weaker follow-up hits every 1.2 seconds.",
+    "270%-330% total magic damage over 5 hits.",
+    "Multi-target spread behavior remains descriptive-only in the single-target simulator."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Corruption_Blast"
+}

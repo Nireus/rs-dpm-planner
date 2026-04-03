@@ -88,6 +88,12 @@
       @if (inspection().bloodlustStacks !== null && inspection().bloodlustMaxStacks !== null) {
         <div class="inspector-inline-stat">Bloodlust {{ inspection().bloodlustStacks }}/{{ inspection().bloodlustMaxStacks }}</div>
       }
+      @if (inspection().glacialEmbraceStacks !== null && inspection().glacialEmbraceMaxStacks !== null) {
+        <div class="inspector-inline-stat">Glacial Embrace {{ inspection().glacialEmbraceStacks }}/{{ inspection().glacialEmbraceMaxStacks }}</div>
+      }
+      @if (inspection().essenceCorruptionStacks !== null && inspection().essenceCorruptionMaxStacks !== null) {
+        <div class="inspector-inline-stat">Essence Corruption {{ inspection().essenceCorruptionStacks }}/{{ inspection().essenceCorruptionMaxStacks }}</div>
+      }
       @if (inspection().activePersistentBuffs.length || inspection().activeTemporaryBuffs.length) {
         @if (inspection().activeTemporaryBuffs.length) {
           <h4>Temporary</h4>
@@ -114,6 +120,14 @@
     <article class="inspector-card">
       <h3>Gear / Ammo</h3>
       <ul class="inspector-list">
+        <li>
+          Spell:
+          @if (inspection().activeSpell; as activeSpell) {
+            {{ activeSpell.name }} ({{ activeSpell.spellbookId }})
+          } @else {
+            None selected
+          }
+        </li>
         @for (entry of inspection().equipmentState; track entry.slot) {
           <li>
             {{ entry.slot }}: {{ entry.itemName }}

@@ -1,0 +1,14 @@
+{
+  "id": "essence-corruption",
+  "name": "Essence Corruption",
+  "iconPath": "/icons/wiki/essence-corruption.png",
+  "wikiUrl": "https://runescape.wiki/w/Essence_Corruption",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 50,
+  "stackRules": {
+    "maxStacks": 100,
+    "refreshesDuration": true
+  },
+  "displayPriority": 82
+}

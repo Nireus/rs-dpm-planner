@@ -1,0 +1,14 @@
+{
+  "id": "glacial-embrace",
+  "name": "Glacial Embrace",
+  "iconPath": "/icons/wiki/glacial-embrace.png",
+  "wikiUrl": "https://runescape.wiki/w/Glacial_Embrace",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 34,
+  "stackRules": {
+    "maxStacks": 5,
+    "refreshesDuration": true
+  },
+  "displayPriority": 79
+}

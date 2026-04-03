@@ -20,9 +20,12 @@ export function applyAdditiveDamageModifiers(
   ability: { id?: string; style?: string; effectRefs?: EffectRef[] },
   baseDamage: DamageSummary,
   abilityDamage: number,
+  hitTick: number,
   timelineBuffs: Record<number, EntityId[]>,
 ): AdditiveDamageComputation {
-  if (ability.style !== 'ranged' || ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)) {
+  const isRangedHit = ability.style === 'ranged' && !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
+  const isMagicHit = ability.style === 'magic';
+  if (!isRangedHit && !isMagicHit) {
     return {
       finalDamage: baseDamage,
       additiveModifiers: [],
@@ -35,6 +38,7 @@ export function applyAdditiveDamageModifiers(
     .filter((entry): entry is DamageModifierContribution & { bonusDamage: number } => Boolean(entry));
   const caromingModifier = parseCaromingModifier(config, ability.id, abilityDamage);
   const flankingModifier = parseFlankingModifier(config, ability.id, timelineBuffs[action.tick], abilityDamage);
+  const songOfDestructionModifier = parseSongOfDestructionModifier(config, ability, hitTick, timelineBuffs);
 
   if (caromingModifier) {
     modifiers.push(caromingModifier);
@@ -42,6 +46,10 @@ export function applyAdditiveDamageModifiers(
 
   if (flankingModifier) {
     modifiers.push(flankingModifier);
+  }
+
+  if (songOfDestructionModifier) {
+    modifiers.push(songOfDestructionModifier);
   }
 
   if (!modifiers.length) {
@@ -63,6 +71,38 @@ export function applyAdditiveDamageModifiers(
       ...entry,
       value: bonusDamage,
     })),
+  };
+}
+
+function parseSongOfDestructionModifier(
+  config: SimulationConfig,
+  ability: { style?: string },
+  hitTick: number,
+  timelineBuffs: Record<number, EntityId[]>,
+): (DamageModifierContribution & { bonusDamage: number }) | null {
+  if (ability.style !== 'magic') {
+    return null;
+  }
+
+  const projectedConfig = projectSimulationConfigAtTick(config, hitTick);
+  if (
+    projectedConfig.gearSetup.equipment.weapon?.definitionId !== 'roar-of-awakening' ||
+    projectedConfig.gearSetup.equipment.offHand?.definitionId !== 'ode-to-deceit'
+  ) {
+    return null;
+  }
+
+  const essenceCorruptionStacks = (timelineBuffs[hitTick] ?? []).filter((buffId) => buffId === 'essence-corruption').length;
+  if (essenceCorruptionStacks < 10) {
+    return null;
+  }
+
+  const bonusDamage = roundDamageValue(essenceCorruptionStacks * 3 + (projectedConfig.playerStats.magicLevel ?? 0));
+  return {
+    sourceId: 'song-of-destruction:set-1',
+    label: `Song of Destruction +${bonusDamage} damage`,
+    value: 0,
+    bonusDamage,
   };
 }
 

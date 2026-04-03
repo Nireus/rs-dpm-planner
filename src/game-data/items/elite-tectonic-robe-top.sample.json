@@ -1,0 +1,25 @@
+{
+  "id": "elite-tectonic-robe-top",
+  "name": "Elite tectonic robe top",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "/icons/wiki/elite-tectonic-robe-top.png",
+  "wikiUrl": "https://runescape.wiki/w/Elite_tectonic_robe_top",
+  "hoverSummary": "Tier 92 magic power body with 34.5 magic damage bonus.",
+  "detailLines": [
+    "Requires level 92 Defence to wear.",
+    "Elite tectonic power armour body piece.",
+    "Live set bonus: Elite Fracture Point grants 2% critical strike chance per piece worn."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "magicBonus": 34.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 92
+    }
+  },
+  "implementationNotes": "Curated elite magic body from the live Elite tectonic robe top page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

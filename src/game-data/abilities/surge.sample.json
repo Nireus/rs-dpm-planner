@@ -1,0 +1,22 @@
+{
+  "id": "surge",
+  "name": "Surge",
+  "style": "magic",
+  "subtype": "utility",
+  "cooldownTicks": 34,
+  "adrenalineCost": 0,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "description": "Teleport forward.",
+  "iconPath": "/icons/wiki/surge.png",
+  "hoverSummary": "Utility | 34 ticks | Self-target | 0% adrenaline",
+  "detailLines": [
+    "Moves forward up to 10 tiles.",
+    "Can be cast during the global cooldown.",
+    "Shares cooldown with Escape, and in PvP with Dive."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Surge"
+}

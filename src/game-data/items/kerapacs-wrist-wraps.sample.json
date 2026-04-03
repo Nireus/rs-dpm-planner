@@ -1,0 +1,25 @@
+{
+  "id": "kerapacs-wrist-wraps",
+  "name": "Kerapac's wrist wraps",
+  "category": "armor",
+  "slot": "hands",
+  "iconPath": "/icons/wiki/kerapacs-wrist-wraps.png",
+  "wikiUrl": "https://runescape.wiki/w/Kerapac%27s_wrist_wraps",
+  "hoverSummary": "Tier 85 magic gloves with 13.2 magic damage bonus and a Dragon Breath to Combust passive.",
+  "detailLines": [
+    "Requires level 85 Defence to wear.",
+    "For 6 seconds after Dragon Breath, Combust deals 25% more damage and resolves instantly.",
+    "The PvP-disabled instant-combust behavior is planned for the dedicated magic mechanics pass."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 85,
+  "offensiveStats": {
+    "magicBonus": 13.2
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 85
+    }
+  },
+  "implementationNotes": "Curated magic gloves from the live Kerapac's wrist wraps page. Wiki-verified with Playwright for tier, style bonus, and Dragon Breath/Combust passive text."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "smoke-barrage",
+  "name": "Smoke Barrage",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 86,
+  "tier": 86,
+  "iconPath": "/icons/wiki/smoke-barrage.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 86 | Tier 86",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

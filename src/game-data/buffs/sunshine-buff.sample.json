@@ -1,0 +1,13 @@
+{
+  "id": "sunshine-buff",
+  "name": "Sunshine",
+  "iconPath": "/icons/wiki/sunshine.png",
+  "wikiUrl": "https://runescape.wiki/w/Sunshine",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 50,
+  "effectRefs": [
+    "magic-damage-multiplier:+50%"
+  ],
+  "displayPriority": 95
+}

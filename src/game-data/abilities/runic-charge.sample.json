@@ -1,0 +1,33 @@
+{
+  "id": "runic-charge",
+  "name": "Runic Charge",
+  "style": "magic",
+  "subtype": "utility",
+  "cooldownTicks": 50,
+  "adrenalineCost": 0,
+  "requires": {
+    "levelRequirements": {
+      "magic": 26
+    }
+  },
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "anima-charged"
+    }
+  ],
+  "description": "Charge yourself with Anima.",
+  "iconPath": "/icons/wiki/runic-charge.png",
+  "hoverSummary": "Utility | 50 ticks | Self-target | 0% adrenaline",
+  "detailLines": [
+    "Applies Anima Charged for 15 seconds.",
+    "Can be cast during the global cooldown and must be manually triggered during Revolution.",
+    "Its empowered follow-up ability behavior remains for the next magic mechanics pass."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Runic_Charge"
+}

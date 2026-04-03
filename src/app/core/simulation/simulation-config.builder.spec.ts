@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { BuffDefinition, ItemDefinition, RelicDefinition } from '../../../game-data/types';
+import type { AbilityDefinition, BuffDefinition, ItemDefinition, RelicDefinition } from '../../../game-data/types';
 import {
   buildSimulationConfigFromAppState,
   collectPersistentBuffIds,
@@ -75,6 +75,19 @@ const ELDRITCH_CROSSBOW: ItemDefinition = {
   effectRefs: ['weapon-class:crossbow'],
 };
 
+const SURGE: AbilityDefinition = {
+  id: 'surge',
+  name: 'Surge',
+  style: 'magic',
+  subtype: 'utility',
+  cooldownTicks: 17,
+  hitSchedule: [],
+  baseDamage: {
+    min: 0,
+    max: 0,
+  },
+};
+
 const CATALOG: GameDataCatalog = {
   items: {
     'bakriminel-bolts': BAKRIMINEL_BOLTS,
@@ -83,7 +96,10 @@ const CATALOG: GameDataCatalog = {
     'pernixs-quiver': PERNIXS_QUIVER,
   },
   ammo: {},
-  abilities: {},
+  spells: {},
+  abilities: {
+    [SURGE.id]: SURGE,
+  },
   buffs: {
     rigour: RIGOUR,
     'warped-gem': WARPED_GEM,
@@ -180,6 +196,53 @@ describe('buildSimulationConfigFromAppState', () => {
     expect(result.gearSetup.ammoSelection).toEqual({
       instanceId: 'quiver-1:loaded-bolts:bakriminel-bolts',
       definitionId: 'bakriminel-bolts',
+    });
+  });
+
+  it('projects non-gcd utility ability actions into the simulation ability stream', () => {
+    const result = buildSimulationConfigFromAppState({
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 120,
+        magicLevel: 120,
+      },
+      gearState: {
+        equipment: {},
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 30,
+        nonGcdActions: [
+          {
+            id: 'non-gcd-ability-surge-3-1',
+            tick: 3,
+            lane: 'non-gcd',
+            actionType: 'ability-use',
+            payload: {
+              templateId: 'ability-use',
+              abilityId: 'surge',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    expect(result.rotationPlan.abilityActions).toContainEqual({
+      id: 'non-gcd-ability-surge-3-1',
+      tick: 3,
+      lane: 'non-gcd',
+      actionType: 'ability-use',
+      payload: {
+        templateId: 'ability-use',
+        abilityId: 'surge',
+      },
     });
   });
 });

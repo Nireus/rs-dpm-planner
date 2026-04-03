@@ -1,0 +1,15 @@
+{
+  "id": "ice-blitz",
+  "name": "Ice Blitz",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 82,
+  "tier": 82,
+  "iconPath": "/icons/wiki/ice-blitz.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 82 | Tier 82",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

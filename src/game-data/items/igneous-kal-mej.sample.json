@@ -1,0 +1,20 @@
+{
+  "id": "igneous-kal-mej",
+  "name": "Igneous Kal-Mej",
+  "category": "armor",
+  "slot": "cape",
+  "iconPath": "/icons/wiki/igneous-kal-mej.png",
+  "wikiUrl": "https://runescape.wiki/w/Igneous_Kal-Mej",
+  "hoverSummary": "Tier 85 magic cape with 37.1 magic damage bonus.",
+  "detailLines": [
+    "High-level magic cape created by upgrading TokHaar-Kal-Mej with an igneous stone.",
+    "Provides 37.1 magic damage bonus.",
+    "Magic cape upgrade behavior is reserved for the dedicated ultimate/passive pass."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 85,
+  "offensiveStats": {
+    "magicBonus": 37.1
+  },
+  "implementationNotes": "Curated magic cape from the live Igneous Kal-Mej page. Wiki-verified with Playwright for tier and style bonus."
+}

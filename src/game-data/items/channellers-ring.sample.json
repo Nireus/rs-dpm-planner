@@ -1,0 +1,19 @@
+{
+  "id": "channellers-ring",
+  "name": "Channeller's ring",
+  "category": "jewellery",
+  "slot": "ring",
+  "iconPath": "/icons/wiki/channellers-ring.png",
+  "wikiUrl": "https://runescape.wiki/w/Channeller%27s_ring",
+  "hoverSummary": "Magic ring with 34.5 magic damage bonus and stacking critical bonuses on channelled abilities.",
+  "detailLines": [
+    "Provides 34.5 magic damage bonus and 5 prayer bonus.",
+    "Passive: Runic Embrace grants +4% stacking critical strike chance per hit on magic channelled abilities.",
+    "Enchantment of metaphysics adds stacking critical strike damage after the ring has been equipped for 9 seconds."
+  ],
+  "combatStyleTags": ["magic"],
+  "offensiveStats": {
+    "magicBonus": 34.5
+  },
+  "implementationNotes": "Curated magic ring from the live Channeller's ring page. Wiki-verified with Playwright for style bonus and Runic Embrace passive text."
+}

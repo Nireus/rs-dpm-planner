@@ -120,6 +120,40 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
       [armor.id]: armor,
     },
     ammo: {},
+    spells: {
+      'fire-surge': {
+        id: 'fire-surge',
+        name: 'Fire Surge',
+        spellbookId: 'standard',
+        role: 'combat',
+        levelRequirement: 95,
+        tier: 95,
+      },
+      'water-surge': {
+        id: 'water-surge',
+        name: 'Water Surge',
+        spellbookId: 'standard',
+        role: 'combat',
+        levelRequirement: 85,
+        tier: 85,
+      },
+      'incite-fear': {
+        id: 'incite-fear',
+        name: 'Incite Fear',
+        spellbookId: 'ancient',
+        role: 'combat',
+        levelRequirement: 98,
+        tier: 98,
+      },
+      'vulnerability-spell': {
+        id: 'vulnerability-spell',
+        name: 'Vulnerability',
+        spellbookId: 'standard',
+        role: 'utility',
+        levelRequirement: 66,
+        tier: 0,
+      },
+    },
     abilities,
     buffs: {},
     perks: {},
@@ -130,7 +164,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
   return {
     playerStats: {
       rangedLevel: 99,
+      magicLevel: 99,
       prayerLevel: 99,
+    },
+    combatChoices: {
+      magic: {
+        spellbookId: 'standard',
+        activeSpellId: 'fire-surge',
+      },
     },
     gearSetup: {
       equipment: {
@@ -590,5 +631,110 @@ describe('validateStrictRotationPlan', () => {
         (issue) => issue.relatedActionId === 'followup-1' && issue.code === 'ability.channel_conflict',
       ),
     ).toBe(false);
+  });
+
+  it('reports spell swaps during an active channel with the shared swap warning', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        spells: {
+          'fire-surge': {
+            id: 'fire-surge',
+            name: 'Fire Surge',
+            spellbookId: 'standard',
+            role: 'combat',
+            levelRequirement: 95,
+            tier: 95,
+          },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'swap-spell',
+            tick: 2,
+            lane: 'non-gcd',
+            actionType: 'spell-swap',
+            payload: {
+              spellId: 'fire-surge',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'channel-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'channel-shot' },
+          },
+        ],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.find((issue) => issue.relatedActionId === 'swap-spell' && issue.code === 'action.channel_conflict')
+        ?.message,
+    ).toBe('Gear, ammo, and spell swaps during an active channel are not supported in strict mode.');
+  });
+
+  it('rejects spell swaps that try to use a spell from a different spellbook', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'bad-spell-swap',
+            tick: 2,
+            lane: 'non-gcd',
+            actionType: 'spell-swap',
+            payload: {
+              spellId: 'incite-fear',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.find((issue) => issue.relatedActionId === 'bad-spell-swap' && issue.code === 'action.invalid_payload')
+        ?.message,
+    ).toBe('Spell "Incite Fear" does not belong to the selected standard spellbook.');
+  });
+
+  it('rejects spell swaps that try to use a utility spell', () => {
+    const config = createConfig({
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'utility-spell-swap',
+            tick: 2,
+            lane: 'non-gcd',
+            actionType: 'spell-swap',
+            payload: {
+              spellId: 'vulnerability-spell',
+            },
+          },
+        ],
+        abilityActions: [],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(
+      issues.find((issue) => issue.relatedActionId === 'utility-spell-swap' && issue.code === 'action.invalid_payload')
+        ?.message,
+    ).toBe('Spell swap only supports combat spells. "Vulnerability" is a utility spell.');
   });
 });

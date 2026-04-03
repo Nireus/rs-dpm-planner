@@ -1,0 +1,15 @@
+{
+  "id": "ice-rush",
+  "name": "Ice Rush",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 58,
+  "tier": 58,
+  "iconPath": "/icons/wiki/ice-rush.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 58 | Tier 58",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

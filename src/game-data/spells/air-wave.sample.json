@@ -1,0 +1,15 @@
+{
+  "id": "air-wave",
+  "name": "Air Wave",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 62,
+  "tier": 62,
+  "iconPath": "/icons/wiki/air-wave.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 62 | Tier 62",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

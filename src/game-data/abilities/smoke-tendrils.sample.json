@@ -1,0 +1,38 @@
+{
+  "id": "smoke-tendrils",
+  "name": "Smoke Tendrils",
+  "style": "magic",
+  "subtype": "enhanced",
+  "cooldownTicks": 75,
+  "adrenalineCost": 0,
+  "requires": {
+    "levelRequirements": {
+      "magic": 75
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 7,
+  "hitSchedule": [
+    { "id": "smoke-tendrils-hit-1", "tickOffset": 0, "damage": { "min": 55, "max": 65 } },
+    { "id": "smoke-tendrils-hit-2", "tickOffset": 2, "damage": { "min": 65, "max": 80 } },
+    { "id": "smoke-tendrils-hit-3", "tickOffset": 4, "damage": { "min": 75, "max": 95 } },
+    { "id": "smoke-tendrils-hit-4", "tickOffset": 6, "damage": { "min": 85, "max": 110 } }
+  ],
+  "baseDamage": {
+    "min": 280,
+    "max": 350
+  },
+  "effectRefs": [
+    "critical-strike-chance:+100%"
+  ],
+  "description": "Tendrils of smoke whip at the target's feet.",
+  "iconPath": "/icons/wiki/smoke-tendrils.png",
+  "hoverSummary": "Enhanced | 75 ticks | 4 hits | 0% adrenaline",
+  "detailLines": [
+    "55%-65%, 65%-80%, 75%-95%, then 85%-110% magic damage over 4 hits.",
+    "Guaranteed critical strike and deals 35%-40% self-damage per hit.",
+    "Incite Fear and Instability synergy remains for later magic mechanics work."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Smoke_Tendrils"
+}

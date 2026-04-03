@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import type { PortableConfigValidationError } from '../../../simulation-engine/validation/portable-config';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from '../combat-choices/combat-choices-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
 import { RotationPlannerStore } from '../rotation-planner/rotation-planner.store';
@@ -25,6 +26,7 @@ export class PortableConfigExchangeService {
   private readonly workspaceRepository = inject(WorkspaceRepositoryService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
   private readonly rotationPlannerStore = inject(RotationPlannerStore);
 
@@ -94,6 +96,7 @@ export class PortableConfigExchangeService {
     });
     this.buffConfigurationStore.loadState(workspaceDocument.appState.buffSelection);
     this.playerStatsStore.loadStats(workspaceDocument.portableConfig.playerStats);
+    this.combatChoicesStore.loadCombatChoices(workspaceDocument.portableConfig.combatChoices);
     this.rotationPlannerStore.loadState({
       startingAdrenaline: workspaceDocument.portableConfig.rotationPlan.startingAdrenaline,
       tickCount: workspaceDocument.portableConfig.rotationPlan.tickCount,

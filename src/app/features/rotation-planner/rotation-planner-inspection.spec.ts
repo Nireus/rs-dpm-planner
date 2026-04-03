@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { AbilityDefinition, BuffDefinition, ItemDefinition, RelicDefinition } from '../../../game-data/types';
+import type { AbilityDefinition, BuffDefinition, ItemDefinition, RelicDefinition, SpellDefinition } from '../../../game-data/types';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import type { RotationPlan, SimulationResult } from '../../../simulation-engine/models';
 import { inspectRotationPlannerTick } from './rotation-planner-inspection';
@@ -134,6 +134,33 @@ const FURY_OF_THE_SMALL: RelicDefinition = {
   name: 'Fury of the Small',
 };
 
+const FIRE_SURGE: SpellDefinition = {
+  id: 'fire-surge',
+  name: 'Fire Surge',
+  spellbookId: 'standard',
+  role: 'combat',
+  levelRequirement: 95,
+  tier: 95,
+};
+
+const WATER_SURGE: SpellDefinition = {
+  id: 'water-surge',
+  name: 'Water Surge',
+  spellbookId: 'standard',
+  role: 'combat',
+  levelRequirement: 85,
+  tier: 85,
+};
+
+const INCITE_FEAR: SpellDefinition = {
+  id: 'incite-fear',
+  name: 'Incite Fear',
+  spellbookId: 'ancient',
+  role: 'combat',
+  levelRequirement: 98,
+  tier: 98,
+};
+
 const PRECISE_PERK = {
   id: 'precise',
   name: 'Precise',
@@ -152,6 +179,11 @@ const CATALOG: GameDataCatalog = {
     [ESSENCE_OF_FINALITY.id]: ESSENCE_OF_FINALITY,
   },
   ammo: {},
+  spells: {
+    [FIRE_SURGE.id]: FIRE_SURGE,
+    [WATER_SURGE.id]: WATER_SURGE,
+    [INCITE_FEAR.id]: INCITE_FEAR,
+  },
   abilities: {
     [PIERCING_SHOT.id]: PIERCING_SHOT,
   },
@@ -962,5 +994,180 @@ describe('rotation planner inspection', () => {
         message: 'Deadshot requires more adrenaline at this tick.',
       }),
     ]);
+  });
+
+  it('shows the projected active spell after a spell swap takes effect', () => {
+    const rotationPlan: RotationPlan = {
+      startingAdrenaline: 0,
+      tickCount: 8,
+      nonGcdActions: [
+        {
+          id: 'spell-swap-2',
+          tick: 2,
+          lane: 'non-gcd',
+          actionType: 'spell-swap',
+          payload: {
+            spellId: WATER_SURGE.id,
+            label: 'Spell: Water Surge',
+            shortLabel: 'Water',
+            iconPath: 'icons/actions/gear-swap.svg',
+          },
+        },
+      ],
+      abilityActions: [],
+    };
+
+    const beforeSwap = inspectRotationPlannerTick({
+      tick: 2,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+        magicLevel: 99,
+      },
+      combatChoices: {
+        magic: {
+          spellbookId: 'standard',
+          activeSpellId: FIRE_SURGE.id,
+        },
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan,
+    });
+
+    const afterSwap = inspectRotationPlannerTick({
+      tick: 3,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+        magicLevel: 99,
+      },
+      combatChoices: {
+        magic: {
+          spellbookId: 'standard',
+          activeSpellId: FIRE_SURGE.id,
+        },
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan,
+    });
+
+    expect(beforeSwap.activeSpell).toEqual({
+      name: 'Fire Surge',
+      spellbookId: 'standard',
+    });
+    expect(beforeSwap.actionsStarting).toEqual(['Spell Swap: Water Surge']);
+    expect(afterSwap.activeSpell).toEqual({
+      name: 'Water Surge',
+      spellbookId: 'standard',
+    });
+  });
+
+  it('shows Glacial Embrace and Essence Corruption as stack readouts instead of generic buffs', () => {
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: 6 }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        deathsporeStacks: 0,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds:
+          index === 4
+            ? ['glacial-embrace', 'glacial-embrace', 'essence-corruption', 'essence-corruption', 'essence-corruption', 'sunshine-buff']
+            : [],
+        activeBuffIds:
+          index === 4
+            ? ['glacial-embrace', 'glacial-embrace', 'essence-corruption', 'essence-corruption', 'essence-corruption', 'sunshine-buff']
+            : [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 4,
+      catalog: {
+        ...CATALOG,
+        buffs: {
+          ...CATALOG.buffs,
+          'glacial-embrace': {
+            id: 'glacial-embrace',
+            name: 'Glacial Embrace',
+            category: 'temporary',
+            sourceType: 'ability',
+            stackRules: {
+              maxStacks: 5,
+            },
+          },
+          'essence-corruption': {
+            id: 'essence-corruption',
+            name: 'Essence Corruption',
+            category: 'temporary',
+            sourceType: 'item',
+            stackRules: {
+              maxStacks: 100,
+            },
+          },
+          'sunshine-buff': {
+            id: 'sunshine-buff',
+            name: 'Sunshine',
+            category: 'temporary',
+            sourceType: 'ability',
+          },
+        },
+      },
+      playerStats: {
+        rangedLevel: 99,
+        magicLevel: 99,
+      },
+      combatChoices: {
+        magic: {
+          spellbookId: 'ancient',
+          activeSpellId: INCITE_FEAR.id,
+        },
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 6,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.glacialEmbraceStacks).toBe(2);
+    expect(inspection.glacialEmbraceMaxStacks).toBe(5);
+    expect(inspection.essenceCorruptionStacks).toBe(3);
+    expect(inspection.essenceCorruptionMaxStacks).toBe(100);
+    expect(inspection.activeTemporaryBuffs).toEqual(['Sunshine']);
   });
 });

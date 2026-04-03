@@ -30,7 +30,7 @@ export function evaluateAbilityAvailability(
   ability: AbilityDefinition,
   context: AbilityAvailabilityContext,
 ): AbilityAvailabilityResult {
-  const issues = evaluateRequirementSet(ability.requires, context);
+  const issues = evaluateRequirementSet(resolveAbilityRequirementSet(ability), context);
 
   return {
     abilityId: ability.id,
@@ -87,6 +87,23 @@ export function requirementSetMatches(
   context: AbilityAvailabilityContext,
 ): boolean {
   return evaluateRequirementSet(requirements, context).length === 0;
+}
+
+function resolveAbilityRequirementSet(ability: AbilityDefinition): RequirementSet | undefined {
+  const requiredEquipmentTags = ability.requires?.requiredEquipmentTags;
+  if (requiredEquipmentTags?.length) {
+    return ability.requires;
+  }
+
+  const implicitWeaponRequirementTag = resolveImplicitWeaponRequirementTag(ability);
+  if (!implicitWeaponRequirementTag) {
+    return ability.requires;
+  }
+
+  return {
+    ...ability.requires,
+    requiredEquipmentTags: [implicitWeaponRequirementTag],
+  };
 }
 
 export function collectAvailabilityTags(context: AbilityAvailabilityContext): Set<string> {
@@ -199,6 +216,21 @@ function formatBlockedTag(tag: string): string {
   }
 
   return tag.replace(/-/g, ' ');
+}
+
+function resolveImplicitWeaponRequirementTag(ability: AbilityDefinition): string | null {
+  if (ability.subtype === 'special') {
+    return null;
+  }
+
+  switch (ability.style) {
+    case 'melee':
+    case 'ranged':
+    case 'magic':
+      return `${ability.style}-weapon`;
+    default:
+      return null;
+  }
 }
 
 function resolveStringConfigValue(

@@ -1,10 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { validateSpellDefinition } from '../schemas';
 import { loadBundledGameData, loadSampleGameData } from './catalog-loader';
-import type { SampleGameDataManifest } from './sample-manifest';
+import { sampleGameDataManifest, type SampleGameDataManifest } from './sample-manifest';
 
 describe('loadSampleGameData', () => {
   it('loads and normalizes sample definitions', async () => {
     const manifest: SampleGameDataManifest = {
       items: ['/items/bolg.json'],
+      spells: [],
       abilities: ['/abilities/rapid-fire.json', '/abilities/dark-bow-eof.json'],
       buffs: ['/buffs/feasting-spores-ready.json'],
       eofSpecs: ['/eof-specs/dark-bow.json'],
@@ -75,6 +80,7 @@ describe('loadSampleGameData', () => {
 
     if (result.success) {
       expect(Object.keys(result.data.items)).toEqual(['bolg']);
+      expect(Object.keys(result.data.spells)).toEqual([]);
       expect(Object.keys(result.data.abilities)).toEqual(['rapid-fire', 'dark-bow-eof']);
       expect(Object.keys(result.data.buffs)).toEqual(['feasting-spores-ready']);
       expect(Object.keys(result.data.eofSpecs)).toEqual(['dark-bow-eof']);
@@ -86,6 +92,7 @@ describe('loadSampleGameData', () => {
   it('returns clean load issues when a document is invalid', async () => {
     const manifest: SampleGameDataManifest = {
       items: ['/items/bad.json'],
+      spells: [],
       abilities: [],
       buffs: [],
       eofSpecs: [],
@@ -116,6 +123,7 @@ describe('loadSampleGameData', () => {
   it('returns clean load issues when combat styles are unknown', async () => {
     const manifest: SampleGameDataManifest = {
       items: ['/items/bad-style-item.json'],
+      spells: [],
       abilities: ['/abilities/bad-style-ability.json'],
       buffs: [],
       eofSpecs: [],
@@ -168,6 +176,7 @@ describe('loadBundledGameData', () => {
         category: 'weapon',
         combatStyleTags: ['ranged'],
       }],
+      spells: [],
       abilities: [{
         id: 'rapid-fire',
         name: 'Rapid Fire',
@@ -211,5 +220,21 @@ describe('loadBundledGameData', () => {
       expect(result.data.perks['precise'].maxRank).toBe(6);
       expect(result.data.perks['precise'].shortCode).toBe('P');
     }
+  });
+});
+
+describe('sample spell catalog', () => {
+  it('keeps every bundled spell definition schema-valid and explicitly typed by role', () => {
+    const repoRoot = path.resolve(__dirname, '../../..');
+
+    sampleGameDataManifest.spells.forEach((assetPath) => {
+      const sourcePath = path.join(repoRoot, 'src', assetPath.replace(/^\/game-data\//, 'game-data/'));
+      const raw = fs.readFileSync(sourcePath, 'utf8');
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const validation = validateSpellDefinition(parsed);
+
+      expect(validation.success).toBe(true);
+      expect(parsed['role']).toMatch(/^(combat|utility)$/);
+    });
   });
 });

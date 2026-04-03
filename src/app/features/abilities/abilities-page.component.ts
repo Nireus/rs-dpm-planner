@@ -10,6 +10,7 @@ import {
 import type { AbilityDefinition, CombatStyle } from '../../../game-data/types';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from '../../core/combat-choices/combat-choices-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { GearBuilderStore } from '../../core/gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
@@ -39,6 +40,7 @@ export class AbilitiesPageComponent {
   private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
 
   protected readonly query = signal('');
@@ -56,6 +58,7 @@ export class AbilitiesPageComponent {
     const simulationConfig = buildSimulationConfigFromAppState({
       catalog,
       playerStats: this.playerStatsStore.stats(),
+      combatChoices: this.combatChoicesStore.combatChoices(),
       gearState: this.gearBuilderStore.snapshot(),
       buffState: this.buffConfigurationStore.state(),
       rotationPlan: {

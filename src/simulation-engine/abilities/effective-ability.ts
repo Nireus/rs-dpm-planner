@@ -47,9 +47,43 @@ export function resolveEffectiveAbilityDefinition(
     return null;
   }
 
+  const castSpellAbility = resolveCastSpellAbility(projectedConfig, action, baseAbility);
+  if (castSpellAbility) {
+    return applyAdrenalineCostModifiers(projectedConfig, castSpellAbility);
+  }
+
   const dispatchedAbility = resolveSpecialDispatchAbility(projectedConfig, baseAbility) ?? baseAbility;
   const resolvedAbility = applyMatchingAbilityVariant(projectedConfig, dispatchedAbility);
   return applyAdrenalineCostModifiers(projectedConfig, resolvedAbility);
+}
+
+function resolveCastSpellAbility(
+  config: SimulationConfig,
+  action: RotationAction | null,
+  baseAbility: AbilityDefinition,
+): AbilityDefinition | null {
+  if (baseAbility.id !== 'cast-spell') {
+    return null;
+  }
+
+  const spellId = action?.payload['spellId'];
+  const spell =
+    typeof spellId === 'string' && spellId.length > 0
+      ? config.gameData.spells?.[spellId] ?? null
+      : null;
+  if (!spell) {
+    return baseAbility;
+  }
+
+  if (spell.role === 'combat') {
+    const magicAbility = config.gameData.abilities['magic'];
+    return magicAbility ?? baseAbility;
+  }
+
+  return {
+    ...baseAbility,
+    timelineEffects: spell.timelineEffects ?? [],
+  };
 }
 
 function resolveSpecialDispatchAbility(

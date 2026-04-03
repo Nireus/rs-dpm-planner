@@ -1,0 +1,13 @@
+{
+  "id": "channelled-might",
+  "name": "Channelled Might",
+  "iconPath": "/icons/wiki/channelled-might.png",
+  "wikiUrl": "https://runescape.wiki/w/Asphyxiate",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 6,
+  "effectRefs": [
+    "critical-strike-damage:+15%"
+  ],
+  "displayPriority": 78
+}

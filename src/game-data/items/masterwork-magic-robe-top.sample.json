@@ -1,0 +1,25 @@
+{
+  "id": "masterwork-magic-robe-top",
+  "name": "Masterwork magic robe top",
+  "category": "armor",
+  "slot": "body",
+  "iconPath": "/icons/wiki/masterwork-magic-robe-top.png",
+  "wikiUrl": "https://runescape.wiki/w/Masterwork_magic_robe_top",
+  "hoverSummary": "Tier 100 magic power body with 37.5 magic damage bonus.",
+  "detailLines": [
+    "Requires level 99 Defence to wear.",
+    "Masterwork magic power armour body piece.",
+    "Live set bonus: Masterwork Magic Set delays incoming damage over time."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 100,
+  "offensiveStats": {
+    "magicBonus": 37.5
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 99
+    }
+  },
+  "implementationNotes": "Curated masterwork magic body from the live Masterwork magic robe top page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

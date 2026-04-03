@@ -1,0 +1,25 @@
+{
+  "id": "smoke-cloud",
+  "name": "Smoke Cloud",
+  "spellbookId": "ancient",
+  "role": "utility",
+  "levelRequirement": 74,
+  "tier": 0,
+  "iconPath": "/icons/wiki/smoke-cloud.png",
+  "wikiUrl": "https://runescape.wiki/w/Smoke_Cloud",
+  "hoverSummary": "Utility spell | 3 ticks | 200t debuff",
+  "detailLines": [
+    "Applies Smoke Cloud to the target for 200 ticks.",
+    "Support spell with no direct hit damage."
+  ],
+  "description": "Shrouds the target in Smoke Cloud and increases critical strike damage taken.",
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "smoke-cloud",
+      "durationTicks": 200
+    }
+  ]
+}
+
+

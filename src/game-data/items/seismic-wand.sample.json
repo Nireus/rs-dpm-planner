@@ -1,0 +1,26 @@
+{
+  "id": "seismic-wand",
+  "name": "Seismic wand",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/seismic-wand.png",
+  "wikiUrl": "https://runescape.wiki/w/Seismic_wand",
+  "hoverSummary": "Tier 90 main-hand magic wand with 864 ability damage and 2458 accuracy.",
+  "detailLines": [
+    "Requires level 90 Magic to wield.",
+    "Main-hand magic weapon with 4-tick speed and range 8.",
+    "Curated as part of the dual-wield magic batch."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 90
+    }
+  },
+  "implementationNotes": "Curated main-hand magic weapon from the live Seismic wand page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and range."
+}

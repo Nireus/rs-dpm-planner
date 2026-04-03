@@ -1,0 +1,19 @@
+{
+  "id": "staff-of-sliske-eof",
+  "name": "Staff of Sliske (EOF)",
+  "iconPath": "/icons/wiki/staff-of-sliske.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 5 hits",
+  "detailLines": [
+    "Stored Staff of Sliske special attack for Essence of Finality.",
+    "Summons a clone that strikes five times for 55%-65% ability damage each.",
+    "The live special has no cooldown but only one clone can be active at a time."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Staff_of_Sliske",
+  "weaponOrigin": "staff-of-sliske",
+  "abilityId": "from-the-shadows",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:staff-of-sliske"]
+  },
+  "effectRefs": ["eof-staff-of-sliske-spec"],
+  "description": "Stored Staff of Sliske special attack for Essence of Finality."
+}

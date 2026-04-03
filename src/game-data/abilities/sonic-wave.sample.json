@@ -1,0 +1,43 @@
+{
+  "id": "sonic-wave",
+  "name": "Sonic Wave",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 6
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "sonic-wave-hit-1",
+      "tickOffset": 2,
+      "damage": {
+        "min": 90,
+        "max": 110
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 90,
+    "max": 110
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "flow"
+    }
+  ],
+  "description": "A focused blast of magic that pummels the target.",
+  "iconPath": "/icons/wiki/sonic-wave.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "90%-110% magic damage.",
+    "Applies Flow for 9 seconds.",
+    "Flow cost reduction is currently tracked as buff state; the adrenaline discount is not implemented yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Sonic_Wave"
+}

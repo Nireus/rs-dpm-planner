@@ -1,0 +1,12 @@
+{
+  "id": "torment",
+  "name": "Torment",
+  "iconPath": "/icons/wiki/torment.png",
+  "wikiUrl": "https://runescape.wiki/w/Torment",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["torment", "magic-damage-multiplier:+10%"],
+  "displayPriority": 20
+}

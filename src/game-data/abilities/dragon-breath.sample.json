@@ -1,0 +1,37 @@
+{
+  "id": "dragon-breath",
+  "name": "Dragon Breath",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 12,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 19
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "dragon-breath-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 110,
+        "max": 130
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 110,
+    "max": 130
+  },
+  "description": "Breathe a mighty cloud of fire.",
+  "iconPath": "/icons/wiki/dragon-breath.png",
+  "hoverSummary": "Basic | 12 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "110%-130% magic damage to the primary target.",
+    "Multi-target cone behavior remains descriptive-only in the single-target simulator.",
+    "Deals 1.25x damage to combusted enemies on the live page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Dragon_Breath"
+}

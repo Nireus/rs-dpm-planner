@@ -1,0 +1,19 @@
+{
+  "id": "mirrorback",
+  "name": "Mirrorback",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 100,
+  "adrenalineGain": 0,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "effectRefs": ["weapon-special:mirrorback"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Noxious staff special attack. Summons a mirrorback spider that reduces incoming damage by 50% and reflects the reduced amount while active."
+}

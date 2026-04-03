@@ -1,0 +1,25 @@
+{
+  "id": "elite-tectonic-robe-bottom",
+  "name": "Elite tectonic robe bottom",
+  "category": "armor",
+  "slot": "legs",
+  "iconPath": "/icons/wiki/elite-tectonic-robe-bottom.png",
+  "wikiUrl": "https://runescape.wiki/w/Elite_tectonic_robe_bottom",
+  "hoverSummary": "Tier 92 magic power legs with 28.7 magic damage bonus.",
+  "detailLines": [
+    "Requires level 92 Defence to wear.",
+    "Elite tectonic power armour leg piece.",
+    "Live set bonus: Elite Fracture Point grants 2% critical strike chance per piece worn."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "magicBonus": 28.7
+  },
+  "requirements": {
+    "levelRequirements": {
+      "defence": 92
+    }
+  },
+  "implementationNotes": "Curated elite magic legs from the live Elite tectonic robe bottom page. Wiki-verified with Playwright for tier, armour type, style bonus, and set bonus text."
+}

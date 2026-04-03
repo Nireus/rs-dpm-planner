@@ -1,0 +1,60 @@
+{
+  "id": "from-the-shadows",
+  "name": "From the Shadows",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 50,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "from-the-shadows-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 55,
+        "max": 65
+      }
+    },
+    {
+      "id": "from-the-shadows-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 55,
+        "max": 65
+      }
+    },
+    {
+      "id": "from-the-shadows-hit-3",
+      "tickOffset": 0,
+      "damage": {
+        "min": 55,
+        "max": 65
+      }
+    },
+    {
+      "id": "from-the-shadows-hit-4",
+      "tickOffset": 0,
+      "damage": {
+        "min": 55,
+        "max": 65
+      }
+    },
+    {
+      "id": "from-the-shadows-hit-5",
+      "tickOffset": 0,
+      "damage": {
+        "min": 55,
+        "max": 65
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 275,
+    "max": 325
+  },
+  "effectRefs": ["weapon-special:from-the-shadows"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Staff of Sliske special attack. Summons a shadow clone that strikes five times for 55%-65% ability damage per hit."
+}

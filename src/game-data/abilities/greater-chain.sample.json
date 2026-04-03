@@ -1,0 +1,37 @@
+{
+  "id": "greater-chain",
+  "name": "Greater Chain",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 17,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 51
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-chain-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 80,
+        "max": 100
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 80,
+    "max": 100
+  },
+  "description": "A magical spell that chains between nearby targets.",
+  "iconPath": "/icons/wiki/greater-chain.png",
+  "hoverSummary": "Basic | 17 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "80%-100% magic damage to the primary target.",
+    "Multi-target chain behavior remains descriptive-only in the single-target simulator.",
+    "The 6-second enhanced follow-up cleave effect is not implemented yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Chain"
+}

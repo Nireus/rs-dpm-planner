@@ -110,6 +110,7 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
     (left, right) => left.tick - right.tick || left.id.localeCompare(right.id),
   );
   let projectedGearState = createInitialProjectedGearState(config);
+  const selectedSpellbookId = config.combatChoices?.magic.spellbookId ?? 'standard';
 
   for (const action of nonGcdActions) {
     if (action.actionType === 'gear-swap') {
@@ -212,6 +213,57 @@ function validateSwapActionPayloads(config: SimulationConfig, context: Validatio
       }
     }
 
+    if (action.actionType === 'spell-swap') {
+      const spellId = readStringPayload(action, 'spellId');
+
+      if (!spellId) {
+        issues.push(
+          createActionIssue(action, 'action.invalid_payload', 'Spell swap is missing spell reference.'),
+        );
+        continue;
+      }
+
+      const spellDefinition = config.gameData.spells?.[spellId];
+      if (!spellDefinition) {
+        issues.push(
+          createActionIssue(action, 'action.invalid_item_reference', `Unknown spell "${spellId}".`),
+        );
+        continue;
+      }
+
+      if (spellDefinition.spellbookId !== selectedSpellbookId) {
+        issues.push(
+          createActionIssue(
+            action,
+            'action.invalid_payload',
+            `Spell "${spellDefinition.name}" does not belong to the selected ${selectedSpellbookId} spellbook.`,
+          ),
+        );
+        continue;
+      }
+
+      if (spellDefinition.role !== 'combat') {
+        issues.push(
+          createActionIssue(
+            action,
+            'action.invalid_payload',
+            `Spell swap only supports combat spells. "${spellDefinition.name}" is a utility spell.`,
+          ),
+        );
+        continue;
+      }
+
+      if ((config.playerStats.magicLevel ?? 0) < spellDefinition.levelRequirement) {
+        issues.push(
+          createActionIssue(
+            action,
+            'action.invalid_equip_state',
+            `${spellDefinition.name} requires Magic ${spellDefinition.levelRequirement}.`,
+          ),
+        );
+      }
+    }
+
     if (action.actionType === ADRENALINE_POTION_ACTION_TYPE) {
       const variantId = readStringPayload(action, 'variantId');
       if (!getAdrenalinePotionVariant(variantId)) {
@@ -252,6 +304,42 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
       continue;
     }
 
+    if (abilityId === 'cast-spell') {
+      const spellId = readStringPayload(action, 'spellId');
+      if (!spellId) {
+        issues.push(createActionIssue(action, 'ability.invalid_payload', 'Cast Spell is missing spellId.'));
+        continue;
+      }
+
+      const spellDefinition = config.gameData.spells?.[spellId];
+      if (!spellDefinition) {
+        issues.push(createActionIssue(action, 'ability.invalid_payload', `Unknown spell "${spellId}".`));
+        continue;
+      }
+
+      if (spellDefinition.spellbookId !== (config.combatChoices?.magic.spellbookId ?? 'standard')) {
+        issues.push(
+          createActionIssue(
+            action,
+            'ability.invalid_payload',
+            `"${spellDefinition.name}" does not belong to the selected spellbook.`,
+          ),
+        );
+        continue;
+      }
+
+      if ((config.playerStats.magicLevel ?? 0) < spellDefinition.levelRequirement) {
+        issues.push(
+          createActionIssue(
+            action,
+            'ability.unavailable',
+            `${spellDefinition.name} requires Magic ${spellDefinition.levelRequirement}.`,
+          ),
+        );
+        continue;
+      }
+    }
+
     const ability = resolveEffectiveAbilityDefinition(config, action) ?? baseAbility;
 
     while (
@@ -272,7 +360,7 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
       );
     }
 
-    const availability = evaluateAbilityAvailability(baseAbility, {
+    const availability = evaluateAbilityAvailability(ability, {
       playerStats: config.playerStats,
       equippedItems: getEquippedDefinitions(projectedGearState, config),
       inventoryItems: context.inventoryDefinitions,
@@ -317,7 +405,7 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
         createActionIssue(
           action,
           'action.channel_conflict',
-          'Gear and ammo swaps during an active channel are not supported in strict mode.',
+          'Gear, ammo, and spell swaps during an active channel are not supported in strict mode.',
         ),
       );
     }
@@ -413,6 +501,18 @@ function applyProjectedSwap(
       equipment: applied.equipment,
       inventory: applied.inventory,
     };
+  }
+
+  if (action.actionType === 'spell-swap') {
+    const spellId = readStringPayload(action, 'spellId');
+    const spellDefinition = spellId ? config.gameData.spells?.[spellId] : undefined;
+    const selectedSpellbookId = config.combatChoices?.magic.spellbookId ?? 'standard';
+
+    if (!spellId || !spellDefinition || spellDefinition.spellbookId !== selectedSpellbookId) {
+      return state;
+    }
+
+    return state;
   }
 
   return state;
@@ -525,7 +625,7 @@ function resolveAmmoDefinition(
 }
 
 function isChannelSensitiveAction(action: RotationAction): boolean {
-  return action.actionType === 'gear-swap' || action.actionType === 'ammo-swap';
+  return action.actionType === 'gear-swap' || action.actionType === 'ammo-swap' || action.actionType === 'spell-swap';
 }
 
 function isWithinChannelWindow(tick: number, windows: ChannelWindow[]): boolean {

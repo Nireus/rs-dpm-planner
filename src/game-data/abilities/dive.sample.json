@@ -2,7 +2,7 @@
   "id": "dive",
   "name": "Dive",
   "style": "melee",
-  "subtype": "other",
+  "subtype": "utility",
   "cooldownTicks": 34,
   "adrenalineCost": 0,
   "hitSchedule": [],

@@ -1,0 +1,11 @@
+{
+  "id": "temporal-anomaly",
+  "name": "Temporal Anomaly",
+  "iconPath": "/icons/wiki/temporal-anomaly.png",
+  "wikiUrl": "https://runescape.wiki/w/Temporal_Anomaly",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 1200,
+  "displayPriority": 67
+}
+

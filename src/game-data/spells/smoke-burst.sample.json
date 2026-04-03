@@ -1,0 +1,15 @@
+{
+  "id": "smoke-burst",
+  "name": "Smoke Burst",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 62,
+  "tier": 62,
+  "iconPath": "/icons/wiki/smoke-burst.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 62 | Tier 62",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

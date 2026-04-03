@@ -1,0 +1,15 @@
+{
+  "id": "earth-blast",
+  "name": "Earth Blast",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 53,
+  "tier": 53,
+  "iconPath": "/icons/wiki/earth-blast.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 53 | Tier 53",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

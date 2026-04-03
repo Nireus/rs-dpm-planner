@@ -1,0 +1,14 @@
+{
+  "id": "smoke-cloud",
+  "name": "Smoke Cloud",
+  "iconPath": "/icons/wiki/smoke-cloud.png",
+  "wikiUrl": "https://runescape.wiki/w/Smoke_Cloud",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 200,
+  "effectRefs": [
+    "critical-strike-damage:+15%"
+  ],
+  "displayPriority": 82
+}
+

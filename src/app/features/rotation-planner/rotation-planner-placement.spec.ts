@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { AbilityDefinition } from '../../../game-data/types';
+import type { AbilityDefinition, ItemDefinition } from '../../../game-data/types';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import { evaluateAbilityPlacement } from './rotation-planner-placement';
 
@@ -34,8 +34,17 @@ const ULTIMATE_ABILITY: AbilityDefinition = {
 };
 
 const CATALOG: GameDataCatalog = {
-  items: {},
+  items: {
+    'test-bow': {
+      id: 'test-bow',
+      name: 'Test Bow',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['ranged'],
+    } satisfies ItemDefinition,
+  },
   ammo: {},
+  spells: {},
   abilities: {
     [BASIC_ABILITY.id]: BASIC_ABILITY,
     [ULTIMATE_ABILITY.id]: ULTIMATE_ABILITY,
@@ -46,8 +55,13 @@ const CATALOG: GameDataCatalog = {
   eofSpecs: {},
 };
 
-const EMPTY_GEAR_STATE: GearBuilderState = {
-  equipment: {},
+const RANGED_GEAR_STATE: GearBuilderState = {
+  equipment: {
+    weapon: {
+      instanceId: 'weapon-1',
+      definitionId: 'test-bow',
+    },
+  },
   inventory: [],
 };
 
@@ -79,7 +93,7 @@ describe('rotation planner placement', () => {
       playerStats: {
         rangedLevel: 99,
       },
-      gearState: EMPTY_GEAR_STATE,
+      gearState: RANGED_GEAR_STATE,
       buffState: {
         activeBuffIds: [],
         activeRelicIds: [],
@@ -108,7 +122,7 @@ describe('rotation planner placement', () => {
       playerStats: {
         rangedLevel: 99,
       },
-      gearState: EMPTY_GEAR_STATE,
+      gearState: RANGED_GEAR_STATE,
       buffState: {
         activeBuffIds: [],
         activeRelicIds: [],
@@ -147,7 +161,7 @@ describe('rotation planner placement', () => {
       playerStats: {
         rangedLevel: 99,
       },
-      gearState: EMPTY_GEAR_STATE,
+      gearState: RANGED_GEAR_STATE,
       buffState: {
         activeBuffIds: [],
         activeRelicIds: [],

@@ -1,0 +1,43 @@
+{
+  "id": "greater-sonic-wave",
+  "name": "Greater Sonic Wave",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 25,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 6
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "greater-sonic-wave-hit-1",
+      "tickOffset": 2,
+      "damage": {
+        "min": 115,
+        "max": 135
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 115,
+    "max": 135
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "greater-flow"
+    }
+  ],
+  "description": "A focused blast of magic that pummels the target and leaves behind residual energy.",
+  "iconPath": "/icons/wiki/greater-sonic-wave.png",
+  "hoverSummary": "Basic | 25 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "115%-135% magic damage.",
+    "Applies Greater Flow for 9 seconds.",
+    "Greater Flow cost reduction is currently tracked as buff state; the adrenaline discount is not implemented yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Greater_Sonic_Wave"
+}

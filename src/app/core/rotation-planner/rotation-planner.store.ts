@@ -24,7 +24,9 @@ import {
   type PlannerAbilityGapControl,
   type PlannerNonGcdDropPayload,
   type PlannerNonGcdTemplate,
+  updateAbilityActionPayload,
   updateNonGcdActionPayload,
+  upsertNonGcdAbilityAction,
   upsertNonGcdAction,
   upsertAbilityAction,
 } from './rotation-planner.utils';
@@ -209,20 +211,43 @@ export class RotationPlannerStore {
     });
   }
 
-  placeAbility(definition: AbilityDefinition, tick: number, payload?: PlannerAbilityDropPayload): boolean {
+  placeAbility(definition: AbilityDefinition, tick: number, payload?: PlannerAbilityDropPayload): string | null {
     const dropPayload: PlannerAbilityDropPayload = payload ?? {
       sourceType: 'catalog',
       abilityId: definition.id,
     };
 
     if (!this.canPlaceAbilityAtTick(definition, tick, dropPayload.actionId)) {
-      return false;
+      return null;
     }
 
-    this.abilityActionsValue.update((actions) =>
-      upsertAbilityAction(actions, this.gameDataStore.snapshot().catalog?.abilities ?? {}, dropPayload, tick),
-    );
-    return true;
+    let nextActionId: string | null = null;
+
+    this.abilityActionsValue.update((actions) => {
+      const nextActions = upsertAbilityAction(
+        actions,
+        this.gameDataStore.snapshot().catalog?.abilities ?? {},
+        dropPayload,
+        tick,
+      );
+
+      if (dropPayload.sourceType === 'timeline' && dropPayload.actionId) {
+        nextActionId = dropPayload.actionId;
+      } else {
+        const previousIds = new Set(actions.map((action) => action.id));
+        nextActionId =
+          nextActions.find((action) =>
+            !previousIds.has(action.id) &&
+            action.tick === tick &&
+            action.actionType === 'ability-use' &&
+            action.payload['abilityId'] === definition.id,
+          )?.id ?? null;
+      }
+
+      return nextActions;
+    });
+
+    return nextActionId;
   }
 
   canPlaceNonGcdActionAtTick(tick: number): boolean {
@@ -258,8 +283,45 @@ export class RotationPlannerStore {
     return nextActionId;
   }
 
+  placeUtilityAbilityNonGcd(
+    definition: AbilityDefinition,
+    tick: number,
+    payload?: PlannerNonGcdDropPayload,
+  ): string | null {
+    if (!this.canPlaceNonGcdActionAtTick(tick)) {
+      return null;
+    }
+
+    let nextActionId: string | null = null;
+
+    this.nonGcdActionsValue.update((actions) => {
+      const nextActions = upsertNonGcdAbilityAction(actions, definition, tick, payload);
+
+      if (payload?.sourceType === 'timeline' && payload.actionId) {
+        nextActionId = payload.actionId;
+      } else {
+        const previousIds = new Set(actions.map((action) => action.id));
+        nextActionId =
+          nextActions.find((action) =>
+            !previousIds.has(action.id) &&
+            action.tick === tick &&
+            action.actionType === 'ability-use' &&
+            action.payload['abilityId'] === definition.id,
+          )?.id ?? null;
+      }
+
+      return nextActions;
+    });
+
+    return nextActionId;
+  }
+
   updateNonGcdAction(actionId: string, payloadUpdate: Record<string, unknown>): void {
     this.nonGcdActionsValue.update((actions) => updateNonGcdActionPayload(actions, actionId, payloadUpdate));
+  }
+
+  updateAbilityAction(actionId: string, payloadUpdate: Record<string, unknown>): void {
+    this.abilityActionsValue.update((actions) => updateAbilityActionPayload(actions, actionId, payloadUpdate));
   }
 
   removeAbility(actionId: string): void {

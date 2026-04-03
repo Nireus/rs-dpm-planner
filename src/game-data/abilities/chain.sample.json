@@ -1,0 +1,37 @@
+{
+  "id": "chain",
+  "name": "Chain",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 17,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 51
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "chain-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 70,
+        "max": 90
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 70,
+    "max": 90
+  },
+  "description": "A magical spell that chains between nearby targets.",
+  "iconPath": "/icons/wiki/chain.png",
+  "hoverSummary": "Basic | 17 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "70%-90% magic damage to the primary target.",
+    "Multi-target chain behavior remains descriptive-only in the single-target simulator.",
+    "The 6-second follow-up cleave effect is not implemented yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Chain"
+}

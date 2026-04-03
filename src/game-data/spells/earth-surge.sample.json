@@ -1,0 +1,15 @@
+{
+  "id": "earth-surge",
+  "name": "Earth Surge",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 90,
+  "tier": 90,
+  "iconPath": "/icons/wiki/earth-surge.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 90 | Tier 90",
+  "description": "High-tier Standard combat spell used for magic ability damage selection."
+}
+
+
+

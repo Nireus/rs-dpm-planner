@@ -10,7 +10,10 @@ export function projectSimulationConfigAtTick(
   tick: number,
 ): SimulationConfig {
   const relevantSwaps = [...config.rotationPlan.nonGcdActions]
-    .filter((entry) => entry.actionType === 'gear-swap' && entry.tick < tick)
+    .filter((entry) => (
+      (entry.actionType === 'gear-swap' || entry.actionType === 'spell-swap') &&
+      entry.tick < tick
+    ))
     .sort((left, right) => left.tick - right.tick);
 
   if (!relevantSwaps.length) {
@@ -19,8 +22,37 @@ export function projectSimulationConfigAtTick(
 
   let projectedEquipment = { ...config.gearSetup.equipment };
   let projectedInventory = [...config.inventory.items];
+  let projectedCombatChoices = config.combatChoices ?? {
+    magic: {
+      spellbookId: 'standard',
+      activeSpellId: 'air-strike',
+    },
+  };
 
   for (const swap of relevantSwaps) {
+    if (swap.actionType === 'spell-swap') {
+      const spellId = readStringPayload(swap, 'spellId');
+      const spellDefinition = spellId ? config.gameData.spells?.[spellId] : undefined;
+      const activeSpellbookId = projectedCombatChoices.magic.spellbookId;
+
+      if (
+        spellId &&
+        spellDefinition &&
+        spellDefinition.spellbookId === activeSpellbookId &&
+        spellDefinition.role === 'combat'
+      ) {
+        projectedCombatChoices = {
+          ...projectedCombatChoices,
+          magic: {
+            spellbookId: activeSpellbookId,
+            activeSpellId: spellDefinition.id,
+          },
+        };
+      }
+
+      continue;
+    }
+
     const instanceId = readStringPayload(swap, 'instanceId');
     const slot = readStringPayload(swap, 'slot');
     if (!instanceId || !slot) {
@@ -48,6 +80,7 @@ export function projectSimulationConfigAtTick(
 
   return {
     ...config,
+    combatChoices: projectedCombatChoices,
     gearSetup: {
       ...config.gearSetup,
       equipment: projectedEquipment,

@@ -6,7 +6,14 @@ function createConfig(): SimulationConfig {
   return {
     playerStats: {
       rangedLevel: 99,
+      magicLevel: 99,
       prayerLevel: 99,
+    },
+    combatChoices: {
+      magic: {
+        spellbookId: 'standard',
+        activeSpellId: 'fire-surge',
+      },
     },
     gearSetup: {
       equipment: {
@@ -121,6 +128,40 @@ function createConfig(): SimulationConfig {
         },
       },
       ammo: {},
+      spells: {
+        'fire-surge': {
+          id: 'fire-surge',
+          name: 'Fire Surge',
+          spellbookId: 'standard',
+          role: 'combat',
+          levelRequirement: 95,
+          tier: 95,
+        },
+        'water-surge': {
+          id: 'water-surge',
+          name: 'Water Surge',
+          spellbookId: 'standard',
+          role: 'combat',
+          levelRequirement: 85,
+          tier: 85,
+        },
+        'incite-fear': {
+          id: 'incite-fear',
+          name: 'Incite Fear',
+          spellbookId: 'ancient',
+          role: 'combat',
+          levelRequirement: 98,
+          tier: 98,
+        },
+        'vulnerability-spell': {
+          id: 'vulnerability-spell',
+          name: 'Vulnerability',
+          spellbookId: 'standard',
+          role: 'utility',
+          levelRequirement: 66,
+          tier: 0,
+        },
+      },
       abilities: {},
       buffs: {},
       perks: {},
@@ -226,5 +267,60 @@ describe('projectSimulationConfigAtTick', () => {
     expect(projected.gearSetup.equipment.weapon).toBeUndefined();
     expect(projected.gearSetup.equipment.offHand?.instanceId).toBe('off-hand-one');
     expect(projected.inventory.items.map((item) => item.instanceId)).toContain('weapon-two-handed');
+  });
+
+  it('projects spell swap actions starting on the next tick', () => {
+    const config = {
+      ...createConfig(),
+      rotationPlan: {
+        ...createConfig().rotationPlan,
+        nonGcdActions: [
+          ...createConfig().rotationPlan.nonGcdActions,
+          {
+            id: 'swap-to-incite-fear',
+            tick: 5,
+            lane: 'non-gcd',
+            actionType: 'spell-swap',
+            payload: {
+              spellId: 'water-surge',
+            },
+          },
+        ],
+      },
+    } satisfies SimulationConfig;
+
+    expect(projectSimulationConfigAtTick(config, 5).combatChoices?.magic).toEqual({
+      spellbookId: 'standard',
+      activeSpellId: 'fire-surge',
+    });
+    expect(projectSimulationConfigAtTick(config, 6).combatChoices?.magic).toEqual({
+      spellbookId: 'standard',
+      activeSpellId: 'water-surge',
+    });
+  });
+
+  it('ignores utility spells in spell swap projection', () => {
+    const config = {
+      ...createConfig(),
+      rotationPlan: {
+        ...createConfig().rotationPlan,
+        nonGcdActions: [
+          {
+            id: 'swap-to-vulnerability',
+            tick: 5,
+            lane: 'non-gcd',
+            actionType: 'spell-swap',
+            payload: {
+              spellId: 'vulnerability-spell',
+            },
+          },
+        ],
+      },
+    } satisfies SimulationConfig;
+
+    expect(projectSimulationConfigAtTick(config, 6).combatChoices?.magic).toEqual({
+      spellbookId: 'standard',
+      activeSpellId: 'fire-surge',
+    });
   });
 });

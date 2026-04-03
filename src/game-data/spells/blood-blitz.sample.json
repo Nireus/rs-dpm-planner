@@ -1,0 +1,15 @@
+{
+  "id": "blood-blitz",
+  "name": "Blood Blitz",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 80,
+  "tier": 80,
+  "iconPath": "/icons/wiki/blood-blitz.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 80 | Tier 80",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

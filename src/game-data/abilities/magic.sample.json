@@ -1,0 +1,37 @@
+{
+  "id": "magic",
+  "name": "Magic",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 3,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 1
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "magic-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 110
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 90,
+    "max": 110
+  },
+  "description": "Attack the target.",
+  "iconPath": "/icons/wiki/magic-ability.png",
+  "hoverSummary": "Basic | 3 ticks | 1 hit | +9% adrenaline",
+  "detailLines": [
+    "90%-110% magic damage.",
+    "Default magic basic attack.",
+    "Animation varies with the currently selected spell."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Magic_(ability)"
+}

@@ -2,7 +2,7 @@
   <header class="toolbar">
     <div class="title-copy">
       <h1>Rotation Planner</h1>
-      <p>Manual tick timeline for ranged rotations under strict validation.</p>
+      <p>Manual tick timeline for single-target rotations under strict validation.</p>
     </div>
   </header>
 
@@ -81,8 +81,10 @@
                   @for (entry of category.abilities; track entry.definition.id) {
                     <button
                       type="button"
-                      class="ability-chip icon-only-chip"
-                      [class]=" 'ability-chip icon-only-chip ' + entry.themeClass"
+                      class="ability-chip"
+                      [class]="entry.definition.id === 'cast-spell'
+                        ? 'ability-chip cast-spell-inline-chip ' + entry.themeClass
+                        : 'ability-chip icon-only-chip ' + entry.themeClass"
                       [attr.data-testid]="'ability-palette-' + entry.definition.id"
                       [class.blocked-chip]="entry.availabilityIssue"
                       [title]="abilityPaletteEntryTitle(entry)"
@@ -90,7 +92,12 @@
                       (dragstart)="onCatalogAbilityDragStart(entry)"
                       (dragend)="onAbilityDragEnd()"
                     >
-                      @if (entry.definition.iconPath) {
+                      @if (entry.definition.id === 'cast-spell') {
+                        <span class="cast-spell-inline-copy">
+                          <span class="ability-chip-name">{{ entry.definition.name }}</span>
+                          <span class="ability-chip-meta">Any spell</span>
+                        </span>
+                      } @else if (entry.definition.iconPath) {
                         <img
                           class="ability-chip-icon"
                           [src]="entry.definition.iconPath"
@@ -341,15 +348,16 @@
                       [class.preview-shifted]="occupancy.previewState === 'shifted'"
                       [style.--occupied-span]="abilitySpan(occupancy.definition)"
                       [title]="placedAbilityTitle(occupancy.action)"
+                      (click)="openAbilityActionConfig(occupancy.action, $event)"
                       draggable="true"
                       (dragstart)="onTimelineAbilityDragStart(occupancy.action)"
                       (dragend)="onAbilityDragEnd()"
                     >
-                      @if (occupancy.definition.iconPath) {
+                      @if (placedAbilityIconPath(occupancy.action, occupancy.definition); as placedIconPath) {
                         <img
                           class="placed-ability-icon"
-                          [src]="occupancy.definition.iconPath"
-                          [alt]="occupancy.definition.name"
+                          [src]="placedIconPath"
+                          [alt]="placedAbilityLabel(occupancy.action, occupancy.definition)"
                         />
                       } @else {
                         <span class="placed-ability-fallback">
@@ -358,8 +366,8 @@
                       }
 
                       <span class="placed-ability-copy">
-                        <span class="placed-ability-name">{{ occupancy.definition.name }}</span>
-                        <span class="placed-ability-meta">{{ occupancy.definition.subtype }}</span>
+                        <span class="placed-ability-name">{{ placedAbilityLabel(occupancy.action, occupancy.definition) }}</span>
+                        <span class="placed-ability-meta">{{ placedAbilityMeta(occupancy.action, occupancy.definition) }}</span>
                       </span>
 
                       @if (perfectEquilibriumProcMarkers(occupancy.action).length) {
@@ -486,6 +494,30 @@
         (cancel)="closeAdrenalinePotionConfig(true)"
         (remove)="removeAdrenalinePotionActionFromDialog()"
         (apply)="confirmAdrenalinePotionConfig()"
+      />
+    }
+
+    @if (spellSwapDialogActionId(); as spellSwapActionId) {
+      <app-rotation-planner-spell-swap-dialog
+        [actionTick]="activeSpellSwapAction()?.tick ?? 0"
+        [options]="spellSwapOptions()"
+        [selectedSpellId]="selectedSpellSwapSpellId()"
+        (selectedSpellIdChange)="updateSelectedSpellSwapSpellId($event)"
+        (cancel)="closeSpellSwapConfig(true)"
+        (remove)="removeSpellSwapActionFromDialog()"
+        (apply)="confirmSpellSwapConfig()"
+      />
+    }
+
+    @if (castSpellDialogActionId(); as castSpellActionId) {
+      <app-rotation-planner-cast-spell-dialog
+        [actionTick]="activeCastSpellAction()?.tick ?? 0"
+        [options]="castSpellOptions()"
+        [selectedSpellId]="selectedCastSpellSpellId()"
+        (selectedSpellIdChange)="updateSelectedCastSpellSpellId($event)"
+        (cancel)="closeCastSpellConfig(true)"
+        (remove)="removeCastSpellActionFromDialog()"
+        (apply)="confirmCastSpellConfig()"
       />
     }
 

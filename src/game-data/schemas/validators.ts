@@ -5,6 +5,7 @@ import type {
   ItemDefinition,
   PerkDefinition,
   RelicDefinition,
+  SpellDefinition,
 } from '../types';
 import { isRecognizedCombatStyle } from '../conventions/combat-styles';
 import { isRecognizedEffectRef, isRecognizedRequirementTag } from '../conventions/mechanics';
@@ -52,7 +53,7 @@ export function parseJsonDocument(raw: string): unknown {
 
 function validateDefinitionBase(
   input: unknown,
-  kind: 'item' | 'ability' | 'buff' | 'eof spec' | 'perk' | 'relic',
+  kind: 'item' | 'spell' | 'ability' | 'buff' | 'eof spec' | 'perk' | 'relic',
 ): GameDataValidationError[] {
   const errors: GameDataValidationError[] = [];
 
@@ -168,6 +169,38 @@ export function validateAbilityDefinition(
   }
 
   return { success: true, data: input as unknown as AbilityDefinition };
+}
+
+export function validateSpellDefinition(input: unknown): GameDataValidationResult<SpellDefinition> {
+  const errors = validateDefinitionBase(input, 'spell');
+
+  if (!isRecord(input)) {
+    return { success: false, errors };
+  }
+
+  if (input['spellbookId'] !== 'standard' && input['spellbookId'] !== 'ancient') {
+    pushError(errors, 'spellbookId', 'Expected "spellbookId" to be "standard" or "ancient".');
+  }
+
+  if (input['role'] !== 'combat' && input['role'] !== 'utility') {
+    pushError(errors, 'role', 'Expected "role" to be "combat" or "utility".');
+  }
+
+  if (typeof input['levelRequirement'] !== 'number') {
+    pushError(errors, 'levelRequirement', 'Expected "levelRequirement" to be a number.');
+  }
+
+  if (typeof input['tier'] !== 'number') {
+    pushError(errors, 'tier', 'Expected "tier" to be a number.');
+  }
+
+  validateTimelineEffects(errors, input['timelineEffects'], 'timelineEffects');
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return { success: true, data: input as unknown as SpellDefinition };
 }
 
 export function validateBuffDefinition(input: unknown): GameDataValidationResult<BuffDefinition> {

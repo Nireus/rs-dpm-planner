@@ -182,6 +182,53 @@ describe('buildPlannerBuffLaneBars', () => {
     ]);
   });
 
+  it('filters Glacial Embrace and Essence Corruption stack buffs out of the shared buff lane', () => {
+    const bars = buildPlannerBuffLaneBars({
+      tickCount: 4,
+      buffTimeline: {
+        0: ['glacial-embrace'],
+        1: ['glacial-embrace', 'essence-corruption', 'sunshine-buff'],
+        2: ['sunshine-buff'],
+        3: [],
+      },
+      buffDefinitions: {
+        'glacial-embrace': {
+          id: 'glacial-embrace',
+          name: 'Glacial Embrace',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+        'essence-corruption': {
+          id: 'essence-corruption',
+          name: 'Essence Corruption',
+          category: 'temporary',
+          sourceType: 'item',
+        },
+        'sunshine-buff': {
+          id: 'sunshine-buff',
+          name: 'Sunshine',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+      },
+    });
+
+    expect(bars).toEqual([
+      {
+        buffId: 'sunshine-buff',
+        name: 'Sunshine',
+        iconPath: undefined,
+        isWarning: false,
+        themeClass: undefined,
+        startTick: 1,
+        endTick: 2,
+        span: 2,
+        row: 0,
+        stackPeak: 1,
+      },
+    ]);
+  });
+
   it('marks equilibrium cooldown as a warning-colored buff bar', () => {
     const bars = buildPlannerBuffLaneBars({
       tickCount: 4,

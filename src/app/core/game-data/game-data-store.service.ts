@@ -29,9 +29,10 @@ export class GameDataStoreService {
     return {
       status: current.status,
       issues: current.issues,
-      counts: catalog
+          counts: catalog
         ? {
             items: Object.keys(catalog.items).length,
+            spells: Object.keys(catalog.spells ?? {}).length,
             abilities: Object.keys(catalog.abilities).length,
             buffs: Object.keys(catalog.buffs).length,
             eofSpecs: Object.keys(catalog.eofSpecs).length,

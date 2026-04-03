@@ -83,6 +83,30 @@ export const ABILITIES_SCREEN_HELP: ScreenHelpInfo = {
   ],
 };
 
+export const SPELLBOOK_SCREEN_HELP: ScreenHelpInfo = {
+  eyebrow: 'Magic Setup',
+  title: 'Spellbook',
+  description: 'Choose the spellbook and the spell that is active before the first planner tick starts.',
+  sections: [
+    {
+      title: 'What you can do here',
+      bullets: [
+        'Switch between the Standard and Ancient spellbooks.',
+        'Pick the combat spell that should be active at the start of the rotation.',
+        'Review the unlocked curated spell list for the selected spellbook.',
+      ],
+    },
+    {
+      title: 'What to know',
+      bullets: [
+        'This is the pre-fight spell setup for the whole build.',
+        'Mid-rotation Spell Swap actions can only change spells within the selected spellbook.',
+        'If a spell is not unlocked by the current Magic level, it will not appear here.',
+      ],
+    },
+  ],
+};
+
 export const ROTATION_PLANNER_SCREEN_HELP: ScreenHelpInfo = {
   eyebrow: 'Timeline',
   title: 'Rotation Planner',

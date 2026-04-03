@@ -1,5 +1,5 @@
 import type { BuffDefinition } from '../../../game-data/types';
-import type { PlayerStats } from '../../../simulation-engine/models';
+import type { CombatChoices, PlayerStats } from '../../../simulation-engine/models';
 import type { PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
 import type { BuffSelectionState } from '../buffs/persistent-buff-config';
 import type { GearBuilderState } from '../gear/gear-state';
@@ -13,11 +13,13 @@ export interface WorkspaceRepository {
   readDocument(): WorkspaceDocument;
   readPortableConfigDocument(): PortableConfigDocument;
   readPlayerStats(): PlayerStats;
+  readCombatChoices(): CombatChoices;
   readGearBuilderState(): GearBuilderWorkspaceState;
   readBuffSelectionState(): BuffSelectionState;
   readRotationPlannerState(): RotationPlannerWorkspaceState;
   replacePortableConfigDocument(document: PortableConfigDocument): WorkspaceDocument;
   updatePlayerStats(playerStats: PlayerStats): void;
+  updateCombatChoices(combatChoices: CombatChoices): void;
   updateGearBuilderState(gearState: GearBuilderState, nextInstanceId: number): void;
   updateBuffSelectionState(
     selection: BuffSelectionState,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AbilityDefinition, EofSpecDefinition, ItemDefinition } from '../../game-data/types';
+import type { AbilityDefinition, EofSpecDefinition, ItemDefinition, SpellDefinition } from '../../game-data/types';
 import type { LoadedGameDataSnapshot, RotationAction, SimulationConfig } from '../models';
 import { resolveEffectiveAbilityDefinition } from './effective-ability';
 
@@ -302,8 +302,66 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
           },
         ],
       }),
+      magic: createAbility({
+        id: 'magic',
+        name: 'Magic',
+        style: 'magic',
+        subtype: 'basic',
+        cooldownTicks: 3,
+        adrenalineGain: 9,
+        requires: {
+          requiredEquipmentTags: ['magic-weapon'],
+        },
+        hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 90, max: 110 } }],
+        baseDamage: { min: 90, max: 110 },
+      }),
+      'cast-spell': createAbility({
+        id: 'cast-spell',
+        name: 'Cast Spell',
+        style: 'magic',
+        subtype: 'utility',
+        cooldownTicks: 3,
+        requires: {
+          requiredEquipmentTags: ['magic-weapon'],
+        },
+        hitSchedule: [],
+        baseDamage: { min: 0, max: 0 },
+      }),
     },
-    buffs: {},
+    spells: {
+      'fire-surge': {
+        id: 'fire-surge',
+        name: 'Fire Surge',
+        spellbookId: 'standard',
+        role: 'combat',
+        levelRequirement: 95,
+        tier: 95,
+      } satisfies SpellDefinition,
+      'smoke-cloud': {
+        id: 'smoke-cloud',
+        name: 'Smoke Cloud',
+        spellbookId: 'ancient',
+        role: 'utility',
+        levelRequirement: 74,
+        tier: 0,
+        timelineEffects: [
+          {
+            kind: 'apply-buff',
+            buffId: 'smoke-cloud',
+            durationTicks: 200,
+          },
+        ],
+      } satisfies SpellDefinition,
+    },
+    buffs: {
+      'smoke-cloud': {
+        id: 'smoke-cloud',
+        name: 'Smoke Cloud',
+        category: 'temporary',
+        sourceType: 'ability',
+        durationTicks: 200,
+      },
+    },
     perks: {},
     relics: {},
     eofSpecs: {
@@ -334,6 +392,13 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
   return {
     playerStats: {
       rangedLevel: 99,
+      magicLevel: 99,
+    },
+    combatChoices: {
+      magic: {
+        spellbookId: 'standard',
+        activeSpellId: 'fire-surge',
+      },
     },
     gearSetup: {
       equipment: {
@@ -781,5 +846,101 @@ describe('resolveEffectiveAbilityDefinition', () => {
       { id: 'adaptive-strike-hit-1', tickOffset: 0, damage: { min: 120, max: 140 } },
     ]);
     expect(result?.baseDamage).toEqual({ min: 120, max: 140 });
+  });
+
+  it('resolves Cast Spell with a combat spell to the Magic basic ability', () => {
+    const config = createConfig({
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          'magic-staff': createItem({
+            id: 'magic-staff',
+            name: 'Magic Staff',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['magic'],
+            equipBehavior: 'two-handed',
+          }),
+        },
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'magic-staff-1',
+            definitionId: 'magic-staff',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'cast-spell-fire-surge',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'cast-spell',
+        spellId: 'fire-surge',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result?.id).toBe('magic');
+    expect(result?.hitSchedule).toEqual([{ id: 'magic-hit', tickOffset: 0, damage: { min: 90, max: 110 } }]);
+  });
+
+  it('resolves Cast Spell with a utility spell to a buff-applying utility action', () => {
+    const config = createConfig({
+      combatChoices: {
+        magic: {
+          spellbookId: 'ancient',
+          activeSpellId: 'fire-surge',
+        },
+      },
+      gameData: {
+        ...createConfig().gameData,
+        items: {
+          ...createConfig().gameData.items,
+          'magic-staff': createItem({
+            id: 'magic-staff',
+            name: 'Magic Staff',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['magic'],
+            equipBehavior: 'two-handed',
+          }),
+        },
+      },
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'magic-staff-1',
+            definitionId: 'magic-staff',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'cast-smoke-cloud',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'cast-spell',
+        spellId: 'smoke-cloud',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result?.id).toBe('cast-spell');
+    expect(result?.timelineEffects).toEqual([
+      {
+        kind: 'apply-buff',
+        buffId: 'smoke-cloud',
+        durationTicks: 200,
+      },
+    ]);
   });
 });

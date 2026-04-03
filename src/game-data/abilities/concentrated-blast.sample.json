@@ -1,0 +1,34 @@
+{
+  "id": "concentrated-blast",
+  "name": "Concentrated Blast",
+  "style": "magic",
+  "subtype": "basic",
+  "cooldownTicks": 9,
+  "adrenalineGain": 9,
+  "requires": {
+    "levelRequirements": {
+      "magic": 66
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "isChanneled": true,
+  "channelDurationTicks": 3,
+  "hitSchedule": [
+    { "id": "concentrated-blast-hit-1", "tickOffset": 0, "damage": { "min": 30, "max": 40 } },
+    { "id": "concentrated-blast-hit-2", "tickOffset": 1, "damage": { "min": 30, "max": 40 } },
+    { "id": "concentrated-blast-hit-3", "tickOffset": 2, "damage": { "min": 30, "max": 40 } }
+  ],
+  "baseDamage": {
+    "min": 90,
+    "max": 120
+  },
+  "description": "Blast the target with beams of concentrated energy.",
+  "iconPath": "/icons/wiki/concentrated-blast.png",
+  "hoverSummary": "Basic | 9 ticks | 3 hits | +9% adrenaline",
+  "detailLines": [
+    "30%-40% magic damage per hit.",
+    "3-hit channeled basic over 1.8 seconds.",
+    "Its next-ability critical strike setup remains descriptive-only for now."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Concentrated_Blast"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "enchantment-of-metaphysics",
+  "name": "Enchantment of metaphysics",
+  "category": "other",
+  "iconPath": "/icons/wiki/enchantment-of-metaphysics.png",
+  "wikiUrl": "https://runescape.wiki/w/Enchantment_of_metaphysics",
+  "combatStyleTags": ["magic"],
+  "inventoryOnlyBehavior": "consumable-unlock",
+  "implementationNotes": "Curated magic utility unlock from the live Enchantment of metaphysics page. Wiki-verified with Playwright for its Channeller's ring enhancement effect."
+}

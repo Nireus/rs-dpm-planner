@@ -1,5 +1,6 @@
 import { createPortableConfigDocument, PORTABLE_CONFIG_SCHEMA_VERSION, type PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
-import type { PlayerStats, RotationAction } from '../../../simulation-engine/models';
+import type { CombatChoices, PlayerStats, RotationAction } from '../../../simulation-engine/models';
+import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import type { StartingStackState } from '../../../simulation-engine/models/starting-stacks';
 import { buildBuffSelectionStateFromPersistentConfig, type BuffSelectionState } from '../buffs/persistent-buff-config';
 import type { GearBuilderState } from '../gear/gear-state';
@@ -77,10 +78,10 @@ export function isWorkspaceDocument(value: unknown): value is WorkspaceDocument 
   }
 
   const candidate = value as Partial<WorkspaceDocument>;
+  const portableConfigResult = parsePortableConfigDocument(candidate.portableConfig);
   return (
     candidate.documentVersion === WORKSPACE_DOCUMENT_VERSION &&
-    !!candidate.portableConfig &&
-    candidate.portableConfig.schemaVersion === PORTABLE_CONFIG_SCHEMA_VERSION &&
+    portableConfigResult.success &&
     !!candidate.appState?.gearBuilder &&
     typeof candidate.appState.gearBuilder.nextInstanceId === 'number' &&
     Array.isArray(candidate.appState.buffSelection?.activeBuffIds) &&

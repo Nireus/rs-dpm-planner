@@ -1,0 +1,15 @@
+{
+  "id": "blood-barrage",
+  "name": "Blood Barrage",
+  "spellbookId": "ancient",
+  "role": "combat",
+  "levelRequirement": 92,
+  "tier": 92,
+  "iconPath": "/icons/wiki/blood-barrage.png",
+  "wikiUrl": "https://runescape.wiki/w/Ancient_Magicks",
+  "hoverSummary": "Ancient spell | Level 92 | Tier 92",
+  "description": "Ancient combat spell used for magic ability damage selection."
+}
+
+
+

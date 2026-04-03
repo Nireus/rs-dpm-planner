@@ -422,6 +422,12 @@ export function buildPlacedAbilityTitle(
   return lines.join('\n');
 }
 
+export function buildPlacedAbilityDisplayName(name: string): string {
+  return name
+    .replace(/\bGreater\b/g, 'G.')
+    .replace(/\bConcentrated\b/g, 'Conc.');
+}
+
 export function buildAbilitySegmentClass(
   segment: AbilityOccupancyEntry['segment'],
 ): string {
@@ -554,6 +560,18 @@ export function describeInvalidAbilityPlacement(
 
   if (issue.code === 'ability.insufficient_adrenaline') {
     return `Not enough adrenaline to place ${abilityName} there.`;
+  }
+
+  if (issue.code === 'ability.unavailable') {
+    const details = issue.message.startsWith(`${abilityName}: `)
+      ? issue.message.slice(`${abilityName}: `.length)
+      : issue.message;
+
+    if (/magic weapon/i.test(details)) {
+      return `${abilityName} requires a magic weapon at that tick.`;
+    }
+
+    return `${abilityName} is unavailable at that tick. ${details}`;
   }
 
   return issue.message || `${abilityName} cannot be placed on that tick.`;

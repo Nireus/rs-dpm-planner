@@ -1,5 +1,5 @@
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
-import type { AbilityDefinition, BuffDefinition, ItemDefinition } from '../../game-data/types';
+import type { AbilityDefinition, BuffDefinition, ItemDefinition, SpellDefinition } from '../../game-data/types';
 import type { RotationAction, SimulationConfig } from '../models';
 
 const DEFAULT_BOW: ItemDefinition = {
@@ -18,9 +18,11 @@ export function createScenarioConfig(input: {
   abilities: Record<string, AbilityDefinition>;
   buffs?: Record<string, BuffDefinition>;
   items?: Record<string, ItemDefinition>;
+  spells?: Record<string, SpellDefinition>;
   equipment?: SimulationConfig['gearSetup']['equipment'];
   inventoryItems?: SimulationConfig['inventory']['items'];
   persistentBuffConfig?: SimulationConfig['persistentBuffConfig'];
+  combatChoices?: SimulationConfig['combatChoices'];
   nonGcdActions?: RotationAction[];
   abilityActions: RotationAction[];
   startingAdrenaline: number;
@@ -47,6 +49,7 @@ export function createScenarioConfig(input: {
     inventory: {
       items: input.inventoryItems ?? [],
     },
+    combatChoices: input.combatChoices,
     persistentBuffConfig: input.persistentBuffConfig ?? {},
     rotationPlan: {
       startingAdrenaline: input.startingAdrenaline,
@@ -60,6 +63,7 @@ export function createScenarioConfig(input: {
         ...(input.items ?? {}),
       },
       ammo: {},
+      spells: input.spells ?? {},
       abilities: input.abilities,
       buffs: input.buffs ?? {},
       perks: {},

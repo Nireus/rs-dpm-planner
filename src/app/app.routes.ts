@@ -9,6 +9,7 @@ import { ImportExportPageComponent } from './features/import-export/import-expor
 import { ReportingPageComponent } from './features/reporting/reporting-page.component';
 import { RotationPlannerPageComponent } from './features/rotation-planner/rotation-planner-page.component';
 import { ResultsPageComponent } from './features/results/results-page.component';
+import { SpellbookPageComponent } from './features/spellbook/spellbook-page.component';
 import {
   ABILITIES_SCREEN_HELP,
   BUFFS_SCREEN_HELP,
@@ -16,6 +17,7 @@ import {
   IMPORT_EXPORT_SCREEN_HELP,
   RESULTS_SCREEN_HELP,
   ROTATION_PLANNER_SCREEN_HELP,
+  SPELLBOOK_SCREEN_HELP,
 } from './shared/app-screen-info';
 
 export const routes: Routes = [
@@ -40,6 +42,13 @@ export const routes: Routes = [
     component: AbilitiesPageComponent,
     data: {
       screenHelp: ABILITIES_SCREEN_HELP,
+    },
+  },
+  {
+    path: 'spellbook',
+    component: SpellbookPageComponent,
+    data: {
+      screenHelp: SPELLBOOK_SCREEN_HELP,
     },
   },
   {

@@ -9,6 +9,7 @@ import {
 } from '../../../simulation-engine/test/scenario-test-helpers';
 import {
   buildBloodlustSpendMarkersByAction,
+  describeInvalidAbilityPlacement,
   buildPerfectEquilibriumProcMarkersByAction,
   buildPlacedAbilityMarkerLeft,
 } from './rotation-planner-page.helpers';
@@ -302,5 +303,14 @@ describe('rotation planner page helpers', () => {
         stackEffects: [{ buffId: 'bloodlust', operation: 'spend', stacks: 4 }],
       }),
     })).toEqual({});
+  });
+
+  it('describes magic weapon availability failures in user-facing planner copy', () => {
+    expect(
+      describeInvalidAbilityPlacement('Sunshine', {
+        code: 'ability.unavailable',
+        message: 'Sunshine: Requires a magic weapon in the main hand slot.',
+      }),
+    ).toBe('Sunshine requires a magic weapon at that tick.');
   });
 });

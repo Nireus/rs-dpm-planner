@@ -1,0 +1,30 @@
+{
+  "id": "fractured-staff-of-armadyl",
+  "name": "Fractured Staff of Armadyl",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/fractured-staff-of-armadyl.png",
+  "wikiUrl": "https://runescape.wiki/w/Fractured_Staff_of_Armadyl",
+  "hoverSummary": "Tier 95 two-handed magic staff with 1368 ability damage and 2765 accuracy.",
+  "detailLines": [
+    "Requires level 95 Magic to wield.",
+    "Two-handed magic weapon with 6-tick speed and range 8.",
+    "Live special attack: Instability.",
+    "Passive and special interactions are planned for the dedicated magic mechanics pass."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 95
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:instability"],
+  "specialAbilityId": "instability",
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Curated endgame magic 2h staff from the live Fractured Staff of Armadyl page. Wiki-verified with Playwright for tier, damage, accuracy, speed, and special attack presence."
+}

@@ -42,6 +42,7 @@ describe('App', () => {
       'Gear',
       'Buffs',
       'Abilities',
+      'Spellbook',
       'Rotation Planner',
       'Results',
       'Import / Export',

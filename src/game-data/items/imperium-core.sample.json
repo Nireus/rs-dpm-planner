@@ -1,0 +1,26 @@
+{
+  "id": "imperium-core",
+  "name": "Imperium core",
+  "category": "weapon",
+  "slot": "offHand",
+  "iconPath": "/icons/wiki/imperium-core.png",
+  "wikiUrl": "https://runescape.wiki/w/Imperium_core",
+  "hoverSummary": "Tier 92 off-hand magic core with 441.6 ability damage and 2577 accuracy.",
+  "detailLines": [
+    "Requires level 92 Magic to wield.",
+    "Off-hand magic weapon with 4-tick speed and range 8.",
+    "Curated as part of the dual-wield magic batch."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 92,
+  "offensiveStats": {
+    "damageTier": 92,
+    "accuracyTier": 92
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 92
+    }
+  },
+  "implementationNotes": "Curated off-hand magic weapon from the live Imperium core page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and range."
+}

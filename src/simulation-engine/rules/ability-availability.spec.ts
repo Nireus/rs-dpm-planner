@@ -135,6 +135,35 @@ describe('evaluateAbilityAvailability', () => {
     });
   });
 
+  it('requires a ranged weapon for ranged combat abilities without an explicit weapon tag', () => {
+    const ability: AbilityDefinition = {
+      id: 'deadshot',
+      name: 'Deadshot',
+      style: 'ranged',
+      subtype: 'ultimate',
+      cooldownTicks: 50,
+      hitSchedule: [],
+      baseDamage: { min: 1, max: 2 },
+      requires: {
+        levelRequirements: { ranged: 21 },
+      },
+    };
+
+    expect(
+      evaluateAbilityAvailability(ability, {
+        playerStats: baseStats,
+        equippedItems: [],
+        inventoryItems: [],
+      }),
+    ).toEqual({
+      abilityId: 'deadshot',
+      isAvailable: false,
+      issues: [
+        { code: 'missing-tag', message: 'Requires an equipped ranged weapon.' },
+      ],
+    });
+  });
+
   it('supports inventory-enabled requirement tags', () => {
     const ability: AbilityDefinition = {
       id: 'prototype-shot',

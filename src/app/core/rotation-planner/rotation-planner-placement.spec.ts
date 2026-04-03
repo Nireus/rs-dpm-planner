@@ -54,6 +54,7 @@ const CATALOG: GameDataCatalog = {
     [BOW.id]: BOW,
   },
   ammo: {},
+  spells: {},
   abilities: {
     [DEADSHOT.id]: DEADSHOT,
     [DEATHS_SWIFTNESS.id]: DEATHS_SWIFTNESS,
@@ -121,6 +122,45 @@ describe('evaluateAbilityPlacement', () => {
 
     expect(result).toEqual({
       isPlaceable: true,
+    });
+  });
+
+  it('blocks ranged ability placement when no ranged weapon is equipped', () => {
+    const result = evaluateAbilityPlacement({
+      abilityActions: [],
+      nonGcdActions: [],
+      abilityDefinitions: CATALOG.abilities,
+      tickCount: 30,
+      startingAdrenaline: 100,
+      abilityDefinition: DEADSHOT,
+      tick: 3,
+      payload: {
+        sourceType: 'catalog',
+        abilityId: 'deadshot',
+      },
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: {
+        equipment: {},
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+    });
+
+    expect(result).toEqual({
+      isPlaceable: false,
+      issue: {
+        code: 'ability.unavailable',
+        severity: 'error',
+        tick: 3,
+        message: 'Requires an equipped ranged weapon.',
+      },
     });
   });
 });

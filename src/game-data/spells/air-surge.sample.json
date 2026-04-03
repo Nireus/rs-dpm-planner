@@ -1,0 +1,15 @@
+{
+  "id": "air-surge",
+  "name": "Air Surge",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 81,
+  "tier": 81,
+  "iconPath": "/icons/wiki/air-surge.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 81 | Tier 81",
+  "description": "High-tier Standard combat spell used for magic ability damage selection."
+}
+
+
+

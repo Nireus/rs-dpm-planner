@@ -1,5 +1,6 @@
 import type { CombatStyle, EquipmentSlot, ItemDefinition } from '../../game-data/types';
-import type { SimulationConfig } from '../models';
+import type { RotationAction, SimulationConfig } from '../models';
+import { calculateMagicAbilityDamage } from './magic-ability-damage';
 import { calculateMeleeAbilityDamage } from './melee-ability-damage';
 import { calculateRangedAbilityDamage } from './ranged-ability-damage';
 
@@ -11,12 +12,15 @@ type AbilityDamageSource = {
 export function calculateAbilityDamage(
   config: SimulationConfig,
   ability: AbilityDamageSource,
+  action?: RotationAction | null,
 ): number {
   const combatStyle = resolveAbilityDamageCombatStyle(config, ability);
 
   switch (combatStyle) {
     case 'melee':
       return calculateMeleeAbilityDamage(config);
+    case 'magic':
+      return calculateMagicAbilityDamage(config, action);
     case 'ranged':
       return calculateRangedAbilityDamage(config);
     default:

@@ -1,0 +1,15 @@
+{
+  "id": "fire-surge",
+  "name": "Fire Surge",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 95,
+  "tier": 95,
+  "iconPath": "/icons/wiki/fire-surge.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 95 | Tier 95",
+  "description": "High-tier Standard combat spell used for magic ability damage selection."
+}
+
+
+

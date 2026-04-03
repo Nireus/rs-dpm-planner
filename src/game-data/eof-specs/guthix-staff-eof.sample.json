@@ -1,0 +1,19 @@
+{
+  "id": "guthix-staff-eof",
+  "name": "Guthix Staff (EOF)",
+  "iconPath": "/icons/wiki/guthix-staff.png",
+  "hoverSummary": "EOF special | -25% adrenaline | 1 hit",
+  "detailLines": [
+    "Stored Guthix staff special attack for Essence of Finality.",
+    "Strikes for 200%-240% ability damage.",
+    "Applies the Guthix staff defence and affinity debuff from the live page."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Guthix_staff",
+  "weaponOrigin": "guthix-staff",
+  "abilityId": "guthix-staff-eof",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:guthix-staff"]
+  },
+  "effectRefs": ["eof-guthix-staff-spec"],
+  "description": "Stored Guthix staff special attack for Essence of Finality."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "fire-wave",
+  "name": "Fire Wave",
+  "spellbookId": "standard",
+  "role": "combat",
+  "levelRequirement": 75,
+  "tier": 75,
+  "iconPath": "/icons/wiki/fire-wave.png",
+  "wikiUrl": "https://runescape.wiki/w/Standard_spells",
+  "hoverSummary": "Standard spell | Level 75 | Tier 75",
+  "description": "Standard combat spell used for magic ability damage selection."
+}
+
+
+

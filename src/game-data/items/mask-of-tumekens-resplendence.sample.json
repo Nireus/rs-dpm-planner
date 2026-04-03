@@ -1,0 +1,26 @@
+{
+  "id": "mask-of-tumekens-resplendence",
+  "name": "Mask of Tumeken's resplendence",
+  "category": "armor",
+  "slot": "head",
+  "iconPath": "/icons/wiki/mask-of-tumekens-resplendence.png",
+  "wikiUrl": "https://runescape.wiki/w/Mask_of_Tumeken%27s_resplendence",
+  "hoverSummary": "Tier 95 magic power helm with 23.7 magic damage bonus.",
+  "detailLines": [
+    "Requires level 95 Magic and 95 Defence to wear.",
+    "Tumeken's Resplendence activates after the armour pieces are worn for at least 5.4 seconds.",
+    "The set grants Sunshine crit bonuses and Asphyxiate upgrades at higher piece counts."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 95,
+  "offensiveStats": {
+    "magicBonus": 23.7
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 95,
+      "defence": 95
+    }
+  },
+  "implementationNotes": "Curated Tumeken helm from the live Mask of Tumeken's resplendence page. Wiki-verified with Playwright for tier, requirements, style bonus, and set bonus text."
+}

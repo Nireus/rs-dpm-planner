@@ -1,0 +1,137 @@
+<section class="page">
+  <header class="toolbar">
+    <div class="title-row">
+      <div class="title-cluster">
+        <div class="title-copy">
+          <h1>Spellbook</h1>
+        </div>
+
+        <label class="search-field">
+          <span>Search spells</span>
+          <input
+            type="search"
+            [ngModel]="query()"
+            (ngModelChange)="query.set($event)"
+            placeholder="Name, family, tier, or level"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-meta">
+        <div class="summary-chip">
+          {{ selectedSpellbookSummary().spellCount }} spells
+          @if (selectedSpellbookSummary().highestTier; as highestTier) {
+            | up to tier {{ highestTier }}
+          }
+        </div>
+
+        @if (selectedSpellEntry(); as selectedSpell) {
+          <div class="summary-chip">
+            Start: {{ selectedSpell.name }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="spellbook-toolbar-row">
+      <div class="style-tabs" role="tablist" aria-label="Spellbooks">
+        <button
+          type="button"
+          class="style-tab"
+          [class.style-tab-active]="magicChoices().spellbookId === 'standard'"
+          (click)="updateSelectedSpellbook('standard')"
+        >
+          Standard
+        </button>
+        <button
+          type="button"
+          class="style-tab"
+          [class.style-tab-active]="magicChoices().spellbookId === 'ancient'"
+          (click)="updateSelectedSpellbook('ancient')"
+        >
+          Ancient
+        </button>
+      </div>
+
+      <label class="search-field compact-select-field">
+        <span>Starting spell</span>
+        <select
+          [ngModel]="magicChoices().activeSpellId"
+          (ngModelChange)="updateSelectedSpell($event)"
+        >
+          @for (spell of availableCombatSpells(); track spell.id) {
+            <option [ngValue]="spell.id">{{ spell.name }} - tier {{ spell.tier }} - level {{ spell.levelRequirement }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </header>
+
+  @if (storeSummary().status === 'loading' || storeSummary().status === 'idle') {
+    <article class="panel">
+      <h2>Loading</h2>
+      <p>Loading curated magic spell definitions from the repository...</p>
+    </article>
+  } @else if (storeSummary().status === 'error') {
+    <article class="panel">
+      <h2>Load Issues</h2>
+      <ul class="issue-list">
+        @for (issue of storeSummary().issues; track issue.path + issue.message) {
+          <li><code>{{ issue.path }}</code>: {{ issue.message }}</li>
+        }
+      </ul>
+    </article>
+  } @else {
+    <article class="panel helper-panel">
+      <p>
+        The selected spellbook and starting spell apply before tick 0. Mid-rotation Spell Swap actions can only
+        change the active spell inside this chosen spellbook.
+      </p>
+    </article>
+
+    @if (spellSections().length) {
+      <div class="section-stack">
+        @for (section of spellSections(); track section.key) {
+          <section class="section-panel">
+            <div class="section-heading">
+              <div>
+                <h2>{{ section.label }}</h2>
+              </div>
+              <span class="category-count">{{ section.spells.length }}</span>
+            </div>
+
+            <div class="spell-grid compact-spell-grid">
+              @for (spell of section.spells; track spell.id) {
+                <button
+                  type="button"
+                  class="spell-card compact-spell-card"
+                  [class.active]="spell.role === 'combat' && magicChoices().activeSpellId === spell.id"
+                  [title]="spellCardTitle(spell)"
+                  (click)="spell.role === 'combat' ? selectSpell(spell.id) : null"
+                >
+                  <span class="card-corner">{{ spell.familyLabel }}</span>
+                  <span class="icon-tile compact-icon-tile">
+                    @if (spell.iconPath) {
+                      <img [src]="spell.iconPath" [alt]="spell.name" class="spell-icon compact-spell-icon" />
+                    } @else {
+                      <span class="fallback-icon">{{ initials(spell.name) }}</span>
+                    }
+                  </span>
+
+                  <span class="spell-name">{{ spell.name }}</span>
+                  <span class="spell-summary">{{ spellSummary(spell) }}</span>
+                  <span class="spell-status">{{ spellStatusLabel(spell) }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    } @else {
+      <article class="panel">
+        <h2>No Matches</h2>
+        <p>No unlocked spells match the current spellbook and search.</p>
+      </article>
+    }
+  }
+</section>

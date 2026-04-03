@@ -57,6 +57,7 @@ const CATALOG: GameDataCatalog = {
     'pernixs-quiver': PERNIXS_QUIVER,
   },
   ammo: {},
+  spells: {},
   abilities: {},
   buffs: {},
   perks: {},

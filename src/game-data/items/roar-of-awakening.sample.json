@@ -1,0 +1,29 @@
+{
+  "id": "roar-of-awakening",
+  "name": "Roar of Awakening",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/roar-of-awakening.png",
+  "wikiUrl": "https://runescape.wiki/w/Roar_of_Awakening",
+  "hoverSummary": "Tier 95 main-hand magic weapon with 912 ability damage and 2765 accuracy.",
+  "detailLines": [
+    "Requires level 95 Magic to wield.",
+    "Main-hand magic weapon with 4-tick speed and range 8.",
+    "Live special attack: Soulfire.",
+    "Shares the Song of Destruction set bonus with Ode to Deceit."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 95,
+  "offensiveStats": {
+    "damageTier": 95,
+    "accuracyTier": 95
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 95
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:soulfire"],
+  "specialAbilityId": "soulfire",
+  "implementationNotes": "Curated main-hand magic weapon from the live Roar of Awakening page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, Soulfire special text, and Song of Destruction set linkage."
+}

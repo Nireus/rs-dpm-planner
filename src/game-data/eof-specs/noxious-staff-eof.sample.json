@@ -1,0 +1,18 @@
+{
+  "id": "noxious-staff-eof",
+  "name": "Noxious Staff (EOF)",
+  "iconPath": "/icons/wiki/noxious-staff.png",
+  "hoverSummary": "EOF special | -100% adrenaline | defensive summon",
+  "detailLines": [
+    "Stored Noxious staff special attack for Essence of Finality.",
+    "Summons a mirrorback spider that splits incoming damage and reflects the reduced amount."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Noxious_staff",
+  "weaponOrigin": "noxious-staff",
+  "abilityId": "mirrorback",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:noxious-staff"]
+  },
+  "effectRefs": ["eof-noxious-staff-spec"],
+  "description": "Stored Noxious staff special attack for Essence of Finality."
+}

@@ -1,0 +1,37 @@
+{
+  "id": "omnipower",
+  "name": "Omnipower",
+  "style": "magic",
+  "subtype": "ultimate",
+  "cooldownTicks": 50,
+  "adrenalineCost": 60,
+  "requires": {
+    "levelRequirements": {
+      "magic": 12
+    },
+    "requiredEquipmentTags": ["magic-weapon"]
+  },
+  "hitSchedule": [
+    {
+      "id": "omnipower-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 420,
+        "max": 500
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 420,
+    "max": 500
+  },
+  "description": "Bombard the target with each of the four elements.",
+  "iconPath": "/icons/wiki/omnipower.png",
+  "hoverSummary": "Ultimate | 50 ticks | 1 hit | -60% adrenaline",
+  "detailLines": [
+    "420%-500% magic damage.",
+    "60% effective in PvP on the live page.",
+    "The Igneous Kal-Mej upgrade path remains descriptive-only for now."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Omnipower"
+}

@@ -50,6 +50,14 @@ export function applyEquipmentPlacement(
     nextInventory.push(displacedTarget);
   }
 
+  if (targetSlot === 'weapon' && isTwoHandedItem(itemDefinition)) {
+    const displacedOffHand = nextEquipment.offHand;
+    if (displacedOffHand && displacedOffHand.instanceId !== itemInstance.instanceId) {
+      nextInventory.push(displacedOffHand);
+      delete nextEquipment.offHand;
+    }
+  }
+
   if (targetSlot === 'offHand') {
     const displacedMainHand = nextEquipment.weapon;
     const displacedMainHandDefinition = displacedMainHand
