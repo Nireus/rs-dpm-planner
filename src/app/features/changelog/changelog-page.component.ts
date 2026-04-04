@@ -12,6 +12,11 @@ export class ChangelogPageComponent {
     {
       date: '04.04.2026',
       change:
+        'Gear and planner validation polish: two-handed swaps now correctly move displaced off-hands into backpack, the ability palette is more lenient when valid melee/ranged/magic swaps are available from accessible gear, and Shard of Genesis Essence support now covers Fractured Staff of Armadyl, Roar of Awakening, Ode to Deceit, and shared dual-wield set unlock behavior.',
+    },
+    {
+      date: '04.04.2026',
+      change:
         'Magic expansion is now live in the planner with spellbook selection, combat and utility spell support, non-GCD Spell Swap, Cast Spell actions, first-pass magic abilities/gear/buffs/specials, spell-aware damage and inspection, and a dedicated Spellbook page for choosing the starting combat spell.',
     },
     {

@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
+import { findGenesisUnlockGroup } from '../../../simulation-engine/gear/configured-equipment-definition';
 import type { ItemDefinition, PerkDefinition } from '../../../game-data/types';
+import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { GearBuilderStore } from './gear-builder.store';
 import type { ResolvedItemInstanceViewModel } from './gear-builder.store';
 import { isAugmentableSlot } from './gear-builder.utils';
 
@@ -29,6 +32,7 @@ export class GearItemConfigPanelComponent {
     black: '/icons/wiki/black-mushroom-ink.png',
   };
   private readonly gameDataStore = inject(GameDataStoreService);
+  private readonly gearBuilderStore = inject(GearBuilderStore);
   @Input({ required: true }) item!: ItemDefinition;
   @Input({ required: true }) perkOptions: PerkDefinition[] = [];
   @Input() resolvedInstance: ResolvedItemInstanceViewModel | null = null;
@@ -145,6 +149,10 @@ export class GearItemConfigPanelComponent {
   }
 
   configValue(optionId: string): boolean | number | string {
+    if (optionId === CONFIG_OPTION_IDS.genesisEnchanted) {
+      return this.hasGenesisEnchantment();
+    }
+
     const configuredValue = this.resolvedInstance?.instance.configValues?.[optionId];
 
     if (configuredValue !== undefined) {
@@ -164,6 +172,24 @@ export class GearItemConfigPanelComponent {
 
   genesisShardIcon(): string {
     return this.genesisShardIconPath;
+  }
+
+  private hasGenesisEnchantment(): boolean {
+    const definitionId = this.resolvedInstance?.instance.definitionId ?? this.item.id;
+    const unlockGroup = findGenesisUnlockGroup(definitionId);
+
+    if (!unlockGroup) {
+      return this.resolvedInstance?.instance.configValues?.[CONFIG_OPTION_IDS.genesisEnchanted] === true;
+    }
+
+    const gearState = this.gearBuilderStore.snapshot();
+    return [
+      ...Object.values(gearState.equipment).filter((instance): instance is ItemInstanceConfig => Boolean(instance)),
+      ...gearState.inventory,
+    ].some((instance) =>
+      unlockGroup.includes(instance.definitionId) &&
+      instance.configValues?.[CONFIG_OPTION_IDS.genesisEnchanted] === true,
+    );
   }
 
   displayConfigChoice(choice: string): string {

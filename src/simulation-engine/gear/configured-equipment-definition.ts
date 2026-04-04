@@ -6,11 +6,17 @@ const GENESIS_UNLOCK_GROUPS: readonly (readonly string[])[] = [
   ['bolg'],
   ['ek-zekkil'],
   ['dark-shard-of-leng', 'dark-sliver-of-leng'],
+  ['fractured-staff-of-armadyl'],
+  ['roar-of-awakening', 'ode-to-deceit'],
   ['tumekens-light'],
 ];
 
 const GENESIS_TIER_DELTA = 5;
 const GENESIS_MAX_TIER = 100;
+
+export function findGenesisUnlockGroup(definitionId: string): readonly string[] | null {
+  return GENESIS_UNLOCK_GROUPS.find((group) => group.includes(definitionId)) ?? null;
+}
 
 export function resolveConfiguredEquipmentDefinition(
   config: SimulationConfig,
@@ -41,7 +47,7 @@ export function resolveConfiguredItemDefinition(
 }
 
 function hasGenesisUnlockForDefinition(config: SimulationConfig, definitionId: string): boolean {
-  const unlockGroup = GENESIS_UNLOCK_GROUPS.find((group) => group.includes(definitionId));
+  const unlockGroup = findGenesisUnlockGroup(definitionId);
   if (!unlockGroup) {
     return false;
   }

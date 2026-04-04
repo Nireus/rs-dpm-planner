@@ -1,5 +1,7 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { EquipmentSlot, ItemDefinition } from '../../../game-data/types';
+import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
+import { findGenesisUnlockGroup } from '../../../simulation-engine/gear/configured-equipment-definition';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { GameDataStoreService } from '../game-data/game-data-store.service';
 import type { GearBuilderState } from './gear-state';
@@ -292,6 +294,11 @@ export class GearBuilderStore {
     optionId: string,
     value: boolean | number | string,
   ): void {
+    if (optionId === CONFIG_OPTION_IDS.genesisEnchanted && typeof value === 'boolean') {
+      this.state.update((current) => syncGenesisConfigAcrossUnlockGroup(current, instanceId, value));
+      return;
+    }
+
     this.updateInstance(instanceId, (instance) => ({
       ...instance,
       configValues: {
@@ -366,4 +373,115 @@ export class GearBuilderStore {
       };
     });
   }
+}
+
+export function syncGenesisConfigAcrossUnlockGroup(
+  state: GearBuilderState,
+  sourceInstanceId: string,
+  enabled: boolean,
+): GearBuilderState {
+  const sourceInstance = [
+    ...Object.values(state.equipment).filter((instance): instance is ItemInstanceConfig => Boolean(instance)),
+    ...state.inventory,
+  ].find((instance) => instance.instanceId === sourceInstanceId);
+
+  if (!sourceInstance) {
+    return state;
+  }
+
+  const unlockGroup = findGenesisUnlockGroup(sourceInstance.definitionId);
+  if (!unlockGroup) {
+    return applyConfigValueToSingleInstance(state, sourceInstanceId, CONFIG_OPTION_IDS.genesisEnchanted, enabled);
+  }
+
+  let changed = false;
+  const nextEquipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>> = { ...state.equipment };
+
+  for (const slot of SUPPORTED_GEAR_SLOTS) {
+    const instance = state.equipment[slot];
+    if (!instance || !unlockGroup.includes(instance.definitionId)) {
+      continue;
+    }
+
+    nextEquipment[slot] = withGenesisConfigValue(instance, enabled);
+    changed = true;
+  }
+
+  const nextInventory = state.inventory.map((instance) => {
+    if (!unlockGroup.includes(instance.definitionId)) {
+      return instance;
+    }
+
+    changed = true;
+    return withGenesisConfigValue(instance, enabled);
+  });
+
+  if (!changed) {
+    return state;
+  }
+
+  return {
+    equipment: nextEquipment,
+    inventory: nextInventory,
+  };
+}
+
+function applyConfigValueToSingleInstance(
+  state: GearBuilderState,
+  instanceId: string,
+  optionId: string,
+  value: boolean | number | string,
+): GearBuilderState {
+  let changed = false;
+  const nextEquipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>> = { ...state.equipment };
+
+  for (const slot of SUPPORTED_GEAR_SLOTS) {
+    const instance = state.equipment[slot];
+    if (instance?.instanceId !== instanceId) {
+      continue;
+    }
+
+    nextEquipment[slot] = {
+      ...instance,
+      configValues: {
+        ...(instance.configValues ?? {}),
+        [optionId]: value,
+      },
+    };
+    changed = true;
+  }
+
+  const nextInventory = state.inventory.map((instance) => {
+    if (instance.instanceId !== instanceId) {
+      return instance;
+    }
+
+    changed = true;
+    return {
+      ...instance,
+      configValues: {
+        ...(instance.configValues ?? {}),
+        [optionId]: value,
+      },
+    };
+  });
+
+  if (!changed) {
+    return state;
+  }
+
+  return {
+    equipment: nextEquipment,
+    inventory: nextInventory,
+  };
+}
+
+function withGenesisConfigValue(instance: ItemInstanceConfig, enabled: boolean): ItemInstanceConfig {
+  return {
+    ...instance,
+    configValues: {
+      ...(instance.configValues ?? {}),
+      [CONFIG_OPTION_IDS.genesisEnchanted]: enabled,
+    },
+  };
 }

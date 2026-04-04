@@ -23,5 +23,13 @@
       "magic": 95
     }
   },
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
   "implementationNotes": "Curated off-hand magic weapon from the live Ode to Deceit page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, and Song of Destruction set text."
 }

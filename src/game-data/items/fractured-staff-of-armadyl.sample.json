@@ -25,6 +25,14 @@
   },
   "effectRefs": ["weapon-special-access", "weapon-special:instability"],
   "specialAbilityId": "instability",
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
   "equipBehavior": "two-handed",
   "implementationNotes": "Curated endgame magic 2h staff from the live Fractured Staff of Armadyl page. Wiki-verified with Playwright for tier, damage, accuracy, speed, and special attack presence."
 }

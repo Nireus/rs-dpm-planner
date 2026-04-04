@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import type { EquipmentSlot, ItemDefinition, PerkDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
+import { findGenesisUnlockGroup } from '../../../simulation-engine/gear/configured-equipment-definition';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
@@ -305,7 +306,22 @@ export class GearBuilderPageComponent {
   }
 
   protected hasGenesisEnchantment(instance: ItemInstanceConfig | null): boolean {
-    return instance?.configValues?.['genesis-enchanted'] === true;
+    if (!instance) {
+      return false;
+    }
+
+    const unlockGroup = findGenesisUnlockGroup(instance.definitionId);
+    if (!unlockGroup) {
+      return instance.configValues?.['genesis-enchanted'] === true;
+    }
+
+    return [
+      ...this.inventoryEntries().map((entry) => entry.instance),
+      ...this.equippedSlots().flatMap((entry) => (entry.instance ? [entry.instance] : [])),
+    ].some((candidate) =>
+      unlockGroup.includes(candidate.definitionId) &&
+      candidate.configValues?.['genesis-enchanted'] === true,
+    );
   }
 
   protected quiverAmmoIcon(

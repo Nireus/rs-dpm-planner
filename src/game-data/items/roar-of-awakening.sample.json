@@ -25,5 +25,13 @@
   },
   "effectRefs": ["weapon-special-access", "weapon-special:soulfire"],
   "specialAbilityId": "soulfire",
+  "configOptions": [
+    {
+      "id": "genesis-enchanted",
+      "label": "Genesis enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
   "implementationNotes": "Curated main-hand magic weapon from the live Roar of Awakening page. Wiki-verified with Playwright for slot, Magic requirement, damage, accuracy, speed, Soulfire special text, and Song of Destruction set linkage."
 }
