@@ -115,6 +115,16 @@ export interface SimulationModeFlags {
   strictValidation: boolean;
 }
 
+export type CriticalHitResolutionMode = 'deterministic-accumulator' | 'expected-value';
+
+export interface SimulationSettings {
+  criticalHitResolutionMode: CriticalHitResolutionMode;
+}
+
+export const DEFAULT_SIMULATION_SETTINGS: SimulationSettings = {
+  criticalHitResolutionMode: 'deterministic-accumulator',
+};
+
 export interface SimulationConfig {
   playerStats: PlayerStats;
   combatChoices?: CombatChoices;
@@ -124,4 +134,5 @@ export interface SimulationConfig {
   rotationPlan: RotationPlan;
   gameData: LoadedGameDataSnapshot;
   modeFlags: SimulationModeFlags;
+  simulationSettings?: SimulationSettings;
 }

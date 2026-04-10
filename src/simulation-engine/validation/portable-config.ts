@@ -3,6 +3,7 @@ import {
   type PortableConfigDocumentV1,
   type PortableConfigDocument,
 } from '../models/portable-config';
+import { DEFAULT_SIMULATION_SETTINGS, type SimulationSettings } from '../models';
 import { normalizeCombatChoices } from '../spells/magic-combat-choices';
 import { sanitizePlayerStats } from './player-stats';
 
@@ -98,6 +99,24 @@ function requireArrayField(
   return value;
 }
 
+function normalizeSimulationSettings(input: unknown): SimulationSettings {
+  if (!isRecord(input)) {
+    return DEFAULT_SIMULATION_SETTINGS;
+  }
+
+  const criticalHitResolutionMode = input['criticalHitResolutionMode'];
+  if (
+    criticalHitResolutionMode === 'deterministic-accumulator' ||
+    criticalHitResolutionMode === 'expected-value'
+  ) {
+    return {
+      criticalHitResolutionMode,
+    };
+  }
+
+  return DEFAULT_SIMULATION_SETTINGS;
+}
+
 export function parsePortableConfigDocument(input: unknown): PortableConfigParseResult {
   const errors: PortableConfigValidationError[] = [];
 
@@ -185,6 +204,7 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
       persistentBuffConfig:
         persistentBuffConfig as unknown as PortableConfigDocument['persistentBuffConfig'],
       rotationPlan: rotationPlan as unknown as PortableConfigDocument['rotationPlan'],
+      simulationSettings: normalizeSimulationSettings(input['simulationSettings']),
     },
   };
 }

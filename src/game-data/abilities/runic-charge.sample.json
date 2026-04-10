@@ -15,6 +15,9 @@
     "min": 0,
     "max": 0
   },
+  "plannerPlacement": {
+    "allowedLanes": ["non-gcd"]
+  },
   "timelineEffects": [
     {
       "kind": "apply-buff",
@@ -27,7 +30,7 @@
   "detailLines": [
     "Applies Anima Charged for 15 seconds.",
     "Can be cast during the global cooldown and must be manually triggered during Revolution.",
-    "Its empowered follow-up ability behavior remains for the next magic mechanics pass."
+    "The next empowered Sonic Wave, Greater Sonic Wave, Dragon Breath, Concentrated Blast, or Greater Concentrated Blast consumes Anima Charged."
   ],
   "wikiUrl": "https://runescape.wiki/w/Runic_Charge"
 }

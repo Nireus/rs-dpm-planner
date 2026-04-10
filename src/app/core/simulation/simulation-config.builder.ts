@@ -1,5 +1,6 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { CombatChoices, PlayerStats, RotationPlan, SimulationConfig } from '../../../simulation-engine/models';
+import { DEFAULT_SIMULATION_SETTINGS } from '../../../simulation-engine/models';
+import type { CombatChoices, PlayerStats, RotationPlan, SimulationConfig, SimulationSettings } from '../../../simulation-engine/models';
 import { normalizeCombatChoices } from '../../../simulation-engine/spells/magic-combat-choices';
 import { buildPersistentBuffConfigFromBuffSelection, collectPersistentBuffIdsFromSelection, type BuffSelectionState } from '../buffs/persistent-buff-config';
 import type { GearBuilderState } from '../gear/gear-state';
@@ -12,6 +13,7 @@ export interface SimulationConfigBuilderInput {
   gearState: GearBuilderState;
   buffState: BuffSelectionState;
   rotationPlan: RotationPlan;
+  simulationSettings?: SimulationSettings;
 }
 
 export function buildSimulationConfigFromAppState(
@@ -41,6 +43,7 @@ export function buildSimulationConfigFromAppState(
     modeFlags: {
       strictValidation: true,
     },
+    simulationSettings: input.simulationSettings ?? DEFAULT_SIMULATION_SETTINGS,
   };
 }
 

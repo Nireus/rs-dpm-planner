@@ -37,7 +37,7 @@
   "detailLines": [
     "90%-110% magic damage.",
     "Applies Flow for 9 seconds.",
-    "Flow cost reduction is currently tracked as buff state; the adrenaline discount is not implemented yet."
+    "Flow reduces the adrenaline cost of the next qualifying magic ability by 10%, or 35% when empowered by Runic Charge."
   ],
   "wikiUrl": "https://runescape.wiki/w/Sonic_Wave"
 }

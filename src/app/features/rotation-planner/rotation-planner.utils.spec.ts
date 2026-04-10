@@ -362,6 +362,42 @@ describe('rotation planner utils', () => {
     ]);
   });
 
+  it('adds Runic Charge onto the non-gcd lane', () => {
+    const runicCharge: AbilityDefinition = {
+      id: 'runic-charge',
+      name: 'Runic Charge',
+      style: 'magic',
+      subtype: 'utility',
+      cooldownTicks: 50,
+      hitSchedule: [],
+      baseDamage: {
+        min: 0,
+        max: 0,
+      },
+      plannerPlacement: {
+        allowedLanes: ['non-gcd'],
+      },
+    };
+
+    const actions = upsertNonGcdAbilityAction([], runicCharge, 6);
+
+    expect(actions).toEqual([
+      {
+        id: 'non-gcd-ability-runic-charge-6-1',
+        tick: 6,
+        lane: 'non-gcd',
+        actionType: 'ability-use',
+        payload: {
+          templateId: 'ability-use',
+          abilityId: 'runic-charge',
+          label: 'Runic Charge',
+          shortLabel: 'RC',
+          iconPath: undefined,
+        },
+      },
+    ]);
+  });
+
   it('removes non-gcd actions by id', () => {
     const actions = removeNonGcdAction(
       [

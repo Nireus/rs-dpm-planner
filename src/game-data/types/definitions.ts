@@ -27,6 +27,12 @@ export interface AbilityDisplayHints {
   hiddenFromUi?: boolean;
 }
 
+export type AbilityPlannerLane = 'ability' | 'non-gcd';
+
+export interface AbilityPlannerPlacement {
+  allowedLanes?: AbilityPlannerLane[];
+}
+
 export interface AbilitySpecialDispatch {
   source: 'equipped-weapon' | 'equipped-eof';
 }
@@ -172,6 +178,7 @@ export interface AbilityDefinition {
   variants?: AbilityVariantDefinition[];
   timelineEffects?: AbilityTimelineEffect[];
   stackEffects?: AbilityStackEffect[];
+  plannerPlacement?: AbilityPlannerPlacement;
   displayHints?: AbilityDisplayHints;
   description?: string;
 }

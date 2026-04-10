@@ -1,0 +1,9 @@
+{
+  "id": "greater-concentrated-blast-critical-strike",
+  "name": "Greater Concentrated Blast Critical Strike",
+  "iconPath": "/icons/wiki/greater-concentrated-blast.png",
+  "wikiUrl": "https://runescape.wiki/w/Greater_Concentrated_Blast",
+  "category": "temporary",
+  "sourceType": "ability",
+  "displayPriority": 76
+}

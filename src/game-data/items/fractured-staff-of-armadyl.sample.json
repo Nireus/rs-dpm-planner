@@ -9,8 +9,8 @@
   "detailLines": [
     "Requires level 95 Magic to wield.",
     "Two-handed magic weapon with 6-tick speed and range 8.",
-    "Live special attack: Instability.",
-    "Passive and special interactions are planned for the dedicated magic mechanics pass."
+    "Special attack: Instability costs 50% adrenaline, deals 120%-140% ability damage, and applies the Instability buff for 30 seconds.",
+    "While Instability is active, qualifying magic critical strikes fire a non-recursive Lightning Surge 1 tick later for 70%-90% ability damage."
   ],
   "combatStyleTags": ["magic"],
   "tier": 95,
@@ -34,5 +34,5 @@
     }
   ],
   "equipBehavior": "two-handed",
-  "implementationNotes": "Curated endgame magic 2h staff from the live Fractured Staff of Armadyl page. Wiki-verified with Playwright for tier, damage, accuracy, speed, and special attack presence."
+  "implementationNotes": "Curated endgame magic 2h staff from the live Fractured Staff of Armadyl page. Wiki-verified with Playwright for tier, damage, accuracy, speed, special attack, and current Lightning Surge behavior."
 }

@@ -5,7 +5,9 @@ import type {
   PersistentBuffConfig,
   PlayerStats,
   RotationPlan,
+  SimulationSettings,
 } from './config';
+import { DEFAULT_SIMULATION_SETTINGS } from './config';
 import { normalizeCombatChoices } from '../spells/magic-combat-choices';
 
 export const PORTABLE_CONFIG_SCHEMA_VERSION = 2;
@@ -27,6 +29,7 @@ export interface PortableConfigDocumentV2 {
   inventory: InventoryState;
   persistentBuffConfig: PersistentBuffConfig;
   rotationPlan: RotationPlan;
+  simulationSettings: SimulationSettings;
 }
 
 export type PortableConfigDocument = PortableConfigDocumentV2;
@@ -38,6 +41,7 @@ export interface ExportableSimulationState {
   inventory: InventoryState;
   persistentBuffConfig: PersistentBuffConfig;
   rotationPlan: RotationPlan;
+  simulationSettings?: SimulationSettings;
 }
 
 export function createPortableConfigDocument(
@@ -51,5 +55,6 @@ export function createPortableConfigDocument(
     inventory: state.inventory,
     persistentBuffConfig: state.persistentBuffConfig,
     rotationPlan: state.rotationPlan,
+    simulationSettings: state.simulationSettings ?? DEFAULT_SIMULATION_SETTINGS,
   };
 }

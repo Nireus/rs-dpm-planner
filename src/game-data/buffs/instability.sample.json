@@ -6,5 +6,10 @@
   "category": "temporary",
   "sourceType": "ability",
   "durationTicks": 50,
+  "effectRefs": ["magic-critical-hit-lightning-surge:70-90%:delay-1t"],
+  "detailLines": [
+    "Qualifying Magic critical strikes on the primary target fire a non-recursive Lightning Surge 1 tick later.",
+    "Lightning Surge deals 70%-90% ability damage and only triggers while a magic weapon is equipped."
+  ],
   "displayPriority": 81
 }

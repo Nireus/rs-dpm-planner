@@ -647,6 +647,10 @@ function maybeAppendLightningSurgeDamage(
     deterministicMagicTimeline,
     lightningEvent.derivedDamageParts,
   );
+  lightningBreakdown.derivedParts = {
+    ...(lightningBreakdown.derivedParts ?? {}),
+    procEfficacy: expectedCritChance,
+  };
 
   damageBreakdowns.push(lightningBreakdown);
   addDamageSummary(damageByTick[lightningTick], lightningBreakdown.finalDamage);

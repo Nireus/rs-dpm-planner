@@ -1138,6 +1138,103 @@ describe('simulation regression scenarios', () => {
     expect(result.adrenalineTimeline[15]).toBeGreaterThanOrEqual(16);
   });
 
+  it('supports configurable Tsunami adrenaline from magic critical hits', () => {
+    const staff: ItemDefinition = {
+      id: 'magic-staff',
+      name: 'Magic Staff',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+    };
+
+    const createConfig = (mode?: 'deterministic-accumulator' | 'expected-value') =>
+      createScenarioConfig({
+        abilities: {
+          tsunami: createAbilityDefinition({
+            id: 'tsunami',
+            name: 'Tsunami',
+            style: 'magic',
+            subtype: 'ultimate',
+            cooldownTicks: 100,
+            adrenalineCost: 100,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            hitSchedule: [{ id: 'tsunami-hit', tickOffset: 0, damage: { min: 225, max: 275 } }],
+            baseDamage: { min: 225, max: 275 },
+            timelineEffects: [
+              {
+                kind: 'apply-buff',
+                buffId: 'tsunami-buff',
+              },
+            ],
+          }),
+          magic: createAbilityDefinition({
+            id: 'magic',
+            name: 'Magic',
+            style: 'magic',
+            cooldownTicks: 3,
+            adrenalineGain: 8,
+            requires: {
+              requiredEquipmentTags: ['magic-weapon'],
+            },
+            effectRefs: ['critical-strike-chance:+100%'],
+            hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+            baseDamage: { min: 95, max: 105 },
+          }),
+        },
+        buffs: {
+          'tsunami-buff': {
+            id: 'tsunami-buff',
+            name: 'Tsunami',
+            category: 'temporary',
+            sourceType: 'ability',
+            durationTicks: 51,
+            effectRefs: ['magic-critical-hit-adrenaline:+8%'],
+          },
+        },
+        items: {
+          [staff.id]: staff,
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'staff-1',
+            definitionId: staff.id,
+          },
+        },
+        abilityActions: [
+          createAbilityAction('tsunami-1', 0, 'tsunami'),
+          createAbilityAction('magic-1', 3, 'magic'),
+        ],
+        startingAdrenaline: 100,
+        tickCount: 8,
+        simulationSettings: mode ? { criticalHitResolutionMode: mode } : undefined,
+      });
+
+    const deterministicResult = simulateBaseDamage(createConfig());
+    const expectedValueResult = simulateBaseDamage(createConfig('expected-value'));
+
+    expect(deterministicResult.isValid).toBe(true);
+    expect(deterministicResult.buffTimeline[3]).toContain('tsunami-buff');
+    expect(deterministicResult.adrenalineTimeline[0]).toBe(0);
+    expect(deterministicResult.adrenalineTimeline[3]).toBe(16);
+    expect(deterministicResult.explainability.notes).toContain(
+      'Tsunami: magic critical strikes grant additional adrenaline using the Deterministic build-up crit model while the Tsunami buff is active.',
+    );
+    expect(expectedValueResult.isValid).toBe(true);
+    expect(expectedValueResult.adrenalineTimeline[0]).toBeCloseTo(0.8);
+    expect(expectedValueResult.adrenalineTimeline[3]).toBeCloseTo(16.8);
+    expect(expectedValueResult.explainability.notes).toContain(
+      'Tsunami: magic critical strikes grant additional adrenaline using the Expected value crit model while the Tsunami buff is active.',
+    );
+  });
+
   it('supports the first playable magic empowerment flow with Runic Charge into Dragon Breath', () => {
     const staff: ItemDefinition = {
       id: 'magic-staff',
@@ -1237,13 +1334,249 @@ describe('simulation regression scenarios', () => {
 
     expect(result.isValid).toBe(true);
     expect(result.buffTimeline[0]).toContain('anima-charged');
+    expect(result.buffTimeline[3]).toContain('anima-charged');
+    expect(result.buffTimeline[4]).not.toContain('anima-charged');
     const dragonBreathHits = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'dragon-breath');
     expect(dragonBreathHits).toHaveLength(1);
     expect(dragonBreathHits[0]?.baseDamage.min).toBeGreaterThanOrEqual(260);
     expect(dragonBreathHits[0]?.baseDamage.max).toBeGreaterThanOrEqual(310);
   });
 
-  it('fires an expected-value Lightning Surge while Instability is active', () => {
+  it('consumes Runic Charge through Sonic Wave Flow discounts', () => {
+    const staff: ItemDefinition = {
+      id: 'magic-staff',
+      name: 'Magic Staff',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+    };
+    const runicCharge = createAbilityDefinition({
+      id: 'runic-charge',
+      name: 'Runic Charge',
+      style: 'magic',
+      subtype: 'utility',
+      cooldownTicks: 50,
+      adrenalineCost: 0,
+      hitSchedule: [],
+      baseDamage: { min: 0, max: 0 },
+      timelineEffects: [{ kind: 'apply-buff', buffId: 'anima-charged' }],
+    });
+    const wildMagic = createAbilityDefinition({
+      id: 'wild-magic',
+      name: 'Wild Magic',
+      style: 'magic',
+      subtype: 'enhanced',
+      cooldownTicks: 9,
+      adrenalineCost: 40,
+      hitSchedule: [{ id: 'wild-magic-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+      baseDamage: { min: 100, max: 100 },
+    });
+
+    for (const entry of [
+      { abilityId: 'sonic-wave', flowBuffId: 'flow', damage: { min: 90, max: 110 }, expectedAdrenaline: 3 },
+      { abilityId: 'greater-sonic-wave', flowBuffId: 'greater-flow', damage: { min: 115, max: 135 }, expectedAdrenaline: 7 },
+    ] as const) {
+      const result = simulateBaseDamage(
+        createScenarioConfig({
+          abilities: {
+            'runic-charge': runicCharge,
+            'wild-magic': wildMagic,
+            [entry.abilityId]: createAbilityDefinition({
+              id: entry.abilityId,
+              name: entry.abilityId,
+              style: 'magic',
+              cooldownTicks: 25,
+              adrenalineGain: 9,
+              hitSchedule: [{ id: `${entry.abilityId}-hit`, tickOffset: 0, damage: entry.damage }],
+              baseDamage: entry.damage,
+              timelineEffects: [{ kind: 'apply-buff', buffId: entry.flowBuffId }],
+            }),
+          },
+          buffs: {
+            'anima-charged': {
+              id: 'anima-charged',
+              name: 'Anima Charged',
+              category: 'temporary',
+              sourceType: 'ability',
+              durationTicks: 25,
+            },
+            flow: {
+              id: 'flow',
+              name: 'Flow',
+              category: 'temporary',
+              sourceType: 'ability',
+              durationTicks: 15,
+            },
+            'greater-flow': {
+              id: 'greater-flow',
+              name: 'Greater Flow',
+              category: 'temporary',
+              sourceType: 'ability',
+              durationTicks: 15,
+            },
+          },
+          items: {
+            [staff.id]: staff,
+          },
+          equipment: {
+            weapon: {
+              instanceId: 'staff-1',
+              definitionId: staff.id,
+            },
+          },
+          abilityActions: [
+            createAbilityAction('runic-charge-1', 0, 'runic-charge'),
+            createAbilityAction(`${entry.abilityId}-1`, 3, entry.abilityId),
+            createAbilityAction('wild-magic-1', 6, 'wild-magic'),
+          ],
+          startingAdrenaline: 20,
+          tickCount: 10,
+        }),
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.buffTimeline[3]).toContain('anima-charged');
+      expect(result.buffTimeline[4]).not.toContain('anima-charged');
+      expect(result.buffTimeline[6]).toContain(entry.flowBuffId);
+      expect(result.buffTimeline[7]).not.toContain(entry.flowBuffId);
+      expect(result.adrenalineTimeline[6]).toBe(entry.expectedAdrenaline);
+    }
+  });
+
+  it('consumes Runic Charge through Greater Concentrated Blast crit setup', () => {
+    const staff: ItemDefinition = {
+      id: 'magic-staff',
+      name: 'Magic Staff',
+      category: 'weapon',
+      slot: 'weapon',
+      combatStyleTags: ['magic'],
+      tier: 95,
+      equipBehavior: 'two-handed',
+      offensiveStats: {
+        damageTier: 95,
+        magicBonus: 110,
+      },
+    };
+    const swapStaff: ItemDefinition = {
+      ...staff,
+      id: 'backup-magic-staff',
+      name: 'Backup Magic Staff',
+    };
+    const createConfigWithRunic = (includeRunicCharge: boolean, includeWeaponSwap = false) => createScenarioConfig({
+      spells: {
+        'fire-surge': {
+          id: 'fire-surge',
+          name: 'Fire Surge',
+          spellbookId: 'standard',
+          role: 'combat',
+          levelRequirement: 95,
+          tier: 16,
+        },
+      },
+      combatChoices: {
+        magic: {
+          spellbookId: 'standard',
+          activeSpellId: 'fire-surge',
+        },
+      },
+      abilities: {
+        'runic-charge': createAbilityDefinition({
+          id: 'runic-charge',
+          name: 'Runic Charge',
+          style: 'magic',
+          subtype: 'utility',
+          cooldownTicks: 50,
+          adrenalineCost: 0,
+          hitSchedule: [],
+          baseDamage: { min: 0, max: 0 },
+          timelineEffects: [{ kind: 'apply-buff', buffId: 'anima-charged' }],
+        }),
+        'greater-concentrated-blast': createAbilityDefinition({
+          id: 'greater-concentrated-blast',
+          name: 'Greater Concentrated Blast',
+          style: 'magic',
+          cooldownTicks: 9,
+          adrenalineGain: 9,
+          isChanneled: true,
+          channelDurationTicks: 3,
+          hitSchedule: [
+            { id: 'gconc-hit-1', tickOffset: 0, damage: { min: 40, max: 50 } },
+            { id: 'gconc-hit-2', tickOffset: 1, damage: { min: 40, max: 50 } },
+            { id: 'gconc-hit-3', tickOffset: 2, damage: { min: 40, max: 50 } },
+          ],
+          baseDamage: { min: 120, max: 150 },
+        }),
+        magic: createAbilityDefinition({
+          id: 'magic',
+          name: 'Magic',
+          style: 'magic',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      buffs: {
+        'anima-charged': {
+          id: 'anima-charged',
+          name: 'Anima Charged',
+          category: 'temporary',
+          sourceType: 'ability',
+          durationTicks: 25,
+        },
+        'greater-concentrated-blast-critical-strike': {
+          id: 'greater-concentrated-blast-critical-strike',
+          name: 'Greater Concentrated Blast Critical Strike',
+          category: 'temporary',
+          sourceType: 'ability',
+        },
+      },
+      items: {
+        [staff.id]: staff,
+        [swapStaff.id]: swapStaff,
+      },
+      inventoryItems: includeWeaponSwap ? [{ instanceId: 'staff-2', definitionId: swapStaff.id }] : [],
+      equipment: {
+        weapon: {
+          instanceId: 'staff-1',
+          definitionId: staff.id,
+        },
+      },
+      nonGcdActions: includeWeaponSwap
+        ? [createGearSwapAction('swap-staff-1', 5, 'staff-2', swapStaff.id, 'weapon')]
+        : [],
+      abilityActions: [
+        ...(includeRunicCharge ? [createAbilityAction('runic-charge-1', 0, 'runic-charge')] : []),
+        createAbilityAction('gconc-1', 3, 'greater-concentrated-blast'),
+        createAbilityAction('magic-1', 6, 'magic'),
+      ],
+      startingAdrenaline: 100,
+      tickCount: 10,
+    });
+    const baseline = simulateBaseDamage(createConfigWithRunic(false));
+    const empowered = simulateBaseDamage(createConfigWithRunic(true));
+    const swapped = simulateBaseDamage(createConfigWithRunic(true, true));
+    const baselineMagicHit = baseline.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'magic');
+    const empoweredMagicHit = empowered.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'magic');
+    const swappedMagicHit = swapped.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'magic');
+
+    expect(empowered.isValid).toBe(true);
+    expect(empowered.buffTimeline[3]).toContain('anima-charged');
+    expect(empowered.buffTimeline[4]).not.toContain('anima-charged');
+    expect(empowered.buffTimeline[6]).toContain('greater-concentrated-blast-critical-strike');
+    expect(empowered.buffTimeline[7]).not.toContain('greater-concentrated-blast-critical-strike');
+    expect(empoweredMagicHit?.finalDamage.avg).toBeGreaterThan(baselineMagicHit?.finalDamage.avg ?? 0);
+    expect(swapped.buffTimeline[6]).not.toContain('greater-concentrated-blast-critical-strike');
+    expect(swappedMagicHit?.finalDamage.avg ?? 0).toBeLessThan(baselineMagicHit?.finalDamage.avg ?? 0);
+  });
+
+  it('fires Lightning Surge while Instability is active and records proc efficacy', () => {
     const staff: ItemDefinition = {
       id: 'fractured-staff-of-armadyl',
       name: 'Fractured Staff of Armadyl',
@@ -1258,7 +1591,7 @@ describe('simulation regression scenarios', () => {
       },
     };
 
-    const result = simulateBaseDamage(
+    const createInstabilityConfig = (mode?: 'deterministic-accumulator' | 'expected-value') =>
       createScenarioConfig({
         abilities: {
           instability: createAbilityDefinition({
@@ -1315,16 +1648,22 @@ describe('simulation regression scenarios', () => {
         ],
         startingAdrenaline: 100,
         tickCount: 8,
-      }),
+        simulationSettings: mode ? { criticalHitResolutionMode: mode } : undefined,
+      });
+
+    const result = simulateBaseDamage(createInstabilityConfig());
+    const expectedValueResult = simulateBaseDamage(createInstabilityConfig('expected-value'));
+    const deterministicLightningSurge = result.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'lightning-surge' && entry.tick === 4,
+    );
+    const expectedValueOpeningSurge = expectedValueResult.explainability.damageBreakdowns.find(
+      (entry) => entry.abilityId === 'lightning-surge' && entry.tick === 1,
     );
 
     expect(result.isValid).toBe(true);
-    expect(result.explainability.damageBreakdowns.some((entry) => entry.abilityId === 'lightning-surge')).toBe(true);
-    expect(
-      result.explainability.damageBreakdowns.some(
-        (entry) => entry.abilityId === 'lightning-surge' && entry.tick === 4,
-      ),
-    ).toBe(true);
+    expect(deterministicLightningSurge?.derivedParts?.procEfficacy).toBe(1);
+    expect(expectedValueResult.isValid).toBe(true);
+    expect(expectedValueOpeningSurge?.derivedParts?.procEfficacy).toBeCloseTo(0.1);
   });
 
   it('uses Soulfire to build Essence Corruption and amplify the next Combust', () => {

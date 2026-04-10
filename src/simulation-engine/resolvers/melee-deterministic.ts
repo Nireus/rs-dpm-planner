@@ -32,6 +32,10 @@ export function resolveDeterministicMeleeTimeline(
     }
 
     const ability = resolveEffectiveAbilityDefinition(config, action);
+    if (ability?.style !== 'melee') {
+      continue;
+    }
+
     applyAbilityTimelineEffects({
       config,
       action,

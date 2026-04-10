@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import type { BuffDefinition } from '../../../game-data/types';
-import type { CombatChoices, ItemInstanceConfig, PlayerStats } from '../../../simulation-engine/models';
+import type { CombatChoices, ItemInstanceConfig, PlayerStats, SimulationSettings } from '../../../simulation-engine/models';
 import type { PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import type { BuffSelectionState } from '../buffs/persistent-buff-config';
@@ -18,6 +18,7 @@ import {
   LEGACY_ROTATION_PLANNER_STORAGE_KEY,
   type GearBuilderWorkspaceState,
   type RotationPlannerWorkspaceState,
+  type SimulationSettingsWorkspaceState,
   WORKSPACE_STORAGE_KEY,
   type WorkspaceDocument,
 } from './workspace.models';
@@ -120,6 +121,11 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
     };
   }
 
+  readSimulationSettings(): SimulationSettingsWorkspaceState {
+    return this.readWorkspaceDocumentFromStorage()?.portableConfig.simulationSettings
+      ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.simulationSettings;
+  }
+
   replacePortableConfigDocument(portableConfig: PortableConfigDocument): WorkspaceDocument {
     const nextDocument = this.buildWorkspaceDocumentFromPortableConfig(portableConfig);
 
@@ -207,6 +213,16 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
           nonGcdActions: state.nonGcdActions,
           abilityActions: state.abilityActions,
         },
+      },
+    }));
+  }
+
+  updateSimulationSettings(settings: SimulationSettings): void {
+    this.updateDocument((current) => ({
+      ...current,
+      portableConfig: {
+        ...current.portableConfig,
+        simulationSettings: settings,
       },
     }));
   }

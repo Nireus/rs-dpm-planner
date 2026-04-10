@@ -410,6 +410,26 @@
                         </span>
                       }
 
+                      @if (instabilityProcMarkers(occupancy.action).length) {
+                        <span class="placed-ability-proc-markers" title="Triggers Instability Lightning Surge">
+                          @for (marker of instabilityProcMarkers(occupancy.action); track marker.tickOffset + ':' + marker.indexAtTick) {
+                            @if (instabilityIconPath(); as procIconPath) {
+                              <img
+                                class="placed-ability-proc-icon instability-proc-icon"
+                                [src]="procIconPath"
+                                alt="Instability Lightning Surge trigger"
+                                [style.left]="instabilityProcLeft(occupancy.action, marker)"
+                              />
+                            } @else {
+                              <span
+                                class="placed-ability-proc-fallback instability-proc-fallback"
+                                [style.left]="instabilityProcLeft(occupancy.action, marker)"
+                              >LS</span>
+                            }
+                          }
+                        </span>
+                      }
+
                       <button
                         type="button"
                         class="placed-ability-remove"
@@ -680,6 +700,30 @@
               }
             </div>
           }
+
+          <div class="configuration-group">
+            <span class="configuration-group-title">Simulation</span>
+
+            <label class="control-field compact-field critical-model-field">
+              <span class="control-field-label">
+                <span>Critical hit model</span>
+                <span
+                  class="info-tooltip"
+                  tabindex="0"
+                  role="img"
+                  aria-label="Critical hit model help. Deterministic build-up accumulates crit chance per hit and procs when it reaches 100 percent, keeping overflow. Expected value grants fractional on-crit effects every hit based on crit chance."
+                  data-tooltip="Deterministic build-up: each hit adds its crit chance to a hidden accumulator. At 100%, on-crit effects proc and overflow carries forward. Expected value: each hit grants fractional on-crit value equal to its crit chance, such as 30% crit giving 30% of the proc."
+                >i</span>
+              </span>
+              <select
+                [ngModel]="simulationSettings().criticalHitResolutionMode"
+                (ngModelChange)="updateCriticalHitResolutionMode($event)"
+              >
+                <option value="deterministic-accumulator">Deterministic build-up</option>
+                <option value="expected-value">Expected value</option>
+              </select>
+            </label>
+          </div>
 
           <label class="lane-toggle configuration-lane-toggle">
             <input

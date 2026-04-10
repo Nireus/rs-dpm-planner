@@ -35,6 +35,7 @@ describe('parsePortableConfigDocument', () => {
       expect(result.data.playerStats.rangedLevel).toBe(99);
       expect(result.data.combatChoices.magic.spellbookId).toBe('standard');
       expect(result.data.combatChoices.magic.activeSpellId).toBe('fire-surge');
+      expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('deterministic-accumulator');
       expect(result.data.playerStats.attackLevel).toBe(99);
       expect(result.data.playerStats.strengthLevel).toBe(99);
       expect(result.data.playerStats.defenceLevel).toBe(99);
@@ -136,6 +137,39 @@ describe('parsePortableConfigDocument', () => {
       expect(result.data.schemaVersion).toBe(PORTABLE_CONFIG_SCHEMA_VERSION);
       expect(result.data.combatChoices.magic.spellbookId).toBe('standard');
       expect(result.data.combatChoices.magic.activeSpellId).toBe('earth-wave');
+      expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('deterministic-accumulator');
+    }
+  });
+
+  it('parses configured simulation settings', () => {
+    const document = createPortableConfigDocument({
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearSetup: {
+        equipment: {},
+      },
+      inventory: {
+        items: [],
+      },
+      persistentBuffConfig: {},
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 30,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+      simulationSettings: {
+        criticalHitResolutionMode: 'expected-value',
+      },
+    });
+
+    const result = parsePortableConfigDocument(document);
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('expected-value');
     }
   });
 });

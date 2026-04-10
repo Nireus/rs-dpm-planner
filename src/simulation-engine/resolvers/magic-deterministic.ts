@@ -6,10 +6,18 @@ import {
   applyAbilityTimelineEffects,
   createEmptyBuffTimeline,
 } from './ability-timeline-effects';
+import {
+  consumePendingBuff,
+  isPendingBuffActive,
+  markPendingMagicBuff,
+  resolvePendingMagicCritBuffEndTick,
+  type PendingMagicBuff,
+} from './magic-buff-state';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import { resolveMagicSpellDefinitionForAction } from '../spells/selected-spell';
 import { collectActiveEffectRefs } from '../calculators/active-effect-refs';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
+import { advanceChanceAccumulator, createChanceAccumulatorState } from '../utils/chance-accumulator';
 
 export interface DeterministicMagicTimelineResult {
   buffTimeline: Record<number, string[]>;
@@ -33,13 +41,14 @@ export function resolveDeterministicMagicTimeline(
   const actionCritChanceBonusByActionId: Record<string, number> = {};
   const hitCritChanceBonusByActionId: Record<string, Record<string, number>> = {};
   const hitExpectedCritChanceByActionId: Record<string, Record<string, number>> = {};
-  let nextMagicAbilityCostReductionPercent = 0;
-  let nextMagicAbilityCritChanceBonus = 0;
+  let nextMagicAbilityCostReduction: PendingMagicBuff | null = null;
+  let nextMagicAbilityCritChanceBonus: PendingMagicBuff | null = null;
   let animaChargedUntilTick = -1;
   let glacialEmbraceStacks = 0;
   let glacialEmbraceExpiresAtTick = -1;
   let essenceCorruptionStacks = 0;
   let essenceCorruptionExpiresAtTick = -1;
+  let magicCriticalAccumulator = createChanceAccumulatorState();
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
     if (blockedActionIds.has(action.id)) {
@@ -49,25 +58,33 @@ export function resolveDeterministicMagicTimeline(
     const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
     const spell = resolveMagicSpellDefinitionForAction(projectedConfig, action);
     const songOfDestructionActive = hasSongOfDestructionSetEquipped(projectedConfig);
-    let ability = resolveEffectiveAbilityDefinition(config, action);
+    let ability = resolveEffectiveAbilityDefinition(projectedConfig, action);
     if (ability?.style !== 'magic') {
       continue;
     }
 
     const hitsMagicTarget = ability.hitSchedule.some((hit) => hit.damage.min > 0 || hit.damage.max > 0);
     const animaChargedActive = action.tick <= animaChargedUntilTick;
-    const critBonusForAction = hitsMagicTarget ? nextMagicAbilityCritChanceBonus : 0;
+    const activeCritBonus = isPendingBuffActive(nextMagicAbilityCritChanceBonus, action.tick)
+      ? nextMagicAbilityCritChanceBonus
+      : null;
+    const critBonusForAction = hitsMagicTarget ? activeCritBonus?.percent ?? 0 : 0;
     if (critBonusForAction > 0) {
       actionCritChanceBonusByActionId[action.id] = critBonusForAction;
-      nextMagicAbilityCritChanceBonus = 0;
+      consumePendingBuff(buffTimeline, activeCritBonus?.buffId, action.tick, config.rotationPlan.tickCount);
+      nextMagicAbilityCritChanceBonus = null;
     }
 
     if (ability.adrenalineCost && ability.adrenalineCost > 0) {
       let reductionPercent = 0;
+      const activeCostReduction = isPendingBuffActive(nextMagicAbilityCostReduction, action.tick)
+        ? nextMagicAbilityCostReduction
+        : null;
 
-      if (nextMagicAbilityCostReductionPercent > 0) {
-        reductionPercent = Math.max(reductionPercent, nextMagicAbilityCostReductionPercent);
-        nextMagicAbilityCostReductionPercent = 0;
+      if (activeCostReduction) {
+        reductionPercent = Math.max(reductionPercent, activeCostReduction.percent);
+        consumePendingBuff(buffTimeline, activeCostReduction.buffId, action.tick, config.rotationPlan.tickCount);
+        nextMagicAbilityCostReduction = null;
       }
 
       if (ability.id === 'tsunami' && glacialEmbraceStacks > 0) {
@@ -98,6 +115,7 @@ export function resolveDeterministicMagicTimeline(
         },
       };
       animaChargedUntilTick = -1;
+      consumePendingBuff(buffTimeline, 'anima-charged', action.tick, config.rotationPlan.tickCount);
     }
 
     const selfHitCritBonuses = resolveSelfHitCritBonuses(ability.id, ability.hitSchedule, animaChargedActive);
@@ -175,7 +193,7 @@ export function resolveDeterministicMagicTimeline(
         continue;
       }
 
-       const expectedCritChance = resolveExpectedMagicCriticalStrikeChance(
+      const expectedCritChance = resolveExpectedMagicCriticalStrikeChance(
         config,
         ability,
         hit,
@@ -184,45 +202,83 @@ export function resolveDeterministicMagicTimeline(
         critBonusForAction,
         selfHitCritBonuses[hit.id] ?? 0,
       );
-      if (expectedCritChance > 0) {
+      const criticalProcResult = resolveCriticalProcValue(config, magicCriticalAccumulator, expectedCritChance);
+      magicCriticalAccumulator = criticalProcResult.nextAccumulator;
+      if (criticalProcResult.procValue > 0) {
         const existing = hitExpectedCritChanceByActionId[action.id] ?? {};
-        existing[hit.id] = expectedCritChance;
+        existing[hit.id] = criticalProcResult.procValue;
         hitExpectedCritChanceByActionId[action.id] = existing;
       }
 
-      if ((buffTimeline[hitTick] ?? []).includes('tsunami-buff')) {
-        adrenalineByTick[hitTick] += roundValue(
-          expectedCritChance * 8,
-        );
+      const criticalHitAdrenalineGain = resolveMagicCriticalHitAdrenalineGain(
+        config,
+        ability,
+        hitTick,
+        buffTimeline,
+      );
+      if (criticalHitAdrenalineGain > 0 && criticalProcResult.procValue > 0) {
+        adrenalineByTick[hitTick] += roundValue(criticalProcResult.procValue * criticalHitAdrenalineGain);
       }
     }
+
+    const pendingCritBuffEndTick = resolvePendingMagicCritBuffEndTick(config.rotationPlan.nonGcdActions, action.tick, config.rotationPlan.tickCount);
 
     switch (ability.id) {
       case 'runic-charge':
         animaChargedUntilTick = action.tick + 24;
         break;
       case 'sonic-wave':
-        nextMagicAbilityCostReductionPercent = animaChargedActive ? 35 : 10;
+        nextMagicAbilityCostReduction = {
+          percent: animaChargedActive ? 35 : 10,
+          buffId: 'flow',
+          expiresAtTick: action.tick + 14,
+        };
         if (animaChargedActive) {
           animaChargedUntilTick = -1;
+          consumePendingBuff(buffTimeline, 'anima-charged', action.tick, config.rotationPlan.tickCount);
         }
         break;
       case 'greater-sonic-wave':
-        nextMagicAbilityCostReductionPercent = animaChargedActive ? 45 : 20;
+        nextMagicAbilityCostReduction = {
+          percent: animaChargedActive ? 45 : 20,
+          buffId: 'greater-flow',
+          expiresAtTick: action.tick + 14,
+        };
         if (animaChargedActive) {
           animaChargedUntilTick = -1;
+          consumePendingBuff(buffTimeline, 'anima-charged', action.tick, config.rotationPlan.tickCount);
         }
         break;
       case 'concentrated-blast':
-        nextMagicAbilityCritChanceBonus = animaChargedActive ? 45 : 15;
+        nextMagicAbilityCritChanceBonus = markPendingMagicBuff({
+          buffTimeline,
+          timelineGeneratedBuffSources,
+          buffId: 'concentrated-blast-critical-strike',
+          sourceId: ability.id,
+          percent: animaChargedActive ? 45 : 15,
+          startTick: action.tick,
+          endTick: pendingCritBuffEndTick,
+          tickCount: config.rotationPlan.tickCount,
+        });
         if (animaChargedActive) {
           animaChargedUntilTick = -1;
+          consumePendingBuff(buffTimeline, 'anima-charged', action.tick, config.rotationPlan.tickCount);
         }
         break;
       case 'greater-concentrated-blast':
-        nextMagicAbilityCritChanceBonus = animaChargedActive ? 51 : 21;
+        nextMagicAbilityCritChanceBonus = markPendingMagicBuff({
+          buffTimeline,
+          timelineGeneratedBuffSources,
+          buffId: 'greater-concentrated-blast-critical-strike',
+          sourceId: ability.id,
+          percent: animaChargedActive ? 51 : 21,
+          startTick: action.tick,
+          endTick: pendingCritBuffEndTick,
+          tickCount: config.rotationPlan.tickCount,
+        });
         if (animaChargedActive) {
           animaChargedUntilTick = -1;
+          consumePendingBuff(buffTimeline, 'anima-charged', action.tick, config.rotationPlan.tickCount);
         }
         break;
       default:
@@ -246,16 +302,24 @@ export function resolveDeterministicMagicTimeline(
         ? ['Sunshine and Greater Sunshine: apply their magic damage windows in the simulation. Area damage and planted-feet edge cases remain out of scope.']
         : []),
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('flow') || buffIds.includes('greater-flow'))
-        ? ['Flow and Greater Flow: their next-magic-ability adrenaline reduction is now applied in the adrenaline timeline.']
+        ? ['Flow and Greater Flow: their next-magic-ability adrenaline reduction is applied in the adrenaline timeline and consumed by the discounted cast.']
         : []),
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('anima-charged'))
-        ? ['Runic Charge: Sonic Wave, Greater Sonic Wave, Dragon Breath, Concentrated Blast, and Greater Concentrated Blast now use their empowered milestone behavior.']
+        ? ['Runic Charge: Sonic Wave, Greater Sonic Wave, Dragon Breath, Concentrated Blast, and Greater Concentrated Blast use their empowered behavior and consume Anima Charged.']
+        : []),
+      ...(Object.values(buffTimeline).some((buffIds) =>
+        buffIds.includes('concentrated-blast-critical-strike') ||
+        buffIds.includes('greater-concentrated-blast-critical-strike'))
+        ? ['Concentrated Blast and Greater Concentrated Blast: their next-magic-attack critical strike setup is tracked as expected-value crit chance.']
         : []),
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('glacial-embrace'))
         ? ['Incite Fear: Glacial Embrace stacks are tracked and reduce Tsunami adrenaline cost based on the active stack count.']
         : []),
+      ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('tsunami-buff'))
+        ? [`Tsunami: magic critical strikes grant additional adrenaline using the ${resolveCriticalHitResolutionMode(config) === 'expected-value' ? 'Expected value' : 'Deterministic build-up'} crit model while the Tsunami buff is active.`]
+        : []),
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('instability'))
-        ? ['Instability: magic critical strikes on the primary target now create expected-value Lightning Surge hits one tick later while a magic weapon is equipped.']
+        ? [`Instability: magic critical strikes on the primary target create Lightning Surge hits one tick later using the ${resolveCriticalHitResolutionMode(config) === 'expected-value' ? 'Expected value' : 'Deterministic build-up'} crit model while a magic weapon is equipped.`]
         : []),
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('essence-corruption'))
         ? ['Song of Destruction: Soulfire, Combust, and Corruption Blast now build Essence Corruption stacks; 10+ stacks add flat magic hit damage, 25+ stacks add basic-adrenaline flow, and the 30% immediate-proc/cooldown-reset effect remains descriptive-only for now.']
@@ -357,6 +421,39 @@ function appendTimelineGeneratedBuffSourceOnce(
   timelineGeneratedBuffSources.push(entry);
 }
 
+function resolveCriticalProcValue(
+  config: SimulationConfig,
+  accumulator: ReturnType<typeof createChanceAccumulatorState>,
+  expectedCritChance: number,
+): {
+  procValue: number;
+  nextAccumulator: ReturnType<typeof createChanceAccumulatorState>;
+} {
+  if (expectedCritChance <= 0) {
+    return {
+      procValue: 0,
+      nextAccumulator: accumulator,
+    };
+  }
+
+  if (resolveCriticalHitResolutionMode(config) === 'expected-value') {
+    return {
+      procValue: expectedCritChance,
+      nextAccumulator: accumulator,
+    };
+  }
+
+  const result = advanceChanceAccumulator(accumulator, expectedCritChance * 100);
+  return {
+    procValue: result.procCount,
+    nextAccumulator: result.nextState,
+  };
+}
+
+function resolveCriticalHitResolutionMode(config: SimulationConfig) {
+  return config.simulationSettings?.criticalHitResolutionMode ?? 'deterministic-accumulator';
+}
+
 function resolveExpectedMagicCriticalStrikeChance(
   config: SimulationConfig,
   ability: AbilityDefinition,
@@ -383,6 +480,21 @@ function resolveExpectedMagicCriticalStrikeChance(
   return clampProbability(
     0.1 + guaranteedCriticalStrikeBonus + bitingBonus + effectRefCritChanceBonus + actionCritChanceBonus / 100 + hitCritChanceBonus / 100,
   );
+}
+
+function resolveMagicCriticalHitAdrenalineGain(
+  config: SimulationConfig,
+  ability: AbilityDefinition,
+  hitTick: number,
+  buffTimeline: Record<number, string[]>,
+): number {
+  return collectActiveEffectRefs(config, ability, hitTick, buffTimeline)
+    .reduce((total, effectRef) => total + parseMagicCriticalHitAdrenalineGain(effectRef), 0);
+}
+
+function parseMagicCriticalHitAdrenalineGain(effectRef: string): number {
+  const match = /^magic-critical-hit-adrenaline:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
+  return match ? Number.parseFloat(match[1]) : 0;
 }
 
 function clampProbability(value: number): number {

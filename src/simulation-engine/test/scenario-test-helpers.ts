@@ -22,6 +22,7 @@ export function createScenarioConfig(input: {
   equipment?: SimulationConfig['gearSetup']['equipment'];
   inventoryItems?: SimulationConfig['inventory']['items'];
   persistentBuffConfig?: SimulationConfig['persistentBuffConfig'];
+  simulationSettings?: SimulationConfig['simulationSettings'];
   combatChoices?: SimulationConfig['combatChoices'];
   nonGcdActions?: RotationAction[];
   abilityActions: RotationAction[];
@@ -73,6 +74,7 @@ export function createScenarioConfig(input: {
     modeFlags: {
       strictValidation: true,
     },
+    simulationSettings: input.simulationSettings,
   };
 }
 

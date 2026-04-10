@@ -141,6 +141,9 @@ describe('buildSimulationConfigFromAppState', () => {
         nonGcdActions: [],
         abilityActions: [],
       },
+      simulationSettings: {
+        criticalHitResolutionMode: 'expected-value',
+      },
     });
 
     expect(result.playerStats.rangedLevel).toBe(120);
@@ -156,6 +159,7 @@ describe('buildSimulationConfigFromAppState', () => {
       pocketEffectItemIds: ['scripture-of-jas'],
     });
     expect(result.modeFlags.strictValidation).toBe(true);
+    expect(result.simulationSettings?.criticalHitResolutionMode).toBe('expected-value');
   });
 
   it('projects bakriminel bolts from pernix quiver when a crossbow is equipped', () => {

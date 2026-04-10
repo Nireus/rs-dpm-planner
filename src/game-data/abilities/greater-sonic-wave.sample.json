@@ -37,7 +37,7 @@
   "detailLines": [
     "115%-135% magic damage.",
     "Applies Greater Flow for 9 seconds.",
-    "Greater Flow cost reduction is currently tracked as buff state; the adrenaline discount is not implemented yet."
+    "Greater Flow reduces the adrenaline cost of the next qualifying magic ability by 20%, or 45% when empowered by Runic Charge."
   ],
   "wikiUrl": "https://runescape.wiki/w/Greater_Sonic_Wave"
 }

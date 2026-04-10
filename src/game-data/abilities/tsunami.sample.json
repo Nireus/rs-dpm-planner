@@ -36,8 +36,9 @@
   "hoverSummary": "Ultimate | 100 ticks | 1 hit | -100% adrenaline",
   "detailLines": [
     "225%-275% magic damage to the primary target.",
-    "Applies Tsunami's 30-second magic crit adrenaline status.",
-    "Its crit-driven adrenaline generation and Incite Fear cost reduction remain for the next magic mechanics pass."
+    "Applies Tsunami's 30.6-second magic crit adrenaline status.",
+    "While active, magic critical strikes generate an additional 8% adrenaline.",
+    "Incite Fear Glacial Embrace stacks reduce Tsunami's adrenaline cost by 12% per stack, up to 60%."
   ],
   "wikiUrl": "https://runescape.wiki/w/Tsunami"
 }

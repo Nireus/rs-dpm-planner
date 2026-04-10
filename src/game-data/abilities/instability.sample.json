@@ -30,5 +30,5 @@
   "displayHints": {
     "hiddenFromUi": true
   },
-  "description": "Fractured Staff of Armadyl special attack. Strikes for 120%-140% ability damage and applies the Instability buff for 30 seconds."
+  "description": "Fractured Staff of Armadyl special attack. Strikes for 120%-140% ability damage and applies the Instability buff for 30 seconds. While active, qualifying Magic critical strikes fire a non-recursive Lightning Surge 1 tick later for 70%-90% ability damage."
 }

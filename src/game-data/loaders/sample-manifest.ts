@@ -264,6 +264,8 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
     '/game-data/buffs/flow.sample.json',
     '/game-data/buffs/greater-flow.sample.json',
     '/game-data/buffs/anima-charged.sample.json',
+    '/game-data/buffs/concentrated-blast-critical-strike.sample.json',
+    '/game-data/buffs/greater-concentrated-blast-critical-strike.sample.json',
     '/game-data/buffs/sunshine-buff.sample.json',
     '/game-data/buffs/greater-sunshine-buff.sample.json',
     '/game-data/buffs/channelled-might.sample.json',

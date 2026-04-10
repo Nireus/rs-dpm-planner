@@ -7,6 +7,7 @@ import { GearBuilderStore } from '../gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
 import { RotationPlannerStore } from '../rotation-planner/rotation-planner.store';
 import { buildSimulationConfigFromAppState } from './simulation-config.builder';
+import { SimulationSettingsStoreService } from './simulation-settings-store.service';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +19,7 @@ export class SimulationSessionService {
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
   private readonly rotationPlannerStore = inject(RotationPlannerStore);
+  private readonly simulationSettingsStore = inject(SimulationSettingsStoreService);
 
   readonly simulationConfig = computed(() => {
     const catalog = this.gameDataStore.snapshot().catalog;
@@ -32,6 +34,7 @@ export class SimulationSessionService {
       gearState: this.gearBuilderStore.snapshot(),
       buffState: this.buffConfigurationStore.state(),
       rotationPlan: this.rotationPlannerStore.rotationPlan(),
+      simulationSettings: this.simulationSettingsStore.settings(),
     });
   });
 

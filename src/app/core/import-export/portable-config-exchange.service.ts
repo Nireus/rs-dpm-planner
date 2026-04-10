@@ -6,6 +6,7 @@ import { CombatChoicesStoreService } from '../combat-choices/combat-choices-stor
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import { PlayerStatsStoreService } from '../player-stats/player-stats-store.service';
 import { RotationPlannerStore } from '../rotation-planner/rotation-planner.store';
+import { SimulationSettingsStoreService } from '../simulation/simulation-settings-store.service';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 
 export type PortableConfigTextParseResult =
@@ -29,6 +30,7 @@ export class PortableConfigExchangeService {
   private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly playerStatsStore = inject(PlayerStatsStoreService);
   private readonly rotationPlannerStore = inject(RotationPlannerStore);
+  private readonly simulationSettingsStore = inject(SimulationSettingsStoreService);
 
   readFormattedPortableConfigDocument(): string {
     return this.formatPortableConfigDocument(this.workspaceRepository.readPortableConfigDocument());
@@ -97,6 +99,7 @@ export class PortableConfigExchangeService {
     this.buffConfigurationStore.loadState(workspaceDocument.appState.buffSelection);
     this.playerStatsStore.loadStats(workspaceDocument.portableConfig.playerStats);
     this.combatChoicesStore.loadCombatChoices(workspaceDocument.portableConfig.combatChoices);
+    this.simulationSettingsStore.loadSettings(workspaceDocument.portableConfig.simulationSettings);
     this.rotationPlannerStore.loadState({
       startingAdrenaline: workspaceDocument.portableConfig.rotationPlan.startingAdrenaline,
       tickCount: workspaceDocument.portableConfig.rotationPlan.tickCount,

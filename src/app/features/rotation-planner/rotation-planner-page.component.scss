@@ -85,6 +85,51 @@ p {
   gap: 0.35rem;
 }
 
+.info-tooltip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid rgba(158, 201, 230, 0.45);
+  border-radius: 999px;
+  background: rgba(16, 38, 56, 0.92);
+  color: #cfe9fb;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: help;
+  outline: none;
+}
+
+.info-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: -0.3rem;
+  bottom: calc(100% + 0.55rem);
+  z-index: 10;
+  width: min(17.5rem, 70vw);
+  padding: 0.7rem 0.78rem;
+  border: 1px solid rgba(158, 201, 230, 0.3);
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, rgba(13, 29, 43, 0.98), rgba(7, 14, 22, 0.98));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+  color: #d8ecf8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.info-tooltip:hover::after,
+.info-tooltip:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .control-field-icon {
   width: 1rem;
   height: 1rem;
@@ -98,6 +143,10 @@ p {
 
 .configuration-panel-body .control-field.compact-field {
   min-width: 0;
+}
+
+.critical-model-field {
+  grid-template-columns: minmax(0, 1fr) 6.9rem;
 }
 
 .control-field input,
@@ -218,6 +267,7 @@ p {
 .configuration-panel.expanded {
   width: 16rem;
   min-width: 16rem;
+  overflow: visible;
 }
 
 .configuration-panel-toggle {
@@ -1364,6 +1414,16 @@ p {
 
 .bloodlust-spend-fallback {
   color: #f2d0d0;
+}
+
+.instability-proc-icon,
+.instability-proc-fallback {
+  border-color: rgba(104, 165, 235, 0.5);
+  background: rgba(10, 22, 38, 0.94);
+}
+
+.instability-proc-fallback {
+  color: #d8ecff;
 }
 
 .placed-ability.segment-start {

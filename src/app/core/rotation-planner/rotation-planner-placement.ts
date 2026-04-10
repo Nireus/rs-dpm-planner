@@ -1,5 +1,5 @@
 import type { GameDataCatalog } from '../../../game-data/loaders';
-import type { AbilityDefinition } from '../../../game-data/types';
+import type { AbilityDefinition, AbilityPlannerLane } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import type { PlayerStats, RotationAction, ValidationIssue } from '../../../simulation-engine/models';
 import { evaluateAbilityAvailability } from '../../../simulation-engine/rules/ability-availability';
@@ -20,6 +20,18 @@ function isItemInstance(value: ItemInstanceConfig | undefined): value is ItemIns
   return Boolean(value);
 }
 
+export function canPlaceAbilityOnPlannerLane(
+  abilityDefinition: AbilityDefinition,
+  lane: AbilityPlannerLane,
+): boolean {
+  const allowedLanes = abilityDefinition.plannerPlacement?.allowedLanes;
+  if (allowedLanes?.length) {
+    return allowedLanes.includes(lane);
+  }
+
+  return lane === 'ability' || abilityDefinition.subtype === 'utility';
+}
+
 export function evaluateAbilityPlacement(input: {
   abilityActions: RotationAction[];
   nonGcdActions: RotationAction[];
@@ -34,6 +46,18 @@ export function evaluateAbilityPlacement(input: {
   gearState: GearBuilderState;
   buffState: BuffSelectionState;
 }): AbilityPlacementEvaluationResult {
+  if (!canPlaceAbilityOnPlannerLane(input.abilityDefinition, 'ability')) {
+    return {
+      isPlaceable: false,
+      issue: {
+        code: 'ability.invalid_lane',
+        severity: 'error',
+        tick: input.tick,
+        message: `${input.abilityDefinition.name} can only be placed on the non-GCD lane.`,
+      },
+    };
+  }
+
   if (
     !canPlaceAbilityAtTick(
       input.abilityActions,

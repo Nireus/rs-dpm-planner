@@ -163,6 +163,8 @@ const PARAMETERIZED_EFFECT_REF_PREFIXES = [
   'target-damage-taken:',
   'eof-',
   'hit-chance:',
+  'magic-critical-hit-adrenaline:',
+  'magic-critical-hit-lightning-surge:',
   'magic-damage-multiplier:',
   'melee-damage-multiplier:',
   'overload-tier-',

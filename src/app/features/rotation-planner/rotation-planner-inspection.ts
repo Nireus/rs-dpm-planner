@@ -476,6 +476,10 @@ function buildDamageCalculationEntry(
     ? `Max: (((${formatNumber(entry.baseDamage.max)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMaxMultiplier)}${critAdjustedRange.max !== afterAdditive.max ? ' (crit)' : ''}) + ${formatNumber(inheritedTriggerDamage.max)} = ${formatNumber(entry.finalDamage.max)}`
     : `Max: ((${formatNumber(entry.baseDamage.max)} × ${formatNumber(multiplicativeProduct)}) + ${formatNumber(additiveTotal)}) × ${formatNumber(critMaxMultiplier)}${entry.finalDamage.max !== afterAdditive.max ? ' (crit)' : ''} = ${formatNumber(entry.finalDamage.max)}`;
 
+  const procEfficacyStep = typeof entry.derivedParts?.procEfficacy === 'number'
+    ? `Proc efficacy: ${formatPercent(entry.derivedParts.procEfficacy)}`
+    : null;
+
   return {
     abilityName,
     hitName,
@@ -487,8 +491,8 @@ function buildDamageCalculationEntry(
       ? `${entry.multiplicativeModifiers.map((modifier) => extractMultiplierLabel(modifier.label)).join(' × ')} = x${formatNumber(multiplicativeProduct)}`
       : 'No damage multipliers',
     expectedValueStep: entry.expectedValueModifiers.length
-      ? `Min x${formatNumber(critMinMultiplier)}, Avg x${formatNumber(critAvgMultiplier)}, Max x${formatNumber(critMaxMultiplier)} (crit)`
-      : 'No crit multiplier',
+      ? `Min x${formatNumber(critMinMultiplier)}, Avg x${formatNumber(critAvgMultiplier)}, Max x${formatNumber(critMaxMultiplier)} (crit)${procEfficacyStep ? `; ${procEfficacyStep}` : ''}`
+      : procEfficacyStep ?? 'No crit multiplier',
     finalRange: formatDamageRange(entry.finalDamage),
     minFormula: finalMinFormula,
     avgFormula: finalAvgFormula,
@@ -570,6 +574,10 @@ function extractMultiplierLabel(label: string): string {
 
 function formatSignedValue(value: number): string {
   return `${value >= 0 ? '+' : ''}${formatNumber(value)}`;
+}
+
+function formatPercent(value: number): string {
+  return `${formatNumber(value * 100)}%`;
 }
 
 function formatNumber(value: number): string {

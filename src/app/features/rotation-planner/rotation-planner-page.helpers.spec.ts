@@ -9,6 +9,7 @@ import {
 } from '../../../simulation-engine/test/scenario-test-helpers';
 import {
   buildBloodlustSpendMarkersByAction,
+  buildInstabilityProcMarkersByAction,
   describeInvalidAbilityPlacement,
   buildPerfectEquilibriumProcMarkersByAction,
   buildPlacedAbilityMarkerLeft,
@@ -219,6 +220,67 @@ describe('rotation planner page helpers', () => {
       }),
     })).toEqual({
       'assault-action': [
+        {
+          tickOffset: 0,
+          indexAtTick: 0,
+        },
+      ],
+    });
+  });
+
+  it('builds Instability proc markers from Lightning Surge damage breakdowns', () => {
+    const action = createAbilityAction('magic-action', 6, 'magic');
+    const magic = createAbilityDefinition({
+      id: 'magic',
+      name: 'Magic',
+      style: 'magic',
+      cooldownTicks: 3,
+      adrenalineGain: 8,
+      hitSchedule: [{ id: 'magic-hit', tickOffset: 0, damage: { min: 95, max: 105 } }],
+      baseDamage: { min: 95, max: 105 },
+      displayHints: {
+        hitTickMode: 'resolved',
+      },
+    });
+
+    const markersByAction = buildInstabilityProcMarkersByAction(
+      {
+        isValid: true,
+        validationIssues: [],
+        totalDamage: { min: 0, avg: 0, max: 0 },
+        damageByAbility: [],
+        damageByTick: {},
+        adrenalineTimeline: [],
+        buffTimeline: {},
+        timelineGeneratedBuffSources: [],
+        cooldownTimeline: {},
+        tickStates: [],
+        explainability: {
+          damageBreakdowns: [
+            {
+              abilityId: 'lightning-surge',
+              hitId: 'magic-action:lightning-surge:magic-hit',
+              tick: 7,
+              baseDamage: { min: 0, avg: 0, max: 0 },
+              additiveModifiers: [],
+              multiplicativeModifiers: [],
+              expectedValueModifiers: [],
+              finalDamage: { min: 0, avg: 0, max: 0 },
+              derivedParts: {
+                procEfficacy: 1,
+              },
+            },
+          ],
+        },
+      },
+      [action],
+      {
+        magic,
+      },
+    );
+
+    expect(markersByAction).toEqual({
+      'magic-action': [
         {
           tickOffset: 0,
           indexAtTick: 0,

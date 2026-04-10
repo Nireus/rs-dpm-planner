@@ -12,6 +12,8 @@ export const PERFECT_EQUILIBRIUM_ICON_PATH =
   '/icons/wiki/equilibrium.png';
 export const BLOODLUST_ICON_PATH =
   '/icons/wiki/bloodlust-max-stacks.png';
+export const INSTABILITY_ICON_PATH =
+  '/icons/wiki/instability.png';
 const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 
 const HEADER_ROW_HEIGHT_REM = 2.7;
@@ -82,6 +84,11 @@ export interface PlannerPerfectEquilibriumProcMarker {
 }
 
 export interface PlannerBloodlustSpendMarker {
+  tickOffset: number;
+  indexAtTick: number;
+}
+
+export interface PlannerInstabilityProcMarker {
   tickOffset: number;
   indexAtTick: number;
 }
@@ -422,6 +429,49 @@ export function buildPlacedAbilityTitle(
   return lines.join('\n');
 }
 
+export function buildInstabilityProcMarkersByAction(
+  simulationResult: SimulationResult | null,
+  abilityActions: RotationAction[],
+  abilityCatalog: Record<string, AbilityDefinition>,
+): Record<string, PlannerInstabilityProcMarker[]> {
+  if (!simulationResult) {
+    return {};
+  }
+
+  return simulationResult.explainability.damageBreakdowns.reduce<
+    Record<string, PlannerInstabilityProcMarker[]>
+  >((markersByAction, breakdown) => {
+    if (breakdown.abilityId !== 'lightning-surge') {
+      return markersByAction;
+    }
+
+    const sourceActionId = breakdown.hitId.split(':')[0];
+    if (!sourceActionId) {
+      return markersByAction;
+    }
+
+    const sourceAction = abilityActions.find((action) => action.id === sourceActionId);
+    if (!sourceAction) {
+      return markersByAction;
+    }
+
+    const sourceHitTick = breakdown.tick - 1;
+    const tickOffset = Math.max(0, sourceHitTick - sourceAction.tick);
+    const existingMarkers = markersByAction[sourceActionId] ?? [];
+    const indexAtTick = existingMarkers.filter((marker) => marker.tickOffset === tickOffset).length;
+
+    markersByAction[sourceActionId] = [
+      ...existingMarkers,
+      {
+        tickOffset,
+        indexAtTick,
+      },
+    ];
+
+    return markersByAction;
+  }, {});
+}
+
 export function buildPlacedAbilityDisplayName(name: string): string {
   return name
     .replace(/\bGreater\b/g, 'G.')
@@ -461,7 +511,7 @@ export function buildPerfectEquilibriumProcLeft(
 
 export function buildPlacedAbilityMarkerLeft(
   action: RotationAction,
-  marker: PlannerPerfectEquilibriumProcMarker | PlannerBloodlustSpendMarker,
+  marker: PlannerPerfectEquilibriumProcMarker | PlannerBloodlustSpendMarker | PlannerInstabilityProcMarker,
   definition: AbilityDefinition | null,
 ): string {
   const offset = Math.max(0, marker.tickOffset);

@@ -10,6 +10,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 export class ChangelogPageComponent {
   protected readonly entries = [
     {
+      date: '11.04.2026',
+      change:
+        'Fixxed runic charge bugs. Implemented crit interactions with Tsunami and FSOA.',
+    },
+    {
       date: '04.04.2026',
       change:
         'Gear and planner validation polish: two-handed swaps now correctly move displaced off-hands into backpack, the ability palette is more lenient when valid melee/ranged/magic swaps are available from accessible gear, and Shard of Genesis Essence support now covers Fractured Staff of Armadyl, Roar of Awakening, Ode to Deceit, and shared dual-wield set unlock behavior.',

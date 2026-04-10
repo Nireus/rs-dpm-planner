@@ -6,5 +6,8 @@
   "category": "temporary",
   "sourceType": "ability",
   "durationTicks": 51,
+  "effectRefs": [
+    "magic-critical-hit-adrenaline:+8%"
+  ],
   "displayPriority": 76
 }

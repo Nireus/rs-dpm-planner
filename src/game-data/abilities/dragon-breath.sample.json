@@ -30,6 +30,7 @@
   "hoverSummary": "Basic | 12 ticks | 1 hit | +9% adrenaline",
   "detailLines": [
     "110%-130% magic damage to the primary target.",
+    "Deals 260%-310% magic damage when empowered by Runic Charge.",
     "Multi-target cone behavior remains descriptive-only in the single-target simulator.",
     "Deals 1.25x damage to combusted enemies on the live page."
   ],

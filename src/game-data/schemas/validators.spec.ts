@@ -122,7 +122,7 @@ describe('game-data sample JSON validation', () => {
         max: 120,
       },
       hitSchedule: [],
-      effectRefs: ['weapon-special:sample-special', 'critical-strike-chance:+100%'],
+      effectRefs: ['weapon-special:sample-special', 'critical-strike-chance:+100%', 'magic-critical-hit-adrenaline:+8%'],
       requires: {
         requiredEquipmentTags: ['equipped-effect:weapon-special-access', 'melee-dual-wield'],
         blockedEquipmentTags: ['ranged-two-handed'],
@@ -130,6 +130,56 @@ describe('game-data sample JSON validation', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('accepts supported planner placement lanes', () => {
+    const result = validateAbilityDefinition({
+      id: 'sample-utility',
+      name: 'Sample Utility',
+      style: 'magic',
+      subtype: 'utility',
+      cooldownTicks: 50,
+      baseDamage: {
+        min: 0,
+        max: 0,
+      },
+      hitSchedule: [],
+      plannerPlacement: {
+        allowedLanes: ['non-gcd'],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown planner placement lanes', () => {
+    const result = validateAbilityDefinition({
+      id: 'bad-utility',
+      name: 'Bad Utility',
+      style: 'magic',
+      subtype: 'utility',
+      cooldownTicks: 50,
+      baseDamage: {
+        min: 0,
+        max: 0,
+      },
+      hitSchedule: [],
+      plannerPlacement: {
+        allowedLanes: ['sideways'],
+      },
+    });
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'plannerPlacement.allowedLanes[0]',
+          }),
+        ]),
+      );
+    }
   });
 
   it('rejects unknown nested requirement tags', () => {

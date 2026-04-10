@@ -36,6 +36,7 @@ export interface DamageBreakdown {
   };
   derivedParts?: {
     inheritedTriggerDamage?: DamageSummary;
+    procEfficacy?: number;
   };
   percentageOfTotal?: number;
 }

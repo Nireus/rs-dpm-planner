@@ -356,6 +356,84 @@ describe('rotation planner inspection', () => {
     ]);
   });
 
+  it('shows Instability Lightning Surge proc efficacy in tick inspection', () => {
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 70, avg: 80, max: 90 },
+      damageByAbility: [],
+      damageByTick: {
+        4: { min: 70, avg: 80, max: 90 },
+      },
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [
+          {
+            abilityId: 'lightning-surge',
+            hitId: 'magic-action:lightning-surge:magic-hit',
+            tick: 4,
+            baseDamage: { min: 70, avg: 80, max: 90 },
+            additiveModifiers: [],
+            multiplicativeModifiers: [],
+            expectedValueModifiers: [],
+            finalDamage: { min: 70, avg: 80, max: 90 },
+            derivedParts: {
+              procEfficacy: 0.3,
+            },
+          },
+        ],
+      },
+      tickStates: Array.from({ length: 8 }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: [],
+        activeBuffIds: [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 4,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        ...ROTATION_PLAN,
+        tickCount: 8,
+        abilityActions: [
+          {
+            id: 'magic-action',
+            tick: 3,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'magic',
+            },
+          },
+        ],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.damageCalculations[0]?.abilityName).toBe('Lightning Surge');
+    expect(inspection.damageCalculations[0]?.expectedValueStep).toBe('Proc efficacy: 30%');
+  });
+
   it('projects configured gear swaps from the next tick onward', () => {
     const inspection = inspectRotationPlannerTick({
       tick: 2,

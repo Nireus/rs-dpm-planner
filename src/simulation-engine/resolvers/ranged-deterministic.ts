@@ -82,6 +82,10 @@ export function resolveDeterministicRangedTimeline(
     }
 
     const effectiveAbility = resolveEffectiveAbilityDefinition(config, action);
+    if (effectiveAbility?.style !== 'ranged') {
+      continue;
+    }
+
     applyAbilityTimelineEffects({
       config,
       action,

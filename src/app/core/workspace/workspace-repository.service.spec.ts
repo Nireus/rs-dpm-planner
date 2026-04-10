@@ -233,6 +233,9 @@ describe('WorkspaceRepositoryService', () => {
           nonGcdActions: [],
           abilityActions: [],
         },
+        simulationSettings: {
+          criticalHitResolutionMode: 'expected-value',
+        },
       }),
     );
 
@@ -247,5 +250,6 @@ describe('WorkspaceRepositoryService', () => {
     expect(repository.readPortableConfigDocument().rotationPlan.startingStacks).toEqual({
       deathsporeStacks: 7,
     });
+    expect(repository.readSimulationSettings().criticalHitResolutionMode).toBe('expected-value');
   });
 });

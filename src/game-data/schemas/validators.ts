@@ -162,6 +162,7 @@ export function validateAbilityDefinition(
   validateAbilityVariants(errors, input['variants'], 'variants');
   validateTimelineEffects(errors, input['timelineEffects'], 'timelineEffects');
   validateStackEffects(errors, input['stackEffects'], 'stackEffects');
+  validatePlannerPlacement(errors, input['plannerPlacement'], 'plannerPlacement');
   validateDisplayHints(errors, input['displayHints'], 'displayHints');
 
   if (errors.length > 0) {
@@ -655,6 +656,41 @@ function validateStackEffects(
 
     if (typeof entry['stacks'] !== 'number') {
       pushError(errors, `${effectPath}.stacks`, 'Expected "stacks" to be a number.');
+    }
+  });
+}
+
+function validatePlannerPlacement(
+  errors: GameDataValidationError[],
+  placementValue: unknown,
+  pathPrefix: string,
+): void {
+  if (placementValue === undefined) {
+    return;
+  }
+
+  if (!isRecord(placementValue)) {
+    pushError(errors, pathPrefix, `Expected "${pathPrefix}" to be an object.`);
+    return;
+  }
+
+  const allowedLanes = placementValue['allowedLanes'];
+  if (allowedLanes === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(allowedLanes)) {
+    pushError(errors, `${pathPrefix}.allowedLanes`, 'Expected "allowedLanes" to be an array.');
+    return;
+  }
+
+  allowedLanes.forEach((lane, index) => {
+    if (lane !== 'ability' && lane !== 'non-gcd') {
+      pushError(
+        errors,
+        `${pathPrefix}.allowedLanes[${index}]`,
+        'Expected lane to be "ability" or "non-gcd".',
+      );
     }
   });
 }

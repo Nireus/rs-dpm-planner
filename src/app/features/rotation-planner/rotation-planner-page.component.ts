@@ -14,6 +14,7 @@ import { GameDataStoreService } from '../../core/game-data/game-data-store.servi
 import { PlayerStatsStoreService } from '../../core/player-stats/player-stats-store.service';
 import { AbilityAvailabilityService } from '../../core/abilities/ability-availability.service';
 import { SimulationSessionService } from '../../core/simulation/simulation-session.service';
+import { SimulationSettingsStoreService } from '../../core/simulation/simulation-settings-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
 import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
@@ -48,6 +49,7 @@ import {
   type PlannerNonGcdTemplate,
   snapTickToAbilityWindowStart,
 } from './rotation-planner.utils';
+import { canPlaceAbilityOnPlannerLane } from './rotation-planner-placement';
 import {
   abilityDefinitionForAction,
   buildActionValidationSummaryByAction,
@@ -60,6 +62,7 @@ import {
   buildAbilityOccupancyMap,
   buildBuffBarTitle,
   buildBloodlustSpendMarkersByAction,
+  buildInstabilityProcMarkersByAction,
   buildPlacedAbilityMarkerLeft,
   buildCooldownBarTitle,
   buildPerfectEquilibriumProcMarkersByAction,
@@ -75,6 +78,7 @@ import {
   laneCellLabel,
   laneBarCopyTemplate,
   laneHeightRem,
+  INSTABILITY_ICON_PATH,
   PERFECT_EQUILIBRIUM_ICON_PATH,
   BLOODLUST_ICON_PATH,
   type AbilityOccupancyEntry,
@@ -82,6 +86,7 @@ import {
   type PlannerActionValidationSummary,
   type PlannerBloodlustSpendMarker,
   type PlannerGearSwapOption,
+  type PlannerInstabilityProcMarker,
   type PlannerLaneViewModel,
   type PlannerPerfectEquilibriumProcMarker,
   buildNonGcdIconPath,
@@ -134,6 +139,7 @@ export class RotationPlannerPageComponent {
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly abilityAvailabilityService = inject(AbilityAvailabilityService);
   private readonly resultsSimulationService = inject(SimulationSessionService);
+  private readonly simulationSettingsStore = inject(SimulationSettingsStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
   private readonly combatChoicesStore = inject(CombatChoicesStoreService);
@@ -168,6 +174,7 @@ export class RotationPlannerPageComponent {
     }),
   );
   protected readonly simulationResult = this.resultsSimulationService.simulationResult;
+  protected readonly simulationSettings = this.simulationSettingsStore.settings;
   protected readonly selectedTick = signal(0);
   protected readonly showCooldownLane = signal(false);
   protected readonly configurationPanelExpanded = signal(false);
@@ -393,6 +400,14 @@ export class RotationPlannerPageComponent {
     this.abilityCatalog(),
   ));
   protected readonly bloodlustIconPath = computed(() => BLOODLUST_ICON_PATH);
+  protected readonly instabilityProcMarkersByAction = computed<
+    Record<string, PlannerInstabilityProcMarker[]>
+  >(() => buildInstabilityProcMarkersByAction(
+    this.simulationResult(),
+    this.abilityActions(),
+    this.abilityCatalog(),
+  ));
+  protected readonly instabilityIconPath = computed(() => INSTABILITY_ICON_PATH);
   protected readonly nonGcdPaletteEntries = PLANNER_NON_GCD_TEMPLATES;
   protected readonly adrenalinePotionVariants = ADRENALINE_POTION_VARIANTS;
   protected readonly startingStackControls = computed(() => {
@@ -533,6 +548,10 @@ export class RotationPlannerPageComponent {
     this.showCooldownLane.set(value === true || value === 'true');
   }
 
+  protected updateCriticalHitResolutionMode(value: string | null): void {
+    this.simulationSettingsStore.updateCriticalHitResolutionMode(value);
+  }
+
   protected toggleConfigurationPanel(): void {
     this.configurationPanelExpanded.update((expanded) => !expanded);
   }
@@ -574,13 +593,17 @@ export class RotationPlannerPageComponent {
     const draggedAbility = this.draggedAbilityPayload;
     if (draggedAbility) {
       const definition = this.abilityCatalog()[draggedAbility.abilityId];
-      return Boolean(definition?.subtype === 'utility') && this.canPlaceUtilityAbilityOnNonGcd(definition, tickIndex);
+      if (!definition || !canPlaceAbilityOnPlannerLane(definition, 'non-gcd')) {
+        return false;
+      }
+
+      return this.canPlaceAbilityOnNonGcd(definition, tickIndex);
     }
 
     return Boolean(this.draggedNonGcdPayload) && this.plannerStore.canPlaceNonGcdActionAtTick(tickIndex);
   }
 
-  private canPlaceUtilityAbilityOnNonGcd(definition: AbilityDefinition, tickIndex: number): boolean {
+  private canPlaceAbilityOnNonGcd(definition: AbilityDefinition, tickIndex: number): boolean {
     if (!this.plannerStore.canPlaceNonGcdActionAtTick(tickIndex)) {
       return false;
     }
@@ -810,6 +833,23 @@ export class RotationPlannerPageComponent {
     );
   }
 
+  protected instabilityProcMarkers(
+    action: RotationAction,
+  ): PlannerInstabilityProcMarker[] {
+    return this.instabilityProcMarkersByAction()[action.id] ?? [];
+  }
+
+  protected instabilityProcLeft(
+    action: RotationAction,
+    marker: PlannerInstabilityProcMarker,
+  ): string {
+    return buildPlacedAbilityMarkerLeft(
+      action,
+      marker,
+      this.abilityDefinitionForAction(action),
+    );
+  }
+
   protected nonGcdShortLabel(action: RotationAction): string {
     if (action.actionType === 'ability-use') {
       return this.abilityDefinitionForAction(action)
@@ -956,11 +996,11 @@ export class RotationPlannerPageComponent {
     const draggedAbility = this.draggedAbilityPayload;
     if (draggedAbility) {
       const definition = this.abilityCatalog()[draggedAbility.abilityId];
-      if (!definition || definition.subtype !== 'utility') {
+      if (!definition || !canPlaceAbilityOnPlannerLane(definition, 'non-gcd')) {
         return;
       }
 
-      if (!this.canPlaceUtilityAbilityOnNonGcd(definition, tickIndex)) {
+      if (!this.canPlaceAbilityOnNonGcd(definition, tickIndex)) {
         this.showPlannerWarning(`Cannot place ${definition.name} on that tick.`);
         this.onAbilityDragEnd();
         return;
