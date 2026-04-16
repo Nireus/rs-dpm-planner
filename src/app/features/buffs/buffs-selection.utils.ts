@@ -58,6 +58,22 @@ export function buildMiscellaneousBuffOptions(buffDefinitions: readonly BuffDefi
   return buildBuffOptions(buffDefinitions).filter((definition) => definition.categoryLabel === 'Miscellaneous');
 }
 
+export function buildSummonOptions(buffDefinitions: readonly BuffDefinition[]): BuffSelectionOption[] {
+  return buffDefinitions
+    .filter((definition) => definition.category === 'summon')
+    .map((definition) => ({
+      id: definition.id,
+      name: definition.name,
+      kind: 'buff' as const,
+      categoryLabel: 'Summon',
+      description: formatBuffSource(definition),
+      iconPath: definition.iconPath,
+      wikiUrl: definition.wikiUrl,
+      detailLines: buildBuffDetailLines(definition),
+      effectRefs: definition.effectRefs,
+    }));
+}
+
 export function buildRelicOptions(relicDefinitions: readonly RelicDefinition[]): BuffSelectionOption[] {
   return relicDefinitions.map((definition) => ({
     id: definition.id,
@@ -148,6 +164,8 @@ function formatBuffCategory(category: BuffCategory): string {
       return 'Passive';
     case 'miscellaneous':
       return 'Miscellaneous';
+    case 'summon':
+      return 'Summon';
     default:
       return category;
   }
@@ -171,6 +189,10 @@ function formatBuffSource(definition: BuffDefinition): string {
     return definition.sourceType === 'player-config'
       ? 'Manual passive utility modifier.'
       : 'Miscellaneous persistent modifier.';
+  }
+
+  if (definition.category === 'summon') {
+    return 'Configured familiar or familiar scroll effect.';
   }
 
   return definition.sourceType === 'player-config'

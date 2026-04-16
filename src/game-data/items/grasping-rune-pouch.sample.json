@@ -1,0 +1,21 @@
+{
+  "id": "grasping-rune-pouch",
+  "name": "Grasping rune pouch",
+  "category": "armor",
+  "slot": "ammo",
+  "iconPath": "/icons/wiki/grasping-rune-pouch.png",
+  "wikiUrl": "https://runescape.wiki/w/Grasping_rune_pouch",
+  "hoverSummary": "Ammunition-slot rune pouch for Magic loadouts.",
+  "detailLines": [
+    "Requires level 85 Magic to equip.",
+    "Stores four rune types and has a 25% chance to save combat spell runes.",
+    "Rune storage and rune consumption are descriptive-only in the simulator for now."
+  ],
+  "combatStyleTags": ["magic"],
+  "requirements": {
+    "levelRequirements": {
+      "magic": 85
+    }
+  },
+  "implementationNotes": "Curated Magic ammo-slot item for BIS presets. Rune-saving behavior is not simulated until rune consumption exists."
+}

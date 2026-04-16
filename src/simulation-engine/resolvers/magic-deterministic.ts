@@ -1,6 +1,6 @@
 import type { AbilityDefinition, EntityId, HitDefinition } from '../../game-data/types';
-import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
-import type { SimulationConfig, TimelineGeneratedBuffSource } from '../models';
+import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
+import type { ItemInstanceConfig, SimulationConfig, TimelineGeneratedBuffSource } from '../models';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import {
   applyAbilityTimelineEffects,
@@ -26,6 +26,7 @@ export interface DeterministicMagicTimelineResult {
   resolvedAbilitiesByActionId: Record<string, AbilityDefinition>;
   actionCritChanceBonusByActionId: Record<string, number>;
   hitCritChanceBonusByActionId: Record<string, Record<string, number>>;
+  hitCritDamageBonusByActionId: Record<string, Record<string, number>>;
   hitExpectedCritChanceByActionId: Record<string, Record<string, number>>;
   notes: string[];
 }
@@ -40,6 +41,7 @@ export function resolveDeterministicMagicTimeline(
   const resolvedAbilitiesByActionId: Record<string, AbilityDefinition> = {};
   const actionCritChanceBonusByActionId: Record<string, number> = {};
   const hitCritChanceBonusByActionId: Record<string, Record<string, number>> = {};
+  const hitCritDamageBonusByActionId: Record<string, Record<string, number>> = {};
   const hitExpectedCritChanceByActionId: Record<string, Record<string, number>> = {};
   let nextMagicAbilityCostReduction: PendingMagicBuff | null = null;
   let nextMagicAbilityCritChanceBonus: PendingMagicBuff | null = null;
@@ -49,6 +51,8 @@ export function resolveDeterministicMagicTimeline(
   let essenceCorruptionStacks = 0;
   let essenceCorruptionExpiresAtTick = -1;
   let magicCriticalAccumulator = createChanceAccumulatorState();
+  let channellersRingCritChanceApplied = false;
+  let metaphysicsCritDamageApplied = false;
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
     if (blockedActionIds.has(action.id)) {
@@ -119,8 +123,16 @@ export function resolveDeterministicMagicTimeline(
     }
 
     const selfHitCritBonuses = resolveSelfHitCritBonuses(ability.id, ability.hitSchedule, animaChargedActive);
-    if (Object.keys(selfHitCritBonuses).length > 0) {
-      hitCritChanceBonusByActionId[action.id] = selfHitCritBonuses;
+    const channellersCritChanceBonuses = resolveChannellersRingHitCritChanceBonuses(projectedConfig, ability);
+    const channellersCritDamageBonuses = resolveChannellersRingHitCritDamageBonuses(config, action.tick, ability);
+    channellersRingCritChanceApplied = channellersRingCritChanceApplied || Object.keys(channellersCritChanceBonuses).length > 0;
+    metaphysicsCritDamageApplied = metaphysicsCritDamageApplied || Object.keys(channellersCritDamageBonuses).length > 0;
+    const hitCritChanceBonuses = mergeHitBonusMaps(selfHitCritBonuses, channellersCritChanceBonuses);
+    if (Object.keys(hitCritChanceBonuses).length > 0) {
+      hitCritChanceBonusByActionId[action.id] = hitCritChanceBonuses;
+    }
+    if (Object.keys(channellersCritDamageBonuses).length > 0) {
+      hitCritDamageBonusByActionId[action.id] = channellersCritDamageBonuses;
     }
 
     resolvedAbilitiesByActionId[action.id] = ability;
@@ -200,7 +212,7 @@ export function resolveDeterministicMagicTimeline(
         hitTick,
         buffTimeline,
         critBonusForAction,
-        selfHitCritBonuses[hit.id] ?? 0,
+        hitCritChanceBonuses[hit.id] ?? 0,
       );
       const criticalProcResult = resolveCriticalProcValue(config, magicCriticalAccumulator, expectedCritChance);
       magicCriticalAccumulator = criticalProcResult.nextAccumulator;
@@ -296,6 +308,7 @@ export function resolveDeterministicMagicTimeline(
     resolvedAbilitiesByActionId,
     actionCritChanceBonusByActionId,
     hitCritChanceBonusByActionId,
+    hitCritDamageBonusByActionId,
     hitExpectedCritChanceByActionId,
     notes: [
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('sunshine-buff') || buffIds.includes('greater-sunshine-buff'))
@@ -324,8 +337,109 @@ export function resolveDeterministicMagicTimeline(
       ...(Object.values(buffTimeline).some((buffIds) => buffIds.includes('essence-corruption'))
         ? ['Song of Destruction: Soulfire, Combust, and Corruption Blast now build Essence Corruption stacks; 10+ stacks add flat magic hit damage, 25+ stacks add basic-adrenaline flow, and the 30% immediate-proc/cooldown-reset effect remains descriptive-only for now.']
         : []),
+      ...(channellersRingCritChanceApplied
+        ? ["Channeller's ring: magic channelled hits gain stacking critical strike chance from Runic Embrace when the ring is equipped."]
+        : []),
+      ...(metaphysicsCritDamageApplied
+        ? ["Enchantment of metaphysics: after Channeller's ring has been equipped for 9 seconds, magic channelled hits gain stacking critical strike damage. This stacks with Runic Embrace for +6.5% combined crit contribution per hit step."]
+        : []),
     ],
   };
+}
+
+function resolveChannellersRingHitCritChanceBonuses(
+  projectedConfig: SimulationConfig,
+  ability: AbilityDefinition,
+): Record<string, number> {
+  if (!isMagicChanneledAbility(ability) || projectedConfig.gearSetup.equipment.ring?.definitionId !== 'channellers-ring') {
+    return {};
+  }
+
+  return Object.fromEntries(ability.hitSchedule.map((hit, index) => [hit.id, (index + 1) * 4]));
+}
+
+function resolveChannellersRingHitCritDamageBonuses(
+  config: SimulationConfig,
+  actionTick: number,
+  ability: AbilityDefinition,
+): Record<string, number> {
+  if (!isMagicChanneledAbility(ability)) {
+    return {};
+  }
+
+  const castProjectedConfig = projectSimulationConfigAtTick(config, actionTick);
+  const castRing = castProjectedConfig.gearSetup.equipment.ring;
+  if (
+    castRing?.definitionId !== 'channellers-ring' ||
+    castRing.configValues?.[CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted] !== true
+  ) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    ability.hitSchedule
+      .map((hit, index): [string, number] | null => {
+        const hitTick = actionTick + hit.tickOffset;
+        const projectedConfig = projectSimulationConfigAtTick(config, hitTick);
+        const ring = projectedConfig.gearSetup.equipment.ring;
+        if (
+          ring?.definitionId !== 'channellers-ring' ||
+          ring.configValues?.[CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted] !== true
+        ) {
+          return null;
+        }
+
+        const equippedAtTick = resolveChannellersRingEquippedAtTick(config, hitTick);
+        if (equippedAtTick === null || hitTick - equippedAtTick < 15) {
+          return null;
+        }
+
+        return [hit.id, (index + 1) * 2.5];
+      })
+      .filter((entry): entry is [string, number] => Boolean(entry)),
+  );
+}
+
+function isMagicChanneledAbility(ability: AbilityDefinition): boolean {
+  return ability.style === 'magic' && ability.isChanneled === true;
+}
+
+function resolveChannellersRingEquippedAtTick(config: SimulationConfig, hitTick: number): number | null {
+  const projectedConfig = projectSimulationConfigAtTick(config, hitTick);
+  if (projectedConfig.gearSetup.equipment.ring?.definitionId !== 'channellers-ring') {
+    return null;
+  }
+
+  const knownInstances = [
+    ...Object.values(config.gearSetup.equipment).filter((instance): instance is ItemInstanceConfig => Boolean(instance)),
+    ...config.inventory.items,
+  ];
+  const lastRingSwap = [...config.rotationPlan.nonGcdActions]
+    .filter((action) => action.actionType === 'gear-swap' && action.tick < hitTick && action.payload['slot'] === 'ring')
+    .sort((left, right) => right.tick - left.tick)
+    .find((action) => {
+      const instanceId = action.payload['instanceId'];
+      return typeof instanceId === 'string' &&
+        knownInstances.find((instance) => instance.instanceId === instanceId)?.definitionId === 'channellers-ring';
+    });
+
+  if (lastRingSwap) {
+    return lastRingSwap.tick + 1;
+  }
+
+  return config.gearSetup.equipment.ring?.definitionId === 'channellers-ring' ? 0 : null;
+}
+
+function mergeHitBonusMaps(
+  left: Record<string, number>,
+  right: Record<string, number>,
+): Record<string, number> {
+  const merged = { ...left };
+  for (const [hitId, value] of Object.entries(right)) {
+    merged[hitId] = (merged[hitId] ?? 0) + value;
+  }
+
+  return merged;
 }
 
 function resolveSelfHitCritBonuses(

@@ -6,6 +6,7 @@ import { WorkspaceRepositoryService } from '../workspace/workspace-repository.se
 const DEFAULT_STATE: BuffSelectionState = {
   activeBuffIds: [],
   activeRelicIds: [],
+  activeSummonIds: [],
   activePocketItemIds: [],
 };
 
@@ -18,6 +19,7 @@ export class BuffConfigurationStoreService {
   readonly state = signal<BuffSelectionState>(this.workspaceRepository.readBuffSelectionState());
   readonly activeBuffIds = computed(() => this.state().activeBuffIds);
   readonly activeRelicIds = computed(() => this.state().activeRelicIds);
+  readonly activeSummonIds = computed(() => this.state().activeSummonIds);
   readonly activePocketItemIds = computed(() => this.state().activePocketItemIds);
 
   constructor() {
@@ -45,6 +47,13 @@ export class BuffConfigurationStoreService {
     }));
   }
 
+  activateSummon(summonId: string): void {
+    this.state.update((current) => ({
+      ...current,
+      activeSummonIds: (current.activeSummonIds ?? []).includes(summonId) ? [] : [summonId],
+    }));
+  }
+
   togglePocketItem(itemId: string): void {
     this.state.update((current) => ({
       ...current,
@@ -68,6 +77,7 @@ export class BuffConfigurationStoreService {
     this.state.set({
       activeBuffIds: [...state.activeBuffIds],
       activeRelicIds: [...state.activeRelicIds],
+      activeSummonIds: [...(state.activeSummonIds ?? [])],
       activePocketItemIds: [...state.activePocketItemIds],
     });
   }

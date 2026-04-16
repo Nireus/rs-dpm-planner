@@ -9,6 +9,7 @@ export function calculatePersistentOffensiveStatBonus(
     ...(config.persistentBuffConfig.prayerIds ?? []),
     ...(config.persistentBuffConfig.potionIds ?? []),
     ...(config.persistentBuffConfig.buffIds ?? []),
+    ...(config.persistentBuffConfig.summonIds ?? []),
   ]
     .flatMap((buffId) => config.gameData.buffs[buffId]?.effectRefs ?? [])
     .reduce((total, effectRef) => total + parseOffensiveStatBonus(effectRef, style), 0);

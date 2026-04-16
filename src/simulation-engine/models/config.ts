@@ -54,6 +54,7 @@ export interface PersistentBuffConfig {
   potionIds?: EntityId[];
   relicIds?: EntityId[];
   buffIds?: EntityId[];
+  summonIds?: EntityId[];
   pocketEffectItemIds?: EntityId[];
 }
 

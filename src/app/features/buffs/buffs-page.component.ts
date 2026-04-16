@@ -9,6 +9,7 @@ import {
   activateExclusivePotion,
   buildBuffOptions,
   buildMiscellaneousBuffOptions,
+  buildSummonOptions,
   calculateRelicEnergy,
   buildPotionOptions,
   buildPrayerOptions,
@@ -65,6 +66,9 @@ export class BuffsPageComponent {
   protected readonly miscellaneousBuffOptions = computed(() =>
     buildMiscellaneousBuffOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
   );
+  protected readonly summonOptions = computed(() =>
+    buildSummonOptions(Object.values(this.gameDataStore.snapshot().catalog?.buffs ?? {})),
+  );
   protected readonly relicOptions = computed(() =>
     buildRelicOptions(Object.values(this.gameDataStore.snapshot().catalog?.relics ?? {})),
   );
@@ -93,6 +97,7 @@ export class BuffsPageComponent {
   protected readonly activeIds = computed(() => ({
     buffs: new Set(this.buffConfigurationStore.activeBuffIds()),
     relics: new Set(this.buffConfigurationStore.activeRelicIds()),
+    summons: new Set(this.buffConfigurationStore.activeSummonIds()),
     pockets: new Set(this.buffConfigurationStore.activePocketItemIds()),
   }));
   protected readonly validationMessage = signal<string | null>(null);
@@ -125,6 +130,12 @@ export class BuffsPageComponent {
         showCategoryLabel: false,
       },
       {
+        key: 'summons',
+        label: 'Summons',
+        options: this.summonOptions(),
+        showCategoryLabel: false,
+      },
+      {
         key: 'relics',
         label: 'Relics',
         options: this.relicOptions(),
@@ -151,6 +162,7 @@ export class BuffsPageComponent {
 
     return [
       ...this.buffOptions().filter((option) => active.buffs.has(option.id)),
+      ...this.summonOptions().filter((option) => active.summons.has(option.id)),
       ...this.relicOptions().filter((option) => active.relics.has(option.id)),
     ];
   });
@@ -168,6 +180,11 @@ export class BuffsPageComponent {
 
     switch (option.kind) {
       case 'buff':
+        if (option.categoryLabel === 'Summon') {
+          this.buffConfigurationStore.activateSummon(option.id);
+          return;
+        }
+
         if (option.categoryLabel === 'Potion' && !this.activeIds().buffs.has(option.id)) {
           const nextBuffIds = activateExclusivePotion(
             this.buffConfigurationStore.activeBuffIds(),
@@ -329,7 +346,9 @@ export class BuffsPageComponent {
 
     switch (option.kind) {
       case 'buff':
-        return active.buffs.has(option.id);
+        return option.categoryLabel === 'Summon'
+          ? active.summons.has(option.id)
+          : active.buffs.has(option.id);
       case 'relic':
         return active.relics.has(option.id);
       case 'pocket':
@@ -380,6 +399,7 @@ export class BuffsPageComponent {
 
     const allOptions = [
       ...this.buffOptions(),
+      ...this.summonOptions(),
       ...this.relicOptions(),
     ];
 

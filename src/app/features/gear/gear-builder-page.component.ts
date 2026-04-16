@@ -5,10 +5,12 @@ import type { EquipmentSlot, ItemDefinition, PerkDefinition } from '../../../gam
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { findGenesisUnlockGroup } from '../../../simulation-engine/gear/configured-equipment-definition';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
+import { CombatChoicesStoreService } from '../../core/combat-choices/combat-choices-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { RotationPlannerStore } from '../../core/rotation-planner/rotation-planner.store';
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
+import { MAGIC_BIS_BUFF_SELECTION } from '../../core/gear/magic-bis-preset';
 import { RANGED_BIS_BUFF_SELECTION } from '../../core/gear/ranged-bis-preset';
 import {
   GEAR_CATALOG_TABS,
@@ -42,9 +44,12 @@ export class GearBuilderPageComponent {
     '/icons/wiki/shard-of-genesis-essence.png';
   private readonly shadowsEnchantmentIconPath =
     'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
+  private readonly metaphysicsEnchantmentIconPath =
+    '/icons/wiki/enchantment-of-metaphysics.png';
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly combatChoicesStore = inject(CombatChoicesStoreService);
   private readonly rotationPlannerStore = inject(RotationPlannerStore);
 
   protected readonly query = signal('');
@@ -57,6 +62,7 @@ export class GearBuilderPageComponent {
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly selectedInstanceId = signal<string | null>(null);
   protected readonly bisRangedDialogOpen = signal(false);
+  protected readonly bisMagicDialogOpen = signal(false);
   protected readonly bisRemoveCurrentGear = signal(false);
   protected readonly bisClearRotationPlanner = signal(false);
   protected readonly bisUseBuffs = signal(true);
@@ -132,6 +138,17 @@ export class GearBuilderPageComponent {
     this.bisRangedDialogOpen.set(false);
   }
 
+  protected openBisMagicDialog(): void {
+    this.bisRemoveCurrentGear.set(false);
+    this.bisClearRotationPlanner.set(false);
+    this.bisUseBuffs.set(true);
+    this.bisMagicDialogOpen.set(true);
+  }
+
+  protected closeBisMagicDialog(): void {
+    this.bisMagicDialogOpen.set(false);
+  }
+
   protected applyBisRangedPreset(): void {
     this.gearBuilderStore.applyRangedBestInSlotPreset(this.bisRemoveCurrentGear());
 
@@ -139,6 +156,7 @@ export class GearBuilderPageComponent {
       this.buffConfigurationStore.replaceSelections({
         activeBuffIds: [...RANGED_BIS_BUFF_SELECTION.activeBuffIds],
         activeRelicIds: [...RANGED_BIS_BUFF_SELECTION.activeRelicIds],
+        activeSummonIds: [...RANGED_BIS_BUFF_SELECTION.activeSummonIds],
         activePocketItemIds: [...RANGED_BIS_BUFF_SELECTION.activePocketItemIds],
       });
     }
@@ -151,6 +169,34 @@ export class GearBuilderPageComponent {
     this.selectedInstanceId.set(null);
     this.closeBisRangedDialog();
     this.dragHint.set('Loaded ranged best-in-slot gear.');
+  }
+
+  protected applyBisMagicPreset(): void {
+    this.gearBuilderStore.applyMagicBestInSlotPreset(this.bisRemoveCurrentGear());
+    this.combatChoicesStore.loadCombatChoices({
+      magic: {
+        spellbookId: 'ancient',
+        activeSpellId: 'incite-fear',
+      },
+    });
+
+    if (this.bisUseBuffs()) {
+      this.buffConfigurationStore.replaceSelections({
+        activeBuffIds: [...MAGIC_BIS_BUFF_SELECTION.activeBuffIds],
+        activeRelicIds: [...MAGIC_BIS_BUFF_SELECTION.activeRelicIds],
+        activeSummonIds: [...MAGIC_BIS_BUFF_SELECTION.activeSummonIds],
+        activePocketItemIds: [...MAGIC_BIS_BUFF_SELECTION.activePocketItemIds],
+      });
+    }
+
+    if (this.bisClearRotationPlanner()) {
+      this.rotationPlannerStore.clearPlannedActions();
+    }
+
+    this.selectedItemId.set(null);
+    this.selectedInstanceId.set(null);
+    this.closeBisMagicDialog();
+    this.dragHint.set('Loaded magic best-in-slot gear.');
   }
 
   protected openCatalogDetail(item: ItemDefinition | null): void {
@@ -372,6 +418,11 @@ export class GearBuilderPageComponent {
       instance.configValues?.[CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted] === true;
   }
 
+  protected hasChannellersRingMetaphysicsEnchantment(instance: ItemInstanceConfig | null): boolean {
+    return instance?.definitionId === 'channellers-ring' &&
+      instance.configValues?.[CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted] === true;
+  }
+
   protected quiverAmmoIcon(
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
@@ -482,6 +533,10 @@ export class GearBuilderPageComponent {
 
   protected shadowsEnchantmentIcon(): string {
     return this.shadowsEnchantmentIconPath;
+  }
+
+  protected metaphysicsEnchantmentIcon(): string {
+    return this.metaphysicsEnchantmentIconPath;
   }
 
   protected supportsPerks(item: ItemDefinition): boolean {

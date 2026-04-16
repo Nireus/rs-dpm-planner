@@ -1,0 +1,19 @@
+{
+  "id": "legatuss-emberstaff-eof",
+  "name": "Legatus's Emberstaff (EOF)",
+  "iconPath": "/icons/wiki/legatuss-emberstaff.png",
+  "hoverSummary": "EOF special | -35% adrenaline | 1 hit",
+  "detailLines": [
+    "Stored Legatus's Emberstaff special attack for Essence of Finality.",
+    "Strikes for 240%-280% ability damage.",
+    "The missing-life damage bonus is intentionally not simulated yet."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Legatus%27s_Emberstaff",
+  "weaponOrigin": "legatuss-emberstaff",
+  "abilityId": "legatuss-emberstaff-eof",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:legatuss-emberstaff"]
+  },
+  "effectRefs": ["eof-legatuss-emberstaff-spec"],
+  "description": "Stored Legatus's Emberstaff special attack for Essence of Finality."
+}

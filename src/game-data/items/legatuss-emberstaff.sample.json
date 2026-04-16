@@ -1,0 +1,29 @@
+{
+  "id": "legatuss-emberstaff",
+  "name": "Legatus's Emberstaff",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "/icons/wiki/legatuss-emberstaff.png",
+  "wikiUrl": "https://runescape.wiki/w/Legatus%27s_Emberstaff",
+  "hoverSummary": "Tier 90 two-handed magic staff with The Last Command special attack.",
+  "detailLines": [
+    "Requires level 90 Magic to wield.",
+    "Special attack: The Last Command costs 35% adrenaline and deals 240%-280% ability damage.",
+    "The live missing-life damage bonus is intentionally left as a TODO until target life percentage support exists."
+  ],
+  "combatStyleTags": ["magic"],
+  "tier": 90,
+  "offensiveStats": {
+    "damageTier": 90,
+    "accuracyTier": 90
+  },
+  "requirements": {
+    "levelRequirements": {
+      "magic": 90
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:the-last-command"],
+  "specialAbilityId": "legatuss-emberstaff-eof",
+  "equipBehavior": "two-handed",
+  "implementationNotes": "Missing target-life bonus from The Last Command is a TODO pending target life percentage modeling."
+}

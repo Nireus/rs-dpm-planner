@@ -3,114 +3,99 @@ import type { EquipmentSlot } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import type { GearBuilderState } from './gear-state';
 
-export interface RangedBisPresetApplicationOptions {
+export interface MagicBisPresetApplicationOptions {
   removeCurrentGear: boolean;
 }
 
-export interface RangedBisPresetApplicationResult {
+export interface MagicBisPresetApplicationResult {
   state: GearBuilderState;
   nextInstanceId: number;
 }
 
-export const RANGED_BIS_BUFF_SELECTION = {
-  activeBuffIds: ['desolation', 'warped-gem', 'reaper-crew', 'overload-tier-17-5'],
-  activeRelicIds: ['conservation-of-energy', 'fury-of-the-small', 'death-ward'],
-  activeSummonIds: ['ripper-demon'],
+export const MAGIC_BIS_BUFF_SELECTION = {
+  activeBuffIds: ['affliction', 'warped-gem', 'reaper-crew', 'overload-tier-17-5'],
+  activeRelicIds: ['conservation-of-energy', 'berserkers-fury'],
+  activeSummonIds: ['kalgerion-demon'],
   activePocketItemIds: [],
 } as const;
 
-export function applyRangedBisPresetToGearState(
+export function applyMagicBisPresetToGearState(
   current: GearBuilderState,
   nextInstanceId: number,
-  options: RangedBisPresetApplicationOptions,
-): RangedBisPresetApplicationResult {
+  options: MagicBisPresetApplicationOptions,
+): MagicBisPresetApplicationResult {
   const factory = createInstanceFactory(nextInstanceId);
   const equipment: Partial<Record<EquipmentSlot, ItemInstanceConfig>> = {
-    weapon: factory('bolg', {
+    weapon: factory('fractured-staff-of-armadyl', {
       configValues: {
         [CONFIG_OPTION_IDS.genesisEnchanted]: true,
       },
       configuredPerks: [
         { socketIndex: 0, perkId: 'precise', rank: 6 },
-        { socketIndex: 0, perkId: 'caroming', rank: 1 },
+        { socketIndex: 0, perkId: 'ultimatums', rank: 4 },
         { socketIndex: 1, perkId: 'aftershock', rank: 4 },
         { socketIndex: 1, perkId: 'eruptive', rank: 2 },
       ],
     }),
-    head: factory('elite-dracolich-helm'),
-    body: factory('elite-dracolich-hauberk', {
+    head: factory('mask-of-tumekens-resplendence'),
+    body: factory('robe-top-of-tumekens-resplendence', {
       configuredPerks: [
         { socketIndex: 0, perkId: 'relentless', rank: 5 },
         { socketIndex: 0, perkId: 'crackling', rank: 4 },
         { socketIndex: 1, perkId: 'biting', rank: 4 },
       ],
     }),
-    legs: factory('elite-dracolich-chaps', {
+    legs: factory('robe-bottom-of-tumekens-resplendence', {
       configuredPerks: [
         { socketIndex: 0, perkId: 'impatient', rank: 4 },
         { socketIndex: 0, perkId: 'devoted', rank: 4 },
-        { socketIndex: 1, perkId: 'ultimatums', rank: 4 },
+        { socketIndex: 1, perkId: 'energising', rank: 4 },
+        { socketIndex: 1, perkId: 'invigorating', rank: 3 },
       ],
     }),
-    hands: factory('elite-dracolich-vambraces'),
-    feet: factory('elite-dracolich-boots'),
+    hands: factory('gloves-of-tumekens-resplendence'),
+    feet: factory('boots-of-tumekens-resplendence'),
+    ring: factory('channellers-ring', {
+      configValues: {
+        [CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted]: true,
+      },
+    }),
     amulet: factory('essence-of-finality', {
       configValues: {
-        'applied-dye': 'yellow',
-        [CONFIG_OPTION_IDS.storedSpecial]: 'eldritch-crossbow',
+        'applied-dye': 'black',
+        [CONFIG_OPTION_IDS.storedSpecial]: 'ibans-staff',
       },
     }),
-    ring: factory('stalkers-ring', {
-      configValues: {
-        [CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted]: true,
-      },
-    }),
-    pocket: factory('scripture-of-ful'),
     cape: factory('igneous-kal-zuk'),
-    ammo: factory('pernixs-quiver', {
-      configValues: {
-        [CONFIG_OPTION_IDS.loadedAmmo]: 'deathspore-arrows',
-        'applied-dye': 'yellow',
-      },
-    }),
+    pocket: factory('erethdors-grimoire'),
+    ammo: factory('grasping-rune-pouch'),
   };
   const presetInventory = [
-    factory('pernixs-quiver', {
+    factory('roar-of-awakening', {
+      configuredPerks: [
+        { socketIndex: 0, perkId: 'caroming', rank: 4 },
+        { socketIndex: 0, perkId: 'aftershock', rank: 1 },
+      ],
+    }),
+    factory('ode-to-deceit', {
+      configuredPerks: [
+        { socketIndex: 0, perkId: 'lunging', rank: 4 },
+        { socketIndex: 0, perkId: 'eruptive', rank: 2 },
+      ],
+    }),
+    factory('essence-of-finality', {
       configValues: {
-        [CONFIG_OPTION_IDS.loadedAmmo]: 'ful-arrows',
         'applied-dye': 'red',
+        [CONFIG_OPTION_IDS.storedSpecial]: 'legatuss-emberstaff',
       },
     }),
-    factory('pernixs-quiver', {
+    factory('essence-of-finality', {
       configValues: {
-        [CONFIG_OPTION_IDS.loadedAmmo]: 'wen-arrows',
-        'applied-dye': 'blue',
-      },
-    }),
-    factory('pernixs-quiver', {
-      configValues: {
-        [CONFIG_OPTION_IDS.loadedAmmo]: 'jas-dragonbane-arrows',
         'applied-dye': 'purple',
+        [CONFIG_OPTION_IDS.storedSpecial]: 'guthix-staff',
       },
     }),
-    factory('essence-of-finality', {
-      configValues: {
-        'applied-dye': 'blue',
-        [CONFIG_OPTION_IDS.storedSpecial]: 'seren-godbow',
-      },
-    }),
-    factory('essence-of-finality', {
-      configValues: {
-        'applied-dye': 'green',
-        [CONFIG_OPTION_IDS.storedSpecial]: 'dark-bow',
-      },
-    }),
-    factory('essence-of-finality', {
-      configValues: {
-        'applied-dye': 'pink',
-        [CONFIG_OPTION_IDS.storedSpecial]: 'gloomfire-bow',
-      },
-    }),
+    factory('reavers-ring'),
   ];
   const preservedInventory = options.removeCurrentGear
     ? []

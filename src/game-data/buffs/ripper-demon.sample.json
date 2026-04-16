@@ -1,0 +1,11 @@
+{
+  "id": "ripper-demon",
+  "name": "Ripper Demon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Binding_contract_%28ripper_demon%29.png",
+  "wikiUrl": "https://runescape.wiki/w/Ripper_Demon_(familiar)",
+  "category": "summon",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "effectRefs": ["ripper-demon"],
+  "displayPriority": 10
+}

@@ -1,0 +1,9 @@
+{
+  "id": "lunging",
+  "name": "Lunging",
+  "iconPath": "/icons/wiki/lunging.png",
+  "maxRank": 4,
+  "shortCode": "Lu",
+  "effectRefs": ["lunging"],
+  "description": "Increases Combust and Dismember damage. Display/config only for now."
+}

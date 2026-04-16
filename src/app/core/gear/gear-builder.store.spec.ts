@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GearBuilderState } from './gear-state';
 import { syncGenesisConfigAcrossUnlockGroup } from './gear-builder.store';
+import { applyMagicBisPresetToGearState } from './magic-bis-preset';
 import { applyRangedBisPresetToGearState } from './ranged-bis-preset';
 
 describe('syncGenesisConfigAcrossUnlockGroup', () => {
@@ -25,6 +26,76 @@ describe('syncGenesisConfigAcrossUnlockGroup', () => {
 
     expect(result.equipment.weapon?.configValues?.['genesis-enchanted']).toBe(true);
     expect(result.inventory[0]?.configValues?.['genesis-enchanted']).toBe(true);
+  });
+});
+
+describe('applyMagicBisPresetToGearState', () => {
+  it('moves equipped items to backpack and appends Magic BIS gear when preserving current gear', () => {
+    const current: GearBuilderState = {
+      equipment: {
+        weapon: {
+          instanceId: 'old-weapon',
+          definitionId: 'obliteration',
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'old-backpack',
+          definitionId: 'scripture-of-jas',
+        },
+      ],
+    };
+
+    const result = applyMagicBisPresetToGearState(current, 20, { removeCurrentGear: false });
+
+    expect(result.state.equipment.weapon?.definitionId).toBe('fractured-staff-of-armadyl');
+    expect(result.state.equipment.weapon?.instanceId).toBe('gear-item-20');
+    expect(result.state.equipment.weapon?.configValues?.['genesis-enchanted']).toBe(true);
+    expect(result.state.equipment.ring?.definitionId).toBe('channellers-ring');
+    expect(result.state.equipment.ring?.configValues?.['channellers-ring-metaphysics-enchanted']).toBe(true);
+    expect(result.state.equipment.amulet?.configValues).toMatchObject({
+      'applied-dye': 'black',
+      'stored-special': 'ibans-staff',
+    });
+    expect(result.state.equipment.ammo?.definitionId).toBe('grasping-rune-pouch');
+    expect(result.state.inventory.map((item) => item.instanceId).slice(0, 2)).toEqual([
+      'old-weapon',
+      'old-backpack',
+    ]);
+    expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'legatuss-emberstaff')).toBe(true);
+    expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'guthix-staff')).toBe(true);
+    expect(result.nextInstanceId).toBe(36);
+  });
+
+  it('replaces current gear and backpack when loading Magic BIS destructively', () => {
+    const current: GearBuilderState = {
+      equipment: {
+        weapon: {
+          instanceId: 'old-weapon',
+          definitionId: 'obliteration',
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'old-backpack',
+          definitionId: 'scripture-of-jas',
+        },
+      ],
+    };
+
+    const result = applyMagicBisPresetToGearState(current, 1, { removeCurrentGear: true });
+
+    expect(Object.values(result.state.equipment).some((item) => item?.instanceId === 'old-weapon')).toBe(false);
+    expect(result.state.inventory.some((item) => item.instanceId === 'old-backpack')).toBe(false);
+    expect(result.state.inventory).toHaveLength(5);
+    expect(result.state.equipment.legs?.configuredPerks).toEqual(
+      expect.arrayContaining([
+        { socketIndex: 0, perkId: 'impatient', rank: 4 },
+        { socketIndex: 0, perkId: 'devoted', rank: 4 },
+        { socketIndex: 1, perkId: 'energising', rank: 4 },
+        { socketIndex: 1, perkId: 'invigorating', rank: 3 },
+      ]),
+    );
   });
 });
 

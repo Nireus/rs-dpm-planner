@@ -85,6 +85,7 @@ describe('WorkspaceRepositoryService', () => {
     expect(repository.readBuffSelectionState()).toEqual({
       activeBuffIds: ['rigour'],
       activeRelicIds: ['fury-of-the-small'],
+      activeSummonIds: [],
       activePocketItemIds: ['scripture-of-jas'],
     });
     expect(repository.readRotationPlannerState()).toEqual({
@@ -183,6 +184,7 @@ describe('WorkspaceRepositoryService', () => {
     expect(storedWorkspace.appState.buffSelection).toEqual({
       activeBuffIds: ['rigour'],
       activeRelicIds: ['fury-of-the-small'],
+      activeSummonIds: [],
       activePocketItemIds: ['scripture-of-jas'],
     });
     expect(storedWorkspace.portableConfig.persistentBuffConfig).toEqual({
@@ -190,6 +192,7 @@ describe('WorkspaceRepositoryService', () => {
       potionIds: [],
       relicIds: ['fury-of-the-small'],
       buffIds: [],
+      summonIds: [],
       pocketEffectItemIds: ['scripture-of-jas'],
     });
   });
@@ -244,6 +247,7 @@ describe('WorkspaceRepositoryService', () => {
     expect(workspaceDocument.appState.buffSelection).toEqual({
       activeBuffIds: ['rigour'],
       activeRelicIds: ['fury-of-the-small'],
+      activeSummonIds: [],
       activePocketItemIds: ['scripture-of-jas'],
     });
     expect(repository.readPortableConfigDocument().rotationPlan.tickCount).toBe(84);

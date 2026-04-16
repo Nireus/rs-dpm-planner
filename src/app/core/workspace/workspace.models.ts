@@ -91,6 +91,8 @@ export function isWorkspaceDocument(value: unknown): value is WorkspaceDocument 
     typeof candidate.appState.gearBuilder.nextInstanceId === 'number' &&
     Array.isArray(candidate.appState.buffSelection?.activeBuffIds) &&
     Array.isArray(candidate.appState.buffSelection?.activeRelicIds) &&
+    (candidate.appState.buffSelection.activeSummonIds === undefined ||
+      Array.isArray(candidate.appState.buffSelection.activeSummonIds)) &&
     Array.isArray(candidate.appState.buffSelection?.activePocketItemIds)
   );
 }

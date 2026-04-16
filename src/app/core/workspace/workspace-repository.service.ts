@@ -87,13 +87,15 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
   readBuffSelectionState(): BuffSelectionState {
     const document = this.readWorkspaceDocumentFromStorage();
     if (document) {
-      return document.appState.buffSelection
-        ?? buildBuffSelectionStateFromPersistentConfig(document.portableConfig.persistentBuffConfig);
+      return normalizeBuffSelectionState(
+        document.appState.buffSelection
+          ?? buildBuffSelectionStateFromPersistentConfig(document.portableConfig.persistentBuffConfig),
+      );
     }
 
-    return (
+    return normalizeBuffSelectionState((
       this.readLegacyJson(LEGACY_BUFF_CONFIGURATION_STORAGE_KEY) as BuffSelectionState | null
-    ) ?? buildBuffSelectionStateFromPersistentConfig(DEFAULT_WORKSPACE_DOCUMENT.portableConfig.persistentBuffConfig);
+    ) ?? buildBuffSelectionStateFromPersistentConfig(DEFAULT_WORKSPACE_DOCUMENT.portableConfig.persistentBuffConfig));
   }
 
   readRotationPlannerState(): RotationPlannerWorkspaceState {
@@ -195,6 +197,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         buffSelection: {
           activeBuffIds: [...selection.activeBuffIds],
           activeRelicIds: [...selection.activeRelicIds],
+          activeSummonIds: [...(selection.activeSummonIds ?? [])],
           activePocketItemIds: [...selection.activePocketItemIds],
         },
       },
@@ -311,9 +314,10 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         gearBuilder: {
           nextInstanceId: gearBuilder.nextInstanceId,
         },
-        buffSelection:
+        buffSelection: normalizeBuffSelectionState(
           buffSelection
-          ?? buildBuffSelectionStateFromPersistentConfig(DEFAULT_WORKSPACE_DOCUMENT.portableConfig.persistentBuffConfig),
+            ?? buildBuffSelectionStateFromPersistentConfig(DEFAULT_WORKSPACE_DOCUMENT.portableConfig.persistentBuffConfig),
+        ),
       },
     };
   }
@@ -330,8 +334,8 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         gearBuilder: {
           nextInstanceId: deriveNextInstanceIdFromPortableConfig(portableConfig),
         },
-        buffSelection: buildBuffSelectionStateFromPersistentConfig(
-          portableConfig.persistentBuffConfig,
+        buffSelection: normalizeBuffSelectionState(
+          buildBuffSelectionStateFromPersistentConfig(portableConfig.persistentBuffConfig),
         ),
       },
     };
@@ -343,6 +347,15 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
     window.localStorage.removeItem(LEGACY_PLAYER_STATS_STORAGE_KEY);
     window.localStorage.removeItem(LEGACY_ROTATION_PLANNER_STORAGE_KEY);
   }
+}
+
+function normalizeBuffSelectionState(selection: BuffSelectionState): BuffSelectionState {
+  return {
+    activeBuffIds: [...(selection.activeBuffIds ?? [])],
+    activeRelicIds: [...(selection.activeRelicIds ?? [])],
+    activeSummonIds: [...(selection.activeSummonIds ?? [])],
+    activePocketItemIds: [...(selection.activePocketItemIds ?? [])],
+  };
 }
 
 function deriveNextInstanceIdFromPortableConfig(portableConfig: PortableConfigDocument): number {

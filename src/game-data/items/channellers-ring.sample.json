@@ -15,5 +15,14 @@
   "offensiveStats": {
     "magicBonus": 34.5
   },
+  "effectRefs": ["channellers-ring-runic-embrace"],
+  "configOptions": [
+    {
+      "id": "channellers-ring-metaphysics-enchanted",
+      "label": "Metaphysics enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
   "implementationNotes": "Curated magic ring from the live Channeller's ring page. Wiki-verified with Playwright for style bonus and Runic Embrace passive text."
 }

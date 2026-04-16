@@ -112,12 +112,14 @@ class MockGearBuilderStore {
 class MockBuffConfigurationStoreService {
   readonly activeBuffIds = signal<string[]>([]);
   readonly activeRelicIds = signal<string[]>([]);
+  readonly activeSummonIds = signal<string[]>([]);
   readonly activePocketItemIds = signal<string[]>([]);
 
   state() {
     return {
       activeBuffIds: this.activeBuffIds(),
       activeRelicIds: this.activeRelicIds(),
+      activeSummonIds: this.activeSummonIds(),
       activePocketItemIds: this.activePocketItemIds(),
     };
   }

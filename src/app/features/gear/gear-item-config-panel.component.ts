@@ -24,6 +24,8 @@ export class GearItemConfigPanelComponent {
     '/icons/wiki/shard-of-genesis-essence.png';
   private readonly shadowsEnchantmentIconPath =
     'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
+  private readonly metaphysicsEnchantmentIconPath =
+    '/icons/wiki/enchantment-of-metaphysics.png';
   private readonly dyeIconPaths: Record<string, string> = {
     red: '/icons/wiki/red-dye.png',
     orange: '/icons/wiki/orange-dye.png',
@@ -172,6 +174,10 @@ export class GearItemConfigPanelComponent {
     return optionId === CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted;
   }
 
+  isChannellersRingMetaphysicsOption(optionId: string): boolean {
+    return optionId === CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted;
+  }
+
   isDyeOption(optionId: string): boolean {
     return optionId === 'applied-dye';
   }
@@ -182,6 +188,10 @@ export class GearItemConfigPanelComponent {
 
   shadowsEnchantmentIcon(): string {
     return this.shadowsEnchantmentIconPath;
+  }
+
+  metaphysicsEnchantmentIcon(): string {
+    return this.metaphysicsEnchantmentIconPath;
   }
 
   private hasGenesisEnchantment(): boolean {

@@ -118,6 +118,7 @@ function collectCastScopedEffectRefs(
     ...(projectedConfig.persistentBuffConfig.potionIds ?? []),
     ...(projectedConfig.persistentBuffConfig.relicIds ?? []),
     ...(projectedConfig.persistentBuffConfig.buffIds ?? []),
+    ...(projectedConfig.persistentBuffConfig.summonIds ?? []),
     ...(projectedConfig.persistentBuffConfig.pocketEffectItemIds ?? []),
   ];
 

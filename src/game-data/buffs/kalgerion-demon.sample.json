@@ -1,0 +1,11 @@
+{
+  "id": "kalgerion-demon",
+  "name": "Kal'gerion demon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Binding_contract_%28kal%27gerion_demon%29.png",
+  "wikiUrl": "https://runescape.wiki/w/Kal%27gerion_demon_(familiar)",
+  "category": "summon",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "effectRefs": ["kalgerion-demon", "critical-strike-chance:+6%"],
+  "displayPriority": 20
+}

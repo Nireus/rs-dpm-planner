@@ -1,0 +1,9 @@
+{
+  "id": "energising",
+  "name": "Energising",
+  "iconPath": "/icons/wiki/energising.png",
+  "maxRank": 4,
+  "shortCode": "En",
+  "effectRefs": ["energising"],
+  "description": "Increases channeled ability adrenaline gain. Display/config only for now."
+}

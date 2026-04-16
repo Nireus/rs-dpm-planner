@@ -365,6 +365,10 @@ function createDamageBreakdown(
     deterministicMagicTimeline.hitCritChanceBonusByActionId[action.id]?.[hit.id]
       ? deterministicMagicTimeline.hitCritChanceBonusByActionId[action.id][hit.id] / 100
       : 0,
+    0,
+    deterministicMagicTimeline.hitCritDamageBonusByActionId[action.id]?.[hit.id]
+      ? deterministicMagicTimeline.hitCritDamageBonusByActionId[action.id][hit.id] / 100
+      : 0,
   );
   const finalDamage = derivedDamageParts
     ? {

@@ -96,6 +96,7 @@ export class RotationPlannerStore {
       persistentBuffConfig: {
         buffIds: this.buffConfigurationStore.activeBuffIds(),
         relicIds: this.buffConfigurationStore.activeRelicIds(),
+        summonIds: this.buffConfigurationStore.activeSummonIds(),
         pocketEffectItemIds: this.buffConfigurationStore.activePocketItemIds(),
       },
       gameData: this.gameDataStore.snapshot().catalog ?? {

@@ -12,6 +12,11 @@ export class ChangelogPageComponent {
     {
       date: '16.04.2026',
       change:
+        "Added a Load BIS Magic preset with configured FSOA/Tumeken's gear, EOF swaps, Grasping rune pouch, Affliction, Kal'gerion demon, and Incite Fear selection. Added the Summons buff section, Ripper Demon for ranged BIS, Channeller's ring Enchantment of metaphysics toggle/indicator, and full magic channelled crit stacking where Runic Embrace and the enchantment combine for +6.5% crit contribution per hit step.",
+    },
+    {
+      date: '16.04.2026',
+      change:
         "Added a Load BIS Ranged preset on the Gear screen with configurable gear replacement, planner clearing, and BIS buff loading. The preset includes configured ranged gear, backpack EOF/quiver swaps, Stalker's ring Enchantment of shadows support, Reaper Crew, and new Relentless/Devoted perk data.",
     },
     {

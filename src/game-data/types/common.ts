@@ -35,6 +35,7 @@ export type AmmoType = 'arrow';
 export type BuffCategory =
   | 'prayer'
   | 'potion'
+  | 'summon'
   | 'temporary'
   | 'passive'
   | 'miscellaneous'

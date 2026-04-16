@@ -30,6 +30,8 @@ export function applyExpectedValueCriticalStrike(
   timelineBuffs: Record<number, EntityId[]>,
   actionCritChanceBonus = 0,
   hitCritChanceBonus = 0,
+  actionCritDamageBonus = 0,
+  hitCritDamageBonus = 0,
 ): CriticalStrikeComputation {
   if (ability.effectRefs?.includes(DOT_EFFECT_REF)) {
     return {
@@ -71,7 +73,10 @@ export function applyExpectedValueCriticalStrike(
   const totalChance = clampProbability(
     BASE_CRIT_CHANCE + critChanceBonus + championRingChanceBonus + actionCritChanceBonus + hitCritChanceBonus,
   );
-  const totalDamageBonus = Math.max(0, baseCritDamageBonus + critDamageBonus + championRingDamageBonus);
+  const totalDamageBonus = Math.max(
+    0,
+    baseCritDamageBonus + critDamageBonus + championRingDamageBonus + actionCritDamageBonus + hitCritDamageBonus,
+  );
 
   if (totalChance <= 0 || totalDamageBonus <= 0) {
     return {
@@ -90,8 +95,8 @@ export function applyExpectedValueCriticalStrike(
     baseDamage,
     BASE_CRIT_CHANCE,
     baseCritDamageBonus,
-    critChanceBonus + championRingChanceBonus,
-    critDamageBonus + championRingDamageBonus,
+    critChanceBonus + championRingChanceBonus + actionCritChanceBonus + hitCritChanceBonus,
+    critDamageBonus + championRingDamageBonus + actionCritDamageBonus + hitCritDamageBonus,
   );
 
   return {

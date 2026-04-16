@@ -3,6 +3,7 @@ import {
   activateExclusivePotion,
   buildBuffOptions,
   buildMiscellaneousBuffOptions,
+  buildSummonOptions,
   buildTimelineGeneratedBuffOptions,
   calculateRelicEnergy,
   canActivateRelicWithinCap,
@@ -33,6 +34,26 @@ describe('buffs-selection utils', () => {
     expect(options.map((option) => option.id)).toEqual(['warped-gem']);
     expect(options[0]?.categoryLabel).toBe('Miscellaneous');
     expect(options[0]?.description).toBe('Manual passive utility modifier.');
+  });
+
+  it('builds summon options separately from generic configurable buffs', () => {
+    const definitions = [
+      {
+        id: 'kalgerion-demon',
+        name: "Kal'gerion demon",
+        category: 'summon' as const,
+        sourceType: 'player-config' as const,
+        effectRefs: ['critical-strike-chance:+6%'],
+      },
+    ];
+
+    expect(buildBuffOptions(definitions)).toEqual([]);
+    const summons = buildSummonOptions(definitions);
+    expect(summons[0]).toMatchObject({
+      id: 'kalgerion-demon',
+      categoryLabel: 'Summon',
+      kind: 'buff',
+    });
   });
 
   it('toggles ids in and out of the active selection', () => {

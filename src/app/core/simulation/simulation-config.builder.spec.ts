@@ -156,6 +156,7 @@ describe('buildSimulationConfigFromAppState', () => {
       potionIds: [],
       relicIds: ['fury-of-the-small'],
       buffIds: ['warped-gem'],
+      summonIds: [],
       pocketEffectItemIds: ['scripture-of-jas'],
     });
     expect(result.modeFlags.strictValidation).toBe(true);

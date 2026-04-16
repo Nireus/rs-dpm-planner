@@ -5,6 +5,7 @@ import type { PersistentBuffConfig } from '../../../simulation-engine/models';
 export interface BuffSelectionState {
   activeBuffIds: string[];
   activeRelicIds: string[];
+  activeSummonIds?: string[];
   activePocketItemIds: string[];
 }
 
@@ -32,6 +33,10 @@ export function buildPersistentBuffConfigFromBuffSelection(
       continue;
     }
 
+    if (definition.category === 'summon') {
+      continue;
+    }
+
     buffIds.push(buffId);
   }
 
@@ -40,6 +45,7 @@ export function buildPersistentBuffConfigFromBuffSelection(
     potionIds,
     relicIds: [...selection.activeRelicIds],
     buffIds,
+    summonIds: [...(selection.activeSummonIds ?? [])],
     pocketEffectItemIds: [...selection.activePocketItemIds],
   };
 }
@@ -54,6 +60,7 @@ export function buildBuffSelectionStateFromPersistentConfig(
       ...(persistentBuffConfig?.buffIds ?? []),
     ],
     activeRelicIds: [...(persistentBuffConfig?.relicIds ?? [])],
+    activeSummonIds: [...(persistentBuffConfig?.summonIds ?? [])],
     activePocketItemIds: [...(persistentBuffConfig?.pocketEffectItemIds ?? [])],
   };
 }
@@ -64,6 +71,7 @@ export function collectPersistentBuffIdsFromSelection(
 ): EntityId[] {
   return [
     ...selection.activeBuffIds.filter((id) => Boolean(catalog.buffs[id])),
+    ...(selection.activeSummonIds ?? []).filter((id) => Boolean(catalog.buffs[id])),
     ...selection.activeRelicIds.filter((id) => Boolean(catalog.relics[id])),
   ];
 }

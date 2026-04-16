@@ -20,9 +20,10 @@
     "Stores a special attack which can be used as an ability.",
     "Can be dyed red, blue, yellow, green, purple, pink, or black to distinguish multiple amulets."
   ],
-  "combatStyleTags": ["ranged"],
+  "combatStyleTags": ["ranged", "magic"],
   "offensiveStats": {
-    "rangedBonus": 56
+    "rangedBonus": 56,
+    "magicBonus": 56
   },
   "effectRefs": ["eof-special-access", "amulet-of-souls-passive"],
   "configOptions": [
@@ -38,7 +39,7 @@
       "label": "Stored special",
       "type": "select",
       "defaultValue": "dark-bow",
-      "options": ["dark-bow", "seren-godbow", "gloomfire-bow", "eldritch-crossbow", "none"]
+      "options": ["dark-bow", "seren-godbow", "gloomfire-bow", "eldritch-crossbow", "ibans-staff", "guthix-staff", "legatuss-emberstaff", "none"]
     }
   ],
   "implementationNotes": "Sample amulet-slot item for gear builder MVP."

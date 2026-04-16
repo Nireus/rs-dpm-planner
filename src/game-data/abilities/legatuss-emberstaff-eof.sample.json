@@ -1,0 +1,28 @@
+{
+  "id": "legatuss-emberstaff-eof",
+  "name": "Legatus's Emberstaff (EOF)",
+  "style": "magic",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 35,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "legatuss-emberstaff-eof-hit",
+      "tickOffset": 0,
+      "damage": {
+        "min": 240,
+        "max": 280
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 240,
+    "max": 280
+  },
+  "effectRefs": ["eof-legatuss-emberstaff-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Stored Legatus's Emberstaff special attack for Essence of Finality. Missing-life bonus is a TODO until target life percentage support exists."
+}

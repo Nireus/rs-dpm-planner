@@ -74,6 +74,7 @@
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
                       hasStalkersRingShadowsEnchantment(entry.instance) ||
+                      hasChannellersRingMetaphysicsEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -109,6 +110,12 @@
                         @if (hasStalkersRingShadowsEnchantment(entry.instance)) {
                           <span class="status-icon shadows-status" title="Enchantment of shadows">
                             <img [src]="shadowsEnchantmentIcon()" alt="Enchantment of shadows" />
+                          </span>
+                        }
+
+                        @if (hasChannellersRingMetaphysicsEnchantment(entry.instance)) {
+                          <span class="status-icon metaphysics-status" title="Enchantment of metaphysics">
+                            <img [src]="metaphysicsEnchantmentIcon()" alt="Enchantment of metaphysics" />
                           </span>
                         }
 
@@ -204,6 +211,7 @@
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
                       hasStalkersRingShadowsEnchantment(entry.instance) ||
+                      hasChannellersRingMetaphysicsEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -239,6 +247,12 @@
                         @if (hasStalkersRingShadowsEnchantment(entry.instance)) {
                           <span class="status-icon shadows-status" title="Enchantment of shadows">
                             <img [src]="shadowsEnchantmentIcon()" alt="Enchantment of shadows" />
+                          </span>
+                        }
+
+                        @if (hasChannellersRingMetaphysicsEnchantment(entry.instance)) {
+                          <span class="status-icon metaphysics-status" title="Enchantment of metaphysics">
+                            <img [src]="metaphysicsEnchantmentIcon()" alt="Enchantment of metaphysics" />
                           </span>
                         }
 
@@ -309,6 +323,9 @@
         <div class="preset-actions">
           <button type="button" class="primary-button bis-button" (click)="openBisRangedDialog()">
             Load BIS Ranged
+          </button>
+          <button type="button" class="primary-button bis-button" (click)="openBisMagicDialog()">
+            Load BIS Magic
           </button>
         </div>
 
@@ -447,6 +464,75 @@
           <div class="detail-actions">
             <button type="button" class="secondary-button" (click)="closeBisRangedDialog()">Cancel</button>
             <button type="button" class="primary-button" (click)="applyBisRangedPreset()">Load BIS Ranged</button>
+          </div>
+        </section>
+      </div>
+    }
+
+    @if (bisMagicDialogOpen()) {
+      <div class="dialog-backdrop" (click)="closeBisMagicDialog()">
+        <section
+          class="detail-dialog bis-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bis-magic-dialog-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="dialog-header">
+            <div class="dialog-title-group">
+              <div class="detail-copy">
+                <p class="eyebrow detail-eyebrow">Preset</p>
+                <h2 id="bis-magic-dialog-title">Load BIS Magic</h2>
+                <p>Apply the curated magic best-in-slot gear, backpack swaps, and optional persistent buffs.</p>
+              </div>
+            </div>
+
+            <button type="button" class="icon-button" (click)="closeBisMagicDialog()" aria-label="Close BIS dialog">
+              Close
+            </button>
+          </div>
+
+          <div class="bis-toggle-grid">
+            <label class="bis-toggle">
+              <span>
+                <strong>Remove current gear</strong>
+                <small>When disabled, equipped items are moved to backpack before BIS gear is applied.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisRemoveCurrentGear()"
+                (ngModelChange)="bisRemoveCurrentGear.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Clear rotation planner</strong>
+                <small>Removes placed ability and non-GCD actions, while keeping planner settings.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisClearRotationPlanner()"
+                (ngModelChange)="bisClearRotationPlanner.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Use Best in slot buffs</strong>
+                <small>Replaces active persistent buffs, relics, and summon with the magic BIS set.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisUseBuffs()"
+                (ngModelChange)="bisUseBuffs.set($event)"
+              />
+            </label>
+          </div>
+
+          <div class="detail-actions">
+            <button type="button" class="secondary-button" (click)="closeBisMagicDialog()">Cancel</button>
+            <button type="button" class="primary-button" (click)="applyBisMagicPreset()">Load BIS Magic</button>
           </div>
         </section>
       </div>
