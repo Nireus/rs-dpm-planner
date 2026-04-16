@@ -21,6 +21,20 @@
   } @else {
     <section class="layout">
       <div class="main-column">
+        <article class="panel compact-panel preset-panel" aria-label="Best in slot presets">
+          <div class="preset-actions">
+            <button type="button" class="primary-button bis-button" (click)="openBisRangedDialog()">
+              Load BIS Ranged
+            </button>
+            <button type="button" class="primary-button bis-button" (click)="openBisMagicDialog()">
+              Load BIS Magic
+            </button>
+            <button type="button" class="primary-button bis-button" (click)="openBisMeleeDialog()">
+              Load BIS Melee
+            </button>
+          </div>
+        </article>
+
         <article class="panel compact-panel">
           <div class="panel-heading">
             <div>
@@ -75,6 +89,7 @@
                       hasGenesisEnchantment(entry.instance) ||
                       hasStalkersRingShadowsEnchantment(entry.instance) ||
                       hasChannellersRingMetaphysicsEnchantment(entry.instance) ||
+                      hasEnhancedGlovesAgonyEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -116,6 +131,12 @@
                         @if (hasChannellersRingMetaphysicsEnchantment(entry.instance)) {
                           <span class="status-icon metaphysics-status" title="Enchantment of metaphysics">
                             <img [src]="metaphysicsEnchantmentIcon()" alt="Enchantment of metaphysics" />
+                          </span>
+                        }
+
+                        @if (hasEnhancedGlovesAgonyEnchantment(entry.instance)) {
+                          <span class="status-icon agony-status" title="Enchantment of agony">
+                            <img [src]="agonyEnchantmentIcon()" alt="Enchantment of agony" />
                           </span>
                         }
 
@@ -212,6 +233,7 @@
                       hasGenesisEnchantment(entry.instance) ||
                       hasStalkersRingShadowsEnchantment(entry.instance) ||
                       hasChannellersRingMetaphysicsEnchantment(entry.instance) ||
+                      hasEnhancedGlovesAgonyEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -253,6 +275,12 @@
                         @if (hasChannellersRingMetaphysicsEnchantment(entry.instance)) {
                           <span class="status-icon metaphysics-status" title="Enchantment of metaphysics">
                             <img [src]="metaphysicsEnchantmentIcon()" alt="Enchantment of metaphysics" />
+                          </span>
+                        }
+
+                        @if (hasEnhancedGlovesAgonyEnchantment(entry.instance)) {
+                          <span class="status-icon agony-status" title="Enchantment of agony">
+                            <img [src]="agonyEnchantmentIcon()" alt="Enchantment of agony" />
                           </span>
                         }
 
@@ -318,15 +346,6 @@
               placeholder="Filter by name or id"
             />
           </label>
-        </div>
-
-        <div class="preset-actions">
-          <button type="button" class="primary-button bis-button" (click)="openBisRangedDialog()">
-            Load BIS Ranged
-          </button>
-          <button type="button" class="primary-button bis-button" (click)="openBisMagicDialog()">
-            Load BIS Magic
-          </button>
         </div>
 
         <div class="catalog-tabs" role="tablist" aria-label="Gear catalog categories">
@@ -533,6 +552,75 @@
           <div class="detail-actions">
             <button type="button" class="secondary-button" (click)="closeBisMagicDialog()">Cancel</button>
             <button type="button" class="primary-button" (click)="applyBisMagicPreset()">Load BIS Magic</button>
+          </div>
+        </section>
+      </div>
+    }
+
+    @if (bisMeleeDialogOpen()) {
+      <div class="dialog-backdrop" (click)="closeBisMeleeDialog()">
+        <section
+          class="detail-dialog bis-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bis-melee-dialog-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="dialog-header">
+            <div class="dialog-title-group">
+              <div class="detail-copy">
+                <p class="eyebrow detail-eyebrow">Preset</p>
+                <h2 id="bis-melee-dialog-title">Load BIS Melee</h2>
+                <p>Apply the curated melee best-in-slot gear, backpack swaps, and optional persistent buffs.</p>
+              </div>
+            </div>
+
+            <button type="button" class="icon-button" (click)="closeBisMeleeDialog()" aria-label="Close BIS dialog">
+              Close
+            </button>
+          </div>
+
+          <div class="bis-toggle-grid">
+            <label class="bis-toggle">
+              <span>
+                <strong>Remove current gear</strong>
+                <small>When disabled, equipped items are moved to backpack before BIS gear is applied.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisRemoveCurrentGear()"
+                (ngModelChange)="bisRemoveCurrentGear.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Clear rotation planner</strong>
+                <small>Removes placed ability and non-GCD actions, while keeping planner settings.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisClearRotationPlanner()"
+                (ngModelChange)="bisClearRotationPlanner.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Use Best in slot buffs</strong>
+                <small>Replaces active persistent buffs, relics, and summon with the melee BIS set.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisUseBuffs()"
+                (ngModelChange)="bisUseBuffs.set($event)"
+              />
+            </label>
+          </div>
+
+          <div class="detail-actions">
+            <button type="button" class="secondary-button" (click)="closeBisMeleeDialog()">Cancel</button>
+            <button type="button" class="primary-button" (click)="applyBisMeleePreset()">Load BIS Melee</button>
           </div>
         </section>
       </div>

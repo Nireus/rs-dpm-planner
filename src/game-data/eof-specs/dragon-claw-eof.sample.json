@@ -1,0 +1,19 @@
+{
+  "id": "dragon-claw-eof",
+  "name": "Dragon claw (EOF)",
+  "iconPath": "/icons/wiki/dragon-claw.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 4 hits",
+  "detailLines": [
+    "Stored Dragon claw special attack for Essence of Finality.",
+    "Strikes four times for 360%-440% ability damage total.",
+    "Uses the stored EOF special and does not require both claws equipped."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Dragon_claw",
+  "weaponOrigin": "dragon-claw",
+  "abilityId": "dragon-claw-eof",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:dragon-claw"]
+  },
+  "effectRefs": ["eof-dragon-claw-spec"],
+  "description": "Stored Dragon claw special attack for Essence of Finality."
+}

@@ -3,7 +3,7 @@
   "name": "Grasping rune pouch",
   "category": "armor",
   "slot": "ammo",
-  "iconPath": "/icons/wiki/grasping-rune-pouch.png",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Grasping_rune_pouch.png",
   "wikiUrl": "https://runescape.wiki/w/Grasping_rune_pouch",
   "hoverSummary": "Ammunition-slot rune pouch for Magic loadouts.",
   "detailLines": [

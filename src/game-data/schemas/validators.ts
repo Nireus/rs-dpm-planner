@@ -151,6 +151,8 @@ export function validateAbilityDefinition(
 
   if (!Array.isArray(input['hitSchedule'])) {
     pushError(errors, 'hitSchedule', 'Expected "hitSchedule" to be an array.');
+  } else {
+    validateHitSchedule(errors, input['hitSchedule'], 'hitSchedule');
   }
 
   if (!isRecord(input['baseDamage'])) {
@@ -436,6 +438,13 @@ function validateAbilityVariants(
     }
 
     validateRequirementTags(errors, entry['when'], `${variantPath}.when`);
+    if (entry['hitSchedule'] !== undefined) {
+      if (!Array.isArray(entry['hitSchedule'])) {
+        pushError(errors, `${variantPath}.hitSchedule`, 'Expected "hitSchedule" to be an array when present.');
+      } else {
+        validateHitSchedule(errors, entry['hitSchedule'], `${variantPath}.hitSchedule`);
+      }
+    }
     validateTimelineEffects(errors, entry['timelineEffects'], `${variantPath}.timelineEffects`);
     validateStackEffects(errors, entry['stackEffects'], `${variantPath}.stackEffects`);
     validateDisplayHints(errors, entry['displayHints'], `${variantPath}.displayHints`);
@@ -464,6 +473,34 @@ function validateAbilityVariants(
       } else {
         highestUnconditionalPriority = normalizedPriority;
       }
+    }
+  });
+}
+
+function validateHitSchedule(
+  errors: GameDataValidationError[],
+  hitScheduleValue: unknown[],
+  pathPrefix: string,
+): void {
+  hitScheduleValue.forEach((entry, index) => {
+    const hitPath = `${pathPrefix}[${index}]`;
+    if (!isRecord(entry)) {
+      pushError(errors, hitPath, 'Expected hit entry to be an object.');
+      return;
+    }
+
+    const effectRefs = entry['effectRefs'];
+    if (effectRefs !== undefined && !isStringArray(effectRefs)) {
+      pushError(errors, `${hitPath}.effectRefs`, 'Expected "effectRefs" to be an array of strings.');
+      return;
+    }
+
+    if (Array.isArray(effectRefs)) {
+      effectRefs.forEach((effectRef, effectIndex) => {
+        if (!isRecognizedEffectRef(effectRef)) {
+          pushError(errors, `${hitPath}.effectRefs[${effectIndex}]`, `Unrecognized effect ref "${effectRef}".`);
+        }
+      });
     }
   });
 }

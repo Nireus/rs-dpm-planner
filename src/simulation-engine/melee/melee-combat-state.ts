@@ -1,7 +1,7 @@
-import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
+import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { AbilityDefinition } from '../../game-data/types';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
-import type { RotationAction, SimulationConfig } from '../models';
+import type { ItemInstanceConfig, RotationAction, SimulationConfig } from '../models';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 const REND_ABILITY_ID = 'rend';
@@ -10,6 +10,7 @@ const ENCHANTMENT_OF_HEROISM_ID = 'enchantment-of-heroism';
 const ENDURING_RUIN_WINDOW_TICKS = 10;
 const CORRUPTED_WOUNDS_DURATION_TICKS = 17;
 const HEROISM_EQUIP_TIME_TICKS = 15;
+const AGONY_EQUIP_TIME_TICKS = 15;
 const ABYSSAL_PARASITE_DURATION_TICKS = 15;
 
 export function countActiveTrackedBleeds(config: SimulationConfig, tick: number): number {
@@ -51,11 +52,21 @@ export function getVestmentsOfHavocPieceCount(config: SimulationConfig, tick: nu
 }
 
 export function getEnduringRuinNextAttackBonus(config: SimulationConfig, castTick: number): number {
-  return findMostRecentRendAction(config, castTick, ENDURING_RUIN_WINDOW_TICKS) ? 0.1 : 0;
+  const rendAction = findMostRecentRendAction(config, castTick, ENDURING_RUIN_WINDOW_TICKS);
+  if (!rendAction || !hasEquippedEffectAtTick(config, rendAction.tick, EFFECT_REF_IDS.glovesOfPassagePassive)) {
+    return 0;
+  }
+
+  return hasAgonyEnhancedGlovesBonus(config, rendAction.tick) ? 0.16 : 0.1;
 }
 
 export function getCorruptedWoundsBleedBonus(config: SimulationConfig, hitTick: number): number {
-  return findMostRecentRendAction(config, hitTick, CORRUPTED_WOUNDS_DURATION_TICKS) ? 0.2 : 0;
+  const rendAction = findMostRecentRendAction(config, hitTick, CORRUPTED_WOUNDS_DURATION_TICKS);
+  if (!rendAction || !hasEquippedEffectAtTick(config, rendAction.tick, EFFECT_REF_IDS.glovesOfPassagePassive)) {
+    return 0;
+  }
+
+  return hasAgonyEnhancedGlovesBonus(config, rendAction.tick) ? 0.25 : 0.2;
 }
 
 function countActiveAbilityBleeds(config: SimulationConfig, tick: number): number {
@@ -153,6 +164,28 @@ function hasEquippedEffectAtTick(
 
     return projectedConfig.gameData.items[instance.definitionId]?.effectRefs?.includes(effectRef) ?? false;
   });
+}
+
+function hasAgonyEnhancedGlovesBonus(config: SimulationConfig, tick: number): boolean {
+  const currentHands = projectSimulationConfigAtTick(config, tick).gearSetup.equipment.hands;
+  const previousHands =
+    tick >= AGONY_EQUIP_TIME_TICKS
+      ? projectSimulationConfigAtTick(config, tick - AGONY_EQUIP_TIME_TICKS).gearSetup.equipment.hands
+      : null;
+
+  return isAgonyEnhancedGloves(currentHands) && isSameEquippedItem(currentHands, previousHands);
+}
+
+function isAgonyEnhancedGloves(instance: ItemInstanceConfig | null | undefined): instance is ItemInstanceConfig {
+  return instance?.definitionId === 'enhanced-gloves-of-passage' &&
+    instance.configValues?.[CONFIG_OPTION_IDS.enhancedGlovesOfPassageAgonyEnchanted] === true;
+}
+
+function isSameEquippedItem(
+  current: ItemInstanceConfig | null | undefined,
+  previous: ItemInstanceConfig | null | undefined,
+): boolean {
+  return Boolean(current && previous && current.instanceId === previous.instanceId);
 }
 
 function isTrackedBleedAbility(ability: AbilityDefinition): boolean {

@@ -1,0 +1,22 @@
+{
+  "id": "dragon-battleaxe",
+  "name": "Dragon battleaxe",
+  "category": "weapon",
+  "slot": "weapon",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dragon_battleaxe.png",
+  "wikiUrl": "https://runescape.wiki/w/Dragon_battleaxe",
+  "combatStyleTags": ["melee"],
+  "tier": 60,
+  "offensiveStats": {
+    "damageTier": 60,
+    "accuracyTier": 60
+  },
+  "requirements": {
+    "levelRequirements": {
+      "attack": 60
+    }
+  },
+  "effectRefs": ["weapon-special-access", "weapon-special:rampage"],
+  "specialAbilityId": "rampage",
+  "implementationNotes": "Curated melee weapon from the live Dragon battleaxe page. Rampage's +20% melee damage is simulated; hit chance reduction, stat drains, and Strength boost are TODOs until those systems exist."
+}

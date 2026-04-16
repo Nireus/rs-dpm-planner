@@ -53,6 +53,7 @@ export type HitDefinition = {
   id: string;
   tickOffset: number;
   damage: DamageRange;
+  effectRefs?: EffectRef[];
   tags?: string[];
 };
 

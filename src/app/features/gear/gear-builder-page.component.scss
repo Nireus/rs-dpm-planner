@@ -367,9 +367,13 @@ li,
 
 .preset-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.45rem;
   justify-content: flex-start;
-  margin-bottom: 0.7rem;
+}
+
+.preset-panel {
+  padding: 0.65rem;
 }
 
 .catalog-tab {
@@ -418,7 +422,7 @@ li,
 }
 
 .bis-button {
-  width: 100%;
+  flex: 1 1 9rem;
   justify-content: center;
 }
 

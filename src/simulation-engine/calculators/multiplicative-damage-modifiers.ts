@@ -138,6 +138,27 @@ function parseMultiplicativeModifier(
     };
   }
 
+  if (effectRef === EFFECT_REF_IDS.amHejPassive) {
+    if (ability.style !== 'melee' || isDamageOverTime) {
+      return null;
+    }
+
+    const strengthLevel = Math.max(0, Math.trunc(config.playerStats.strengthLevel ?? 0));
+    const percent = Math.floor(strengthLevel * 0.05);
+    if (percent <= 0) {
+      return null;
+    }
+
+    const multiplier = 1 + percent / 100;
+
+    return {
+      sourceId: effectRef,
+      label: `Am-hej x${roundValue(multiplier).toFixed(2)}`,
+      value: 0,
+      multiplier,
+    };
+  }
+
   if (
     (effectRef === EFFECT_REF_IDS.dragonSlayer && ability.style === 'ranged') ||
     (effectRef === EFFECT_REF_IDS.demonSlayer && ability.style === 'ranged') ||

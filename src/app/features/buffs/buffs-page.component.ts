@@ -26,7 +26,16 @@ interface BuffOptionGroup {
   showCategoryLabel?: boolean;
 }
 
+interface BuffOptionColumn {
+  key: string;
+  groups: BuffOptionGroup[];
+}
+
 const RELIC_POWER_CAP = 650;
+const LEFT_COLUMN_GROUP_ORDER = ['prayers', 'potions', 'summons', 'passive-buffs'];
+const RIGHT_COLUMN_GROUP_ORDER = ['relics', 'miscellaneous-buffs'];
+const LEFT_COLUMN_GROUP_KEYS = new Set(LEFT_COLUMN_GROUP_ORDER);
+const RIGHT_COLUMN_GROUP_KEYS = new Set(RIGHT_COLUMN_GROUP_ORDER);
 
 @Component({
   selector: 'app-buffs-page',
@@ -156,6 +165,27 @@ export class BuffsPageComponent {
       }))
       .filter((group) => group.options.length > 0);
   });
+  protected readonly filteredGroupColumns = computed<BuffOptionColumn[]>(() => {
+    const groups = this.filteredGroups();
+
+    return [
+      {
+        key: 'left',
+        groups: sortGroupsByColumnOrder(
+          groups.filter((group) => LEFT_COLUMN_GROUP_KEYS.has(group.key)),
+          LEFT_COLUMN_GROUP_ORDER,
+        ),
+      },
+      {
+        key: 'right',
+        groups: sortGroupsByColumnOrder(
+          groups.filter((group) => RIGHT_COLUMN_GROUP_KEYS.has(group.key)),
+          RIGHT_COLUMN_GROUP_ORDER,
+        ),
+      },
+    ];
+  });
+  protected readonly hasFilteredGroups = computed(() => this.filteredGroups().length > 0);
 
   protected readonly activeOptions = computed(() => {
     const active = this.activeIds();
@@ -462,4 +492,9 @@ export class BuffsPageComponent {
       }
     });
   }
+}
+
+function sortGroupsByColumnOrder(groups: BuffOptionGroup[], orderedKeys: readonly string[]): BuffOptionGroup[] {
+  const order = new Map(orderedKeys.map((key, index) => [key, index] as const));
+  return [...groups].sort((first, second) => (order.get(first.key) ?? 0) - (order.get(second.key) ?? 0));
 }

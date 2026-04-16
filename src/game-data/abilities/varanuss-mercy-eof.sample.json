@@ -1,0 +1,47 @@
+{
+  "id": "varanuss-mercy-eof",
+  "name": "Varanus's Mercy (EOF)",
+  "style": "melee",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 50,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "varanuss-mercy-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 80,
+        "max": 100
+      },
+      "effectRefs": ["critical-strike-chance:+25%", "critical-strike-damage:+25%"]
+    },
+    {
+      "id": "varanuss-mercy-eof-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 80,
+        "max": 100
+      },
+      "effectRefs": ["critical-strike-chance:+25%", "critical-strike-damage:+25%"]
+    },
+    {
+      "id": "varanuss-mercy-eof-hit-3",
+      "tickOffset": 0,
+      "damage": {
+        "min": 150,
+        "max": 180
+      },
+      "effectRefs": ["critical-strike-chance:+50%", "critical-strike-damage:+50%"]
+    }
+  ],
+  "baseDamage": {
+    "min": 310,
+    "max": 380
+  },
+  "effectRefs": ["eof-varanuss-mercy-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Stored Varanus's Mercy special attack for Essence of Finality. The first two hits gain +25% critical strike chance and damage; the third gains +50%."
+}

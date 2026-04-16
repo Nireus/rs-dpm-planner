@@ -46,6 +46,40 @@ describe('game-data sample JSON validation', () => {
     }
   });
 
+  it('parses and validates melee BIS item, buff, ability, EOF, and perk samples', () => {
+    const checks = [
+      [validateItemDefinition, 'src/game-data/items/nodon-spike-harness.sample.json'],
+      [validateItemDefinition, 'src/game-data/items/dragon-battleaxe.sample.json'],
+      [validateBuffDefinition, 'src/game-data/buffs/malevolence.sample.json'],
+      [validateBuffDefinition, 'src/game-data/buffs/turmoil.sample.json'],
+      [validateBuffDefinition, 'src/game-data/buffs/rampage.sample.json'],
+      [validateAbilityDefinition, 'src/game-data/abilities/rampage.sample.json'],
+      [validateAbilityDefinition, 'src/game-data/abilities/dragon-claw-eof.sample.json'],
+      [validateAbilityDefinition, 'src/game-data/abilities/varanuss-mercy-eof.sample.json'],
+      [validateEofSpecDefinition, 'src/game-data/eof-specs/dragon-claw-eof.sample.json'],
+      [validateEofSpecDefinition, 'src/game-data/eof-specs/varanuss-mercy-eof.sample.json'],
+      [validatePerkDefinition, 'src/game-data/perks/ruthless.sample.json'],
+    ] as const;
+
+    for (const [validator, path] of checks) {
+      const document = readJson(path);
+      const result = validator(document);
+
+      expect(result.success, path).toBe(true);
+    }
+  });
+
+  it('includes melee stored special options on Essence of Finality', () => {
+    const document = readJson('src/game-data/items/essence-of-finality.sample.json');
+    const result = validateItemDefinition(document);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const storedSpecial = result.data.configOptions?.find((option) => option.id === 'stored-special');
+      expect(storedSpecial?.options).toEqual(expect.arrayContaining(['dragon-claw', 'varanuss-mercy']));
+    }
+  });
+
   it('parses and validates sample ability JSON', () => {
     const document = readJson('src/game-data/abilities/rapid-fire.sample.json');
     const result = validateAbilityDefinition(document);
@@ -127,6 +161,33 @@ describe('game-data sample JSON validation', () => {
         requiredEquipmentTags: ['equipped-effect:weapon-special-access', 'melee-dual-wield'],
         blockedEquipmentTags: ['ranged-two-handed'],
       },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts supported hit-scoped effect refs', () => {
+    const result = validateAbilityDefinition({
+      id: 'sample-hit-effects',
+      name: 'Sample Hit Effects',
+      style: 'melee',
+      subtype: 'special',
+      cooldownTicks: 0,
+      baseDamage: {
+        min: 100,
+        max: 120,
+      },
+      hitSchedule: [
+        {
+          id: 'sample-hit',
+          tickOffset: 0,
+          damage: {
+            min: 100,
+            max: 120,
+          },
+          effectRefs: ['critical-strike-chance:+25%', 'critical-strike-damage:+25%'],
+        },
+      ],
     });
 
     expect(result.success).toBe(true);

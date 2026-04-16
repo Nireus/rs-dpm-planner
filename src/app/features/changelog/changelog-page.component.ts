@@ -12,6 +12,11 @@ export class ChangelogPageComponent {
     {
       date: '16.04.2026',
       change:
+        "Added a Load BIS Melee preset with Ek-ZekKil, Vestments of Havoc, enhanced Gloves of Passage with Enchantment of agony, Am-hej, Nodon spike harness, Reaver's ring, Leng weapon swaps, melee EOF specials, Malevolence, Rampage, and supporting melee perks/content. Gear BIS buttons now sit above Equipped in their own compact section, and the Buffs page layout now uses collapsed left/right stacks with Prayers, Potions, and Summons on the left and Relics plus Miscellaneous on the right.",
+    },
+    {
+      date: '16.04.2026',
+      change:
         "Added a Load BIS Magic preset with configured FSOA/Tumeken's gear, EOF swaps, Grasping rune pouch, Affliction, Kal'gerion demon, and Incite Fear selection. Added the Summons buff section, Ripper Demon for ranged BIS, Channeller's ring Enchantment of metaphysics toggle/indicator, and full magic channelled crit stacking where Runic Embrace and the enchantment combine for +6.5% crit contribution per hit step.",
     },
     {

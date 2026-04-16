@@ -1,0 +1,11 @@
+{
+  "id": "rampage",
+  "name": "Rampage",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Rampage.png",
+  "wikiUrl": "https://runescape.wiki/w/Rampage",
+  "category": "temporary",
+  "sourceType": "ability",
+  "durationTicks": 100,
+  "effectRefs": ["rampage", "melee-damage-multiplier:+20%"],
+  "displayPriority": 32
+}

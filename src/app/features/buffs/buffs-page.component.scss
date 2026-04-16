@@ -10,6 +10,12 @@
   align-items: start;
 }
 
+.group-column {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+}
+
 .toolbar,
 .panel,
 .active-panel,

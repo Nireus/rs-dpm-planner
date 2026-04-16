@@ -357,7 +357,7 @@ function createDamageBreakdown(
       };
   const criticalStrikeResult = applyExpectedValueCriticalStrike(
     projectedConfig,
-    ability,
+    mergeHitEffectRefs(ability, hit),
     additiveResult.finalDamage,
     hitTick,
     buffTimeline,
@@ -392,6 +392,20 @@ function createDamageBreakdown(
           inheritedTriggerDamage: derivedDamageParts.inheritedTriggerDamage,
         }
       : undefined,
+  };
+}
+
+function mergeHitEffectRefs(
+  ability: { id: EntityId; style?: string; effectRefs?: string[] },
+  hit: SimulationHitEvent['hit'],
+): { id: EntityId; style?: string; effectRefs?: string[] } {
+  if (!hit.effectRefs?.length) {
+    return ability;
+  }
+
+  return {
+    ...ability,
+    effectRefs: [...new Set([...(ability.effectRefs ?? []), ...hit.effectRefs])],
   };
 }
 

@@ -11,6 +11,7 @@ import { RotationPlannerStore } from '../../core/rotation-planner/rotation-plann
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
 import { MAGIC_BIS_BUFF_SELECTION } from '../../core/gear/magic-bis-preset';
+import { MELEE_BIS_BUFF_SELECTION } from '../../core/gear/melee-bis-preset';
 import { RANGED_BIS_BUFF_SELECTION } from '../../core/gear/ranged-bis-preset';
 import {
   GEAR_CATALOG_TABS,
@@ -46,6 +47,8 @@ export class GearBuilderPageComponent {
     'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
   private readonly metaphysicsEnchantmentIconPath =
     '/icons/wiki/enchantment-of-metaphysics.png';
+  private readonly agonyEnchantmentIconPath =
+    'https://runescape.wiki/w/Special:FilePath/Enchantment_of_agony.png';
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
   private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
@@ -63,6 +66,7 @@ export class GearBuilderPageComponent {
   protected readonly selectedInstanceId = signal<string | null>(null);
   protected readonly bisRangedDialogOpen = signal(false);
   protected readonly bisMagicDialogOpen = signal(false);
+  protected readonly bisMeleeDialogOpen = signal(false);
   protected readonly bisRemoveCurrentGear = signal(false);
   protected readonly bisClearRotationPlanner = signal(false);
   protected readonly bisUseBuffs = signal(true);
@@ -149,6 +153,17 @@ export class GearBuilderPageComponent {
     this.bisMagicDialogOpen.set(false);
   }
 
+  protected openBisMeleeDialog(): void {
+    this.bisRemoveCurrentGear.set(false);
+    this.bisClearRotationPlanner.set(false);
+    this.bisUseBuffs.set(true);
+    this.bisMeleeDialogOpen.set(true);
+  }
+
+  protected closeBisMeleeDialog(): void {
+    this.bisMeleeDialogOpen.set(false);
+  }
+
   protected applyBisRangedPreset(): void {
     this.gearBuilderStore.applyRangedBestInSlotPreset(this.bisRemoveCurrentGear());
 
@@ -197,6 +212,28 @@ export class GearBuilderPageComponent {
     this.selectedInstanceId.set(null);
     this.closeBisMagicDialog();
     this.dragHint.set('Loaded magic best-in-slot gear.');
+  }
+
+  protected applyBisMeleePreset(): void {
+    this.gearBuilderStore.applyMeleeBestInSlotPreset(this.bisRemoveCurrentGear());
+
+    if (this.bisUseBuffs()) {
+      this.buffConfigurationStore.replaceSelections({
+        activeBuffIds: [...MELEE_BIS_BUFF_SELECTION.activeBuffIds],
+        activeRelicIds: [...MELEE_BIS_BUFF_SELECTION.activeRelicIds],
+        activeSummonIds: [...MELEE_BIS_BUFF_SELECTION.activeSummonIds],
+        activePocketItemIds: [...MELEE_BIS_BUFF_SELECTION.activePocketItemIds],
+      });
+    }
+
+    if (this.bisClearRotationPlanner()) {
+      this.rotationPlannerStore.clearPlannedActions();
+    }
+
+    this.selectedItemId.set(null);
+    this.selectedInstanceId.set(null);
+    this.closeBisMeleeDialog();
+    this.dragHint.set('Loaded melee best-in-slot gear.');
   }
 
   protected openCatalogDetail(item: ItemDefinition | null): void {
@@ -423,6 +460,11 @@ export class GearBuilderPageComponent {
       instance.configValues?.[CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted] === true;
   }
 
+  protected hasEnhancedGlovesAgonyEnchantment(instance: ItemInstanceConfig | null): boolean {
+    return instance?.definitionId === 'enhanced-gloves-of-passage' &&
+      instance.configValues?.[CONFIG_OPTION_IDS.enhancedGlovesOfPassageAgonyEnchanted] === true;
+  }
+
   protected quiverAmmoIcon(
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
@@ -537,6 +579,10 @@ export class GearBuilderPageComponent {
 
   protected metaphysicsEnchantmentIcon(): string {
     return this.metaphysicsEnchantmentIconPath;
+  }
+
+  protected agonyEnchantmentIcon(): string {
+    return this.agonyEnchantmentIconPath;
   }
 
   protected supportsPerks(item: ItemDefinition): boolean {

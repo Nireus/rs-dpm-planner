@@ -26,6 +26,8 @@ export class GearItemConfigPanelComponent {
     'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
   private readonly metaphysicsEnchantmentIconPath =
     '/icons/wiki/enchantment-of-metaphysics.png';
+  private readonly agonyEnchantmentIconPath =
+    'https://runescape.wiki/w/Special:FilePath/Enchantment_of_agony.png';
   private readonly dyeIconPaths: Record<string, string> = {
     red: '/icons/wiki/red-dye.png',
     orange: '/icons/wiki/orange-dye.png',
@@ -178,6 +180,10 @@ export class GearItemConfigPanelComponent {
     return optionId === CONFIG_OPTION_IDS.channellersRingMetaphysicsEnchanted;
   }
 
+  isEnhancedGlovesAgonyOption(optionId: string): boolean {
+    return optionId === CONFIG_OPTION_IDS.enhancedGlovesOfPassageAgonyEnchanted;
+  }
+
   isDyeOption(optionId: string): boolean {
     return optionId === 'applied-dye';
   }
@@ -192,6 +198,10 @@ export class GearItemConfigPanelComponent {
 
   metaphysicsEnchantmentIcon(): string {
     return this.metaphysicsEnchantmentIconPath;
+  }
+
+  agonyEnchantmentIcon(): string {
+    return this.agonyEnchantmentIconPath;
   }
 
   private hasGenesisEnchantment(): boolean {

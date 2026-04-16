@@ -1,0 +1,10 @@
+{
+  "id": "ruthless",
+  "name": "Ruthless",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Ruthless.png",
+  "wikiUrl": "https://runescape.wiki/w/Ruthless",
+  "effectRefs": ["ruthless"],
+  "description": "Increases damage after kills. Display/configuration only for now because the simulator is single-target and does not model kill events.",
+  "maxRank": 5,
+  "shortCode": "R"
+}

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { GearBuilderState } from './gear-state';
 import { syncGenesisConfigAcrossUnlockGroup } from './gear-builder.store';
 import { applyMagicBisPresetToGearState } from './magic-bis-preset';
+import { applyMeleeBisPresetToGearState } from './melee-bis-preset';
 import { applyRangedBisPresetToGearState } from './ranged-bis-preset';
 
 describe('syncGenesisConfigAcrossUnlockGroup', () => {
@@ -64,6 +65,11 @@ describe('applyMagicBisPresetToGearState', () => {
     ]);
     expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'legatuss-emberstaff')).toBe(true);
     expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'guthix-staff')).toBe(true);
+    expect(
+      result.state.inventory
+        .filter((item) => item.definitionId === 'roar-of-awakening' || item.definitionId === 'ode-to-deceit')
+        .every((item) => item.configValues?.['genesis-enchanted'] === true),
+    ).toBe(true);
     expect(result.nextInstanceId).toBe(36);
   });
 
@@ -165,6 +171,92 @@ describe('applyRangedBisPresetToGearState', () => {
         { socketIndex: 0, perkId: 'relentless', rank: 5 },
         { socketIndex: 0, perkId: 'crackling', rank: 4 },
         { socketIndex: 1, perkId: 'biting', rank: 4 },
+      ]),
+    );
+  });
+});
+
+describe('applyMeleeBisPresetToGearState', () => {
+  it('moves equipped items to backpack and appends Melee BIS gear when preserving current gear', () => {
+    const current: GearBuilderState = {
+      equipment: {
+        weapon: {
+          instanceId: 'old-weapon',
+          definitionId: 'masterwork-2h-sword',
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'old-backpack',
+          definitionId: 'scripture-of-jas',
+        },
+      ],
+    };
+
+    const result = applyMeleeBisPresetToGearState(current, 30, { removeCurrentGear: false });
+
+    expect(result.state.equipment.weapon?.definitionId).toBe('ek-zekkil');
+    expect(result.state.equipment.weapon?.instanceId).toBe('gear-item-30');
+    expect(result.state.equipment.weapon?.configValues?.['genesis-enchanted']).toBe(true);
+    expect(result.state.equipment.weapon?.configuredPerks).toEqual(
+      expect.arrayContaining([
+        { socketIndex: 0, perkId: 'precise', rank: 6 },
+        { socketIndex: 0, perkId: 'ruthless', rank: 1 },
+        { socketIndex: 1, perkId: 'aftershock', rank: 4 },
+        { socketIndex: 1, perkId: 'eruptive', rank: 2 },
+      ]),
+    );
+    expect(result.state.equipment.hands?.definitionId).toBe('enhanced-gloves-of-passage');
+    expect(result.state.equipment.hands?.configValues?.['enhanced-gloves-of-passage-agony-enchanted']).toBe(true);
+    expect(result.state.equipment.ammo?.definitionId).toBe('nodon-spike-harness');
+    expect(result.state.equipment.ring?.definitionId).toBe('reavers-ring');
+    expect(result.state.inventory.map((item) => item.instanceId).slice(0, 2)).toEqual([
+      'old-weapon',
+      'old-backpack',
+    ]);
+    expect(
+      result.state.inventory
+        .filter((item) => item.definitionId === 'dark-shard-of-leng' || item.definitionId === 'dark-sliver-of-leng')
+        .every((item) => item.configValues?.['genesis-enchanted'] === true),
+    ).toBe(true);
+    expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'dragon-claw')).toBe(true);
+    expect(result.state.inventory.some((item) => item.configValues?.['stored-special'] === 'varanuss-mercy')).toBe(true);
+    expect(result.nextInstanceId).toBe(45);
+  });
+
+  it('replaces current gear and backpack when loading Melee BIS destructively', () => {
+    const current: GearBuilderState = {
+      equipment: {
+        weapon: {
+          instanceId: 'old-weapon',
+          definitionId: 'masterwork-2h-sword',
+        },
+      },
+      inventory: [
+        {
+          instanceId: 'old-backpack',
+          definitionId: 'scripture-of-jas',
+        },
+      ],
+    };
+
+    const result = applyMeleeBisPresetToGearState(current, 1, { removeCurrentGear: true });
+
+    expect(Object.values(result.state.equipment).some((item) => item?.instanceId === 'old-weapon')).toBe(false);
+    expect(result.state.inventory.some((item) => item.instanceId === 'old-backpack')).toBe(false);
+    expect(result.state.inventory).toHaveLength(4);
+    expect(result.state.equipment.body?.configuredPerks).toEqual(
+      expect.arrayContaining([
+        { socketIndex: 0, perkId: 'relentless', rank: 5 },
+        { socketIndex: 0, perkId: 'crackling', rank: 4 },
+        { socketIndex: 1, perkId: 'biting', rank: 4 },
+      ]),
+    );
+    expect(result.state.equipment.legs?.configuredPerks).toEqual(
+      expect.arrayContaining([
+        { socketIndex: 0, perkId: 'impatient', rank: 4 },
+        { socketIndex: 0, perkId: 'devoted', rank: 4 },
+        { socketIndex: 1, perkId: 'ultimatums', rank: 4 },
       ]),
     );
   });

@@ -69,7 +69,12 @@ export function applyExpectedValueCriticalStrike(
     hasHeroismChampionRingBonus(config, hitTick) && activeBleeds > 0
       ? activeBleeds * 0.015
       : 0;
-  const baseCritDamageBonus = resolveBaseCriticalStrikeDamageBonus(config.playerStats.rangedLevel, config.playerStats.magicLevel, ability);
+  const baseCritDamageBonus = resolveBaseCriticalStrikeDamageBonus(
+    config.playerStats.rangedLevel,
+    config.playerStats.magicLevel,
+    config.playerStats.strengthLevel,
+    ability,
+  );
   const totalChance = clampProbability(
     BASE_CRIT_CHANCE + critChanceBonus + championRingChanceBonus + actionCritChanceBonus + hitCritChanceBonus,
   );
@@ -155,9 +160,14 @@ function parseCriticalStrikeDamageBonus(effectRef: EffectRef, config: Simulation
 function resolveBaseCriticalStrikeDamageBonus(
   rangedLevel: number | undefined,
   magicLevel: number | undefined,
+  strengthLevel: number | undefined,
   ability: { style?: string },
 ): number {
-  const level = ability.style === 'magic' ? (magicLevel ?? 0) : (rangedLevel ?? 0);
+  const level = ability.style === 'magic'
+    ? (magicLevel ?? 0)
+    : ability.style === 'melee'
+      ? (strengthLevel ?? rangedLevel ?? 0)
+      : (rangedLevel ?? 0);
 
   if (level >= 90) {
     return 0.5;

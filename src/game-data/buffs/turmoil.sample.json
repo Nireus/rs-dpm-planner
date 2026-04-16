@@ -1,0 +1,12 @@
+{
+  "id": "turmoil",
+  "name": "Turmoil",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Turmoil.png",
+  "wikiUrl": "https://runescape.wiki/w/Turmoil",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["turmoil", "melee-damage-multiplier:+10%"],
+  "displayPriority": 20
+}

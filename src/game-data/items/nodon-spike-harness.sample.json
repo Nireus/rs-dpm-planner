@@ -1,0 +1,20 @@
+{
+  "id": "nodon-spike-harness",
+  "name": "Nodon spike harness",
+  "category": "ammo",
+  "slot": "ammo",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Nodon_spike_harness.png",
+  "wikiUrl": "https://runescape.wiki/w/Nodon_spike_harness",
+  "combatStyleTags": ["melee"],
+  "tier": 90,
+  "offensiveStats": {
+    "meleeBonus": 24.1
+  },
+  "requirements": {
+    "levelRequirements": {
+      "strength": 90
+    }
+  },
+  "effectRefs": ["karmic-retribution"],
+  "implementationNotes": "Curated melee ammo-slot item from the live Nodon spike harness page. Armour-spike damage and life-point scaling are TODOs until armour-spike and target/self life percentage support exists."
+}

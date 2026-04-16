@@ -109,89 +109,95 @@
       }
     </section>
 
-    <div class="group-grid">
-      @for (group of filteredGroups(); track group.key) {
-        <section
-          class="group-panel"
-          [class.drop-target]="isGroupDropTarget(group.key) && canDropToGroup(group)"
-          [class.drop-target-disabled]="isGroupDropTarget(group.key) && !canDropToGroup(group)"
-          (dragover)="allowDrop($event)"
-          (dragenter)="setDragTarget(group.key)"
-          (dragleave)="setDragTarget(null)"
-          (drop)="dropToGroup(group, $event)"
-        >
-          <div class="panel-heading">
-            <h2>{{ group.label }}</h2>
-          </div>
+    @if (hasFilteredGroups()) {
+      <div class="group-grid">
+        @for (column of filteredGroupColumns(); track column.key) {
+          <div class="group-column">
+            @for (group of column.groups; track group.key) {
+              <section
+                class="group-panel"
+                [class.drop-target]="isGroupDropTarget(group.key) && canDropToGroup(group)"
+                [class.drop-target-disabled]="isGroupDropTarget(group.key) && !canDropToGroup(group)"
+                (dragover)="allowDrop($event)"
+                (dragenter)="setDragTarget(group.key)"
+                (dragleave)="setDragTarget(null)"
+                (drop)="dropToGroup(group, $event)"
+              >
+                <div class="panel-heading">
+                  <h2>{{ group.label }}</h2>
+                </div>
 
-          <div class="option-grid">
-            @for (option of group.options; track option.kind + ':' + option.id) {
-              @if (option.kind === 'equipped-perk') {
-                <button type="button" class="option-card active readonly-card" [title]="summaryLine(option)" (click)="openOptionDetail(option)">
-                  <div class="option-topline">
-                    @if (group.showCategoryLabel) {
-                      <span class="option-kind">{{ option.categoryLabel }}</span>
+                <div class="option-grid">
+                  @for (option of group.options; track option.kind + ':' + option.id) {
+                    @if (option.kind === 'equipped-perk') {
+                      <button type="button" class="option-card active readonly-card" [title]="summaryLine(option)" (click)="openOptionDetail(option)">
+                        <div class="option-topline">
+                          @if (group.showCategoryLabel) {
+                            <span class="option-kind">{{ option.categoryLabel }}</span>
+                          }
+                          <span class="option-status">Derived</span>
+                        </div>
+                        <div class="option-main">
+                          <div class="icon-tile">
+                            @if (option.iconPath) {
+                              <img [src]="option.iconPath" alt="" class="option-icon" />
+                            } @else {
+                              <span class="fallback-icon">{{ initials(option.name) }}</span>
+                            }
+                          </div>
+                          <div class="option-copy">
+                            <span class="option-name">{{ option.name }}</span>
+                            <span class="option-summary">{{ tileSummary(option) }}</span>
+                          </div>
+                        </div>
+                      </button>
+                    } @else {
+                      <article class="option-card" [class.active]="isActive(option)" [class.dragged]="isDragged(option)" [title]="summaryLine(option)">
+                        <button
+                          type="button"
+                          class="inspect-layer"
+                          [attr.data-testid]="'buff-option-' + option.id"
+                          draggable="true"
+                          (click)="openOptionDetail(option)"
+                          (dragstart)="onDragStart(option, 'catalog', $event)"
+                          (dragend)="onDragEnd()"
+                          aria-label="Open details for {{ option.name }}"
+                        >
+                          <div class="option-topline">
+                            @if (group.showCategoryLabel) {
+                              <span class="option-kind">{{ option.categoryLabel }}</span>
+                            }
+                            <span class="option-status">{{ isActive(option) ? 'Active' : 'Inactive' }}</span>
+                          </div>
+                          <div class="option-main">
+                            <div class="icon-tile">
+                              @if (option.iconPath) {
+                                <img [src]="option.iconPath" alt="" class="option-icon" />
+                              } @else {
+                                <span class="fallback-icon">{{ initials(option.name) }}</span>
+                              }
+                            </div>
+                            <div class="option-copy">
+                              <span class="option-name">{{ option.name }}</span>
+                              <span class="option-summary">{{ tileSummary(option) }}</span>
+                            </div>
+                          </div>
+                        </button>
+                      </article>
                     }
-                    <span class="option-status">Derived</span>
-                  </div>
-                  <div class="option-main">
-                    <div class="icon-tile">
-                      @if (option.iconPath) {
-                        <img [src]="option.iconPath" alt="" class="option-icon" />
-                      } @else {
-                        <span class="fallback-icon">{{ initials(option.name) }}</span>
-                      }
-                    </div>
-                    <div class="option-copy">
-                      <span class="option-name">{{ option.name }}</span>
-                      <span class="option-summary">{{ tileSummary(option) }}</span>
-                    </div>
-                  </div>
-                </button>
-              } @else {
-                <article class="option-card" [class.active]="isActive(option)" [class.dragged]="isDragged(option)" [title]="summaryLine(option)">
-                  <button
-                    type="button"
-                    class="inspect-layer"
-                    [attr.data-testid]="'buff-option-' + option.id"
-                    draggable="true"
-                    (click)="openOptionDetail(option)"
-                    (dragstart)="onDragStart(option, 'catalog', $event)"
-                    (dragend)="onDragEnd()"
-                    aria-label="Open details for {{ option.name }}"
-                  >
-                    <div class="option-topline">
-                      @if (group.showCategoryLabel) {
-                        <span class="option-kind">{{ option.categoryLabel }}</span>
-                      }
-                      <span class="option-status">{{ isActive(option) ? 'Active' : 'Inactive' }}</span>
-                    </div>
-                    <div class="option-main">
-                      <div class="icon-tile">
-                        @if (option.iconPath) {
-                          <img [src]="option.iconPath" alt="" class="option-icon" />
-                        } @else {
-                          <span class="fallback-icon">{{ initials(option.name) }}</span>
-                        }
-                      </div>
-                      <div class="option-copy">
-                        <span class="option-name">{{ option.name }}</span>
-                        <span class="option-summary">{{ tileSummary(option) }}</span>
-                      </div>
-                    </div>
-                  </button>
-                </article>
-              }
+                  }
+                </div>
+              </section>
             }
           </div>
-        </section>
-      } @empty {
+        }
+      </div>
+    } @else {
         <article class="panel">
           <h2>No Matches</h2>
           <p>No supported prayers, potions, relics, perks, passive buffs, or pocket effects match the current search.</p>
         </article>
-      }
-    </div>
+    }
   }
 
   @if (selectedOption(); as detail) {

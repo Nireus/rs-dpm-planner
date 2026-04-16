@@ -1,0 +1,12 @@
+{
+  "id": "malevolence",
+  "name": "Malevolence",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Malevolence.png",
+  "wikiUrl": "https://runescape.wiki/w/Malevolence",
+  "category": "prayer",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "durationTicks": 180,
+  "effectRefs": ["malevolence", "melee-damage-multiplier:+12%"],
+  "displayPriority": 11
+}

@@ -1,0 +1,26 @@
+{
+  "id": "rampage",
+  "name": "Rampage",
+  "style": "melee",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 100,
+  "adrenalineGain": 0,
+  "hitSchedule": [],
+  "baseDamage": {
+    "min": 0,
+    "max": 0
+  },
+  "timelineEffects": [
+    {
+      "kind": "apply-buff",
+      "buffId": "rampage",
+      "durationTicks": 100
+    }
+  ],
+  "effectRefs": ["weapon-special:rampage"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Dragon battleaxe special attack. Applies Rampage for 60 seconds, increasing melee damage by 20%. Hit chance reduction, stat drains, and Strength boost are TODOs until those systems exist."
+}

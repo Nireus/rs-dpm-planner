@@ -16,5 +16,13 @@
     }
   },
   "effectRefs": ["enduring-ruin"],
-  "implementationNotes": "Curated upgraded melee gloves from the live Enhanced gloves of passage page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and the enhanced Enduring Ruin behavior."
+  "configOptions": [
+    {
+      "id": "enhanced-gloves-of-passage-agony-enchanted",
+      "label": "Agony enchanted",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ],
+  "implementationNotes": "Curated upgraded melee gloves from the live Enhanced gloves of passage page. Wiki-verified with Playwright for Defence requirement, melee style bonus, and Enduring Ruin. Enchantment of agony upgrades Enduring Ruin after 15 equipped ticks."
 }

@@ -1,0 +1,19 @@
+{
+  "id": "varanuss-mercy-eof",
+  "name": "Varanus's Mercy (EOF)",
+  "iconPath": "/icons/wiki/varanuss-mercy.png",
+  "hoverSummary": "EOF special | -50% adrenaline | 3 hits",
+  "detailLines": [
+    "Stored Varanus's Mercy special attack for Essence of Finality.",
+    "Strikes three times for 310%-380% ability damage total.",
+    "The first two hits gain +25% critical strike chance and damage; the third gains +50%."
+  ],
+  "wikiUrl": "https://runescape.wiki/w/Varanus%27s_Mercy",
+  "weaponOrigin": "varanuss-mercy",
+  "abilityId": "varanuss-mercy-eof",
+  "requires": {
+    "requiredEquipmentTags": ["eof-special:varanuss-mercy"]
+  },
+  "effectRefs": ["eof-varanuss-mercy-spec"],
+  "description": "Stored Varanus's Mercy special attack for Essence of Finality."
+}

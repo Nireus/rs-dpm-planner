@@ -8,6 +8,7 @@ import type { GearBuilderState } from './gear-state';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 import type { GearBuilderWorkspaceState } from '../workspace/workspace.models';
 import { applyMagicBisPresetToGearState } from './magic-bis-preset';
+import { applyMeleeBisPresetToGearState } from './melee-bis-preset';
 import { applyRangedBisPresetToGearState } from './ranged-bis-preset';
 import {
   applyGearBuilderPlacement,
@@ -338,6 +339,18 @@ export class GearBuilderStore {
 
   applyMagicBestInSlotPreset(removeCurrentGear: boolean): void {
     const result = applyMagicBisPresetToGearState(
+      this.state(),
+      this.nextInstanceIdValue(),
+      { removeCurrentGear },
+    );
+
+    this.state.set(result.state);
+    this.nextInstanceIdValue.set(result.nextInstanceId);
+    this.workspaceRepository.updateGearBuilderState(result.state, result.nextInstanceId);
+  }
+
+  applyMeleeBestInSlotPreset(removeCurrentGear: boolean): void {
+    const result = applyMeleeBisPresetToGearState(
       this.state(),
       this.nextInstanceIdValue(),
       { removeCurrentGear },

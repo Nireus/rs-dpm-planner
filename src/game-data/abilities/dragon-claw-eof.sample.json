@@ -1,0 +1,52 @@
+{
+  "id": "dragon-claw-eof",
+  "name": "Dragon claw (EOF)",
+  "style": "melee",
+  "subtype": "special",
+  "cooldownTicks": 0,
+  "adrenalineCost": 50,
+  "adrenalineGain": 0,
+  "hitSchedule": [
+    {
+      "id": "dragon-claw-eof-hit-1",
+      "tickOffset": 0,
+      "damage": {
+        "min": 180,
+        "max": 220
+      }
+    },
+    {
+      "id": "dragon-claw-eof-hit-2",
+      "tickOffset": 0,
+      "damage": {
+        "min": 90,
+        "max": 110
+      }
+    },
+    {
+      "id": "dragon-claw-eof-hit-3",
+      "tickOffset": 0,
+      "damage": {
+        "min": 45,
+        "max": 55
+      }
+    },
+    {
+      "id": "dragon-claw-eof-hit-4",
+      "tickOffset": 0,
+      "damage": {
+        "min": 45,
+        "max": 55
+      }
+    }
+  ],
+  "baseDamage": {
+    "min": 360,
+    "max": 440
+  },
+  "effectRefs": ["eof-dragon-claw-spec"],
+  "displayHints": {
+    "hiddenFromUi": true
+  },
+  "description": "Stored Dragon claw special attack for Essence of Finality. Slice and Dice strikes four times for 360%-440% ability damage total."
+}
