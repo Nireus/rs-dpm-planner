@@ -236,6 +236,48 @@ describe('RotationPlannerStore', () => {
     });
   });
 
+  it('clears planned actions without resetting planner configuration', () => {
+    store.loadState({
+      startingAdrenaline: 85,
+      tickCount: 90,
+      startingStacks: {
+        deathsporeStacks: 7,
+        perfectEquilibriumStacks: 2,
+      },
+      nonGcdActions: [
+        {
+          id: 'swap-1',
+          tick: 3,
+          lane: 'non-gcd',
+          actionType: 'gear-swap',
+          payload: {},
+        },
+      ],
+      abilityActions: [
+        {
+          id: 'ability-1',
+          tick: 6,
+          lane: 'ability',
+          actionType: 'ability-use',
+          payload: {
+            abilityId: 'ranged',
+          },
+        },
+      ],
+    });
+
+    store.clearPlannedActions();
+
+    expect(store.startingAdrenaline()).toBe(85);
+    expect(store.tickCount()).toBe(90);
+    expect(store.startingStacks()).toEqual({
+      deathsporeStacks: 7,
+      perfectEquilibriumStacks: 2,
+    });
+    expect(store.nonGcdActions()).toEqual([]);
+    expect(store.abilityActions()).toEqual([]);
+  });
+
   it('raises max starting adrenaline to 120 with full Vestments of Havoc and a melee weapon', () => {
     gearBuilderStore.gearState.set({
       equipment: {

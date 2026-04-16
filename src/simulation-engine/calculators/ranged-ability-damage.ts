@@ -2,6 +2,7 @@ import type { EquipmentSlot } from '../../game-data/types';
 import type { SimulationConfig } from '../models';
 import { resolveConfiguredEquipmentDefinition } from '../gear/configured-equipment-definition';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
+import { calculatePersistentOffensiveStatBonus } from './offensive-stat-bonuses';
 
 const RANGED_LEVEL_SCALING_DENOMINATOR = Math.log(1.6);
 
@@ -73,7 +74,7 @@ function calculateRangedBonus(config: SimulationConfig): number {
 
     const definition = config.gameData.items[instance.definitionId];
     return total + (definition?.offensiveStats?.['rangedBonus'] ?? 0);
-  }, 0);
+  }, calculatePersistentOffensiveStatBonus(config, 'ranged'));
 }
 
 function roundDamageValue(value: number): number {

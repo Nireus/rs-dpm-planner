@@ -4,6 +4,7 @@ export const CONFIG_OPTION_IDS = {
   genesisEnchanted: 'genesis-enchanted',
   loadedAmmo: 'loaded-ammo',
   storedSpecial: 'stored-special',
+  stalkersRingShadowsEnchanted: 'stalkers-ring-shadows-enchanted',
 } as const;
 
 export const REQUIREMENT_TAGS = {
@@ -160,6 +161,8 @@ const PARAMETERIZED_EFFECT_REF_PREFIXES = [
   'basic-adrenaline:',
   'critical-strike-chance:',
   'critical-strike-damage:',
+  'offensive-stat-bonus:',
+  'ranged-critical-strike-damage:',
   'target-damage-taken:',
   'eof-',
   'hit-chance:',

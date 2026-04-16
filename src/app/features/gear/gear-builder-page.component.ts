@@ -4,9 +4,12 @@ import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import type { EquipmentSlot, ItemDefinition, PerkDefinition } from '../../../game-data/types';
 import type { ItemInstanceConfig } from '../../../simulation-engine/models';
 import { findGenesisUnlockGroup } from '../../../simulation-engine/gear/configured-equipment-definition';
+import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
+import { RotationPlannerStore } from '../../core/rotation-planner/rotation-planner.store';
 import { GearItemDetailDialogComponent } from './gear-item-detail-dialog.component';
 import { GearBuilderStore } from './gear-builder.store';
+import { RANGED_BIS_BUFF_SELECTION } from '../../core/gear/ranged-bis-preset';
 import {
   GEAR_CATALOG_TABS,
   gearCatalogTabEmptyMessage,
@@ -37,8 +40,12 @@ const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 export class GearBuilderPageComponent {
   private readonly genesisShardIconPath =
     '/icons/wiki/shard-of-genesis-essence.png';
+  private readonly shadowsEnchantmentIconPath =
+    'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
   private readonly gameDataStore = inject(GameDataStoreService);
   private readonly gearBuilderStore = inject(GearBuilderStore);
+  private readonly buffConfigurationStore = inject(BuffConfigurationStoreService);
+  private readonly rotationPlannerStore = inject(RotationPlannerStore);
 
   protected readonly query = signal('');
   protected readonly catalogTabs = GEAR_CATALOG_TABS;
@@ -49,6 +56,10 @@ export class GearBuilderPageComponent {
   protected readonly dragHint = signal('Drag items into equipment slots or the backpack.');
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly selectedInstanceId = signal<string | null>(null);
+  protected readonly bisRangedDialogOpen = signal(false);
+  protected readonly bisRemoveCurrentGear = signal(false);
+  protected readonly bisClearRotationPlanner = signal(false);
+  protected readonly bisUseBuffs = signal(true);
   protected readonly perkOptions = computed<PerkDefinition[]>(() =>
     Object.values(this.gameDataStore.snapshot().catalog?.perks ?? {}).sort((left, right) =>
       left.name.localeCompare(right.name),
@@ -108,6 +119,38 @@ export class GearBuilderPageComponent {
 
   protected selectCatalogTab(tabId: GearCatalogTabId): void {
     this.selectedCatalogTab.set(tabId);
+  }
+
+  protected openBisRangedDialog(): void {
+    this.bisRemoveCurrentGear.set(false);
+    this.bisClearRotationPlanner.set(false);
+    this.bisUseBuffs.set(true);
+    this.bisRangedDialogOpen.set(true);
+  }
+
+  protected closeBisRangedDialog(): void {
+    this.bisRangedDialogOpen.set(false);
+  }
+
+  protected applyBisRangedPreset(): void {
+    this.gearBuilderStore.applyRangedBestInSlotPreset(this.bisRemoveCurrentGear());
+
+    if (this.bisUseBuffs()) {
+      this.buffConfigurationStore.replaceSelections({
+        activeBuffIds: [...RANGED_BIS_BUFF_SELECTION.activeBuffIds],
+        activeRelicIds: [...RANGED_BIS_BUFF_SELECTION.activeRelicIds],
+        activePocketItemIds: [...RANGED_BIS_BUFF_SELECTION.activePocketItemIds],
+      });
+    }
+
+    if (this.bisClearRotationPlanner()) {
+      this.rotationPlannerStore.clearPlannedActions();
+    }
+
+    this.selectedItemId.set(null);
+    this.selectedInstanceId.set(null);
+    this.closeBisRangedDialog();
+    this.dragHint.set('Loaded ranged best-in-slot gear.');
   }
 
   protected openCatalogDetail(item: ItemDefinition | null): void {
@@ -324,6 +367,11 @@ export class GearBuilderPageComponent {
     );
   }
 
+  protected hasStalkersRingShadowsEnchantment(instance: ItemInstanceConfig | null): boolean {
+    return instance?.definitionId === 'stalkers-ring' &&
+      instance.configValues?.[CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted] === true;
+  }
+
   protected quiverAmmoIcon(
     item: ItemDefinition | null,
     instance: ItemInstanceConfig | null,
@@ -430,6 +478,10 @@ export class GearBuilderPageComponent {
 
   protected genesisShardIcon(): string {
     return this.genesisShardIconPath;
+  }
+
+  protected shadowsEnchantmentIcon(): string {
+    return this.shadowsEnchantmentIconPath;
   }
 
   protected supportsPerks(item: ItemDefinition): boolean {

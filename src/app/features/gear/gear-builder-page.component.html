@@ -73,6 +73,7 @@
                       eofStoredSpecialBadge(entry.definition, entry.instance) ||
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
+                      hasStalkersRingShadowsEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -102,6 +103,12 @@
                         @if (hasGenesisEnchantment(entry.instance)) {
                           <span class="status-icon genesis-status" title="Genesis enchanted">
                             <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
+                          </span>
+                        }
+
+                        @if (hasStalkersRingShadowsEnchantment(entry.instance)) {
+                          <span class="status-icon shadows-status" title="Enchantment of shadows">
+                            <img [src]="shadowsEnchantmentIcon()" alt="Enchantment of shadows" />
                           </span>
                         }
 
@@ -196,6 +203,7 @@
                       eofStoredSpecialBadge(entry.definition, entry.instance) ||
                       perkSocketBadges(entry.instance).length ||
                       hasGenesisEnchantment(entry.instance) ||
+                      hasStalkersRingShadowsEnchantment(entry.instance) ||
                       quiverAmmoIcon(entry.definition, entry.instance) ||
                       quiverBoltIcon(entry.definition, entry.instance)
                     ) {
@@ -225,6 +233,12 @@
                         @if (hasGenesisEnchantment(entry.instance)) {
                           <span class="status-icon genesis-status" title="Genesis enchanted">
                             <img [src]="genesisShardIcon()" alt="Shard of Genesis Essence" />
+                          </span>
+                        }
+
+                        @if (hasStalkersRingShadowsEnchantment(entry.instance)) {
+                          <span class="status-icon shadows-status" title="Enchantment of shadows">
+                            <img [src]="shadowsEnchantmentIcon()" alt="Enchantment of shadows" />
                           </span>
                         }
 
@@ -290,6 +304,12 @@
               placeholder="Filter by name or id"
             />
           </label>
+        </div>
+
+        <div class="preset-actions">
+          <button type="button" class="primary-button bis-button" (click)="openBisRangedDialog()">
+            Load BIS Ranged
+          </button>
         </div>
 
         <div class="catalog-tabs" role="tablist" aria-label="Gear catalog categories">
@@ -361,6 +381,75 @@
         (updateBooleanConfig)="updateBooleanConfig($event.optionId, $event.checked)"
         (updateScalarConfig)="updateScalarConfig($event.optionId, $event.value)"
       />
+    }
+
+    @if (bisRangedDialogOpen()) {
+      <div class="dialog-backdrop" (click)="closeBisRangedDialog()">
+        <section
+          class="detail-dialog bis-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bis-ranged-dialog-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="dialog-header">
+            <div class="dialog-title-group">
+              <div class="detail-copy">
+                <p class="eyebrow detail-eyebrow">Preset</p>
+                <h2 id="bis-ranged-dialog-title">Load BIS Ranged</h2>
+                <p>Apply the curated ranged best-in-slot gear, backpack swaps, and optional persistent buffs.</p>
+              </div>
+            </div>
+
+            <button type="button" class="icon-button" (click)="closeBisRangedDialog()" aria-label="Close BIS dialog">
+              Close
+            </button>
+          </div>
+
+          <div class="bis-toggle-grid">
+            <label class="bis-toggle">
+              <span>
+                <strong>Remove current gear</strong>
+                <small>When disabled, equipped items are moved to backpack before BIS gear is applied.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisRemoveCurrentGear()"
+                (ngModelChange)="bisRemoveCurrentGear.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Clear rotation planner</strong>
+                <small>Removes placed ability and non-GCD actions, while keeping planner settings.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisClearRotationPlanner()"
+                (ngModelChange)="bisClearRotationPlanner.set($event)"
+              />
+            </label>
+
+            <label class="bis-toggle">
+              <span>
+                <strong>Use Best in slot buffs</strong>
+                <small>Replaces active persistent buffs and relics with the ranged BIS set.</small>
+              </span>
+              <input
+                type="checkbox"
+                [ngModel]="bisUseBuffs()"
+                (ngModelChange)="bisUseBuffs.set($event)"
+              />
+            </label>
+          </div>
+
+          <div class="detail-actions">
+            <button type="button" class="secondary-button" (click)="closeBisRangedDialog()">Cancel</button>
+            <button type="button" class="primary-button" (click)="applyBisRangedPreset()">Load BIS Ranged</button>
+          </div>
+        </section>
+      </div>
     }
   }
 </section>

@@ -8,11 +8,20 @@
   "detailLines": [
     "Examine: A fabled ring that burns with primeval venom. It can improve the wearer's skill with a bow.",
     "Grants +3% critical strike chance when wielding a bow.",
+    "With Enchantment of shadows, improves this to +4% critical strike chance and adds +3% critical strike damage when using a bow.",
     "Strong future candidate for ranged crit modeling."
   ],
   "combatStyleTags": ["ranged"],
   "offensiveStats": {
     "rangedBonus": 30.4
   },
-  "effectRefs": ["critical-strike-chance:+3%:bow-only"]
+  "effectRefs": ["critical-strike-chance:+3%:bow-only"],
+  "configOptions": [
+    {
+      "id": "stalkers-ring-shadows-enchanted",
+      "label": "Enchantment of shadows",
+      "type": "boolean",
+      "defaultValue": false
+    }
+  ]
 }

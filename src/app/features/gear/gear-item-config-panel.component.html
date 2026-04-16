@@ -122,6 +122,18 @@
                     (ngModelChange)="updateBooleanConfig.emit({ optionId: option.id, checked: $event })"
                   />
                 </label>
+              } @else if (isStalkersRingShadowsOption(option.id)) {
+                <label class="special-toggle-field">
+                  <span class="special-toggle-copy">
+                    <img class="special-toggle-icon" [src]="shadowsEnchantmentIcon()" alt="Enchantment of shadows" />
+                    <span>{{ option.label }}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    [ngModel]="configValue(option.id)"
+                    (ngModelChange)="updateBooleanConfig.emit({ optionId: option.id, checked: $event })"
+                  />
+                </label>
               } @else {
                 <input
                   type="checkbox"

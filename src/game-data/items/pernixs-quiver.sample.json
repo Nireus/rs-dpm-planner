@@ -27,7 +27,7 @@
       "label": "Loaded arrows",
       "type": "select",
       "defaultValue": "deathspore-arrows",
-      "options": ["deathspore-arrows", "ful-arrows", "none"]
+      "options": ["deathspore-arrows", "ful-arrows", "wen-arrows", "jas-dragonbane-arrows", "none"]
     },
     {
       "id": "applied-dye",

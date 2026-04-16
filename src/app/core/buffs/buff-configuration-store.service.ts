@@ -60,6 +60,10 @@ export class BuffConfigurationStoreService {
     }
   }
 
+  replaceSelections(state: BuffSelectionState): void {
+    this.loadState(state);
+  }
+
   loadState(state: BuffSelectionState): void {
     this.state.set({
       activeBuffIds: [...state.activeBuffIds],

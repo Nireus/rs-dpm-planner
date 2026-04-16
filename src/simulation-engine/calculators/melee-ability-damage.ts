@@ -2,6 +2,7 @@ import type { EquipmentSlot } from '../../game-data/types';
 import type { SimulationConfig } from '../models';
 import { resolveConfiguredEquipmentDefinition } from '../gear/configured-equipment-definition';
 import { calculateScaledCombatLevel } from './ranged-ability-damage';
+import { calculatePersistentOffensiveStatBonus } from './offensive-stat-bonuses';
 
 export function calculateMeleeAbilityDamage(config: SimulationConfig): number {
   const strengthLevel = config.playerStats.strengthLevel ?? 0;
@@ -66,7 +67,7 @@ function calculateMeleeBonus(config: SimulationConfig): number {
 
     const definition = config.gameData.items[instance.definitionId];
     return total + (definition?.offensiveStats?.['meleeBonus'] ?? 0);
-  }, 0);
+  }, calculatePersistentOffensiveStatBonus(config, 'melee'));
 }
 
 function roundDamageValue(value: number): number {

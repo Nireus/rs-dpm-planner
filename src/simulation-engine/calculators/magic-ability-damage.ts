@@ -3,6 +3,7 @@ import type { RotationAction, SimulationConfig } from '../models';
 import { resolveConfiguredEquipmentDefinition } from '../gear/configured-equipment-definition';
 import { calculateScaledCombatLevel } from './ranged-ability-damage';
 import { resolveActiveMagicSpellDefinition, resolveMagicSpellDefinitionForAction } from '../spells/selected-spell';
+import { calculatePersistentOffensiveStatBonus } from './offensive-stat-bonuses';
 
 export function calculateMagicAbilityDamage(config: SimulationConfig, action?: RotationAction | null): number {
   const magicLevel = config.playerStats.magicLevel ?? 0;
@@ -77,7 +78,7 @@ function calculateMagicBonus(config: SimulationConfig): number {
 
     const definition = config.gameData.items[instance.definitionId];
     return total + (definition?.offensiveStats?.['magicBonus'] ?? 0);
-  }, 0);
+  }, calculatePersistentOffensiveStatBonus(config, 'magic'));
 }
 
 function roundDamageValue(value: number): number {

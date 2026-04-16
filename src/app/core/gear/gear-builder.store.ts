@@ -7,6 +7,7 @@ import { GameDataStoreService } from '../game-data/game-data-store.service';
 import type { GearBuilderState } from './gear-state';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 import type { GearBuilderWorkspaceState } from '../workspace/workspace.models';
+import { applyRangedBisPresetToGearState } from './ranged-bis-preset';
 import {
   applyGearBuilderPlacement,
   canEquipItemInSlot,
@@ -320,6 +321,18 @@ export class GearBuilderStore {
       inventory: state.gearState.inventory ?? [],
     });
     this.nextInstanceIdValue.set(Math.max(1, Math.trunc(state.nextInstanceId)));
+  }
+
+  applyRangedBestInSlotPreset(removeCurrentGear: boolean): void {
+    const result = applyRangedBisPresetToGearState(
+      this.state(),
+      this.nextInstanceIdValue(),
+      { removeCurrentGear },
+    );
+
+    this.state.set(result.state);
+    this.nextInstanceIdValue.set(result.nextInstanceId);
+    this.workspaceRepository.updateGearBuilderState(result.state, result.nextInstanceId);
   }
 
   private findDefinition(definitionId: string): ItemDefinition | null {

@@ -345,6 +345,18 @@ export class RotationPlannerStore {
     this.workspaceRepository.updateRotationPlannerState(DEFAULT_ROTATION_PLANNER_STATE);
   }
 
+  clearPlannedActions(): void {
+    this.nonGcdActionsValue.set([]);
+    this.abilityActionsValue.set([]);
+    this.workspaceRepository.updateRotationPlannerState({
+      startingAdrenaline: this.startingAdrenaline(),
+      tickCount: this.tickCount(),
+      startingStacks: this.startingStacks(),
+      nonGcdActions: [],
+      abilityActions: [],
+    });
+  }
+
   loadState(state: RotationPlannerWorkspaceState): void {
     this.startingAdrenalineValue.set(
       normalizeIntegerInput(state.startingAdrenaline, DEFAULT_ROTATION_PLANNER_STATE.startingAdrenaline, 0, this.maxStartingAdrenaline()),

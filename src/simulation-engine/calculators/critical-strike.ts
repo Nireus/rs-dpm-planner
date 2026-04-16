@@ -57,7 +57,7 @@ export function applyExpectedValueCriticalStrike(
     (total, effectRef) => total + parseCriticalStrikeChanceBonus(effectRef, config),
     0,
   );
-  const critDamageBonus = effectRefs.reduce((total, effectRef) => total + parseCriticalStrikeDamageBonus(effectRef), 0);
+  const critDamageBonus = effectRefs.reduce((total, effectRef) => total + parseCriticalStrikeDamageBonus(effectRef, config), 0);
   const activeBleeds = countActiveTrackedBleeds(config, hitTick);
   const championRingChanceBonus =
     hasChampionRingEquipped(config, hitTick) && activeBleeds > 0
@@ -134,9 +134,17 @@ function parseCriticalStrikeChanceBonus(effectRef: EffectRef, config: Simulation
   return Number.parseFloat(match[1]) / 100;
 }
 
-function parseCriticalStrikeDamageBonus(effectRef: EffectRef): number {
-  const match = /^(?:ranged-)?critical-strike-damage:\+(\d+(?:\.\d+)?)%$/.exec(effectRef);
-  return match ? Number.parseFloat(match[1]) / 100 : 0;
+function parseCriticalStrikeDamageBonus(effectRef: EffectRef, config: SimulationConfig): number {
+  const match = /^(?:ranged-)?critical-strike-damage:\+(\d+(?:\.\d+)?)%(?::(bow-only))?$/.exec(effectRef);
+  if (!match) {
+    return 0;
+  }
+
+  if (match[2] === 'bow-only' && !isBowEquipped(config)) {
+    return 0;
+  }
+
+  return Number.parseFloat(match[1]) / 100;
 }
 
 function resolveBaseCriticalStrikeDamageBonus(

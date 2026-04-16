@@ -1,6 +1,7 @@
 import type { EffectRef, EntityId } from '../../game-data/types';
 import type { SimulationConfig } from '../models';
 import { collectEquippedPerkEffectRefs } from '../perks/equipped-perks';
+import { resolveConfiguredItemEffectRefs } from '../gear/configured-equipment-definition';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 
 export function collectActiveEffectRefs(
@@ -31,12 +32,12 @@ export function collectActiveEffectRefs(
       return [];
     }
 
-    return projectedConfig.gameData.items[instance.definitionId]?.effectRefs ?? [];
+    return resolveConfiguredItemEffectRefs(projectedConfig, instance);
   });
 
   const ammoInstance = projectedConfig.gearSetup.ammoSelection ?? projectedConfig.gearSetup.equipment.ammo;
   const ammoEffectRefs = ammoInstance
-    ? (projectedConfig.gameData.items[ammoInstance.definitionId]?.effectRefs ??
+    ? (resolveConfiguredItemEffectRefs(projectedConfig, ammoInstance) ??
       projectedConfig.gameData.ammo[ammoInstance.definitionId]?.effectRefs ??
       [])
     : [];

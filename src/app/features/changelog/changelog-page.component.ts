@@ -12,6 +12,11 @@ export class ChangelogPageComponent {
     {
       date: '16.04.2026',
       change:
+        "Added a Load BIS Ranged preset on the Gear screen with configurable gear replacement, planner clearing, and BIS buff loading. The preset includes configured ranged gear, backpack EOF/quiver swaps, Stalker's ring Enchantment of shadows support, Reaper Crew, and new Relentless/Devoted perk data.",
+    },
+    {
+      date: '16.04.2026',
+      change:
         "Added Erethdor's grimoire as a pocket item with its active +12% critical strike chance effect, including support for pocket item effects selected through persistent buff configuration.",
     },
     {

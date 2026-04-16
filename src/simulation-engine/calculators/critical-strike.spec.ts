@@ -40,6 +40,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         slot: 'ring',
         combatStyleTags: ['ranged'],
         effectRefs: ['critical-strike-chance:+3%:bow-only'],
+        configOptions: [
+          {
+            id: 'stalkers-ring-shadows-enchanted',
+            label: 'Enchantment of shadows',
+            type: 'boolean',
+            defaultValue: false,
+          },
+        ],
       },
       'deathspore-arrows': {
         id: 'deathspore-arrows',
@@ -188,6 +196,45 @@ describe('applyExpectedValueCriticalStrike', () => {
     );
 
     expect(result.finalDamage.avg).toBe(116.5);
+  });
+
+  it('upgrades Stalker ring critical bonuses when Enchantment of shadows is enabled', () => {
+    const base = applyExpectedValueCriticalStrike(
+      createConfig(),
+      createAbility(),
+      { min: 100, avg: 100, max: 100 },
+      0,
+      {},
+    );
+    const enchanted = applyExpectedValueCriticalStrike(
+      createConfig({
+        gearSetup: {
+          equipment: {
+            weapon: {
+              instanceId: 'weapon-1',
+              definitionId: 'bolg',
+            },
+            ring: {
+              instanceId: 'ring-1',
+              definitionId: 'stalkers-ring',
+              configValues: {
+                'stalkers-ring-shadows-enchanted': true,
+              },
+            },
+          },
+        },
+      }),
+      createAbility(),
+      { min: 100, avg: 100, max: 100 },
+      0,
+      {},
+    );
+
+    expect(base.finalDamage.avg).toBe(106.5);
+    expect(enchanted.finalDamage.avg).toBe(107.42);
+    expect(enchanted.expectedValueModifiers.map((entry) => entry.sourceId)).toContain(
+      'critical-strike-damage-bonus',
+    );
   });
 
   it('does not apply critical strikes to damage-over-time abilities', () => {

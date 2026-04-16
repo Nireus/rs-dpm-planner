@@ -84,11 +84,35 @@ describe('ranged ability damage', () => {
 
     expect(result).toBe(expected);
   });
+
+  it('applies Reaper Crew ranged offensive stat bonus from persistent buffs', () => {
+    const withoutReaperCrew = calculateRangedAbilityDamage(
+      createConfig({
+        rangedLevel: 99,
+        items: {
+          weapon: createItem('weapon', 'weapon', { damageTier: 95 }),
+        },
+      }),
+    );
+    const withReaperCrew = calculateRangedAbilityDamage(
+      createConfig({
+        rangedLevel: 99,
+        items: {
+          weapon: createItem('weapon', 'weapon', { damageTier: 95 }),
+        },
+        activeBuffIds: ['reaper-crew'],
+      }),
+    );
+
+    expect(withReaperCrew).toBeGreaterThan(withoutReaperCrew);
+    expect(withReaperCrew - withoutReaperCrew).toBe(18);
+  });
 });
 
 function createConfig(input: {
   rangedLevel: number;
   items: Partial<Record<'weapon' | 'ammo' | 'ring' | 'amulet' | 'body', ItemDefinition>>;
+  activeBuffIds?: string[];
 }): SimulationConfig {
   const weaponConfigValues = buildConfigValues(input.items.weapon);
 
@@ -141,7 +165,9 @@ function createConfig(input: {
     inventory: {
       items: [],
     },
-    persistentBuffConfig: {},
+    persistentBuffConfig: {
+      buffIds: input.activeBuffIds ?? [],
+    },
     rotationPlan: {
       startingAdrenaline: 0,
       tickCount: 1,
@@ -152,7 +178,15 @@ function createConfig(input: {
       items: Object.fromEntries(Object.values(input.items).filter(Boolean).map((item) => [item.id, item])),
       ammo: {},
       abilities: {},
-      buffs: {},
+      buffs: {
+        'reaper-crew': {
+          id: 'reaper-crew',
+          name: 'Reaper Crew',
+          category: 'miscellaneous',
+          sourceType: 'player-config',
+          effectRefs: ['offensive-stat-bonus:ranged:+12'],
+        },
+      },
       perks: {},
       relics: {},
       eofSpecs: {},

@@ -34,16 +34,20 @@ export function resolveConfiguredItemDefinition(
   config: SimulationConfig,
   instance: Pick<ItemInstanceConfig, 'definitionId' | 'configValues'>,
 ): ItemDefinition | null {
-  const definition = config.gameData.items[instance.definitionId] ?? config.gameData.ammo[instance.definitionId] ?? null;
+  let definition = config.gameData.items[instance.definitionId] ?? config.gameData.ammo[instance.definitionId] ?? null;
   if (!definition) {
     return null;
   }
 
-  if (!hasGenesisUnlockForDefinition(config, definition.id)) {
-    return definition;
+  if (definition.id === 'stalkers-ring' && instance.configValues?.[CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted] === true) {
+    definition = applyStalkersRingShadowsEnchantment(definition);
   }
 
-  return applyGenesisUpgrade(definition);
+  if (hasGenesisUnlockForDefinition(config, definition.id)) {
+    definition = applyGenesisUpgrade(definition);
+  }
+
+  return definition;
 }
 
 function hasGenesisUnlockForDefinition(config: SimulationConfig, definitionId: string): boolean {
@@ -75,6 +79,25 @@ function applyGenesisUpgrade(definition: ItemDefinition): ItemDefinition {
   };
 }
 
+export function resolveConfiguredItemEffectRefs(
+  config: SimulationConfig,
+  instance: Pick<ItemInstanceConfig, 'definitionId' | 'configValues'>,
+): string[] {
+  const definition = resolveConfiguredItemDefinition(config, instance);
+  return definition?.effectRefs ?? [];
+}
+
 function increaseTier(tier: number): number {
   return Math.min(GENESIS_MAX_TIER, Math.max(0, Math.trunc(tier)) + GENESIS_TIER_DELTA);
+}
+
+function applyStalkersRingShadowsEnchantment(definition: ItemDefinition): ItemDefinition {
+  return {
+    ...definition,
+    effectRefs: [
+      ...(definition.effectRefs ?? []).filter((effectRef) => effectRef !== 'critical-strike-chance:+3%:bow-only'),
+      'critical-strike-chance:+4%:bow-only',
+      'ranged-critical-strike-damage:+3%:bow-only',
+    ],
+  };
 }

@@ -22,6 +22,8 @@ const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
 export class GearItemConfigPanelComponent {
   private readonly genesisShardIconPath =
     '/icons/wiki/shard-of-genesis-essence.png';
+  private readonly shadowsEnchantmentIconPath =
+    'https://runescape.wiki/w/Special:FilePath/Enchantment_of_shadows.png';
   private readonly dyeIconPaths: Record<string, string> = {
     red: '/icons/wiki/red-dye.png',
     orange: '/icons/wiki/orange-dye.png',
@@ -163,7 +165,11 @@ export class GearItemConfigPanelComponent {
   }
 
   isGenesisOption(optionId: string): boolean {
-    return optionId === 'genesis-enchanted';
+    return optionId === CONFIG_OPTION_IDS.genesisEnchanted;
+  }
+
+  isStalkersRingShadowsOption(optionId: string): boolean {
+    return optionId === CONFIG_OPTION_IDS.stalkersRingShadowsEnchanted;
   }
 
   isDyeOption(optionId: string): boolean {
@@ -172,6 +178,10 @@ export class GearItemConfigPanelComponent {
 
   genesisShardIcon(): string {
     return this.genesisShardIconPath;
+  }
+
+  shadowsEnchantmentIcon(): string {
+    return this.shadowsEnchantmentIconPath;
   }
 
   private hasGenesisEnchantment(): boolean {
