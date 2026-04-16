@@ -1,0 +1,15 @@
+{
+  "id": "reaper-crew",
+  "name": "Reaper Crew",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Reaper_Crew.png",
+  "wikiUrl": "https://runescape.wiki/w/Reaper_Crew",
+  "category": "miscellaneous",
+  "sourceType": "player-config",
+  "isPermanent": true,
+  "effectRefs": [
+    "offensive-stat-bonus:melee:+12",
+    "offensive-stat-bonus:ranged:+12",
+    "offensive-stat-bonus:magic:+12",
+    "offensive-stat-bonus:necromancy:+12"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "devoted",
+  "name": "Devoted",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Devoted.png",
+  "wikiUrl": "https://runescape.wiki/w/Devoted",
+  "effectRefs": [],
+  "description": "Defensive Invention perk. Current simulator support is display/configuration only.",
+  "maxRank": 4,
+  "shortCode": "D"
+}
