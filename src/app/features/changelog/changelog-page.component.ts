@@ -10,6 +10,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 export class ChangelogPageComponent {
   protected readonly entries = [
     {
+      date: '16.04.2026',
+      change:
+        "Added Erethdor's grimoire as a pocket item with its active +12% critical strike chance effect, including support for pocket item effects selected through persistent buff configuration.",
+    },
+    {
       date: '11.04.2026',
       change:
         'Fixxed runic charge bugs. Implemented crit interactions with Tsunami and FSOA.',

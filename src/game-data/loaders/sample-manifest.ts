@@ -59,6 +59,7 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
     '/game-data/items/reaper-necklace.sample.json',
     '/game-data/items/scripture-of-ful.sample.json',
     '/game-data/items/scripture-of-jas.sample.json',
+    '/game-data/items/erethdors-grimoire.sample.json',
     '/game-data/items/ek-zekkil.sample.json',
     '/game-data/items/zaros-godsword.sample.json',
     '/game-data/items/terrasaur-maul.sample.json',

@@ -22,6 +22,9 @@ export function collectActiveEffectRefs(
     ...persistentBuffIds.flatMap((buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? []),
     ...(timelineBuffs[hitTick] ?? []).flatMap((buffId) => projectedConfig.gameData.buffs[buffId]?.effectRefs ?? []),
   ];
+  const activePocketEffectRefs =
+    (projectedConfig.persistentBuffConfig.pocketEffectItemIds ?? [])
+      .flatMap((itemId) => projectedConfig.gameData.items[itemId]?.effectRefs ?? []);
 
   const equippedItemEffectRefs = Object.entries(projectedConfig.gearSetup.equipment).flatMap(([slot, instance]) => {
     if (!instance || slot === 'ammo') {
@@ -42,6 +45,7 @@ export function collectActiveEffectRefs(
   return [...new Set([
     ...(ability.effectRefs ?? []),
     ...activeBuffEffectRefs,
+    ...activePocketEffectRefs,
     ...equippedItemEffectRefs,
     ...ammoEffectRefs,
     ...equippedPerkEffectRefs,

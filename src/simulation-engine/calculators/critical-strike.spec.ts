@@ -49,6 +49,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         combatStyleTags: ['ranged'],
         effectRefs: ['deathspore-progress'],
       },
+      'erethdors-grimoire': {
+        id: 'erethdors-grimoire',
+        name: "Erethdor's grimoire",
+        category: 'pocket',
+        slot: 'pocket',
+        combatStyleTags: ['ranged', 'melee', 'magic', 'necromancy'],
+        effectRefs: ['critical-strike-chance:+12%'],
+      },
     },
     ammo: {},
     abilities: {},
@@ -130,6 +138,40 @@ describe('applyExpectedValueCriticalStrike', () => {
       avg: 105,
       max: 150,
     });
+  });
+
+  it('applies active pocket item critical strike chance from Erethdor grimoire', () => {
+    const base = applyExpectedValueCriticalStrike(
+      createConfig(),
+      createAbility(),
+      {
+        min: 100,
+        avg: 100,
+        max: 100,
+      },
+      0,
+      {},
+    );
+    const withGrimoire = applyExpectedValueCriticalStrike(
+      createConfig({
+        persistentBuffConfig: {
+          pocketEffectItemIds: ['erethdors-grimoire'],
+        },
+      }),
+      createAbility(),
+      {
+        min: 100,
+        avg: 100,
+        max: 100,
+      },
+      0,
+      {},
+    );
+
+    expect(withGrimoire.finalDamage.avg).toBeGreaterThan(base.finalDamage.avg);
+    expect(withGrimoire.expectedValueModifiers.map((entry) => entry.sourceId)).toContain(
+      'critical-strike-chance-bonus',
+    );
   });
 
   it('applies active crit chance bonuses from gear and generated buffs', () => {
