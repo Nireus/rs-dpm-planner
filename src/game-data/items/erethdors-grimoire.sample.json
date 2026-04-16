@@ -1,0 +1,17 @@
+{
+  "id": "erethdors-grimoire",
+  "name": "Erethdor's grimoire",
+  "category": "pocket",
+  "slot": "pocket",
+  "iconPath": "https://runescape.wiki/w/Special:FilePath/Erethdor%27s_grimoire.png",
+  "wikiUrl": "https://runescape.wiki/w/Erethdor%27s_grimoire",
+  "hoverSummary": "Pocket-slot book from Solak that increases critical strike chance while active.",
+  "detailLines": [
+    "Pocket-slot item obtained as a rare drop from Solak.",
+    "When active, increases critical strike chance by 12%.",
+    "The increase is additive with other critical strike chance boosts such as Biting."
+  ],
+  "combatStyleTags": ["ranged", "melee", "magic", "necromancy"],
+  "effectRefs": ["critical-strike-chance:+12%"],
+  "implementationNotes": "Wiki-verified with Playwright on 2026-04-16. Charge consumption and Solak arena charge preservation are not simulated; the configured active effect applies its +12% critical strike chance."
+}
