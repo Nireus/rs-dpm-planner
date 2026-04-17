@@ -17,6 +17,9 @@
       <article class="panel">
         <h2>Save current workspace</h2>
         <p>Creates a named cloud save from your current local planner state.</p>
+        <p class="limit-note">
+          Saved builds {{ savedBuildCount() }} / {{ maxSavedBuilds }} &middot; public builds {{ publicBuildCount() }} / {{ maxPublicBuilds }}
+        </p>
 
         <label class="field">
           <span>Title</span>
@@ -70,6 +73,10 @@
           </label>
         }
 
+        @if (saveLimitMessage(); as limitMessage) {
+          <p class="status error">{{ limitMessage }}</p>
+        }
+
         <div class="actions">
           <button type="button" class="primary-button" [disabled]="!canSave() || busy()" (click)="saveCurrentBuild()">Save Build</button>
         </div>
@@ -77,6 +84,9 @@
 
       <article class="panel">
         <h2>Saved builds</h2>
+        <p class="limit-note">
+          Saved builds {{ savedBuildCount() }} / {{ maxSavedBuilds }} &middot; public builds {{ publicBuildCount() }} / {{ maxPublicBuilds }}
+        </p>
 
         @if (message()) {
           <p class="status success">{{ message() }}</p>
@@ -129,7 +139,15 @@
                 @if (build.visibility === 'public') {
                   <button type="button" class="secondary-button" (click)="setVisibility(build, 'private')">Unpublish</button>
                 } @else {
-                  <button type="button" class="primary-button" (click)="setVisibility(build, 'public')">Publish</button>
+                  <button
+                    type="button"
+                    class="primary-button"
+                    [disabled]="busy() || publicBuildLimitReached()"
+                    [title]="publicBuildLimitReached() ? 'Unpublish another build before publishing this one.' : 'Publish this build'"
+                    (click)="setVisibility(build, 'public')"
+                  >
+                    Publish
+                  </button>
                 }
                 <button type="button" class="danger-button" (click)="deleteBuild(build)">Delete</button>
               </div>

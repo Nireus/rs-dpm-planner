@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BUILD_STYLE_OPTIONS, type BuildMetadataInput, type BuildStyleTag, type BuildVisibility, type CloudBuildSummary } from '../../core/builds/build-sharing.models';
+import {
+  getCreateBuildLimitMessage,
+  getPublishBuildLimitMessage,
+  MAX_PUBLIC_BUILDS_PER_USER,
+  MAX_SAVED_BUILDS_PER_USER,
+} from '../../core/builds/build-limits';
 import { deriveBuildStyleTagsFromRotation } from '../../core/builds/build-style-tags';
 import { CloudBuildRepository } from '../../core/builds/cloud-build.repository';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
@@ -31,7 +37,19 @@ export class MyBuildsPageComponent implements OnInit {
   protected readonly includeProfileSocials = signal(false);
   protected readonly selectedStyleTags = signal<BuildStyleTag[]>([]);
   protected readonly styleOptions = BUILD_STYLE_OPTIONS;
-  protected readonly canSave = computed(() => this.authStore.isAuthenticated() && this.title().trim().length > 0);
+  protected readonly maxSavedBuilds = MAX_SAVED_BUILDS_PER_USER;
+  protected readonly maxPublicBuilds = MAX_PUBLIC_BUILDS_PER_USER;
+  protected readonly savedBuildCount = computed(() => this.builds().length);
+  protected readonly publicBuildCount = computed(() => this.builds().filter((build) => build.visibility === 'public').length);
+  protected readonly saveLimitMessage = computed(() =>
+    getCreateBuildLimitMessage(this.savedBuildCount(), this.publicBuildCount(), this.visibility()),
+  );
+  protected readonly publicBuildLimitReached = computed(() =>
+    getPublishBuildLimitMessage(this.publicBuildCount()) !== null,
+  );
+  protected readonly canSave = computed(() =>
+    this.authStore.isAuthenticated() && this.title().trim().length > 0 && this.saveLimitMessage() === null,
+  );
 
   ngOnInit(): void {
     this.suggestStyleTags();
@@ -54,6 +72,12 @@ export class MyBuildsPageComponent implements OnInit {
   }
 
   protected async saveCurrentBuild(): Promise<void> {
+    const limitMessage = this.saveLimitMessage();
+    if (limitMessage) {
+      this.error.set(limitMessage);
+      return;
+    }
+
     const metadata = this.buildMetadata();
     if (!metadata) {
       return;
@@ -99,6 +123,18 @@ export class MyBuildsPageComponent implements OnInit {
   }
 
   protected async setVisibility(build: CloudBuildSummary, visibility: BuildVisibility): Promise<void> {
+    if (visibility === 'public') {
+      const limitMessage = getPublishBuildLimitMessage(
+        this.builds().filter((currentBuild) => (
+          currentBuild.id !== build.id && currentBuild.visibility === 'public'
+        )).length,
+      );
+      if (limitMessage) {
+        this.error.set(limitMessage);
+        return;
+      }
+    }
+
     this.busy.set(true);
     const result = await this.repository.updateBuildMetadata(
       build.id,

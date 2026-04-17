@@ -13,13 +13,13 @@ This app uses two Supabase projects: one for local development and one for produ
 Repeat these steps in both dev and prod:
 
 1. Open **SQL Editor**.
-2. Copy the contents of `supabase/migrations/20260416000000_build_sharing.sql`.
-3. Run the script.
-4. Confirm these tables, views, and functions exist:
+2. Run the SQL files in `supabase/migrations` in filename order.
+3. Confirm these tables, views, and functions exist:
    - `profiles`
    - `builds`
    - `build_votes`
    - `public_builds_with_stats`
+   - `enforce_build_limits`
    - `toggle_build_vote`
 
 ## 3. Enable Auth Provider
@@ -81,3 +81,4 @@ Never put a service-role key in the frontend.
 7. Open **Public Builds** while signed out and confirm it is visible.
 8. Sign in as another user and like the build.
 9. Import the public build and confirm the local planner updates.
+10. Confirm **My Builds** shows the saved/public build counters. Users can save up to 50 total builds and publish up to 20 at once.

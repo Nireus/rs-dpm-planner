@@ -16,6 +16,7 @@ import {
   type PublicBuildQuery,
 } from './build-sharing.models';
 import { normalizeBuildStyleTags } from './build-style-tags';
+import { getCreateBuildLimitMessage, getPublishBuildLimitMessage } from './build-limits';
 
 const BUILD_WITH_OWNER_PROFILE_SELECT = '*, profiles!builds_owner_id_fkey(display_name, youtube_url, twitch_url, x_url, discord_url)';
 
@@ -82,6 +83,11 @@ export class CloudBuildRepository {
       return failure('Sign in to save builds.');
     }
 
+    const limitResult = await this.ensureCanCreateBuild(visibility);
+    if (!limitResult.success) {
+      return limitResult;
+    }
+
     const config = this.workspaceRepository.readPortableConfigDocument();
     const now = new Date().toISOString();
     const { data, error } = await client
@@ -116,6 +122,11 @@ export class CloudBuildRepository {
     const userId = this.requireUserId();
     if (!client || !userId) {
       return failure('Sign in to update builds.');
+    }
+
+    const limitResult = await this.ensureCanSetVisibility(buildId, visibility);
+    if (!limitResult.success) {
+      return limitResult;
     }
 
     const config = this.workspaceRepository.readPortableConfigDocument();
@@ -154,6 +165,11 @@ export class CloudBuildRepository {
     const userId = this.requireUserId();
     if (!client || !userId) {
       return failure('Sign in to update builds.');
+    }
+
+    const limitResult = await this.ensureCanSetVisibility(buildId, visibility);
+    if (!limitResult.success) {
+      return limitResult;
     }
 
     const now = new Date().toISOString();
@@ -286,6 +302,76 @@ export class CloudBuildRepository {
 
   private requireUserId(): string | null {
     return this.authStore.userId();
+  }
+
+  private async ensureCanCreateBuild(
+    visibility: BuildVisibility,
+  ): Promise<CloudBuildOperationResult<true>> {
+    const savedBuildCount = await this.countOwnBuilds();
+    if (!savedBuildCount.success) {
+      return savedBuildCount;
+    }
+
+    const publicBuildCount = visibility === 'public'
+      ? await this.countOwnBuilds({ visibility: 'public' })
+      : success(0);
+    if (!publicBuildCount.success) {
+      return publicBuildCount;
+    }
+
+    const limitMessage = getCreateBuildLimitMessage(
+      savedBuildCount.data,
+      publicBuildCount.data,
+      visibility,
+    );
+    return limitMessage ? failure(limitMessage) : success(true);
+  }
+
+  private async ensureCanSetVisibility(
+    buildId: string,
+    visibility: BuildVisibility,
+  ): Promise<CloudBuildOperationResult<true>> {
+    if (visibility === 'private') {
+      return success(true);
+    }
+
+    const publicBuildCount = await this.countOwnBuilds({
+      visibility: 'public',
+      excludeBuildId: buildId,
+    });
+    if (!publicBuildCount.success) {
+      return publicBuildCount;
+    }
+
+    const limitMessage = getPublishBuildLimitMessage(publicBuildCount.data);
+    return limitMessage ? failure(limitMessage) : success(true);
+  }
+
+  private async countOwnBuilds(options: {
+    visibility?: BuildVisibility;
+    excludeBuildId?: string;
+  } = {}): Promise<CloudBuildOperationResult<number>> {
+    const client = this.requireClient();
+    const userId = this.requireUserId();
+    if (!client || !userId) {
+      return failure('Sign in to manage builds.');
+    }
+
+    let request = client
+      .from('builds')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId);
+
+    if (options.visibility) {
+      request = request.eq('visibility', options.visibility);
+    }
+
+    if (options.excludeBuildId) {
+      request = request.neq('id', options.excludeBuildId);
+    }
+
+    const { count, error } = await request;
+    return error ? failure(error.message) : success(count ?? 0);
   }
 }
 
