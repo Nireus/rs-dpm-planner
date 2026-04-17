@@ -1,6 +1,8 @@
 <div class="app-shell">
   <aside class="sidebar">
-    <img class="brand-logo" src="logo.png" alt="RuneScape Ranged Rotation Planner logo" />
+    <a class="brand-link" routerLink="/" aria-label="Go to home">
+      <img class="brand-logo" src="logo.png" alt="RuneScape Ranged Rotation Planner logo" />
+    </a>
 
     <nav class="nav-panel" aria-label="Primary">
       @for (item of navItems; track item.path) {
@@ -13,40 +15,61 @@
           {{ item.label }}
         </a>
       }
+    </nav>
 
+    <nav class="nav-panel workspace-panel" aria-label="Workspace">
+      <p class="nav-section-label">Workspace</p>
+      <a
+        class="nav-link"
+        routerLink="/import-export"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Import / Export
+      </a>
       <button type="button" class="clear-state-button" (click)="openClearStateDialog()">
         Clear State
       </button>
     </nav>
-
-    <nav class="nav-panel secondary-nav-panel" aria-label="Project">
-      @for (item of secondaryNavItems; track item.label) {
-        @if (item.path) {
-          <a
-            class="nav-link secondary-nav-link"
-            [class.secondary-nav-link-accent]="item.accent === 'blue'"
-            [routerLink]="item.path"
-            routerLinkActive="is-active"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            {{ item.label }}
-          </a>
-        } @else {
-          <a
-            class="nav-link secondary-nav-link"
-            [class.secondary-nav-link-accent]="item.accent === 'blue'"
-            [href]="item.href"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ item.label }}
-          </a>
-        }
-      }
-    </nav>
   </aside>
 
   <main class="content-shell">
+    <header class="top-bar" aria-label="Workspace utilities">
+      <div class="top-bar-copy">
+        <span class="top-eyebrow">SweatyRS</span>
+        <strong>{{ currentScreenHelp()?.title ?? 'RuneScape DPM Planner' }}</strong>
+      </div>
+
+      <div class="top-menu-row">
+        <a class="top-link" routerLink="/public-builds" routerLinkActive="is-active">Public Builds</a>
+        <a class="top-link" routerLink="/my-builds" routerLinkActive="is-active">My Builds</a>
+        <a
+          class="top-link donate-link"
+          href="https://ko-fi.com/sweatyrs"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Donate
+        </a>
+
+        <details class="top-menu account-menu">
+          <summary>{{ authStore.isAuthenticated() ? authStore.displayName() : 'Sign In' }}</summary>
+          <div class="top-menu-popover account-popover">
+            @if (authStore.isAuthenticated()) {
+              <p class="menu-caption">Signed in as {{ authStore.displayName() }}</p>
+              <button type="button" class="menu-item" (click)="openAuthDialog()">Account Settings</button>
+              <a class="menu-item" routerLink="/reporting">Report Bug / Request Feature</a>
+              <button type="button" class="menu-item" (click)="signOut()">Sign Out</button>
+            } @else {
+              <p class="menu-caption">Sign in to save, publish, and vote on builds.</p>
+              <button type="button" class="menu-item primary" (click)="openAuthDialog()">Sign In</button>
+              <a class="menu-item" routerLink="/reporting">Report Bug / Request Feature</a>
+            }
+          </div>
+        </details>
+      </div>
+    </header>
+
     @if (currentScreenHelp()) {
       <button
         type="button"
@@ -79,6 +102,112 @@
       <div class="app-dialog-actions">
         <button type="button" class="dialog-secondary" (click)="closeClearStateDialog()">Cancel</button>
         <button type="button" class="dialog-danger" (click)="confirmClearState()">Clear Everything</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (authDialogOpen()) {
+  <div class="app-dialog-backdrop" (click)="closeAuthDialog()">
+    <section
+      class="app-dialog auth-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-dialog-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="app-dialog-copy">
+        <p class="dialog-eyebrow">Account</p>
+        <h2 id="auth-dialog-title">{{ authStore.isAuthenticated() ? 'Account settings' : 'Sign in' }}</h2>
+        @if (!authStore.isConfigured()) {
+          <p>Supabase is not configured yet. Add your dev or prod project URL and anon key to the environment files.</p>
+        } @else if (authStore.isAuthenticated()) {
+          <p>Set the display name shown on public builds. Social links are optional and will be visible on your public builds.</p>
+        } @else {
+          <p>Use an email magic link to save and publish builds.</p>
+        }
+      </div>
+
+      @if (authStore.isConfigured()) {
+        @if (authStore.isAuthenticated()) {
+          <label class="dialog-field">
+            <span>Display name</span>
+            <input
+              type="text"
+              [ngModel]="displayNameDraft()"
+              (ngModelChange)="displayNameDraft.set($event)"
+              placeholder="Public builder name"
+            />
+          </label>
+
+          <div class="profile-social-grid">
+            <label class="dialog-field">
+              <span>YouTube URL</span>
+              <input
+                type="url"
+                [ngModel]="profileYoutubeUrlDraft()"
+                (ngModelChange)="profileYoutubeUrlDraft.set($event)"
+                placeholder="Optional"
+              />
+            </label>
+            <label class="dialog-field">
+              <span>Twitch URL</span>
+              <input
+                type="url"
+                [ngModel]="profileTwitchUrlDraft()"
+                (ngModelChange)="profileTwitchUrlDraft.set($event)"
+                placeholder="Optional"
+              />
+            </label>
+            <label class="dialog-field">
+              <span>X URL</span>
+              <input
+                type="url"
+                [ngModel]="profileXUrlDraft()"
+                (ngModelChange)="profileXUrlDraft.set($event)"
+                placeholder="Optional"
+              />
+            </label>
+            <label class="dialog-field">
+              <span>Discord URL</span>
+              <input
+                type="url"
+                [ngModel]="profileDiscordUrlDraft()"
+                (ngModelChange)="profileDiscordUrlDraft.set($event)"
+                placeholder="Optional"
+              />
+            </label>
+          </div>
+        } @else {
+          <label class="dialog-field">
+            <span>Email magic link</span>
+            <input
+              type="email"
+              [ngModel]="authEmail()"
+              (ngModelChange)="authEmail.set($event)"
+              placeholder="you@example.com"
+            />
+          </label>
+
+          <div class="auth-provider-grid">
+            <button type="button" class="dialog-secondary" (click)="signInWithMagicLink()">Send Magic Link</button>
+          </div>
+        }
+      }
+
+      @if (authStore.message()) {
+        <p class="dialog-status success">{{ authStore.message() }}</p>
+      }
+
+      @if (authStore.error()) {
+        <p class="dialog-status error">{{ authStore.error() }}</p>
+      }
+
+      <div class="app-dialog-actions">
+        <button type="button" class="dialog-secondary" (click)="closeAuthDialog()">Close</button>
+        @if (authStore.isAuthenticated()) {
+          <button type="button" class="dialog-secondary" (click)="saveProfile()">Save Profile</button>
+        }
       </div>
     </section>
   </div>

@@ -1,0 +1,144 @@
+<section class="page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Cloud saves</p>
+      <h1>My Builds</h1>
+    </div>
+    <button type="button" class="secondary-button" (click)="loadBuilds()">Refresh</button>
+  </header>
+
+  @if (!authStore.isAuthenticated()) {
+    <article class="panel">
+      <h2>Sign in required</h2>
+      <p>Use the account panel in the sidebar to sign in before saving builds.</p>
+    </article>
+  } @else {
+    <section class="grid">
+      <article class="panel">
+        <h2>Save current workspace</h2>
+        <p>Creates a named cloud save from your current local planner state.</p>
+
+        <label class="field">
+          <span>Title</span>
+          <input type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" placeholder="e.g. Ranged Raksha practice" />
+        </label>
+
+        <label class="field">
+          <span>Description</span>
+          <textarea [ngModel]="description()" (ngModelChange)="description.set($event)" placeholder="Notes, assumptions, intended boss, or rotation comments"></textarea>
+        </label>
+
+        <div class="detected-styles">
+          <span class="field-label">Styles detected from rotation</span>
+          <div class="style-row">
+            @for (tag of selectedStyleTags(); track tag) {
+              <span class="style-token" [title]="tag">
+                @if (styleIconPath(tag); as iconPath) {
+                  <img class="style-icon" [src]="iconPath" [alt]="tag" />
+                } @else {
+                  <span class="hybrid-icons" aria-hidden="true">
+                    @for (iconPath of hybridIconPaths(); track iconPath) {
+                      <img class="style-icon mini" [src]="iconPath" alt="" />
+                    }
+                  </span>
+                }
+                <span class="sr-only">{{ tag }}</span>
+              </span>
+            } @empty {
+              <span class="muted">No styles detected yet.</span>
+            }
+            <button type="button" class="secondary-button compact" (click)="suggestStyleTags()">Refresh</button>
+          </div>
+          <p class="hint">Style tags are always extracted from the current rotation when the build is saved or updated.</p>
+        </div>
+
+        <label class="field">
+          <span>Visibility</span>
+          <select [ngModel]="visibility()" (ngModelChange)="visibility.set($event)">
+            <option value="private">Private</option>
+            <option value="public">Public</option>
+          </select>
+        </label>
+
+        @if (visibility() === 'public') {
+          <label class="checkbox-field social-toggle">
+            <input type="checkbox" [ngModel]="includeProfileSocials()" (ngModelChange)="includeProfileSocials.set($event)" />
+            <span>
+              <strong>Show profile socials on this public build</strong>
+              <small>Optional. These links are visible to everyone when the build is public.</small>
+            </span>
+          </label>
+        }
+
+        <div class="actions">
+          <button type="button" class="primary-button" [disabled]="!canSave() || busy()" (click)="saveCurrentBuild()">Save Build</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>Saved builds</h2>
+
+        @if (message()) {
+          <p class="status success">{{ message() }}</p>
+        }
+        @if (error()) {
+          <p class="status error">{{ error() }}</p>
+        }
+
+        <div class="build-list">
+          @for (build of builds(); track build.id) {
+            <article class="build-card">
+              <div class="build-heading">
+                <div>
+                  <h3>{{ build.title }}</h3>
+                  <p>{{ build.visibility }} · updated {{ formatDate(build.updatedAt) }}</p>
+                </div>
+                <span class="likes">{{ build.likeCount }} likes</span>
+              </div>
+              <p>{{ build.description || 'No description.' }}</p>
+              <div class="tag-row">
+                @for (tag of build.styleTags; track tag) {
+                  <span class="style-token" [title]="tag">
+                    @if (styleIconPath(tag); as iconPath) {
+                      <img class="style-icon" [src]="iconPath" [alt]="tag" />
+                    } @else {
+                      <span class="hybrid-icons" aria-hidden="true">
+                        @for (iconPath of hybridIconPaths(); track iconPath) {
+                          <img class="style-icon mini" [src]="iconPath" alt="" />
+                        }
+                      </span>
+                    }
+                    <span class="sr-only">{{ tag }}</span>
+                  </span>
+                }
+              </div>
+              <label class="checkbox-field compact-checkbox social-toggle compact-social-toggle">
+                <input
+                  type="checkbox"
+                  [ngModel]="build.includeProfileSocials"
+                  (ngModelChange)="setIncludeProfileSocials(build, $event)"
+                />
+                <span>
+                  <strong>Show profile socials publicly</strong>
+                  <small>Used only when this build is public.</small>
+                </span>
+              </label>
+              <div class="actions wrap">
+                <button type="button" class="secondary-button" (click)="importBuild(build)">Import</button>
+                <button type="button" class="secondary-button" (click)="updateBuildFromCurrentWorkspace(build)">Update from current</button>
+                @if (build.visibility === 'public') {
+                  <button type="button" class="secondary-button" (click)="setVisibility(build, 'private')">Unpublish</button>
+                } @else {
+                  <button type="button" class="primary-button" (click)="setVisibility(build, 'public')">Publish</button>
+                }
+                <button type="button" class="danger-button" (click)="deleteBuild(build)">Delete</button>
+              </div>
+            </article>
+          } @empty {
+            <p>No saved builds yet.</p>
+          }
+        </div>
+      </article>
+    </section>
+  }
+</section>

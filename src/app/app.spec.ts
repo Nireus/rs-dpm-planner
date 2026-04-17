@@ -29,16 +29,25 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    const navPanels = compiled.querySelectorAll('.nav-panel');
-    const primaryLinks = Array.from(navPanels[0]?.querySelectorAll('.nav-link') ?? []).map((link) =>
+    const accountNav = compiled.querySelector('nav[aria-label="Account navigation"]');
+    const primaryNav = compiled.querySelector('nav[aria-label="Primary"]');
+    const projectNav = compiled.querySelector('nav[aria-label="Project"]');
+    const accountLinks = Array.from(accountNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
       link.textContent?.trim(),
     );
-    const secondaryLinks = Array.from(navPanels[1]?.querySelectorAll('.nav-link') ?? []).map((link) =>
+    const primaryLinks = Array.from(primaryNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
+      link.textContent?.trim(),
+    );
+    const secondaryLinks = Array.from(projectNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
       link.textContent?.trim(),
     );
 
-    expect(primaryLinks).toEqual([
+    expect(accountLinks).toEqual([
       'Home',
+      'Public Builds',
+      'My Builds',
+    ]);
+    expect(primaryLinks).toEqual([
       'Gear',
       'Buffs',
       'Abilities',

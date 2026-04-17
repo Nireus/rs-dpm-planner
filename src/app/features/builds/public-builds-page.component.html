@@ -1,0 +1,177 @@
+<section class="page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Community</p>
+      <h1>Public Builds</h1>
+    </div>
+    <button type="button" class="secondary-button" (click)="loadBuilds()">Refresh</button>
+  </header>
+
+  <article class="panel filters">
+    <label class="field search-field">
+      <span>Search title or publisher</span>
+      <input
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        (keyup.enter)="loadBuilds()"
+        placeholder="Search public builds..."
+      />
+    </label>
+
+    <label class="field sort-field">
+      <span>Sort</span>
+      <select [ngModel]="sort()" (ngModelChange)="sort.set($event); loadBuilds()">
+        <option value="likes">Most liked</option>
+        <option value="newest">Newest</option>
+      </select>
+    </label>
+
+    <div class="style-row">
+      @for (style of styleOptions; track style.id) {
+        <label class="style-chip" [title]="style.label" [attr.aria-label]="style.label">
+          <input type="checkbox" [checked]="isStyleSelected(style.id)" (change)="toggleStyleTag(style.id)" />
+          @if (style.iconPath) {
+            <img class="style-icon" [src]="style.iconPath" [alt]="style.label" />
+          } @else {
+            <span class="hybrid-icons" aria-hidden="true">
+              @for (iconPath of hybridIconPaths(); track iconPath) {
+                <img class="style-icon mini" [src]="iconPath" alt="" />
+              }
+            </span>
+          }
+          <span class="sr-only">{{ style.label }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary-button" (click)="loadBuilds()">Apply Filters</button>
+      <button type="button" class="secondary-button" (click)="clearFilters()">Clear {{ activeFilterCount() ? '(' + activeFilterCount() + ')' : '' }}</button>
+    </div>
+  </article>
+
+  @if (message()) {
+    <p class="status success">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="status error">{{ error() }}</p>
+  }
+
+  @if (builds().length) {
+    <section class="build-table-panel" aria-label="Public builds table">
+      <table class="build-table">
+        <thead>
+          <tr>
+            <th scope="col">Build</th>
+            <th scope="col">Publisher</th>
+            <th scope="col">Styles</th>
+            <th scope="col">Socials</th>
+            <th scope="col">Likes</th>
+            <th scope="col">Published</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (build of builds(); track build.id) {
+            <tr>
+              <td class="build-title-cell">
+                <strong>{{ build.title }}</strong>
+                <span>{{ build.description || 'No description provided.' }}</span>
+              </td>
+              <td>{{ build.authorName }}</td>
+              <td>
+                <div class="tag-row compact-row">
+                  @for (tag of build.styleTags; track tag) {
+                    <span class="style-token" [title]="tag">
+                      @if (styleIconPath(tag); as iconPath) {
+                        <img class="style-icon" [src]="iconPath" [alt]="tag" />
+                      } @else {
+                        <span class="hybrid-icons" aria-hidden="true">
+                          @for (iconPath of hybridIconPaths(); track iconPath) {
+                            <img class="style-icon mini" [src]="iconPath" alt="" />
+                          }
+                        </span>
+                      }
+                      <span class="sr-only">{{ tag }}</span>
+                    </span>
+                  }
+                </div>
+              </td>
+              <td>
+                @if (socialLinks(build).length) {
+                  <div class="social-row compact-row">
+                    @for (link of socialLinks(build); track link.label) {
+                      <a
+                        class="social-link"
+                        [class.youtube]="link.kind === 'youtube'"
+                        [class.twitch]="link.kind === 'twitch'"
+                        [class.x]="link.kind === 'x'"
+                        [class.discord]="link.kind === 'discord'"
+                        [href]="link.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [title]="link.label"
+                        [attr.aria-label]="link.label"
+                      >
+                        @switch (link.kind) {
+                          @case ('youtube') {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M21.2 7.4a3 3 0 0 0-2.1-2.1C17.2 4.8 12 4.8 12 4.8s-5.2 0-7.1.5a3 3 0 0 0-2.1 2.1 31.2 31.2 0 0 0 0 9.2 3 3 0 0 0 2.1 2.1c1.9.5 7.1.5 7.1.5s5.2 0 7.1-.5a3 3 0 0 0 2.1-2.1 31.2 31.2 0 0 0 0-9.2Z" />
+                              <path class="cutout" d="m10 15.3 5.3-3.3L10 8.7v6.6Z" />
+                            </svg>
+                          }
+                          @case ('twitch') {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M5.2 3.2h15.1v10.4l-4.2 4.2h-3.4L9.6 21H7v-3.2H3.7V7.1l1.5-3.9Zm2 2.1v10.4h3.3v2.2l2.2-2.2h3.7l1.8-1.8V5.3h-11Z" />
+                              <path class="cutout" d="M11 8h1.7v4.8H11V8Zm4.3 0H17v4.8h-1.7V8Z" />
+                            </svg>
+                          }
+                          @case ('x') {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M15 10.4 21 3h-3.2l-4.3 5.2L9.9 3H3l7.3 10.2L3.7 21H7l4.8-5.7 4 5.7H22l-7-10.6Zm-8.2-5h1.9l9.5 13.2h-1.9L6.8 5.4Z" />
+                            </svg>
+                          }
+                          @case ('discord') {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M8.1 5.2c1.4-.6 2.6-.8 3.9-.8s2.5.2 3.9.8l.4 1c2 .6 3.3 1.8 4 3.6.8 2.5.6 5.1-.6 7.8-1.6 1.1-3.1 1.8-4.7 2.1l-.9-1.5c.8-.2 1.5-.5 2.1-.9a12 12 0 0 1-8.4 0c.6.4 1.3.7 2.1.9L9 19.7c-1.6-.3-3.1-1-4.7-2.1-1.2-2.7-1.4-5.3-.6-7.8.7-1.8 2-3 4-3.6l.4-1Zm1 6.8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm5.8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
+                            </svg>
+                          }
+                        }
+                        <span class="sr-only">{{ link.label }}</span>
+                      </a>
+                    }
+                  </div>
+                } @else {
+                  <span class="muted">None</span>
+                }
+              </td>
+              <td>
+                <span class="likes">{{ build.likeCount }}</span>
+              </td>
+              <td>{{ formatDate(build.publishedAt) }}</td>
+              <td>
+                <div class="actions table-actions">
+                  <button type="button" class="primary-button" (click)="importBuild(build)">Import</button>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    [disabled]="!authStore.isAuthenticated()"
+                    (click)="toggleVote(build)"
+                  >
+                    {{ build.votedByMe ? 'Unlike' : 'Like' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <article class="panel">
+      <h2>No public builds found</h2>
+      <p>Try clearing filters, or publish the first build from My Builds.</p>
+    </article>
+  }
+</section>

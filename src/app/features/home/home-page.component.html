@@ -42,15 +42,17 @@
   </section>
 
   <section class="info-grid">
-    <article class="panel quick-start">
-      <p class="section-label">What I am working on...</p>
-      <h2>Current priorities</h2>
-      <ol class="ordered-list">
-        <li>Adding more best-in-slot gear coverage</li>
-        <li>Supporting prebuild rotations and stall-based mechanics</li>
-        <li>Public builds and sharing support</li>
-        <li>In-memory configuration saves</li>
-      </ol>
+    <article class="panel changelog-panel">
+      <p class="section-label">Changelog</p>
+      <h2>Recent updates</h2>
+      <div class="changelog-list">
+        @for (entry of changelogEntries; track entry.date + entry.change) {
+          <article class="changelog-row">
+            <span class="changelog-date">{{ entry.date }}</span>
+            <span class="changelog-change">{{ entry.change }}</span>
+          </article>
+        }
+      </div>
     </article>
 
     <article class="panel assumptions">

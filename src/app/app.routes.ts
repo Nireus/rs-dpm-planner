@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { AbilitiesPageComponent } from './features/abilities/abilities-page.component';
 import { BuffsPageComponent } from './features/buffs/buffs-page.component';
-import { ChangelogPageComponent } from './features/changelog/changelog-page.component';
+import { MyBuildsPageComponent } from './features/builds/my-builds-page.component';
+import { PublicBuildsPageComponent } from './features/builds/public-builds-page.component';
 import { DataExplorerPageComponent } from './features/data-explorer/data-explorer-page.component';
 import { GearBuilderPageComponent } from './features/gear/gear-builder-page.component';
 import { HomePageComponent } from './features/home/home-page.component';
@@ -29,6 +30,14 @@ export const routes: Routes = [
   {
     path: 'home',
     component: HomePageComponent,
+  },
+  {
+    path: 'public-builds',
+    component: PublicBuildsPageComponent,
+  },
+  {
+    path: 'my-builds',
+    component: MyBuildsPageComponent,
   },
   {
     path: 'gear',
@@ -78,10 +87,6 @@ export const routes: Routes = [
     data: {
       screenHelp: IMPORT_EXPORT_SCREEN_HELP,
     },
-  },
-  {
-    path: 'changelog',
-    component: ChangelogPageComponent,
   },
   {
     path: 'reporting',

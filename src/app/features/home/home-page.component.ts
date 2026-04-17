@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CHANGELOG_ENTRIES } from '../changelog/changelog-entries';
 
 @Component({
   selector: 'app-home-page',
@@ -6,6 +7,8 @@ import { Component } from '@angular/core';
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
+  protected readonly changelogEntries = CHANGELOG_ENTRIES;
+
   protected readonly assumptions = [
     'This is an ideal-theory calculator for ranged on a single target, built for players who want to optimize cleanly and push damage plans hard.',
     'The simulation assumes the rotation is executed well: no missed inputs, no movement loss, no interruptions, and no fight-specific downtime.',
