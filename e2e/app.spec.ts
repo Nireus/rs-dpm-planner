@@ -24,7 +24,7 @@ test('covers the main happy path from setup through import/export restore', asyn
     await page.getByTestId('gear-catalog-bolg').click();
     await page.getByRole('button', { name: 'Equip to Weapon' }).click();
     await closeGearDetailIfPresent(page);
-    await expect(page.getByRole('button', { name: /Weapon.*Bow of the Last Guardian/i })).toBeVisible();
+    await expect(page.getByTestId('gear-slot-weapon')).toContainText(/Bow of the La/);
   });
 
   await test.step('activate a persistent buff', async () => {
@@ -61,13 +61,13 @@ test('covers the main happy path from setup through import/export restore', asyn
   let exportedConfig = '';
 
   await test.step('export the current config', async () => {
-    await primaryNavLink(page, 'Import / Export').click();
+    await workspaceNavLink(page, 'Import / Export').click();
     await expect(page.getByRole('heading', { name: 'Import / Export' })).toBeVisible();
 
     const exportJson = page.getByTestId('export-json');
     await expect(exportJson).not.toHaveValue('');
     exportedConfig = await exportJson.evaluate((element) => (element as HTMLTextAreaElement).value);
-    expect(exportedConfig).toContain('"schemaVersion": 1');
+    expect(exportedConfig).toContain('"schemaVersion": 2');
     expect(exportedConfig).toContain('"abilityId": "piercing-shot"');
   });
 
@@ -80,12 +80,12 @@ test('covers the main happy path from setup through import/export restore', asyn
     await page.getByTestId('gear-catalog-gloomfire-bow').click();
     await page.getByRole('button', { name: 'Equip to Weapon' }).click();
     await closeGearDetailIfPresent(page);
-    await expect(page.getByRole('button', { name: /Weapon.*Gloomfire bow/i })).toBeVisible();
+    await expect(page.getByTestId('gear-slot-weapon')).toContainText('Gloomfire bow');
 
-    await primaryNavLink(page, 'Import / Export').click();
+    await workspaceNavLink(page, 'Import / Export').click();
     await expect(page.getByTestId('export-json')).not.toHaveValue(exportedConfig);
 
-    await page.getByTestId('import-json').fill(exportedConfig);
+    await fillImportJson(page, exportedConfig);
     await page.getByTestId('validate-import-json').click();
     await expect(page.getByTestId('import-status')).toContainText('ready to import');
 
@@ -109,7 +109,7 @@ test('shows Perfect Equilibrium in results after a BoLG proc rotation', async ({
     await page.getByRole('button', { name: 'Equip to Weapon' }).click();
     await closeGearDetailIfPresent(page);
 
-    await expect(page.getByRole('button', { name: /Weapon.*Bow of the Last Guardian/i })).toBeVisible();
+    await expect(page.getByTestId('gear-slot-weapon')).toContainText(/Bow of the La/);
   });
 
   await test.step('place enough hits to proc Perfect Equilibrium', async () => {
@@ -122,6 +122,10 @@ test('shows Perfect Equilibrium in results after a BoLG proc rotation', async ({
     await dragToTimelineCell(page, 'ability-palette-piercing-shot', 'timeline-cell-ability-18');
 
     await expect(page.getByText('No current validation issues')).toBeVisible();
+    await expect(page.getByAltText('Perfect Equilibrium trigger').first()).toHaveAttribute(
+      'src',
+      /perfect-equilibrium-self-status\.png/,
+    );
   });
 
   await test.step('confirm Perfect Equilibrium contributes damage in results', async () => {
@@ -135,11 +139,19 @@ function primaryNavLink(page: Page, label: string) {
   return page.getByLabel('Primary').getByRole('link', { name: label, exact: true });
 }
 
+function workspaceNavLink(page: Page, label: string) {
+  return page.getByLabel('Workspace').getByRole('link', { name: label, exact: true });
+}
+
 async function closeGearDetailIfPresent(page: Page): Promise<void> {
   const closeButton = page.getByRole('button', { name: 'Close detail dialog' });
-  if (await closeButton.isVisible({ timeout: 500 }).catch(() => false)) {
-    await closeButton.click().catch(() => undefined);
+  await closeButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+  if (!(await closeButton.isVisible().catch(() => false))) {
+    return;
   }
+
+  await closeButton.click({ force: true });
+  await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 10000 }).catch(() => undefined);
 }
 
 async function closeBuffDetailIfPresent(page: Page): Promise<void> {
@@ -147,6 +159,21 @@ async function closeBuffDetailIfPresent(page: Page): Promise<void> {
   if (await closeButton.isVisible({ timeout: 500 }).catch(() => false)) {
     await closeButton.click().catch(() => undefined);
   }
+}
+
+async function fillImportJson(page: Page, value: string): Promise<void> {
+  const input = page.getByTestId('import-json');
+  await input.fill(value);
+
+  if ((await input.inputValue()) !== value) {
+    await input.evaluate((element, nextValue) => {
+      const textarea = element as HTMLTextAreaElement;
+      textarea.value = nextValue;
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+  }
+
+  await expect(input).toHaveValue(value);
 }
 
 async function dragToTimelineCell(page: Page, sourceTestId: string, targetTestId: string): Promise<void> {

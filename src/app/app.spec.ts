@@ -24,29 +24,26 @@ describe('App', () => {
     expect(compiled.querySelector('.brand-logo')).toBeTruthy();
   });
 
-  it('should render primary and project navigation links', async () => {
+  it('should render the current app navigation links', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    const accountNav = compiled.querySelector('nav[aria-label="Account navigation"]');
     const primaryNav = compiled.querySelector('nav[aria-label="Primary"]');
-    const projectNav = compiled.querySelector('nav[aria-label="Project"]');
-    const accountLinks = Array.from(accountNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
-      link.textContent?.trim(),
-    );
+    const workspaceNav = compiled.querySelector('nav[aria-label="Workspace"]');
+    const topBar = compiled.querySelector('header[aria-label="Workspace utilities"]');
+    const brandLink = compiled.querySelector<HTMLAnchorElement>('.brand-link');
     const primaryLinks = Array.from(primaryNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
       link.textContent?.trim(),
     );
-    const secondaryLinks = Array.from(projectNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
+    const workspaceLinks = Array.from(workspaceNav?.querySelectorAll('.nav-link') ?? []).map((link) =>
+      link.textContent?.trim(),
+    );
+    const topLinks = Array.from(topBar?.querySelectorAll('.top-link') ?? []).map((link) =>
       link.textContent?.trim(),
     );
 
-    expect(accountLinks).toEqual([
-      'Home',
-      'Public Builds',
-      'My Builds',
-    ]);
+    expect(brandLink?.getAttribute('aria-label')).toBe('Go to home');
     expect(primaryLinks).toEqual([
       'Gear',
       'Buffs',
@@ -54,12 +51,12 @@ describe('App', () => {
       'Spellbook',
       'Rotation Planner',
       'Results',
-      'Import / Export',
     ]);
-    expect(secondaryLinks).toEqual([
+    expect(workspaceLinks).toEqual(['Import / Export']);
+    expect(topLinks).toEqual([
+      'Public Builds',
+      'My Builds',
       'Donate',
-      'Bug Report / Functionality Request',
-      'Changelog',
     ]);
   });
 });

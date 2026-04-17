@@ -1,7 +1,7 @@
 {
   "id": "kalgerion-demon",
   "name": "Kal'gerion demon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Binding_contract_%28kal%27gerion_demon%29.png",
+  "iconPath": "/icons/wiki/binding-contract-kalgerion-demon.png",
   "wikiUrl": "https://runescape.wiki/w/Kal%27gerion_demon_(familiar)",
   "category": "summon",
   "sourceType": "player-config",

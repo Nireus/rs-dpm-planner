@@ -9,7 +9,7 @@ import type { PlannerBuffLaneBar } from './rotation-planner-buff-lane';
 import type { PlannerCooldownLaneBar } from './rotation-planner-cooldown-lane';
 import { getAbilitySegment, getAbilityTimelineSpan } from '../../core/rotation-planner/rotation-planner.utils';
 export const PERFECT_EQUILIBRIUM_ICON_PATH =
-  '/icons/wiki/equilibrium.png';
+  '/icons/wiki/perfect-equilibrium-self-status.png';
 export const BLOODLUST_ICON_PATH =
   '/icons/wiki/bloodlust-max-stacks.png';
 export const INSTABILITY_ICON_PATH =

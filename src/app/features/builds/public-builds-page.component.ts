@@ -5,10 +5,10 @@ import { BUILD_STYLE_OPTIONS, type BuildSortOption, type BuildStyleTag, type Clo
 import { CloudBuildRepository } from '../../core/builds/cloud-build.repository';
 
 const STYLE_ICON_PATHS: Record<Exclude<BuildStyleTag, 'hybrid'>, string> = {
-  ranged: 'https://runescape.wiki/images/thumb/Ranged-icon.png/21px-Ranged-icon.png?310aa',
-  melee: 'https://runescape.wiki/images/thumb/Attack-icon.png/21px-Attack-icon.png?93d2b',
-  magic: 'https://runescape.wiki/images/thumb/Magic-icon.png/21px-Magic-icon.png?60d6d',
-  necromancy: 'https://runescape.wiki/images/thumb/Necromancy-icon.png/21px-Necromancy-icon.png?f826b',
+  ranged: '/icons/wiki/ranged-icon.png',
+  melee: '/icons/wiki/attack-icon.png',
+  magic: '/icons/wiki/magic-icon.png',
+  necromancy: '/icons/wiki/necromancy-icon.png',
 };
 
 type SocialLinkKind = 'youtube' | 'twitch' | 'x' | 'discord';

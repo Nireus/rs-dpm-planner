@@ -3,7 +3,7 @@
   "name": "Dragon battleaxe",
   "category": "weapon",
   "slot": "weapon",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Dragon_battleaxe.png",
+  "iconPath": "/icons/wiki/dragon-battleaxe.png",
   "wikiUrl": "https://runescape.wiki/w/Dragon_battleaxe",
   "combatStyleTags": ["melee"],
   "tier": 60,

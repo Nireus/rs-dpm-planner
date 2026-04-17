@@ -49,7 +49,8 @@
       <textarea
         data-testid="import-json"
         class="json-box"
-        [(ngModel)]="importText"
+        [ngModel]="importText()"
+        (ngModelChange)="importText.set($event)"
         placeholder="Paste portable config JSON here..."
         spellcheck="false"></textarea>
 

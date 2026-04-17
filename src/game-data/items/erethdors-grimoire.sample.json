@@ -3,7 +3,7 @@
   "name": "Erethdor's grimoire",
   "category": "pocket",
   "slot": "pocket",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Erethdor%27s_grimoire.png",
+  "iconPath": "/icons/wiki/erethdors-grimoire.png",
   "wikiUrl": "https://runescape.wiki/w/Erethdor%27s_grimoire",
   "hoverSummary": "Pocket-slot book from Solak that increases critical strike chance while active.",
   "detailLines": [

@@ -1,7 +1,7 @@
 {
   "id": "turmoil",
   "name": "Turmoil",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Turmoil.png",
+  "iconPath": "/icons/wiki/turmoil.png",
   "wikiUrl": "https://runescape.wiki/w/Turmoil",
   "category": "prayer",
   "sourceType": "player-config",

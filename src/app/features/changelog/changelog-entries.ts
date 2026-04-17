@@ -5,6 +5,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
+    date: '17.04.2026',
+    change:
+      'Fixed the Rotation Planner Perfect Equilibrium proc marker so it now uses the correct status icon instead of the Equilibrium perk icon or Bow of the Last Guardian item thumbnail. Also added minor UX polish by moving several remaining style, gear, buff, and perk icons to local assets and improving Import / Export text entry reliability.',
+  },
+  {
     date: '16.04.2026',
     change:
       'Added Supabase-backed account and build-sharing foundations: email magic-link sign-in, profile display names and optional social links with per-build public opt-in, manual cloud saves, publishable public builds, public gallery search/filter/sort, build import, voting support, dev/prod environment placeholders, SQL migrations, and a step-by-step Supabase setup guide.',

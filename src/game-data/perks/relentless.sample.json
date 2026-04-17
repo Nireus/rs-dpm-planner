@@ -1,7 +1,7 @@
 {
   "id": "relentless",
   "name": "Relentless",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Relentless.png",
+  "iconPath": "/icons/wiki/relentless.png",
   "wikiUrl": "https://runescape.wiki/w/Relentless",
   "effectRefs": [],
   "description": "1% chance per rank to prevent adrenaline being consumed when using an ability that requires adrenaline. Current simulator support is display/configuration only.",

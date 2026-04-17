@@ -55,9 +55,9 @@ export type CloudBuildOperationResult<T> =
     };
 
 export const BUILD_STYLE_OPTIONS: readonly { id: BuildStyleTag; label: string; iconPath?: string }[] = [
-  { id: 'ranged', label: 'Ranged', iconPath: 'https://runescape.wiki/images/thumb/Ranged-icon.png/21px-Ranged-icon.png?310aa' },
-  { id: 'melee', label: 'Melee', iconPath: 'https://runescape.wiki/images/thumb/Attack-icon.png/21px-Attack-icon.png?93d2b' },
-  { id: 'magic', label: 'Magic', iconPath: 'https://runescape.wiki/images/thumb/Magic-icon.png/21px-Magic-icon.png?60d6d' },
-  { id: 'necromancy', label: 'Necromancy', iconPath: 'https://runescape.wiki/images/thumb/Necromancy-icon.png/21px-Necromancy-icon.png?f826b' },
+  { id: 'ranged', label: 'Ranged', iconPath: '/icons/wiki/ranged-icon.png' },
+  { id: 'melee', label: 'Melee', iconPath: '/icons/wiki/attack-icon.png' },
+  { id: 'magic', label: 'Magic', iconPath: '/icons/wiki/magic-icon.png' },
+  { id: 'necromancy', label: 'Necromancy', iconPath: '/icons/wiki/necromancy-icon.png' },
   { id: 'hybrid', label: 'Hybrid' },
 ];

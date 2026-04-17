@@ -3,7 +3,7 @@
   "name": "Nodon spike harness",
   "category": "ammo",
   "slot": "ammo",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Nodon_spike_harness.png",
+  "iconPath": "/icons/wiki/nodon-spike-harness.png",
   "wikiUrl": "https://runescape.wiki/w/Nodon_spike_harness",
   "combatStyleTags": ["melee"],
   "tier": 90,

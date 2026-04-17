@@ -13,6 +13,7 @@ import {
   describeInvalidAbilityPlacement,
   buildPerfectEquilibriumProcMarkersByAction,
   buildPlacedAbilityMarkerLeft,
+  PERFECT_EQUILIBRIUM_ICON_PATH,
 } from './rotation-planner-page.helpers';
 
 const MELEE_WEAPON: ItemDefinition = {
@@ -29,6 +30,10 @@ const MELEE_WEAPON: ItemDefinition = {
 };
 
 describe('rotation planner page helpers', () => {
+  it('uses the Perfect Equilibrium status artwork for proc markers', () => {
+    expect(PERFECT_EQUILIBRIUM_ICON_PATH).toBe('/icons/wiki/perfect-equilibrium-self-status.png');
+  });
+
   it('centers placed ability markers on the tick tile axis', () => {
     const action = createAbilityAction('assault-action', 9, 'assault');
     const definition = createAbilityDefinition({

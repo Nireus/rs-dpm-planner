@@ -1,7 +1,7 @@
 {
   "id": "malevolence",
   "name": "Malevolence",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Malevolence.png",
+  "iconPath": "/icons/wiki/malevolence.png",
   "wikiUrl": "https://runescape.wiki/w/Malevolence",
   "category": "prayer",
   "sourceType": "player-config",

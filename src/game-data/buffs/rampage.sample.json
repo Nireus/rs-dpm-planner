@@ -1,7 +1,7 @@
 {
   "id": "rampage",
   "name": "Rampage",
-  "iconPath": "https://runescape.wiki/w/Special:FilePath/Rampage.png",
+  "iconPath": "/icons/wiki/rampage.png",
   "wikiUrl": "https://runescape.wiki/w/Rampage",
   "category": "temporary",
   "sourceType": "ability",

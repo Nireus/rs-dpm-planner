@@ -89,6 +89,9 @@ resolve_download_url() {
     "https://runescape.wiki/w/Special:FilePath/Instability.png")
       printf '%s' "https://runescape.wiki/images/Instability_%28self_status%29.png"
       ;;
+    "https://runescape.wiki/w/Special:FilePath/Rampage.png")
+      printf '%s' "https://runescape.wiki/images/Rampage_%28self_status%29.png"
+      ;;
     "https://runescape.wiki/w/Special:FilePath/Soulfire.png")
       printf '%s' "https://runescape.wiki/images/Soulfire.gif"
       ;;
