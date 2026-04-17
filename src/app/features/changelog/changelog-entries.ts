@@ -7,7 +7,7 @@ export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
     date: '17.04.2026',
     change:
-      'Fixed the Rotation Planner Perfect Equilibrium proc marker so it now uses the correct status icon instead of the Equilibrium perk icon or Bow of the Last Guardian item thumbnail. Also added minor UX polish by moving several remaining style, gear, buff, and perk icons to local assets, improving Import / Export text entry reliability, and adding saved/public build counters with 50 saved builds and 20 public builds allowed per user.',
+      'Fixed the Rotation Planner Perfect Equilibrium proc marker so it now uses the correct status icon instead of the Equilibrium perk icon or Bow of the Last Guardian item thumbnail. Also added minor UX polish by moving several remaining style, gear, buff, and perk icons to local assets and improving Import / Export text entry reliability.',
   },
   {
     date: '16.04.2026',
