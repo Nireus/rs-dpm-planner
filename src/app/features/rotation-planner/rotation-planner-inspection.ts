@@ -15,6 +15,7 @@ import type {
 } from '../../../simulation-engine/models';
 import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 import { simulateBaseDamage } from '../../../simulation-engine/calculators';
+import { parsePerfectEquilibriumThreshold } from '../../../simulation-engine/buffs/buff-effect-refs';
 import { resolveBuffStackRuleState } from '../../../simulation-engine/buffs/buff-stack-rules';
 import { resolveAdrenalineTimeline } from '../../../simulation-engine/resolvers/adrenaline';
 import { resolveCooldownTimeline } from '../../../simulation-engine/resolvers/cooldowns';
@@ -34,6 +35,7 @@ import {
 } from './rotation-planner-simulation';
 
 const QUIVER_SECONDARY_BOLT_AMMO_ID = 'bakriminel-bolts';
+const PERFECT_EQUILIBRIUM_DEFAULT_THRESHOLD = 8;
 
 export interface RotationPlannerTickInspection {
   tick: number;
@@ -47,6 +49,7 @@ export interface RotationPlannerTickInspection {
   } | null;
   deathsporeStacks: number | null;
   perfectEquilibriumStacks: number | null;
+  perfectEquilibriumThreshold: number | null;
   bloodlustStacks: number | null;
   bloodlustMaxStacks: number | null;
   glacialEmbraceStacks: number | null;
@@ -114,6 +117,9 @@ export function inspectRotationPlannerTick(input: {
   );
   const deathsporeAmmoActive = hasDeathsporeAmmoEquipped(projectedGearState, input.catalog);
   const perfectEquilibriumWeaponActive = hasEquippedBolg(projectedGearState, input.catalog);
+  const perfectEquilibriumThreshold = perfectEquilibriumWeaponActive
+    ? resolvePerfectEquilibriumThreshold(input.catalog, simulatedTickState?.activeTimelineBuffIds ?? [])
+    : null;
   const bloodlustStacks = countBuffStacks(simulatedTickState?.activeTimelineBuffIds ?? [], 'bloodlust');
   const meleeWeaponActive = hasEquippedMeleeWeapon(projectedGearState, input.catalog);
   const bloodlustStackState = resolveBuffStackRuleState(
@@ -151,6 +157,7 @@ export function inspectRotationPlannerTick(input: {
       perfectEquilibriumWeaponActive && typeof simulatedTickState?.perfectEquilibriumStacks === 'number'
         ? simulatedTickState.perfectEquilibriumStacks
         : null,
+    perfectEquilibriumThreshold,
     bloodlustStacks: meleeWeaponActive ? bloodlustStacks : null,
     bloodlustMaxStacks: meleeWeaponActive ? bloodlustStackState.maxStacks : null,
     glacialEmbraceStacks:
@@ -407,6 +414,16 @@ function hasEquippedBolg(
   }
 
   return catalog.items[weapon.definitionId]?.effectRefs?.includes(EFFECT_REF_IDS.bolgPassive) ?? false;
+}
+
+function resolvePerfectEquilibriumThreshold(
+  catalog: GameDataCatalog,
+  activeTimelineBuffIds: string[],
+): number {
+  return activeTimelineBuffIds
+    .flatMap((buffId) => catalog.buffs[buffId]?.effectRefs ?? [])
+    .map((effectRef) => parsePerfectEquilibriumThreshold(effectRef))
+    .find((value): value is number => typeof value === 'number') ?? PERFECT_EQUILIBRIUM_DEFAULT_THRESHOLD;
 }
 
 function countBuffStacks(activeTimelineBuffIds: string[], buffId: string): number {

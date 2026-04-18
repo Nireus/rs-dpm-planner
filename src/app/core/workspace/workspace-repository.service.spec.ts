@@ -25,6 +25,20 @@ describe('WorkspaceRepositoryService', () => {
     window.localStorage.clear();
   });
 
+  it('uses max combat stats for a fresh workspace by default', () => {
+    const repository = new WorkspaceRepositoryService();
+
+    expect(repository.readPlayerStats()).toEqual({
+      attackLevel: 120,
+      strengthLevel: 120,
+      defenceLevel: 99,
+      rangedLevel: 120,
+      magicLevel: 120,
+      necromancyLevel: 99,
+      prayerLevel: 99,
+    });
+  });
+
   it('reads legacy per-slice state before a workspace document exists', () => {
     const weapon: ItemInstanceConfig = {
       instanceId: 'weapon-1',

@@ -954,6 +954,93 @@ describe('rotation planner inspection', () => {
 
     expect(inspection.equipmentState[0]?.itemName).toBe('Bow of the Last Guardian');
     expect(inspection.perfectEquilibriumStacks).toBe(3);
+    expect(inspection.perfectEquilibriumThreshold).toBe(8);
+  });
+
+  it('shows the reduced BoLG stack threshold while Balance by Force is active', () => {
+    const balanceByForceBuff: BuffDefinition = {
+      id: 'balance-by-force-buff',
+      name: 'Balance by Force',
+      category: 'temporary',
+      sourceType: 'ability',
+      effectRefs: ['perfect-equilibrium-threshold:4'],
+    };
+    const simulationResult: SimulationResult = {
+      isValid: true,
+      validationIssues: [],
+      totalDamage: { min: 0, avg: 0, max: 0 },
+      damageByAbility: [],
+      damageByTick: {},
+      adrenalineTimeline: [],
+      buffTimeline: {},
+      timelineGeneratedBuffSources: [],
+      cooldownTimeline: {},
+      explainability: {
+        damageBreakdowns: [],
+      },
+      tickStates: Array.from({ length: 6 }, (_, index) => ({
+        tickIndex: index,
+        activeEquipmentState: {},
+        adrenaline: 0,
+        deathsporeStacks: 0,
+        perfectEquilibriumStacks: 3,
+        activePersistentBuffIds: [],
+        activeTimelineBuffIds: index === 2 ? [balanceByForceBuff.id] : [],
+        activeBuffIds: [],
+        cooldowns: {},
+        actionsStartingThisTick: [],
+        hitsResolvingThisTick: [],
+        validationIssues: [],
+      })),
+    };
+
+    const inspection = inspectRotationPlannerTick({
+      tick: 2,
+      catalog: {
+        ...CATALOG,
+        items: {
+          ...CATALOG.items,
+          [BOLG.id]: {
+            ...BOLG,
+            effectRefs: ['bolg-passive'],
+          },
+        },
+        buffs: {
+          ...CATALOG.buffs,
+          [balanceByForceBuff.id]: balanceByForceBuff,
+        },
+      },
+      playerStats: {
+        attackLevel: 120,
+        strengthLevel: 120,
+        rangedLevel: 120,
+        magicLevel: 120,
+      },
+      gearState: {
+        equipment: {
+          weapon: {
+            instanceId: 'weapon-1',
+            definitionId: BOLG.id,
+          },
+        },
+        inventory: [],
+      },
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 6,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+      simulationResult,
+    });
+
+    expect(inspection.perfectEquilibriumStacks).toBe(3);
+    expect(inspection.perfectEquilibriumThreshold).toBe(4);
   });
 
   it('shows Bloodlust stacks in tick inspection and hides the raw Bloodlust buff entry', () => {

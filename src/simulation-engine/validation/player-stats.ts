@@ -22,11 +22,11 @@ export interface PlayerStatsValidationIssue {
 }
 
 export const DEFAULT_PLAYER_LEVELS: Record<PlayerLevelStatKey, number> = {
-  attackLevel: 99,
-  strengthLevel: 99,
+  attackLevel: 120,
+  strengthLevel: 120,
   defenceLevel: 99,
-  rangedLevel: 99,
-  magicLevel: 99,
+  rangedLevel: 120,
+  magicLevel: 120,
   necromancyLevel: 99,
   prayerLevel: 99,
 };

@@ -38,11 +38,11 @@ export const DEFAULT_WORKSPACE_DOCUMENT: WorkspaceDocument = {
   documentVersion: WORKSPACE_DOCUMENT_VERSION,
   portableConfig: createPortableConfigDocument({
     playerStats: {
-      attackLevel: 99,
-      strengthLevel: 99,
+      attackLevel: 120,
+      strengthLevel: 120,
       defenceLevel: 99,
-      rangedLevel: 99,
-      magicLevel: 99,
+      rangedLevel: 120,
+      magicLevel: 120,
       necromancyLevel: 99,
       prayerLevel: 99,
     },

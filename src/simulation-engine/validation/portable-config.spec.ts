@@ -43,10 +43,10 @@ describe('parsePortableConfigDocument', () => {
         prebuildNonGcdActions: [],
         stalledAbility: null,
       });
-      expect(result.data.playerStats.attackLevel).toBe(99);
-      expect(result.data.playerStats.strengthLevel).toBe(99);
+      expect(result.data.playerStats.attackLevel).toBe(120);
+      expect(result.data.playerStats.strengthLevel).toBe(120);
       expect(result.data.playerStats.defenceLevel).toBe(99);
-      expect(result.data.playerStats.magicLevel).toBe(99);
+      expect(result.data.playerStats.magicLevel).toBe(120);
       expect(result.data.playerStats.necromancyLevel).toBe(99);
       expect(result.data.playerStats.prayerLevel).toBe(99);
     }
