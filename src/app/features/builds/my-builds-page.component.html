@@ -76,6 +76,9 @@
         @if (saveLimitMessage(); as limitMessage) {
           <p class="status error">{{ limitMessage }}</p>
         }
+        @if (publicBuildTitleMessage(); as titleMessage) {
+          <p class="status error">{{ titleMessage }}</p>
+        }
 
         <div class="actions">
           <button type="button" class="primary-button" [disabled]="!canSave() || busy()" (click)="saveCurrentBuild()">Save Build</button>

@@ -12,6 +12,10 @@ import { CloudBuildRepository } from '../../core/builds/cloud-build.repository';
 import { GameDataStoreService } from '../../core/game-data/game-data-store.service';
 import { WorkspaceRepositoryService } from '../../core/workspace/workspace-repository.service';
 import { AuthStoreService } from '../../core/auth/auth-store.service';
+import {
+  getBlockedLanguageMessage,
+  PUBLIC_BUILD_NAME_BLOCKED_LANGUAGE_MESSAGE,
+} from '../../core/content-moderation/blocked-language';
 
 @Component({
   selector: 'app-my-builds-page',
@@ -47,8 +51,16 @@ export class MyBuildsPageComponent implements OnInit {
   protected readonly publicBuildLimitReached = computed(() =>
     getPublishBuildLimitMessage(this.publicBuildCount()) !== null,
   );
+  protected readonly publicBuildTitleMessage = computed(() =>
+    this.visibility() === 'public'
+      ? getBlockedLanguageMessage(this.title(), PUBLIC_BUILD_NAME_BLOCKED_LANGUAGE_MESSAGE)
+      : null,
+  );
   protected readonly canSave = computed(() =>
-    this.authStore.isAuthenticated() && this.title().trim().length > 0 && this.saveLimitMessage() === null,
+    this.authStore.isAuthenticated()
+      && this.title().trim().length > 0
+      && this.saveLimitMessage() === null
+      && this.publicBuildTitleMessage() === null,
   );
 
   ngOnInit(): void {
@@ -75,6 +87,11 @@ export class MyBuildsPageComponent implements OnInit {
     const limitMessage = this.saveLimitMessage();
     if (limitMessage) {
       this.error.set(limitMessage);
+      return;
+    }
+    const titleMessage = this.publicBuildTitleMessage();
+    if (titleMessage) {
+      this.error.set(titleMessage);
       return;
     }
 

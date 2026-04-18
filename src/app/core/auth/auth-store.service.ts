@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
+import { containsBlockedLanguage, DISPLAY_NAME_BLOCKED_LANGUAGE_MESSAGE } from '../content-moderation/blocked-language';
 import { SupabaseClientService } from '../supabase/supabase-client.service';
 
 export interface UserProfile {
@@ -108,6 +109,10 @@ export class AuthStoreService {
     const trimmed = input.displayName.trim();
     if (trimmed.length < 2) {
       this.error.set('Display name must be at least 2 characters.');
+      return;
+    }
+    if (containsBlockedLanguage(trimmed)) {
+      this.error.set(DISPLAY_NAME_BLOCKED_LANGUAGE_MESSAGE);
       return;
     }
 
@@ -249,9 +254,10 @@ function normalizeOptionalUrl(value: string | null | undefined): string | null {
 function deriveDisplayName(user: User): string {
   const metadataName = typeof user.user_metadata?.['name'] === 'string' ? user.user_metadata['name'] : null;
   if (metadataName?.trim()) {
-    return metadataName.trim();
+    const trimmedName = metadataName.trim();
+    return containsBlockedLanguage(trimmedName) ? 'RuneScape Planner' : trimmedName;
   }
 
   const emailName = user.email?.split('@')[0]?.trim();
-  return emailName || 'RuneScape Planner';
+  return emailName && !containsBlockedLanguage(emailName) ? emailName : 'RuneScape Planner';
 }

@@ -7,6 +7,11 @@ export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
     date: '18.04.2026',
     change:
+      'Added blocked-language checks for public-facing names. Profile display names and public build names are now checked in the app, and Supabase constraints enforce the same rule for new public writes.',
+  },
+  {
+    date: '18.04.2026',
+    change:
       'Added pre-fight planning to Rotation Planner. Prebuild and Ability Stall now live on the same timeline before T0, support abilities and non-GCD setup, preserve import/export, expose gap-to-fight timing in Configuration, and allow tick inspection across pre-fight actions, buffs, gear/ammo, damage math, and cooldowns. The simulator now ages pre-fight buffs and cooldowns, releases stalled abilities with the first main action, handles gear swaps ending channels, and improves strict validation for pre-fight warnings. Also corrected Rapid Fire hit timing, Wen arrow stack behavior, and Seren godbow Crystal Rain target-size damage with proper Perfect Equilibrium stack handling.',
   },
   {

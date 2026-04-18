@@ -2,6 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import type { PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import { AuthStoreService } from '../auth/auth-store.service';
+import {
+  getBlockedLanguageMessage,
+  PUBLIC_BUILD_NAME_BLOCKED_LANGUAGE_MESSAGE,
+} from '../content-moderation/blocked-language';
 import { PortableConfigExchangeService } from '../import-export/portable-config-exchange.service';
 import { SupabaseClientService } from '../supabase/supabase-client.service';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
@@ -83,6 +87,11 @@ export class CloudBuildRepository {
       return failure('Sign in to save builds.');
     }
 
+    const titleModerationResult = ensurePublicBuildTitleIsAllowed(metadata, visibility);
+    if (!titleModerationResult.success) {
+      return titleModerationResult;
+    }
+
     const limitResult = await this.ensureCanCreateBuild(visibility);
     if (!limitResult.success) {
       return limitResult;
@@ -122,6 +131,11 @@ export class CloudBuildRepository {
     const userId = this.requireUserId();
     if (!client || !userId) {
       return failure('Sign in to update builds.');
+    }
+
+    const titleModerationResult = ensurePublicBuildTitleIsAllowed(metadata, visibility);
+    if (!titleModerationResult.success) {
+      return titleModerationResult;
     }
 
     const limitResult = await this.ensureCanSetVisibility(buildId, visibility);
@@ -165,6 +179,11 @@ export class CloudBuildRepository {
     const userId = this.requireUserId();
     if (!client || !userId) {
       return failure('Sign in to update builds.');
+    }
+
+    const titleModerationResult = ensurePublicBuildTitleIsAllowed(metadata, visibility);
+    if (!titleModerationResult.success) {
+      return titleModerationResult;
     }
 
     const limitResult = await this.ensureCanSetVisibility(buildId, visibility);
@@ -421,6 +440,18 @@ export function mapPublicSummary(row: Record<string, unknown>): CloudBuildSummar
 
 function nullableString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
+}
+
+function ensurePublicBuildTitleIsAllowed(
+  metadata: BuildMetadataInput,
+  visibility: BuildVisibility,
+): CloudBuildOperationResult<true> {
+  if (visibility !== 'public') {
+    return success(true);
+  }
+
+  const message = getBlockedLanguageMessage(metadata.title, PUBLIC_BUILD_NAME_BLOCKED_LANGUAGE_MESSAGE);
+  return message ? failure(message) : success(true);
 }
 
 function escapeIlike(value: string): string {
