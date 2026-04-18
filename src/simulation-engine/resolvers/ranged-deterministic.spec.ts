@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { AbilityDefinition, ItemDefinition } from '../../game-data/types';
 import type { LoadedGameDataSnapshot, SimulationConfig } from '../models';
+import { ICY_CHILL_BUFF_ID, ICY_PRECISION_BUFF_ID, WEN_ARROWS_EFFECT_REF } from '../ranged/wen-arrows';
 import { resolveDeterministicRangedTimeline } from './ranged-deterministic';
 
 function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefinition {
@@ -16,7 +17,7 @@ function createAbility(overrides: Partial<AbilityDefinition> = {}): AbilityDefin
     channelDurationTicks: 9,
     hitSchedule: Array.from({ length: 8 }, (_, index) => ({
       id: `rapid-fire-hit-${index + 1}`,
-      tickOffset: index + 1,
+      tickOffset: index,
       damage: { min: 75, max: 85 },
     })),
     baseDamage: {
@@ -38,6 +39,17 @@ function createItem(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
       requiredEquipmentTags: ['two-handed-bow'],
     },
     ...overrides,
+  };
+}
+
+function createAmmo(id: string, name: string, effectRefs: string[] = []): ItemDefinition {
+  return {
+    id,
+    name,
+    category: 'ammo',
+    slot: 'ammo',
+    combatStyleTags: ['ranged'],
+    effectRefs,
   };
 }
 
@@ -415,7 +427,161 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
   };
 }
 
+function countBuff(
+  buffTimeline: Record<number, string[]>,
+  tick: number,
+  buffId: string,
+): number {
+  return (buffTimeline[tick] ?? []).filter((entry) => entry === buffId).length;
+}
+
 describe('resolveDeterministicRangedTimeline', () => {
+  it('caps Wen arrow Icy Chill at 10 stacks', () => {
+    const baseConfig = createConfig();
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: { instanceId: 'weapon-1', definitionId: 'bolg' },
+          ammo: { instanceId: 'wen-arrows-1', definitionId: 'wen-arrows' },
+        },
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 40,
+        nonGcdActions: [],
+        abilityActions: Array.from({ length: 12 }, (_, index) => ({
+          id: `basic-${index}`,
+          tick: index,
+          lane: 'ability',
+          actionType: 'ability-use',
+          payload: {
+            abilityId: 'ranged-basic',
+          },
+        })),
+      },
+      gameData: {
+        ...baseConfig.gameData,
+        items: {
+          ...baseConfig.gameData.items,
+          'wen-arrows': createAmmo('wen-arrows', 'Wen arrows', [WEN_ARROWS_EFFECT_REF]),
+        },
+        abilities: {
+          ...baseConfig.gameData.abilities,
+          'ranged-basic': createAbility({
+            id: 'ranged-basic',
+            name: 'Ranged basic',
+            subtype: 'basic',
+            cooldownTicks: 3,
+            adrenalineCost: 0,
+            adrenalineGain: 9,
+            isChanneled: false,
+            channelDurationTicks: undefined,
+            hitSchedule: [{ id: 'ranged-basic-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+            baseDamage: { min: 100, max: 100 },
+          }),
+        },
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(countBuff(result.buffTimeline, 9, ICY_CHILL_BUFF_ID)).toBe(10);
+    expect(countBuff(result.buffTimeline, 11, ICY_CHILL_BUFF_ID)).toBe(10);
+    expect(countBuff(result.buffTimeline, 11, ICY_PRECISION_BUFF_ID)).toBe(0);
+  });
+
+  it('consumes Wen stacks on the first Rapid Fire hit using Wen arrows after a mid-channel ammo swap', () => {
+    const baseConfig = createConfig();
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: { instanceId: 'weapon-1', definitionId: 'bolg' },
+          ammo: { instanceId: 'wen-arrows-1', definitionId: 'wen-arrows' },
+        },
+      },
+      inventory: {
+        items: [{ instanceId: 'plain-arrows-1', definitionId: 'plain-arrows' }],
+      },
+      rotationPlan: {
+        startingAdrenaline: 100,
+        tickCount: 36,
+        nonGcdActions: [
+          {
+            id: 'swap-to-plain-arrows',
+            tick: 15,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'plain-arrows-1',
+              slot: 'ammo',
+            },
+          },
+          {
+            id: 'swap-to-wen-arrows',
+            tick: 20,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'wen-arrows-1',
+              slot: 'ammo',
+            },
+          },
+        ],
+        abilityActions: [
+          ...Array.from({ length: 5 }, (_, index) => ({
+            id: `piercing-shot-${index}`,
+            tick: index * 3,
+            lane: 'ability' as const,
+            actionType: 'ability-use' as const,
+            payload: {
+              abilityId: 'piercing-shot',
+            },
+          })),
+          {
+            id: 'rapid-fire-1',
+            tick: 18,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: {
+              abilityId: 'rapid-fire',
+            },
+          },
+        ],
+      },
+      gameData: {
+        ...baseConfig.gameData,
+        items: {
+          ...baseConfig.gameData.items,
+          'wen-arrows': createAmmo('wen-arrows', 'Wen arrows', [WEN_ARROWS_EFFECT_REF]),
+          'plain-arrows': createAmmo('plain-arrows', 'Plain arrows'),
+        },
+        abilities: {
+          ...baseConfig.gameData.abilities,
+          'piercing-shot': createAbility({
+            id: 'piercing-shot',
+            name: 'Piercing Shot',
+            subtype: 'basic',
+            cooldownTicks: 3,
+            adrenalineCost: 0,
+            adrenalineGain: 9,
+            isChanneled: false,
+            channelDurationTicks: undefined,
+            hitSchedule: [{ id: 'piercing-shot-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+            baseDamage: { min: 100, max: 100 },
+          }),
+        },
+      },
+    });
+
+    const result = resolveDeterministicRangedTimeline(config);
+
+    expect(countBuff(result.buffTimeline, 20, ICY_CHILL_BUFF_ID)).toBe(10);
+    expect(countBuff(result.buffTimeline, 20, ICY_PRECISION_BUFF_ID)).toBe(0);
+    expect(countBuff(result.buffTimeline, 21, ICY_CHILL_BUFF_ID)).toBe(0);
+    expect(countBuff(result.buffTimeline, 21, ICY_PRECISION_BUFF_ID)).toBe(10);
+    expect(countBuff(result.buffTimeline, 35, ICY_PRECISION_BUFF_ID)).toBe(10);
+  });
+
   it('applies regular dracolich Rapid Fire adrenaline gain per piece worn', () => {
     const config = createConfig({
       gearSetup: {
@@ -782,8 +948,8 @@ describe('resolveDeterministicRangedTimeline', () => {
 
     const result = resolveDeterministicRangedTimeline(config);
 
-    expect(result.adrenalineByTick[4]).toBeCloseTo(5);
-    expect(result.adrenalineByTick[11]).toBeCloseTo(10);
+    expect(result.adrenalineByTick[3]).toBeCloseTo(5);
+    expect(result.adrenalineByTick[10]).toBeCloseTo(10);
   });
 
   it('creates Vulnerability Bomb area and debuff as separate buff-lane states', () => {

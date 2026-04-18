@@ -5,3 +5,6 @@ export const DEADSHOT_ABILITY_ID = 'deadshot';
 export const RANGED_ABILITY_ID = 'ranged';
 export const SPLIT_SOUL_ABILITY_ID = 'split-soul';
 export const SHADOWFALL_ABILITY_ID = 'shadowfall';
+export const SEREN_GODBOW_ABILITY_ID = 'seren-godbow-eof';
+export const SEREN_GODBOW_EFFECT_REF = 'eof-seren-godbow-spec';
+export const SEREN_GODBOW_WEAPON_ID = 'seren-godbow';

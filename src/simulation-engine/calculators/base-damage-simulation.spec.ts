@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { AbilityDefinition, BuffDefinition } from '../../game-data/types';
-import type { SimulationConfig } from '../models';
+import type { SerenGodbowTargetSize, SimulationConfig } from '../models';
+import { ICY_CHILL_BUFF_ID, ICY_PRECISION_BUFF_ID, WEN_ARROWS_EFFECT_REF } from '../ranged/wen-arrows';
 import { simulateBaseDamage } from './base-damage-simulation';
 
 describe('simulateBaseDamage', () => {
@@ -32,7 +33,7 @@ describe('simulateBaseDamage', () => {
           channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index + 1,
+            tickOffset: index,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -304,7 +305,7 @@ describe('simulateBaseDamage', () => {
           channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index + 1,
+            tickOffset: index,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -1813,6 +1814,137 @@ describe('simulateBaseDamage', () => {
     );
   });
 
+  it('includes Seren godbow special arrows according to configured target size', () => {
+    const createSerenGodbowConfig = (targetSize: SerenGodbowTargetSize) =>
+      createConfig({
+        items: {
+          'seren-godbow': {
+            id: 'seren-godbow',
+            name: 'Seren godbow',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['ranged'],
+            specialAbilityId: 'seren-godbow-eof',
+            tier: 92,
+            offensiveStats: {
+              damageTier: 92,
+            },
+            effectRefs: ['weapon-special-access', 'weapon-special:seren-godbow'],
+          },
+        },
+        equipment: {
+          weapon: {
+            instanceId: 'sgb-1',
+            definitionId: 'seren-godbow',
+          },
+        },
+        abilities: {
+          'weapon-special-attack': createAbilityDefinition({
+            id: 'weapon-special-attack',
+            name: 'Special Attack',
+            style: 'constitution',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineCost: 0,
+            hitSchedule: [],
+            baseDamage: { min: 0, max: 0 },
+            specialDispatch: {
+              source: 'equipped-weapon',
+            },
+          }),
+          'seren-godbow-eof': createAbilityDefinition({
+            id: 'seren-godbow-eof',
+            name: 'Seren godbow special',
+            subtype: 'special',
+            cooldownTicks: 0,
+            adrenalineCost: 30,
+            hitSchedule: Array.from({ length: 5 }, (_, index) => ({
+              id: `seren-godbow-eof-hit-${index + 1}`,
+              tickOffset: 0,
+              damage: { min: 125, max: 155 },
+            })),
+            baseDamage: { min: 625, max: 775 },
+            effectRefs: ['eof-seren-godbow-spec'],
+          }),
+        },
+        abilityActions: [createAbilityAction('sgb-spec', 0, 'weapon-special-attack')],
+        startingAdrenaline: 100,
+        tickCount: 4,
+        simulationSettings: {
+          criticalHitResolutionMode: 'deterministic-accumulator',
+          serenGodbowTargetSize: targetSize,
+        },
+      });
+
+    const oneByOne = simulateBaseDamage(createSerenGodbowConfig('1x1'));
+    const fiveByFive = simulateBaseDamage(createSerenGodbowConfig('5x5'));
+
+    expect(oneByOne.isValid).toBe(true);
+    expect(fiveByFive.isValid).toBe(true);
+    expect(oneByOne.explainability.damageBreakdowns).toHaveLength(1);
+    expect(fiveByFive.explainability.damageBreakdowns).toHaveLength(5);
+    expect(fiveByFive.totalDamage.avg).toBeCloseTo(oneByOne.totalDamage.avg * 5, 2);
+  });
+
+  it('lets Seren godbow special build only one Perfect Equilibrium stack regardless of arrow count', () => {
+    const config = createConfig({
+      abilities: {
+        'seren-godbow-eof': createAbilityDefinition({
+          id: 'seren-godbow-eof',
+          name: 'Seren godbow special',
+          subtype: 'special',
+          cooldownTicks: 0,
+          adrenalineCost: 30,
+          hitSchedule: Array.from({ length: 5 }, (_, index) => ({
+            id: `seren-godbow-eof-hit-${index + 1}`,
+            tickOffset: 0,
+            damage: { min: 125, max: 155 },
+          })),
+          baseDamage: { min: 625, max: 775 },
+          effectRefs: ['eof-seren-godbow-spec'],
+        }),
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      abilityActions: [
+        createAbilityAction('sgb-spec', 0, 'seren-godbow-eof'),
+        createAbilityAction('piercing-shot', 3, 'piercing-shot'),
+      ],
+      startingAdrenaline: 100,
+      tickCount: 8,
+      simulationSettings: {
+        criticalHitResolutionMode: 'deterministic-accumulator',
+        serenGodbowTargetSize: '5x5',
+      },
+    });
+    config.rotationPlan.startingStacks = {
+      perfectEquilibriumStacks: 6,
+    };
+    config.gameData.items['bolg'] = {
+      ...config.gameData.items['bolg'],
+      effectRefs: ['bolg-passive'],
+    };
+
+    const result = simulateBaseDamage(config);
+    const serenGodbowBreakdowns = result.explainability.damageBreakdowns.filter(
+      (entry) => entry.abilityId === 'seren-godbow-eof',
+    );
+    const perfectEquilibriumBreakdowns = result.explainability.damageBreakdowns.filter(
+      (entry) => entry.abilityId === 'perfect-equilibrium',
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(serenGodbowBreakdowns).toHaveLength(5);
+    expect(perfectEquilibriumBreakdowns).toHaveLength(1);
+    expect(perfectEquilibriumBreakdowns[0]?.tick).toBe(3);
+  });
+
   it('applies the average Amulet of Souls boost to Split Soul damage', () => {
     const createSplitSoulConfig = (definitionId?: string) =>
       createConfig({
@@ -1912,6 +2044,336 @@ describe('simulateBaseDamage', () => {
     expect(aosSplitSoul?.avg).toBeCloseTo((baselineSplitSoul?.avg ?? 0) * 1.1875, 2);
     expect(eofSplitSoul?.avg).toBeCloseTo((baselineSplitSoul?.avg ?? 0) * 1.1875, 2);
   });
+
+  it('lets prebuild Wen arrow basics build 10 Icy Chill stacks for T0 consumption', () => {
+    const config = createConfig({
+      abilityActions: [createAbilityAction('main-snap-shot', 0, 'snap-shot')],
+      abilities: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+        'snap-shot': createAbilityDefinition({
+          id: 'snap-shot',
+          name: 'Snap Shot',
+          subtype: 'enhanced',
+          cooldownTicks: 34,
+          adrenalineCost: 50,
+          hitSchedule: [{ id: 'snap-shot-hit', tickOffset: 0, damage: { min: 250, max: 250 } }],
+          baseDamage: { min: 250, max: 250 },
+        }),
+      },
+      buffs: createWenBuffDefinitions(),
+      items: createWenItemDefinitions(),
+      equipment: createWenEquipment(),
+      startingAdrenaline: 100,
+      tickCount: 8,
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: Array.from({ length: 5 }, (_, index) => ({
+          id: `prebuild-piercing-${index}`,
+          abilityId: 'piercing-shot',
+        })),
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
+    });
+
+    const result = simulateBaseDamage(config);
+    const snapShotBreakdown = result.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'snap-shot');
+
+    expect(result.isValid).toBe(true);
+    expect(result.explainability.damageBreakdowns.map((entry) => entry.abilityId)).toEqual(['snap-shot']);
+    expect(result.buffTimeline[0].filter((buffId) => buffId === ICY_PRECISION_BUFF_ID)).toHaveLength(10);
+    expect(result.buffTimeline[0]).not.toContain(ICY_CHILL_BUFF_ID);
+    expect(snapShotBreakdown?.additiveModifiers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceId: WEN_ARROWS_EFFECT_REF,
+          label: 'Wen arrows Icy Precision +30% ability damage',
+        }),
+      ]),
+    );
+  });
+
+  it('expires prebuild Wen arrow stacks when the gap to fight start is too long', () => {
+    const config = createConfig({
+      abilityActions: [createAbilityAction('main-snap-shot', 0, 'snap-shot')],
+      abilities: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+        'snap-shot': createAbilityDefinition({
+          id: 'snap-shot',
+          name: 'Snap Shot',
+          subtype: 'enhanced',
+          cooldownTicks: 34,
+          adrenalineCost: 50,
+          hitSchedule: [{ id: 'snap-shot-hit', tickOffset: 0, damage: { min: 250, max: 250 } }],
+          baseDamage: { min: 250, max: 250 },
+        }),
+      },
+      buffs: createWenBuffDefinitions(),
+      items: createWenItemDefinitions(),
+      equipment: createWenEquipment(),
+      startingAdrenaline: 100,
+      tickCount: 8,
+      preFight: {
+        gapTicks: 60,
+        prebuildActions: [{ id: 'prebuild-piercing', abilityId: 'piercing-shot' }],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
+    });
+
+    const result = simulateBaseDamage(config);
+    const snapShotBreakdown = result.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'snap-shot');
+
+    expect(result.isValid).toBe(true);
+    expect(result.buffTimeline[0]).not.toContain(ICY_PRECISION_BUFF_ID);
+    expect(result.buffTimeline[0]).not.toContain(ICY_CHILL_BUFF_ID);
+    expect(snapShotBreakdown?.additiveModifiers.some((modifier) => modifier.sourceId === WEN_ARROWS_EFFECT_REF)).toBe(false);
+  });
+
+  it('lets Rapid Fire hits proc Wen arrows after a mid-channel ammo swap', () => {
+    const config = createConfig({
+      abilityActions: [
+        ...Array.from({ length: 5 }, (_, index) => createAbilityAction(`piercing-shot-${index}`, index * 3, 'piercing-shot')),
+        createAbilityAction('rapid-fire', 18, 'rapid-fire'),
+      ],
+      nonGcdActions: [
+        {
+          id: 'swap-to-plain-arrows',
+          tick: 15,
+          lane: 'non-gcd',
+          actionType: 'gear-swap',
+          payload: {
+            instanceId: 'plain-arrows-1',
+            slot: 'ammo',
+          },
+        },
+        {
+          id: 'swap-to-wen-arrows',
+          tick: 20,
+          lane: 'non-gcd',
+          actionType: 'gear-swap',
+          payload: {
+            instanceId: 'wen-arrows-1',
+            slot: 'ammo',
+          },
+        },
+      ],
+      abilities: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+        'rapid-fire': createAbilityDefinition({
+          id: 'rapid-fire',
+          name: 'Rapid Fire',
+          subtype: 'enhanced',
+          cooldownTicks: 34,
+          adrenalineCost: 25,
+          adrenalineGain: 0,
+          isChanneled: true,
+          channelDurationTicks: 9,
+          hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+            id: `rapid-fire-hit-${index + 1}`,
+            tickOffset: index,
+            damage: { min: 100, max: 100 },
+          })),
+          baseDamage: { min: 800, max: 800 },
+        }),
+      },
+      buffs: createWenBuffDefinitions(),
+      items: {
+        ...createWenItemDefinitions(),
+        ...createPlainArrowItemDefinitions(),
+      },
+      equipment: createWenEquipment(),
+      inventoryItems: [{ instanceId: 'plain-arrows-1', definitionId: 'plain-arrows' }],
+      startingAdrenaline: 100,
+      tickCount: 36,
+    });
+
+    const result = simulateBaseDamage(config);
+    const rapidFireBreakdowns = result.explainability.damageBreakdowns.filter(
+      (entry) => entry.abilityId === 'rapid-fire',
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(rapidFireBreakdowns.map((entry) => entry.tick)).toEqual([18, 19, 20, 21, 22, 23, 24, 25]);
+    expect(result.buffTimeline[20].filter((buffId) => buffId === ICY_PRECISION_BUFF_ID)).toHaveLength(0);
+    expect(result.buffTimeline[21].filter((buffId) => buffId === ICY_PRECISION_BUFF_ID)).toHaveLength(10);
+    expect(rapidFireBreakdowns.filter((entry) => entry.tick < 21).every((entry) =>
+      entry.additiveModifiers.every((modifier) => modifier.sourceId !== WEN_ARROWS_EFFECT_REF)
+    )).toBe(true);
+    expect(rapidFireBreakdowns.filter((entry) => entry.tick >= 21).every((entry) =>
+      entry.additiveModifiers.some((modifier) =>
+        modifier.sourceId === WEN_ARROWS_EFFECT_REF &&
+        modifier.label === 'Wen arrows Icy Precision +30% ability damage'
+      )
+    )).toBe(true);
+  });
+
+  it('lets prebuild actions age buffs and cooldowns without visible damage or adrenaline changes', () => {
+    const config = createConfig({
+      abilityActions: [createAbilityAction('main-piercing', 0, 'piercing-shot')],
+      abilities: {
+        galeshot: createAbilityDefinition({
+          id: 'galeshot',
+          name: 'Galeshot',
+          cooldownTicks: 34,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 120 } }],
+          baseDamage: { min: 100, max: 120 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
+          effectRefs: ['searing-winds'],
+        }),
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      startingAdrenaline: 50,
+      tickCount: 8,
+      preFight: {
+        gapTicks: 5,
+        prebuildActions: [{ id: 'prebuild-galeshot', abilityId: 'galeshot' }],
+        stalledAbility: null,
+      },
+    });
+
+    const result = simulateBaseDamage(config);
+
+    expect(result.isValid).toBe(true);
+    expect(result.explainability.damageBreakdowns.map((entry) => entry.abilityId)).toEqual(['piercing-shot']);
+    expect(result.adrenalineTimeline[0]).toBe(59);
+    expect(result.cooldownTimeline[0]?.['galeshot']).toBe(26);
+    expect(result.buffTimeline[0]).toContain('searing-winds');
+    expect(result.buffTimeline[2]).not.toContain('searing-winds');
+  });
+
+  it('releases stalled Galeshot before the first main ability so Greater Ricochet sees Searing Winds', () => {
+    const config = createConfig({
+      abilityActions: [createAbilityAction('main-grico', 0, 'greater-ricochet')],
+      abilities: {
+        galeshot: createAbilityDefinition({
+          id: 'galeshot',
+          name: 'Galeshot',
+          cooldownTicks: 34,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 120 } }],
+          baseDamage: { min: 100, max: 120 },
+          timelineEffects: [
+            {
+              kind: 'apply-buff',
+              buffId: 'searing-winds',
+            },
+          ],
+          effectRefs: ['searing-winds'],
+        }),
+        'greater-ricochet': createAbilityDefinition({
+          id: 'greater-ricochet',
+          name: 'Greater Ricochet',
+          cooldownTicks: 17,
+          adrenalineGain: 9,
+          hitSchedule: Array.from({ length: 7 }, (_, index) => ({
+            id: `grico-${index + 1}`,
+            tickOffset: 0,
+            damage: { min: 20, max: 20 },
+          })),
+          baseDamage: { min: 140, max: 140 },
+        }),
+      },
+      startingAdrenaline: 50,
+      tickCount: 8,
+      preFight: {
+        gapTicks: 10,
+        prebuildActions: [],
+        stalledAbility: { id: 'stall-galeshot', abilityId: 'galeshot' },
+      },
+    });
+
+    const result = simulateBaseDamage(config);
+    const galeshotBreakdown = result.explainability.damageBreakdowns.find((entry) => entry.abilityId === 'galeshot');
+    const gricoBreakdowns = result.explainability.damageBreakdowns.filter((entry) => entry.abilityId === 'greater-ricochet');
+
+    expect(result.isValid).toBe(true);
+    expect(galeshotBreakdown?.tick).toBe(0);
+    expect(result.cooldownTimeline[0]?.['galeshot']).toBe(24);
+    expect(result.adrenalineTimeline[0]).toBe(59);
+    expect(gricoBreakdowns).toHaveLength(7);
+    expect(gricoBreakdowns.every((entry) => entry.additiveModifiers.some((modifier) => modifier.sourceId.includes('ranged-hit-flat-bonus-ability-damage')))).toBe(true);
+  });
+
+  it('reports imported channelled ability stalls as validation errors', () => {
+    const config = createConfig({
+      abilityActions: [createAbilityAction('main-piercing', 0, 'piercing-shot')],
+      abilities: {
+        'rapid-fire': createAbilityDefinition({
+          id: 'rapid-fire',
+          name: 'Rapid Fire',
+          cooldownTicks: 34,
+          adrenalineCost: 25,
+          isChanneled: true,
+          channelDurationTicks: 9,
+          hitSchedule: [{ id: 'rapid-hit', tickOffset: 1, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      startingAdrenaline: 50,
+      tickCount: 8,
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: [],
+        stalledAbility: { id: 'stall-rapid-fire', abilityId: 'rapid-fire' },
+      },
+    });
+
+    const result = simulateBaseDamage(config);
+
+    expect(result.isValid).toBe(false);
+    expect(result.validationIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'pre_fight.stall_channelled_ability',
+          relatedActionId: 'stall-rapid-fire',
+        }),
+      ]),
+    );
+    expect(result.explainability.damageBreakdowns.map((entry) => entry.abilityId)).toEqual(['piercing-shot']);
+  });
 });
 
 function createConfig(input: {
@@ -1924,6 +2386,8 @@ function createConfig(input: {
   activeBuffIds?: string[];
   startingAdrenaline: number;
   tickCount: number;
+  preFight?: SimulationConfig['rotationPlan']['preFight'];
+  simulationSettings?: SimulationConfig['simulationSettings'];
   weaponConfiguredPerks?: NonNullable<SimulationConfig['gearSetup']['equipment']['weapon']>['configuredPerks'];
   equipment?: SimulationConfig['gearSetup']['equipment'];
   inventoryItems?: SimulationConfig['inventory']['items'];
@@ -1953,6 +2417,7 @@ function createConfig(input: {
       tickCount: input.tickCount,
       nonGcdActions: input.nonGcdActions ?? [],
       abilityActions: input.abilityActions,
+      preFight: input.preFight,
     },
     gameData: {
       items: {
@@ -2078,6 +2543,7 @@ function createConfig(input: {
     modeFlags: {
       strictValidation: true,
     },
+    simulationSettings: input.simulationSettings,
   };
 }
 
@@ -2100,6 +2566,77 @@ function createAbilityDefinition(
     style: 'ranged',
     subtype: 'basic',
     ...input,
+  };
+}
+
+function createWenItemDefinitions(): SimulationConfig['gameData']['items'] {
+  return {
+    'wen-arrows': {
+      id: 'wen-arrows',
+      name: 'Wen arrows',
+      category: 'ammo',
+      slot: 'ammo',
+      combatStyleTags: ['ranged'],
+      tier: 95,
+      offensiveStats: {
+        damageTier: 95,
+      },
+      effectRefs: [WEN_ARROWS_EFFECT_REF],
+    },
+  };
+}
+
+function createPlainArrowItemDefinitions(): SimulationConfig['gameData']['items'] {
+  return {
+    'plain-arrows': {
+      id: 'plain-arrows',
+      name: 'Plain arrows',
+      category: 'ammo',
+      slot: 'ammo',
+      combatStyleTags: ['ranged'],
+      tier: 1,
+      offensiveStats: {
+        damageTier: 1,
+      },
+    },
+  };
+}
+
+function createWenBuffDefinitions(): Record<string, BuffDefinition> {
+  return {
+    [ICY_CHILL_BUFF_ID]: {
+      id: ICY_CHILL_BUFF_ID,
+      name: 'Icy Chill',
+      category: 'temporary',
+      sourceType: 'item',
+      durationTicks: 50,
+      stackRules: {
+        maxStacks: 10,
+      },
+    },
+    [ICY_PRECISION_BUFF_ID]: {
+      id: ICY_PRECISION_BUFF_ID,
+      name: 'Icy Precision',
+      category: 'temporary',
+      sourceType: 'item',
+      durationTicks: 15,
+      stackRules: {
+        maxStacks: 10,
+      },
+    },
+  };
+}
+
+function createWenEquipment(): SimulationConfig['gearSetup']['equipment'] {
+  return {
+    weapon: {
+      instanceId: 'weapon-1',
+      definitionId: 'bolg',
+    },
+    ammo: {
+      instanceId: 'wen-arrows-1',
+      definitionId: 'wen-arrows',
+    },
   };
 }
 

@@ -1,7 +1,13 @@
-import type { DamageRange, EntityId, HitDefinition } from '../../game-data/types';
+import type { AbilityDefinition, DamageRange, EntityId, HitDefinition } from '../../game-data/types';
 import { EFFECT_REF_IDS } from '../../game-data/conventions/mechanics';
 import type { DamageSummary, RotationAction, SimulationConfig } from '../models';
+import { SEREN_GODBOW_EFFECT_REF } from '../abilities/effective-ability.constants';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
+import {
+  isPreFightPrebuildAction,
+  skipsPreFightHits,
+} from '../timeline/pre-fight';
+import { resolveChannelEndTickExclusive } from '../resolvers/channel-interruptions';
 import { roundDamageValue } from './damage-summary';
 
 export const PERFECT_EQUILIBRIUM_ABILITY_ID = 'perfect-equilibrium';
@@ -17,6 +23,7 @@ export interface SimulationHitEvent {
   hit: HitDefinition;
   tick: number;
   contributesToPerfectEquilibrium: boolean;
+  visibleDamage?: boolean;
   derivedDamageParts?: {
     scaledAbilityDamage: DamageSummary;
     inheritedTriggerDamage: DamageSummary;
@@ -26,12 +33,12 @@ export interface SimulationHitEvent {
 export function buildSimulationHitEvents(
   config: SimulationConfig,
   blockingActionIds: ReadonlySet<string>,
-  resolvedAbilityOverridesByActionId: Record<string, { hitSchedule: HitDefinition[]; baseDamage: DamageRange; adrenalineCost?: number; effectRefs?: string[]; id: EntityId; style?: string; subtype?: string }> = {},
+  resolvedAbilityOverridesByActionId: Record<string, Pick<AbilityDefinition, 'id' | 'style' | 'subtype' | 'effectRefs' | 'hitSchedule' | 'baseDamage' | 'adrenalineCost' | 'isChanneled' | 'channelDurationTicks'>> = {},
 ): SimulationHitEvent[] {
   const events: SimulationHitEvent[] = [];
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockingActionIds.has(action.id)) {
+    if (blockingActionIds.has(action.id) || skipsPreFightHits(action)) {
       continue;
     }
 
@@ -43,11 +50,32 @@ export function buildSimulationHitEvents(
     const contributesToPerfectEquilibrium =
       ability.style === 'ranged' &&
       !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
+    const isSerenGodbowSpec = ability.effectRefs?.includes(SEREN_GODBOW_EFFECT_REF) ?? false;
+    let serenGodbowSpecContributedToPerfectEquilibrium = false;
+    const naturalChannelEndTickExclusive = action.tick + Math.max(ability.channelDurationTicks ?? 0, 0);
+    const interruptedChannelEndTickExclusive = ability.isChanneled
+      ? resolveChannelEndTickExclusive(config, action, ability, naturalChannelEndTickExclusive)
+      : null;
+    const channelCancellationTick = interruptedChannelEndTickExclusive !== null &&
+      interruptedChannelEndTickExclusive < naturalChannelEndTickExclusive
+        ? interruptedChannelEndTickExclusive
+        : null;
 
     for (const hit of ability.hitSchedule) {
       const tick = action.tick + hit.tickOffset;
       if (tick < 0 || tick >= config.rotationPlan.tickCount) {
         continue;
+      }
+      if (channelCancellationTick !== null && tick >= channelCancellationTick) {
+        continue;
+      }
+
+      const hitContributesToPerfectEquilibrium =
+        contributesToPerfectEquilibrium &&
+        (!isSerenGodbowSpec || !serenGodbowSpecContributedToPerfectEquilibrium);
+
+      if (isSerenGodbowSpec && hitContributesToPerfectEquilibrium) {
+        serenGodbowSpecContributedToPerfectEquilibrium = true;
       }
 
       events.push({
@@ -55,7 +83,8 @@ export function buildSimulationHitEvents(
         ability,
         hit,
         tick,
-        contributesToPerfectEquilibrium,
+        contributesToPerfectEquilibrium: hitContributesToPerfectEquilibrium,
+        visibleDamage: isPreFightPrebuildAction(action) ? false : undefined,
       });
     }
   }
@@ -103,6 +132,7 @@ export function createPerfectEquilibriumHitEvent(
     },
     tick: sourceEvent.tick,
     contributesToPerfectEquilibrium: false,
+    visibleDamage: sourceEvent.visibleDamage,
     derivedDamageParts: buildPerfectEquilibriumDerivedDamageParts(
       triggeringDamage,
       abilityDamage,

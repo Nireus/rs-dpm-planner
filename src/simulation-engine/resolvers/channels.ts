@@ -1,5 +1,6 @@
 import type { EntityId } from '../../game-data/types';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
+import { resolveChannelEndTickExclusive } from './channel-interruptions';
 
 export interface ChannelTickState {
   tick: number;
@@ -39,8 +40,9 @@ export function resolveChannelTimeline(
       continue;
     }
 
-    for (let offset = 0; offset < ability.channelDurationTicks; offset += 1) {
-      const tick = action.tick + offset;
+    const channelEndTickExclusive = resolveChannelEndTickExclusive(config, action, ability);
+
+    for (let tick = action.tick; tick < channelEndTickExclusive; tick += 1) {
       if (tick < 0 || tick >= config.rotationPlan.tickCount) {
         continue;
       }
@@ -48,7 +50,7 @@ export function resolveChannelTimeline(
       tickStates[tick].activeChannel = {
         sourceActionId: action.id,
         abilityId,
-        remainingTicks: ability.channelDurationTicks - offset,
+        remainingTicks: channelEndTickExclusive - tick,
       };
     }
   }

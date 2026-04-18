@@ -3,8 +3,9 @@ import {
   type PortableConfigDocumentV1,
   type PortableConfigDocument,
 } from '../models/portable-config';
-import { DEFAULT_SIMULATION_SETTINGS, type SimulationSettings } from '../models';
+import { normalizeSimulationSettings } from '../models';
 import { normalizeCombatChoices } from '../spells/magic-combat-choices';
+import { normalizePreFightPlan } from '../timeline/pre-fight';
 import { sanitizePlayerStats } from './player-stats';
 
 export type PortableConfigValidationCode =
@@ -99,24 +100,6 @@ function requireArrayField(
   return value;
 }
 
-function normalizeSimulationSettings(input: unknown): SimulationSettings {
-  if (!isRecord(input)) {
-    return DEFAULT_SIMULATION_SETTINGS;
-  }
-
-  const criticalHitResolutionMode = input['criticalHitResolutionMode'];
-  if (
-    criticalHitResolutionMode === 'deterministic-accumulator' ||
-    criticalHitResolutionMode === 'expected-value'
-  ) {
-    return {
-      criticalHitResolutionMode,
-    };
-  }
-
-  return DEFAULT_SIMULATION_SETTINGS;
-}
-
 export function parsePortableConfigDocument(input: unknown): PortableConfigParseResult {
   const errors: PortableConfigValidationError[] = [];
 
@@ -137,12 +120,12 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
 
   if (typeof schemaVersion !== 'number' || Number.isNaN(schemaVersion)) {
     pushError(errors, 'invalid-type', 'schemaVersion', 'Expected "schemaVersion" to be a number.');
-  } else if (schemaVersion !== 1 && schemaVersion !== PORTABLE_CONFIG_SCHEMA_VERSION) {
+  } else if (schemaVersion !== 1 && schemaVersion !== 2 && schemaVersion !== PORTABLE_CONFIG_SCHEMA_VERSION) {
     pushError(
       errors,
       'unsupported-schema-version',
       'schemaVersion',
-      `Unsupported schemaVersion ${schemaVersion}. Expected 1 or ${PORTABLE_CONFIG_SCHEMA_VERSION}.`,
+      `Unsupported schemaVersion ${schemaVersion}. Expected 1, 2, or ${PORTABLE_CONFIG_SCHEMA_VERSION}.`,
     );
   }
 
@@ -174,6 +157,7 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
     requireNumberField(rotationPlan, 'tickCount', 'rotationPlan.tickCount', errors);
     requireArrayField(rotationPlan, 'nonGcdActions', 'rotationPlan.nonGcdActions', errors);
     requireArrayField(rotationPlan, 'abilityActions', 'rotationPlan.abilityActions', errors);
+    validatePreFightShape(rotationPlan['preFight'], errors);
   }
 
   if (errors.length > 0) {
@@ -203,8 +187,47 @@ export function parsePortableConfigDocument(input: unknown): PortableConfigParse
       inventory: inventory as unknown as PortableConfigDocument['inventory'],
       persistentBuffConfig:
         persistentBuffConfig as unknown as PortableConfigDocument['persistentBuffConfig'],
-      rotationPlan: rotationPlan as unknown as PortableConfigDocument['rotationPlan'],
+      rotationPlan: {
+        ...(rotationPlan as unknown as PortableConfigDocument['rotationPlan']),
+        preFight: normalizePreFightPlan(
+          (rotationPlan as unknown as PortableConfigDocument['rotationPlan']).preFight,
+        ),
+      },
       simulationSettings: normalizeSimulationSettings(input['simulationSettings']),
     },
   };
+}
+
+function validatePreFightShape(
+  input: unknown,
+  errors: PortableConfigValidationError[],
+): void {
+  if (input === undefined) {
+    return;
+  }
+
+  if (!isRecord(input)) {
+    pushError(errors, 'invalid-type', 'rotationPlan.preFight', 'Expected "rotationPlan.preFight" to be an object.');
+    return;
+  }
+
+  if (input['gapTicks'] !== undefined && (typeof input['gapTicks'] !== 'number' || Number.isNaN(input['gapTicks']))) {
+    pushError(errors, 'invalid-type', 'rotationPlan.preFight.gapTicks', 'Expected "rotationPlan.preFight.gapTicks" to be a number.');
+  }
+
+  if (input['prebuildActions'] !== undefined && !Array.isArray(input['prebuildActions'])) {
+    pushError(errors, 'invalid-type', 'rotationPlan.preFight.prebuildActions', 'Expected "rotationPlan.preFight.prebuildActions" to be an array.');
+  }
+
+  if (input['prebuildNonGcdActions'] !== undefined && !Array.isArray(input['prebuildNonGcdActions'])) {
+    pushError(errors, 'invalid-type', 'rotationPlan.preFight.prebuildNonGcdActions', 'Expected "rotationPlan.preFight.prebuildNonGcdActions" to be an array.');
+  }
+
+  if (
+    input['stalledAbility'] !== undefined &&
+    input['stalledAbility'] !== null &&
+    !isRecord(input['stalledAbility'])
+  ) {
+    pushError(errors, 'invalid-type', 'rotationPlan.preFight.stalledAbility', 'Expected "rotationPlan.preFight.stalledAbility" to be an object or null.');
+  }
 }

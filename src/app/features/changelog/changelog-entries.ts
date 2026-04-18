@@ -5,6 +5,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
+    date: '18.04.2026',
+    change:
+      'Added pre-fight planning to Rotation Planner. Prebuild and Ability Stall now live on the same timeline before T0, support abilities and non-GCD setup, preserve import/export, expose gap-to-fight timing in Configuration, and allow tick inspection across pre-fight actions, buffs, gear/ammo, damage math, and cooldowns. The simulator now ages pre-fight buffs and cooldowns, releases stalled abilities with the first main action, handles gear swaps ending channels, and improves strict validation for pre-fight warnings. Also corrected Rapid Fire hit timing, Wen arrow stack behavior, and Seren godbow Crystal Rain target-size damage with proper Perfect Equilibrium stack handling.',
+  },
+  {
     date: '17.04.2026',
     change:
       'Fixed the Rotation Planner Perfect Equilibrium proc marker so it now uses the correct status icon instead of the Equilibrium perk icon or Bow of the Last Guardian item thumbnail. Also added minor UX polish by moving several remaining style, gear, buff, and perk icons to local assets and improving Import / Export text entry reliability.',
@@ -37,7 +42,7 @@ export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
     date: '11.04.2026',
     change:
-      'Fixxed runic charge bugs. Implemented crit interactions with Tsunami and FSOA.',
+      'Fixed runic charge bugs. Implemented crit interactions with Tsunami and FSOA.',
   },
   {
     date: '04.04.2026',

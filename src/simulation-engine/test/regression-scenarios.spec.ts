@@ -95,7 +95,7 @@ describe('simulation regression scenarios', () => {
             channelDurationTicks: 9,
             hitSchedule: Array.from({ length: 8 }, (_, index) => ({
               id: `rapid-hit-${index + 1}`,
-              tickOffset: index + 1,
+              tickOffset: index,
               damage: { min: 75, max: 85 },
             })),
             baseDamage: { min: 600, max: 680 },
@@ -110,8 +110,58 @@ describe('simulation regression scenarios', () => {
     expect(result.isValid).toBe(true);
     expect(result.explainability.damageBreakdowns).toHaveLength(8);
     expect([...new Set(result.explainability.damageBreakdowns.map((entry) => entry.tick))]).toEqual(
-      [1, 2, 3, 4, 5, 6, 7, 8],
+      [0, 1, 2, 3, 4, 5, 6, 7],
     );
+  });
+
+  it('ends channel damage when a weapon gear swap takes effect', () => {
+    const result = simulateBaseDamage(
+      createScenarioConfig({
+        abilities: {
+          'rapid-fire': createAbilityDefinition({
+            id: 'rapid-fire',
+            name: 'Rapid Fire',
+            subtype: 'other',
+            cooldownTicks: 34,
+            adrenalineCost: 25,
+            isChanneled: true,
+            channelDurationTicks: 9,
+            hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+              id: `rapid-hit-${index + 1}`,
+              tickOffset: index,
+              damage: { min: 75, max: 85 },
+            })),
+            baseDamage: { min: 600, max: 680 },
+          }),
+        },
+        items: {
+          'swap-bow': {
+            id: 'swap-bow',
+            name: 'Swap Bow',
+            category: 'weapon',
+            slot: 'weapon',
+            combatStyleTags: ['ranged'],
+          },
+        },
+        inventoryItems: [
+          {
+            instanceId: 'swap-bow-instance',
+            definitionId: 'swap-bow',
+          },
+        ],
+        nonGcdActions: [
+          createGearSwapAction('swap-weapon', 3, 'swap-bow-instance', 'swap-bow', 'weapon'),
+        ],
+        abilityActions: [createAbilityAction('action-rapid', 0, 'rapid-fire')],
+        startingAdrenaline: 100,
+        tickCount: 12,
+      }),
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.validationIssues.some((issue) => issue.code === 'action.channel_conflict')).toBe(false);
+    expect(result.explainability.damageBreakdowns).toHaveLength(4);
+    expect(result.explainability.damageBreakdowns.map((entry) => entry.tick)).toEqual([0, 1, 2, 3]);
   });
 
   it('catches an adrenaline edge case and surfaces the invalid cast clearly', () => {
@@ -1214,7 +1264,9 @@ describe('simulation regression scenarios', () => {
         ],
         startingAdrenaline: 100,
         tickCount: 8,
-        simulationSettings: mode ? { criticalHitResolutionMode: mode } : undefined,
+        simulationSettings: mode
+          ? { criticalHitResolutionMode: mode, serenGodbowTargetSize: '5x5' }
+          : undefined,
       });
 
     const deterministicResult = simulateBaseDamage(createConfig());
@@ -1648,7 +1700,9 @@ describe('simulation regression scenarios', () => {
         ],
         startingAdrenaline: 100,
         tickCount: 8,
-        simulationSettings: mode ? { criticalHitResolutionMode: mode } : undefined,
+        simulationSettings: mode
+          ? { criticalHitResolutionMode: mode, serenGodbowTargetSize: '5x5' }
+          : undefined,
       });
 
     const result = simulateBaseDamage(createInstabilityConfig());

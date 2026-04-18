@@ -16,6 +16,25 @@ import {
 } from '../buffs/buff-effect-refs';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import {
+  resolveChannelEndTickExclusive,
+  resolveEffectiveChannelDurationTicks,
+} from './channel-interruptions';
+import {
+  skipsPreFightAdrenaline,
+  skipsPreFightHits,
+} from '../timeline/pre-fight';
+import {
+  ICY_CHILL_BUFF_ID,
+  ICY_PRECISION_BUFF_ID,
+  WEN_ICY_CHILL_DURATION_TICKS,
+  WEN_ICY_CHILL_MAX_STACKS,
+  WEN_ICY_PRECISION_DURATION_TICKS,
+  WEN_ICY_PRECISION_STACKS,
+  hasWenArrowsEquippedAtTick,
+  isWenStackBuildingAbility,
+  isWenStackConsumingAbility,
+} from '../ranged/wen-arrows';
+import {
   applyAbilityTimelineEffects,
   createEmptyBuffTimeline,
   markBuffRange,
@@ -60,7 +79,7 @@ export function resolveDeterministicRangedTimeline(
   let generatedAdrenalineRenewal = false;
 
   for (const action of [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockedActionIds.has(action.id)) {
+    if (blockedActionIds.has(action.id) || skipsPreFightHits(action)) {
       continue;
     }
 
@@ -94,7 +113,7 @@ export function resolveDeterministicRangedTimeline(
       timelineGeneratedBuffSources,
     });
 
-    if (!dracolichInfo || !isRapidFireAbility(effectiveAbility)) {
+    if (skipsPreFightAdrenaline(action) || !dracolichInfo || !isRapidFireAbility(effectiveAbility)) {
       continue;
     }
 
@@ -103,6 +122,7 @@ export function resolveDeterministicRangedTimeline(
   }
 
   applyTimelineHitAdrenaline(config, blockedActionIds, buffTimeline, adrenalineByTick);
+  const wenArrowResult = applyWenArrowBuffs(config, blockedActionIds, buffTimeline);
 
   if (dracolichInfo && Object.values(adrenalineByTick).some((value) => value > 0)) {
     notes.push(
@@ -179,6 +199,25 @@ export function resolveDeterministicRangedTimeline(
       sourceId: ADRENALINE_RENEWAL_BUFF_ID,
     });
     notes.push('Adrenaline Renewal: applies a 10-tick buff starting on the drink tick and grants 4% adrenaline on each active tick.');
+  }
+
+  if (wenArrowResult.generatedIcyChill) {
+    timelineGeneratedBuffSources.push({
+      buffId: ICY_CHILL_BUFF_ID,
+      sourceType: 'item',
+      sourceId: 'wen-arrows',
+    });
+  }
+
+  if (wenArrowResult.generatedIcyPrecision) {
+    timelineGeneratedBuffSources.push({
+      buffId: ICY_PRECISION_BUFF_ID,
+      sourceType: 'item',
+      sourceId: 'wen-arrows',
+    });
+    notes.push(
+      'Wen arrows: basic ranged hits build up to 10 Icy Chill stacks, and ranged thresholds, ultimates, or specials using Wen arrows consume 10 stacks for Icy Precision.',
+    );
   }
 
   return {
@@ -331,8 +370,8 @@ function applyRapidFireDracolichAdrenaline(
   }
 
   const gainPerTick = dracolichInfo.pieces * dracolichInfo.adrenalinePerPiecePerTick;
-  for (let offset = 0; offset < ability.channelDurationTicks; offset += 1) {
-    const tick = action.tick + offset;
+  const channelEndTickExclusive = resolveChannelEndTickExclusive(config, action, ability);
+  for (let tick = action.tick; tick < channelEndTickExclusive; tick += 1) {
     if (tick < 0 || tick >= config.rotationPlan.tickCount) {
       continue;
     }
@@ -349,6 +388,9 @@ function applyRapidFireDracolichInfusion(
   buffTimeline: Record<number, EntityId[]>,
 ): void {
   if (!ability.isChanneled || !ability.channelDurationTicks || dracolichInfo.infusionDurationTicks <= 0 || !isBowEquipped(config)) {
+    return;
+  }
+  if (resolveEffectiveChannelDurationTicks(config, action, ability) < ability.channelDurationTicks) {
     return;
   }
 
@@ -376,7 +418,7 @@ function applyTimelineHitAdrenaline(
   let perfectEquilibriumStacks = 0;
 
   for (const action of abilityActions) {
-    if (blockedActionIds.has(action.id)) {
+    if (blockedActionIds.has(action.id) || skipsPreFightAdrenaline(action) || skipsPreFightHits(action)) {
       continue;
     }
 
@@ -410,6 +452,220 @@ function applyTimelineHitAdrenaline(
         }
       }
     }
+  }
+}
+
+interface WenArrowEvent {
+  tick: number;
+  actionOrder: number;
+  eventOrder: number;
+  kind: 'build' | 'consume';
+  stackGain: number;
+}
+
+function applyWenArrowBuffs(
+  config: SimulationConfig,
+  blockedActionIds: ReadonlySet<string>,
+  buffTimeline: Record<number, EntityId[]>,
+): {
+  generatedIcyChill: boolean;
+  generatedIcyPrecision: boolean;
+} {
+  const events = buildWenArrowEvents(config, blockedActionIds);
+  if (!events.length) {
+    return {
+      generatedIcyChill: false,
+      generatedIcyPrecision: false,
+    };
+  }
+
+  let eventIndex = 0;
+  let icyChillStacks = 0;
+  let icyChillExpiresAtTick = -1;
+  let icyPrecisionStacks = 0;
+  let icyPrecisionExpiresAtTick = -1;
+  let generatedIcyChill = false;
+  let generatedIcyPrecision = false;
+
+  for (let tick = 0; tick < config.rotationPlan.tickCount; tick += 1) {
+    if (tick > icyChillExpiresAtTick) {
+      icyChillStacks = 0;
+    }
+    if (tick > icyPrecisionExpiresAtTick) {
+      icyPrecisionStacks = 0;
+    }
+
+    while (events[eventIndex]?.tick === tick) {
+      const event = events[eventIndex];
+
+      if (event.kind === 'consume') {
+        if (icyChillStacks >= WEN_ICY_CHILL_MAX_STACKS && icyPrecisionStacks <= 0) {
+          icyPrecisionStacks = WEN_ICY_PRECISION_STACKS;
+          icyPrecisionExpiresAtTick = tick + WEN_ICY_PRECISION_DURATION_TICKS - 1;
+          icyChillStacks = 0;
+          icyChillExpiresAtTick = -1;
+          generatedIcyPrecision = true;
+        }
+      } else if (event.stackGain > 0) {
+        icyChillStacks = Math.min(WEN_ICY_CHILL_MAX_STACKS, icyChillStacks + event.stackGain);
+        icyChillExpiresAtTick = tick + WEN_ICY_CHILL_DURATION_TICKS - 1;
+        generatedIcyChill = true;
+      }
+
+      eventIndex += 1;
+    }
+
+    setStackedBuffAtTick(buffTimeline, tick, ICY_CHILL_BUFF_ID, icyChillStacks);
+    setStackedBuffAtTick(buffTimeline, tick, ICY_PRECISION_BUFF_ID, icyPrecisionStacks);
+  }
+
+  return {
+    generatedIcyChill,
+    generatedIcyPrecision,
+  };
+}
+
+function buildWenArrowEvents(
+  config: SimulationConfig,
+  blockedActionIds: ReadonlySet<string>,
+): WenArrowEvent[] {
+  const orderedActions = config.rotationPlan.abilityActions
+    .map((action, actionOrder) => ({ action, actionOrder }))
+    .sort((left, right) => left.action.tick - right.action.tick || left.actionOrder - right.actionOrder);
+  const events: WenArrowEvent[] = [];
+
+  for (const { action, actionOrder } of orderedActions) {
+    if (blockedActionIds.has(action.id) || skipsPreFightHits(action)) {
+      continue;
+    }
+
+    const ability = resolveEffectiveAbilityDefinition(config, action);
+    if (!ability || ability.style !== 'ranged') {
+      continue;
+    }
+
+    const channelCancellationTick = resolveChannelCancellationTick(config, action, ability);
+
+    if (isWenStackConsumingAbility(ability)) {
+      const consumingHitTick = resolveFirstWenConsumingHitTick(config, action, ability, channelCancellationTick);
+      if (consumingHitTick !== null) {
+        events.push({
+          tick: consumingHitTick,
+          actionOrder,
+          eventOrder: 0,
+          kind: 'consume',
+          stackGain: 0,
+        });
+      }
+    }
+
+    if (!isWenStackBuildingAbility(ability)) {
+      continue;
+    }
+
+    let damagingHitIndex = 0;
+    for (const hit of ability.hitSchedule) {
+      const hitTick = action.tick + hit.tickOffset;
+      if (hit.damage.min <= 0 && hit.damage.max <= 0) {
+        continue;
+      }
+
+      damagingHitIndex += 1;
+
+      if (channelCancellationTick !== null && hitTick >= channelCancellationTick) {
+        continue;
+      }
+
+      if (hitTick < 0 || hitTick >= config.rotationPlan.tickCount || !hasWenArrowsEquippedAtTick(config, hitTick)) {
+        continue;
+      }
+
+      const stackGain = resolveWenStackGain(ability, damagingHitIndex);
+      if (stackGain <= 0) {
+        continue;
+      }
+
+      events.push({
+        tick: hitTick,
+        actionOrder,
+        eventOrder: 1,
+        kind: 'build',
+        stackGain,
+      });
+    }
+  }
+
+  return events.sort((left, right) =>
+    left.tick - right.tick ||
+    left.actionOrder - right.actionOrder ||
+    left.eventOrder - right.eventOrder,
+  );
+}
+
+function resolveFirstWenConsumingHitTick(
+  config: SimulationConfig,
+  action: RotationAction,
+  ability: NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>>,
+  channelCancellationTick: number | null,
+): number | null {
+  for (const hit of ability.hitSchedule) {
+    const hitTick = action.tick + hit.tickOffset;
+    if (hit.damage.min <= 0 && hit.damage.max <= 0) {
+      continue;
+    }
+    if (channelCancellationTick !== null && hitTick >= channelCancellationTick) {
+      continue;
+    }
+    if (hitTick < 0 || hitTick >= config.rotationPlan.tickCount) {
+      continue;
+    }
+    if (hasWenArrowsEquippedAtTick(config, hitTick)) {
+      return hitTick;
+    }
+  }
+
+  return null;
+}
+
+function resolveChannelCancellationTick(
+  config: SimulationConfig,
+  action: RotationAction,
+  ability: NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>>,
+): number | null {
+  const naturalChannelEndTickExclusive = action.tick + Math.max(ability.channelDurationTicks ?? 0, 0);
+  const interruptedChannelEndTickExclusive = ability.isChanneled
+    ? resolveChannelEndTickExclusive(config, action, ability, naturalChannelEndTickExclusive)
+    : null;
+
+  return interruptedChannelEndTickExclusive !== null &&
+    interruptedChannelEndTickExclusive < naturalChannelEndTickExclusive
+      ? interruptedChannelEndTickExclusive
+      : null;
+}
+
+function resolveWenStackGain(
+  ability: NonNullable<ReturnType<typeof resolveEffectiveAbilityDefinition>>,
+  damagingHitIndex: number,
+): number {
+  if (ability.id === 'piercing-shot') {
+    return damagingHitIndex === 1 ? 2 : 0;
+  }
+
+  if (ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime)) {
+    return damagingHitIndex === 1 ? 1 : 0;
+  }
+
+  return 1;
+}
+
+function setStackedBuffAtTick(
+  buffTimeline: Record<number, EntityId[]>,
+  tick: number,
+  buffId: EntityId,
+  stacks: number,
+): void {
+  for (let stack = 0; stack < stacks; stack += 1) {
+    buffTimeline[tick].push(buffId);
   }
 }
 

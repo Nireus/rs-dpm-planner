@@ -7,6 +7,7 @@ import type {
   TickState,
   ValidationIssue,
 } from '../models';
+import { isStalledCastAction } from '../timeline/pre-fight';
 import { createDirectDamageSummary } from './damage-summary';
 
 export function mergeBuffTimelines(
@@ -98,6 +99,10 @@ function groupActionsByTick(
   const grouped = new Map<number, string[]>();
 
   for (const action of [...abilityActions, ...nonGcdActions]) {
+    if (isStalledCastAction(action)) {
+      continue;
+    }
+
     const existing = grouped.get(action.tick) ?? [];
     const label = action.actionType === 'ability-use'
       ? action.payload['abilityId']

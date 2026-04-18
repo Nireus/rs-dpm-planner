@@ -14,6 +14,10 @@ import {
   type PendingMagicBuff,
 } from './magic-buff-state';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import {
+  skipsPreFightAdrenaline,
+  skipsPreFightHits,
+} from '../timeline/pre-fight';
 import { resolveMagicSpellDefinitionForAction } from '../spells/selected-spell';
 import { collectActiveEffectRefs } from '../calculators/active-effect-refs';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
@@ -55,10 +59,11 @@ export function resolveDeterministicMagicTimeline(
   let metaphysicsCritDamageApplied = false;
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockedActionIds.has(action.id)) {
+    if (blockedActionIds.has(action.id) || skipsPreFightHits(action)) {
       continue;
     }
 
+    const skipAdrenaline = skipsPreFightAdrenaline(action);
     const projectedConfig = projectSimulationConfigAtTick(config, action.tick);
     const spell = resolveMagicSpellDefinitionForAction(projectedConfig, action);
     const songOfDestructionActive = hasSongOfDestructionSetEquipped(projectedConfig);
@@ -141,7 +146,7 @@ export function resolveDeterministicMagicTimeline(
       action,
       ability,
       buffTimeline,
-      adrenalineByTick,
+      adrenalineByTick: skipAdrenaline ? undefined : adrenalineByTick,
       timelineGeneratedBuffSources,
     });
 
@@ -228,7 +233,7 @@ export function resolveDeterministicMagicTimeline(
         hitTick,
         buffTimeline,
       );
-      if (criticalHitAdrenalineGain > 0 && criticalProcResult.procValue > 0) {
+      if (!skipAdrenaline && criticalHitAdrenalineGain > 0 && criticalProcResult.procValue > 0) {
         adrenalineByTick[hitTick] += roundValue(criticalProcResult.procValue * criticalHitAdrenalineGain);
       }
     }
@@ -295,7 +300,9 @@ export function resolveDeterministicMagicTimeline(
         break;
       default:
         if (songOfDestructionActive && ability.subtype === 'basic' && ability.style === 'magic' && essenceCorruptionStacks >= 25) {
-          grantWindowedAdrenaline(adrenalineByTick, action.tick, 6, config.rotationPlan.tickCount);
+          if (!skipAdrenaline) {
+            grantWindowedAdrenaline(adrenalineByTick, action.tick, 6, config.rotationPlan.tickCount);
+          }
         }
         break;
     }

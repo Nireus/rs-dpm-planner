@@ -1,0 +1,13 @@
+{
+  "id": "icy-precision",
+  "name": "Icy Precision",
+  "iconPath": "/icons/wiki/wen-arrow-5.png",
+  "wikiUrl": "https://runescape.wiki/w/Wen_arrow",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 15,
+  "stackRules": {
+    "maxStacks": 10
+  },
+  "displayPriority": 78
+}

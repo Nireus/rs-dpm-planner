@@ -1,0 +1,14 @@
+{
+  "id": "icy-chill",
+  "name": "Icy Chill",
+  "iconPath": "/icons/wiki/wen-arrow-5.png",
+  "wikiUrl": "https://runescape.wiki/w/Wen_arrow",
+  "category": "temporary",
+  "sourceType": "item",
+  "durationTicks": 50,
+  "stackRules": {
+    "maxStacks": 10,
+    "refreshesDuration": true
+  },
+  "displayPriority": 77
+}

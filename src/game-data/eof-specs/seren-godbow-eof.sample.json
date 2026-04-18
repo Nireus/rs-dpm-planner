@@ -2,11 +2,11 @@
   "id": "seren-godbow-eof",
   "name": "Seren Godbow (EOF)",
   "iconPath": "/icons/wiki/seren-godbow.png",
-  "hoverSummary": "EOF special | -30% adrenaline | 2 hits",
+  "hoverSummary": "EOF special | -30% adrenaline | target-size arrows",
   "detailLines": [
     "Stored Seren godbow special attack for Essence of Finality.",
     "Requires Essence of Finality storing Seren godbow.",
-    "Represented separately from the main ranged abilities list."
+    "Arrow count is controlled by the Seren godbow target size simulation setting."
   ],
   "wikiUrl": "https://runescape.wiki/w/Seren_godbow",
   "weaponOrigin": "seren-godbow",

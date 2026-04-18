@@ -9,7 +9,7 @@
     "Examine: An intricate bow of pure crystal.",
     "Tier 92 two-handed shortbow.",
     "Provides its own ammo like a chargebow.",
-    "Special attack is a notable future EOF candidate."
+    "Crystal Rain special scales with configured target size."
   ],
   "combatStyleTags": ["ranged"],
   "tier": 92,
@@ -17,5 +17,6 @@
     "requiredEquipmentTags": ["two-handed-bow"]
   },
   "equipBehavior": "two-handed",
+  "specialAbilityId": "seren-godbow-eof",
   "effectRefs": ["weapon-special-access", "weapon-special:seren-godbow"]
 }

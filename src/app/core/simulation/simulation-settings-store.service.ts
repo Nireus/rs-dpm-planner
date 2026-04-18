@@ -1,6 +1,11 @@
 import { effect, inject, Injectable, signal } from '@angular/core';
-import type { CriticalHitResolutionMode, SimulationSettings } from '../../../simulation-engine/models';
-import { DEFAULT_SIMULATION_SETTINGS } from '../../../simulation-engine/models';
+import type { SimulationSettings } from '../../../simulation-engine/models';
+import {
+  DEFAULT_SIMULATION_SETTINGS,
+  normalizeCriticalHitResolutionMode,
+  normalizeSerenGodbowTargetSize,
+  normalizeSimulationSettings,
+} from '../../../simulation-engine/models';
 import { WorkspaceRepositoryService } from '../workspace/workspace-repository.service';
 
 @Injectable({
@@ -28,16 +33,14 @@ export class SimulationSettingsStoreService {
     }));
   }
 
-  loadSettings(settings: Partial<SimulationSettings> | undefined): void {
-    this.settingsValue.set({
-      ...DEFAULT_SIMULATION_SETTINGS,
-      criticalHitResolutionMode: normalizeCriticalHitResolutionMode(settings?.criticalHitResolutionMode),
-    });
+  updateSerenGodbowTargetSize(targetSize: string | null): void {
+    this.settingsValue.update((current) => ({
+      ...current,
+      serenGodbowTargetSize: normalizeSerenGodbowTargetSize(targetSize),
+    }));
   }
-}
 
-function normalizeCriticalHitResolutionMode(
-  mode: string | null | undefined,
-): CriticalHitResolutionMode {
-  return mode === 'expected-value' ? 'expected-value' : 'deterministic-accumulator';
+  loadSettings(settings: Partial<SimulationSettings> | undefined): void {
+    this.settingsValue.set(normalizeSimulationSettings(settings));
+  }
 }

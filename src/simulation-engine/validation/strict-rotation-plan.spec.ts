@@ -633,6 +633,74 @@ describe('validateStrictRotationPlan', () => {
     ).toBe(false);
   });
 
+  it('allows weapon gear swaps during a channel and treats the channel as ended on the next tick', () => {
+    const baseConfig = createConfig();
+    const swapWeapon = createWeapon({
+      id: 'swap-bow',
+      name: 'Swap Bow',
+    });
+    const config = createConfig({
+      gameData: {
+        ...baseConfig.gameData,
+        items: {
+          ...baseConfig.gameData.items,
+          [swapWeapon.id]: swapWeapon,
+        },
+      },
+      inventory: {
+        items: [
+          ...baseConfig.inventory.items,
+          {
+            instanceId: 'swap-weapon-instance',
+            definitionId: swapWeapon.id,
+          },
+        ],
+      },
+      rotationPlan: {
+        startingAdrenaline: 50,
+        tickCount: 20,
+        nonGcdActions: [
+          {
+            id: 'swap-weapon',
+            tick: 2,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {
+              instanceId: 'swap-weapon-instance',
+              definitionId: swapWeapon.id,
+              slot: 'weapon',
+            },
+          },
+        ],
+        abilityActions: [
+          {
+            id: 'channel-1',
+            tick: 1,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'channel-shot' },
+          },
+          {
+            id: 'followup-1',
+            tick: 3,
+            lane: 'ability',
+            actionType: 'ability-use',
+            payload: { abilityId: 'test-shot' },
+          },
+        ],
+      },
+    });
+
+    const issues = validateStrictRotationPlan(config);
+
+    expect(issues.some((issue) => issue.relatedActionId === 'swap-weapon')).toBe(false);
+    expect(
+      issues.some(
+        (issue) => issue.relatedActionId === 'followup-1' && issue.code === 'ability.channel_conflict',
+      ),
+    ).toBe(false);
+  });
+
   it('reports spell swaps during an active channel with the shared swap warning', () => {
     const config = createConfig({
       gameData: {
@@ -679,7 +747,7 @@ describe('validateStrictRotationPlan', () => {
     expect(
       issues.find((issue) => issue.relatedActionId === 'swap-spell' && issue.code === 'action.channel_conflict')
         ?.message,
-    ).toBe('Gear, ammo, and spell swaps during an active channel are not supported in strict mode.');
+    ).toBe('Ammo and spell swaps during an active channel are not supported in strict mode.');
   });
 
   it('rejects spell swaps that try to use a spell from a different spellbook', () => {

@@ -93,12 +93,25 @@ export interface RotationAction {
   payload: Record<string, unknown>;
 }
 
+export interface PreFightAbilityAction {
+  id: string;
+  abilityId: EntityId;
+}
+
+export interface PreFightPlan {
+  gapTicks: number;
+  prebuildActions: PreFightAbilityAction[];
+  prebuildNonGcdActions?: RotationAction[];
+  stalledAbility: PreFightAbilityAction | null;
+}
+
 export interface RotationPlan {
   startingAdrenaline: number;
   tickCount: number;
   startingStacks?: StartingStackState;
   nonGcdActions: RotationAction[];
   abilityActions: RotationAction[];
+  preFight?: PreFightPlan;
 }
 
 export interface LoadedGameDataSnapshot {
@@ -117,14 +130,53 @@ export interface SimulationModeFlags {
 }
 
 export type CriticalHitResolutionMode = 'deterministic-accumulator' | 'expected-value';
+export const SEREN_GODBOW_TARGET_SIZE_VALUES = ['1x1', '2x2', '3x3', '4x4', '5x5'] as const;
+export type SerenGodbowTargetSize = (typeof SEREN_GODBOW_TARGET_SIZE_VALUES)[number];
+
+export const SEREN_GODBOW_TARGET_ARROWS: Record<SerenGodbowTargetSize, number> = {
+  '1x1': 1,
+  '2x2': 1,
+  '3x3': 2,
+  '4x4': 4,
+  '5x5': 5,
+};
 
 export interface SimulationSettings {
   criticalHitResolutionMode: CriticalHitResolutionMode;
+  serenGodbowTargetSize: SerenGodbowTargetSize;
 }
 
 export const DEFAULT_SIMULATION_SETTINGS: SimulationSettings = {
   criticalHitResolutionMode: 'deterministic-accumulator',
+  serenGodbowTargetSize: '5x5',
 };
+
+export function normalizeCriticalHitResolutionMode(
+  mode: unknown,
+): CriticalHitResolutionMode {
+  return mode === 'expected-value' ? 'expected-value' : 'deterministic-accumulator';
+}
+
+export function normalizeSerenGodbowTargetSize(
+  targetSize: unknown,
+): SerenGodbowTargetSize {
+  return SEREN_GODBOW_TARGET_SIZE_VALUES.includes(targetSize as SerenGodbowTargetSize)
+    ? targetSize as SerenGodbowTargetSize
+    : DEFAULT_SIMULATION_SETTINGS.serenGodbowTargetSize;
+}
+
+export function normalizeSimulationSettings(
+  settings: unknown,
+): SimulationSettings {
+  const record = settings && typeof settings === 'object' && !Array.isArray(settings)
+    ? settings as Partial<SimulationSettings>
+    : null;
+
+  return {
+    criticalHitResolutionMode: normalizeCriticalHitResolutionMode(record?.criticalHitResolutionMode),
+    serenGodbowTargetSize: normalizeSerenGodbowTargetSize(record?.serenGodbowTargetSize),
+  };
+}
 
 export interface SimulationConfig {
   playerStats: PlayerStats;

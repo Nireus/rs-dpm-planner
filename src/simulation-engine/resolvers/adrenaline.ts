@@ -12,6 +12,7 @@ import { resolveEffectiveAbilityDefinition } from '../abilities/effective-abilit
 import { parseBasicAdrenalineBonusMultiplier } from '../buffs/buff-effect-refs';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import { skipsPreFightAdrenaline } from '../timeline/pre-fight';
 import { advanceChanceAccumulator, createChanceAccumulatorState } from '../utils/chance-accumulator';
 import { resolveDeathsporeTimeline } from './deathspore';
 import { resolveDeterministicMagicTimeline } from './magic-deterministic';
@@ -52,7 +53,9 @@ export function resolveAdrenalineTimeline(
   config: SimulationConfig,
   blockedActionIds: ReadonlySet<string> = new Set(),
 ): AdrenalineTimelineResult {
-  const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
+  const abilityActions = [...config.rotationPlan.abilityActions]
+    .filter((action) => !skipsPreFightAdrenaline(action))
+    .sort((left, right) => left.tick - right.tick);
   const nonGcdActions = [...config.rotationPlan.nonGcdActions].sort((left, right) => left.tick - right.tick);
   const validationIssues: ValidationIssue[] = [];
   const tickStates: AdrenalineTickState[] = [];

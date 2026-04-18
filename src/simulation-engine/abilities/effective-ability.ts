@@ -6,6 +6,10 @@ import type {
   EofSpecDefinition,
   ItemDefinition,
 } from '../../game-data/types';
+import {
+  normalizeSerenGodbowTargetSize,
+  SEREN_GODBOW_TARGET_ARROWS,
+} from '../models';
 import type { ItemInstanceConfig, RotationAction, SimulationConfig } from '../models';
 import { resolveConfiguredEquipmentDefinition } from '../gear/configured-equipment-definition';
 import type { AbilityAvailabilityContext } from '../rules/ability-availability';
@@ -17,6 +21,9 @@ import {
   DEADSHOT_ABILITY_ID,
   ESSENCE_OF_FINALITY_ABILITY_ID,
   RANGED_ABILITY_ID,
+  SEREN_GODBOW_ABILITY_ID,
+  SEREN_GODBOW_EFFECT_REF,
+  SEREN_GODBOW_WEAPON_ID,
   SHADOWFALL_ABILITY_ID,
   SPLIT_SOUL_ABILITY_ID,
   WEAPON_SPECIAL_ATTACK_ABILITY_ID,
@@ -27,6 +34,9 @@ export {
   DEADSHOT_ABILITY_ID,
   ESSENCE_OF_FINALITY_ABILITY_ID,
   RANGED_ABILITY_ID,
+  SEREN_GODBOW_ABILITY_ID,
+  SEREN_GODBOW_EFFECT_REF,
+  SEREN_GODBOW_WEAPON_ID,
   SHADOWFALL_ABILITY_ID,
   SPLIT_SOUL_ABILITY_ID,
   WEAPON_SPECIAL_ATTACK_ABILITY_ID,
@@ -54,7 +64,8 @@ export function resolveEffectiveAbilityDefinition(
 
   const dispatchedAbility = resolveSpecialDispatchAbility(projectedConfig, baseAbility) ?? baseAbility;
   const resolvedAbility = applyMatchingAbilityVariant(projectedConfig, dispatchedAbility);
-  return applyAdrenalineCostModifiers(projectedConfig, resolvedAbility);
+  const configuredAbility = applySerenGodbowTargetSize(projectedConfig, resolvedAbility);
+  return applyAdrenalineCostModifiers(projectedConfig, configuredAbility);
 }
 
 function resolveCastSpellAbility(
@@ -237,6 +248,37 @@ function mergeAbilityVariant(
       ...(variant.displayHints ?? {}),
     },
     description: variant.description ?? baseAbility.description,
+  };
+}
+
+function applySerenGodbowTargetSize(
+  config: SimulationConfig,
+  ability: AbilityDefinition,
+): AbilityDefinition {
+  if (ability.id !== SEREN_GODBOW_ABILITY_ID && !ability.effectRefs?.includes(SEREN_GODBOW_EFFECT_REF)) {
+    return ability;
+  }
+
+  const targetSize = normalizeSerenGodbowTargetSize(config.simulationSettings?.serenGodbowTargetSize);
+  const arrowCount = SEREN_GODBOW_TARGET_ARROWS[targetSize];
+  const hitSchedule = Array.from({ length: arrowCount }, (_, index) => ({
+    id: `${ability.id}-hit-${index + 1}`,
+    tickOffset: 0,
+    damage: {
+      min: 125,
+      max: 155,
+    },
+  }));
+
+  return {
+    ...ability,
+    hitSchedule,
+    baseDamage: sumHitScheduleDamage(hitSchedule),
+    displayHints: {
+      ...(ability.displayHints ?? {}),
+      hitCountLabel: `${arrowCount} arrow${arrowCount === 1 ? '' : 's'}`,
+      damageRangeLabel: `${arrowCount * 125}-${arrowCount * 155}% ability damage`,
+    },
   };
 }
 

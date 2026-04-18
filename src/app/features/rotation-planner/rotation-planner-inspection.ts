@@ -9,6 +9,7 @@ import type {
   PlayerStats,
   RotationAction,
   RotationPlan,
+  SimulationConfig,
   SimulationResult,
   ValidationIssue,
 } from '../../../simulation-engine/models';
@@ -17,7 +18,13 @@ import { simulateBaseDamage } from '../../../simulation-engine/calculators';
 import { resolveBuffStackRuleState } from '../../../simulation-engine/buffs/buff-stack-rules';
 import { resolveAdrenalineTimeline } from '../../../simulation-engine/resolvers/adrenaline';
 import { resolveCooldownTimeline } from '../../../simulation-engine/resolvers/cooldowns';
-import { buildBaseTimeline } from '../../../simulation-engine/timeline';
+import {
+  buildBaseTimeline,
+  cloneDefaultPreFightPlan,
+  expandPreFightSimulationConfig,
+  GCD_TICKS,
+  mapPreFightVisualTickToSimulationTick,
+} from '../../../simulation-engine/timeline';
 import { projectSimulationConfigAtTick } from '../../../simulation-engine/state/projected-gear-state';
 import { resolveActiveMagicSpellDefinition } from '../../../simulation-engine/spells/selected-spell';
 import {
@@ -87,19 +94,13 @@ export function inspectRotationPlannerTick(input: {
   rotationPlan: RotationPlan;
   simulationResult?: SimulationResult | null;
 }): RotationPlannerTickInspection {
-  const simulationConfig = buildRotationPlannerSimulationConfig(input);
-  const timelineResult = buildBaseTimeline({
-    rotationPlan: input.rotationPlan,
-  });
-  const adrenalineResult = resolveAdrenalineTimeline(simulationConfig);
-  const cooldownResult = resolveCooldownTimeline(simulationConfig);
-  const simulationResult = input.simulationResult ?? simulateBaseDamage(simulationConfig);
-  const clampedTick = Math.max(0, Math.min(input.tick, input.rotationPlan.tickCount - 1));
-  const bucket = timelineResult.timeline.ticks[clampedTick];
-  const adrenalineTickState = adrenalineResult.tickStates[clampedTick];
-  const cooldownTickState = cooldownResult.tickStates[clampedTick];
-  const simulatedTickState = simulationResult.tickStates[clampedTick];
-  const projectedConfig = projectSimulationConfigAtTick(simulationConfig, clampedTick);
+  const baseSimulationConfig = buildRotationPlannerSimulationConfig(input);
+  const runtime = buildInspectionRuntime(input.tick, baseSimulationConfig, input.simulationResult);
+  const bucket = runtime.timelineResult.timeline.ticks[runtime.engineTick];
+  const adrenalineTickState = runtime.adrenalineResult.tickStates[runtime.engineTick];
+  const cooldownTickState = runtime.cooldownResult.tickStates[runtime.engineTick];
+  const simulatedTickState = runtime.simulationResult.tickStates[runtime.engineTick];
+  const projectedConfig = projectSimulationConfigAtTick(runtime.simulationConfig, runtime.engineTick);
   const activeSpell = resolveActiveMagicSpellDefinition(projectedConfig);
   const persistentBuffIds = simulatedTickState?.activePersistentBuffIds ?? collectPersistentBuffIds(input.buffState, input.catalog);
   const temporaryBuffIds = (simulatedTickState?.activeTimelineBuffIds ?? []).filter(
@@ -108,8 +109,8 @@ export function inspectRotationPlannerTick(input: {
   const projectedGearState = projectGearStateAtTick(
     input.gearState,
     input.catalog.items,
-    input.rotationPlan.nonGcdActions,
-    clampedTick,
+    runtime.simulationConfig.rotationPlan.nonGcdActions,
+    runtime.engineTick,
   );
   const deathsporeAmmoActive = hasDeathsporeAmmoEquipped(projectedGearState, input.catalog);
   const perfectEquilibriumWeaponActive = hasEquippedBolg(projectedGearState, input.catalog);
@@ -131,7 +132,7 @@ export function inspectRotationPlannerTick(input: {
   );
 
   return {
-    tick: clampedTick,
+    tick: runtime.displayTick,
     adrenaline: {
       start: adrenalineTickState?.valueAtTickStart ?? input.rotationPlan.startingAdrenaline,
       end: adrenalineTickState?.valueAtTickEnd ?? input.rotationPlan.startingAdrenaline,
@@ -189,42 +190,165 @@ export function inspectRotationPlannerTick(input: {
     cooldowns: Object.entries(cooldownTickState?.cooldownsAtTickStart ?? {}).map(([abilityId, readyAtTick]) => ({
       abilityId,
       abilityName: input.catalog.abilities[abilityId]?.name ?? abilityId,
-      readyAtTick,
-      remainingTicks: Math.max(readyAtTick - clampedTick, 0),
+      readyAtTick: runtime.engineTickToDisplayTick(readyAtTick),
+      remainingTicks: Math.max(readyAtTick - runtime.engineTick, 0),
     })),
     actionsStarting: [
       ...bucket.nonGcdActions.map((action) => readPlannerActionLabel(action)),
-      ...bucket.abilityActions.map((action) => {
-        const configuredLabel = readConfiguredSpellCastLabel(action);
-        if (configuredLabel) {
-          return configuredLabel;
-        }
-
-        const abilityId = action.payload['abilityId'];
-        return typeof abilityId === 'string'
-          ? input.catalog.abilities[abilityId]?.name ?? abilityId
-          : action.id;
-      }),
+      ...bucket.abilityActions.map((action) => readAbilityActionInspectionLabel(action, input.catalog)),
     ],
     hitsResolving: collectResolvedHitLabelsAtTick(
-      simulationResult,
-      clampedTick,
+      runtime.simulationResult,
+      runtime.engineTick,
       input.catalog,
-      input.rotationPlan,
+      runtime.simulationConfig.rotationPlan,
     ),
     damageCalculations: collectDamageCalculationsAtTick(
-      simulationResult,
-      clampedTick,
+      runtime.simulationResult,
+      runtime.engineTick,
       input.catalog,
-      input.rotationPlan,
+      runtime.simulationConfig.rotationPlan,
     ),
     validationIssues: [
-      ...timelineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
-      ...adrenalineResult.validationIssues.filter((issue) => issue.tick === clampedTick),
-      ...cooldownResult.validationIssues.filter((issue) => issue.tick === clampedTick),
-      ...simulationResult.validationIssues.filter((issue) => issue.tick === clampedTick),
+      ...validationIssuesAtEngineTick(runtime.timelineResult.validationIssues, runtime),
+      ...validationIssuesAtEngineTick(runtime.adrenalineResult.validationIssues, runtime),
+      ...validationIssuesAtEngineTick(runtime.cooldownResult.validationIssues, runtime),
+      ...validationIssuesAtEngineTick(runtime.additionalValidationIssues, runtime),
+      ...validationIssuesAtEngineTick(runtime.simulationResult.validationIssues, runtime),
     ],
   };
+}
+
+interface InspectionRuntime {
+  simulationConfig: SimulationConfig;
+  timelineResult: ReturnType<typeof buildBaseTimeline>;
+  adrenalineResult: ReturnType<typeof resolveAdrenalineTimeline>;
+  cooldownResult: ReturnType<typeof resolveCooldownTimeline>;
+  simulationResult: SimulationResult;
+  engineTick: number;
+  displayTick: number;
+  additionalValidationIssues: ValidationIssue[];
+  engineTickToDisplayTick: (tick: number) => number;
+}
+
+function buildInspectionRuntime(
+  requestedTick: number,
+  baseSimulationConfig: SimulationConfig,
+  providedSimulationResult?: SimulationResult | null,
+): InspectionRuntime {
+  const preFightExpansion = expandPreFightSimulationConfig(baseSimulationConfig);
+
+  if (preFightExpansion) {
+    const preFight = preFightExpansion.config.rotationPlan.preFight;
+    const setupTick = -(preFight?.gapTicks ?? 0);
+    const expandedSimulationConfig = {
+      ...preFightExpansion.config,
+      rotationPlan: {
+        ...preFightExpansion.config.rotationPlan,
+        preFight: cloneDefaultPreFightPlan(),
+      },
+    };
+    const requestedActualTick = requestedTick < 0
+      ? mapPreFightVisualTickToSimulationTick(requestedTick, setupTick)
+      : Math.trunc(requestedTick);
+    const engineTick = clampTick(
+      requestedActualTick + preFightExpansion.offsetTicks,
+      expandedSimulationConfig.rotationPlan.tickCount,
+    );
+    const engineTickToDisplayTick = (tick: number): number => {
+      const actualTick = tick - preFightExpansion.offsetTicks;
+      return actualTick < 0
+        ? actualTick - setupTick - GCD_TICKS
+        : actualTick;
+    };
+
+    return {
+      simulationConfig: expandedSimulationConfig,
+      timelineResult: buildBaseTimeline({ rotationPlan: expandedSimulationConfig.rotationPlan }),
+      adrenalineResult: resolveAdrenalineTimeline(expandedSimulationConfig),
+      cooldownResult: resolveCooldownTimeline(expandedSimulationConfig),
+      simulationResult: simulateBaseDamage(expandedSimulationConfig),
+      engineTick,
+      displayTick: engineTickToDisplayTick(engineTick),
+      additionalValidationIssues: preFightExpansion.validationIssues,
+      engineTickToDisplayTick,
+    };
+  }
+
+  if (requestedTick < 0) {
+    const offsetTicks = Math.abs(Math.trunc(requestedTick));
+    const expandedSimulationConfig = {
+      ...baseSimulationConfig,
+      rotationPlan: {
+        ...baseSimulationConfig.rotationPlan,
+        tickCount: baseSimulationConfig.rotationPlan.tickCount + offsetTicks,
+        abilityActions: baseSimulationConfig.rotationPlan.abilityActions.map((action) =>
+          shiftInspectionAction(action, offsetTicks),
+        ),
+        nonGcdActions: baseSimulationConfig.rotationPlan.nonGcdActions.map((action) =>
+          shiftInspectionAction(action, offsetTicks),
+        ),
+        preFight: cloneDefaultPreFightPlan(),
+      },
+    };
+    const engineTick = 0;
+    const engineTickToDisplayTick = (tick: number): number => tick - offsetTicks;
+
+    return {
+      simulationConfig: expandedSimulationConfig,
+      timelineResult: buildBaseTimeline({ rotationPlan: expandedSimulationConfig.rotationPlan }),
+      adrenalineResult: resolveAdrenalineTimeline(expandedSimulationConfig),
+      cooldownResult: resolveCooldownTimeline(expandedSimulationConfig),
+      simulationResult: simulateBaseDamage(expandedSimulationConfig),
+      engineTick,
+      displayTick: engineTickToDisplayTick(engineTick),
+      additionalValidationIssues: [],
+      engineTickToDisplayTick,
+    };
+  }
+
+  const engineTick = clampTick(requestedTick, baseSimulationConfig.rotationPlan.tickCount);
+
+  return {
+    simulationConfig: baseSimulationConfig,
+    timelineResult: buildBaseTimeline({ rotationPlan: baseSimulationConfig.rotationPlan }),
+    adrenalineResult: resolveAdrenalineTimeline(baseSimulationConfig),
+    cooldownResult: resolveCooldownTimeline(baseSimulationConfig),
+    simulationResult: providedSimulationResult ?? simulateBaseDamage(baseSimulationConfig),
+    engineTick,
+    displayTick: engineTick,
+    additionalValidationIssues: [],
+    engineTickToDisplayTick: (tick) => tick,
+  };
+}
+
+function shiftInspectionAction(action: RotationAction, offsetTicks: number): RotationAction {
+  return {
+    ...action,
+    tick: action.tick + offsetTicks,
+  };
+}
+
+function clampTick(tick: number, tickCount: number): number {
+  if (!Number.isFinite(tick)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(Math.trunc(tick), Math.max(0, tickCount - 1)));
+}
+
+function validationIssuesAtEngineTick(
+  issues: ValidationIssue[],
+  runtime: Pick<InspectionRuntime, 'engineTick' | 'engineTickToDisplayTick'>,
+): ValidationIssue[] {
+  return issues
+    .filter((issue) => issue.tick === runtime.engineTick)
+    .map((issue) => ({
+      ...issue,
+      tick: typeof issue.tick === 'number'
+        ? runtime.engineTickToDisplayTick(issue.tick)
+        : issue.tick,
+    }));
 }
 
 function resolveAmmoState(
@@ -380,6 +504,31 @@ function readPlannerActionLabel(action: RotationAction): string {
 
   const label = action.payload['label'];
   return typeof label === 'string' && label ? label : action.actionType;
+}
+
+function readAbilityActionInspectionLabel(action: RotationAction, catalog: GameDataCatalog): string {
+  const configuredLabel = readConfiguredSpellCastLabel(action);
+  const abilityId = action.payload['abilityId'];
+  const abilityLabel = configuredLabel ?? (
+    typeof abilityId === 'string'
+      ? catalog.abilities[abilityId]?.name ?? abilityId
+      : action.id
+  );
+  const preFightPhase = action.payload['preFightPhase'];
+
+  if (preFightPhase === 'prebuild') {
+    return `${abilityLabel} (prebuild)`;
+  }
+
+  if (preFightPhase === 'stalled-cast') {
+    return `${abilityLabel} (stalled)`;
+  }
+
+  if (preFightPhase === 'stalled-release') {
+    return `${abilityLabel} (stall release)`;
+  }
+
+  return abilityLabel;
 }
 
 function readConfiguredSpellCastLabel(action: RotationAction | null): string | null {

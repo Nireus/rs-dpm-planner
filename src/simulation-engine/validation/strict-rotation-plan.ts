@@ -19,7 +19,12 @@ import {
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { applyEquipmentPlacement } from '../gear/equipment-topology';
 import { buildBaseTimeline } from '../timeline';
+import {
+  isStalledCastAction,
+  isStalledReleaseAction,
+} from '../timeline/pre-fight';
 import { evaluateAbilityAvailability } from '../rules/ability-availability';
+import { resolveChannelEndTickExclusive } from '../resolvers/channel-interruptions';
 
 interface ValidationContext {
   config: SimulationConfig;
@@ -86,11 +91,15 @@ function validateAbilityLaneOverlap(
   const issues: ValidationIssue[] = [];
 
   for (const tick of ticks) {
-    if (tick.abilityActions.length <= 1) {
+    const blockingActions = tick.abilityActions.filter((action) =>
+      !isStalledCastAction(action) && !isStalledReleaseAction(action),
+    );
+
+    if (blockingActions.length <= 1) {
       continue;
     }
 
-    for (const action of tick.abilityActions) {
+    for (const action of blockingActions) {
       issues.push({
         code: 'timeline.ability_overlap',
         severity: 'error',
@@ -292,6 +301,10 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
   const channelWindows: ChannelWindow[] = [];
 
   for (const action of abilityActions) {
+    if (isStalledReleaseAction(action)) {
+      continue;
+    }
+
     const abilityId = readStringPayload(action, 'abilityId');
     if (!abilityId) {
       issues.push(createActionIssue(action, 'ability.invalid_payload', 'Ability action is missing abilityId.'));
@@ -388,8 +401,24 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
 
     cooldownMap.set(ability.id, action.tick + Math.max(ability.cooldownTicks, 0));
 
+    if (isStalledCastAction(action) && ability.isChanneled) {
+      issues.push(
+        createActionIssue(
+          action,
+          'pre_fight.stall_channelled_ability',
+          `${ability.name} is channelled and cannot be ability stalled.`,
+        ),
+      );
+      continue;
+    }
+
     if (ability.isChanneled && ability.channelDurationTicks && ability.channelDurationTicks > 0) {
-      activeChannelUntilTickExclusive = action.tick + resolveChannelBlockDurationTicks(ability);
+      activeChannelUntilTickExclusive = resolveChannelEndTickExclusive(
+        config,
+        action,
+        ability,
+        action.tick + resolveChannelBlockDurationTicks(ability),
+      );
       channelWindows.push({
         startTick: action.tick,
         endTickExclusive: activeChannelUntilTickExclusive,
@@ -405,7 +434,7 @@ function validateAbilityActions(config: SimulationConfig, context: ValidationCon
         createActionIssue(
           action,
           'action.channel_conflict',
-          'Gear, ammo, and spell swaps during an active channel are not supported in strict mode.',
+          'Ammo and spell swaps during an active channel are not supported in strict mode.',
         ),
       );
     }
@@ -625,7 +654,7 @@ function resolveAmmoDefinition(
 }
 
 function isChannelSensitiveAction(action: RotationAction): boolean {
-  return action.actionType === 'gear-swap' || action.actionType === 'ammo-swap' || action.actionType === 'spell-swap';
+  return action.actionType === 'ammo-swap' || action.actionType === 'spell-swap';
 }
 
 function isWithinChannelWindow(tick: number, windows: ChannelWindow[]): boolean {

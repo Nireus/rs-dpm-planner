@@ -1,5 +1,6 @@
 import type { EntityId } from '../../game-data/types';
 import type { RotationAction, SimulationConfig, ValidationIssue } from '../models';
+import { skipsPreFightCooldown } from '../timeline/pre-fight';
 
 export interface CooldownTickState {
   tick: number;
@@ -20,7 +21,9 @@ interface CooldownAdjustment {
 }
 
 export function resolveCooldownTimeline(config: SimulationConfig): CooldownTimelineResult {
-  const abilityActions = [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick);
+  const abilityActions = [...config.rotationPlan.abilityActions]
+    .filter((action) => !skipsPreFightCooldown(action))
+    .sort((left, right) => left.tick - right.tick);
   const groupedActions = groupAbilityActionsByTick(abilityActions);
   const tickStates: CooldownTickState[] = [];
   const cooldownTimeline: Record<number, Record<EntityId, number>> = {};

@@ -30,7 +30,7 @@ function createItem(overrides: Partial<ItemDefinition> = {}): ItemDefinition {
         label: 'Stored special',
         type: 'select',
         defaultValue: 'dark-bow',
-        options: ['dark-bow', 'gloomfire-bow', 'eldritch-crossbow', 'none'],
+        options: ['dark-bow', 'seren-godbow', 'gloomfire-bow', 'eldritch-crossbow', 'none'],
       },
     ],
     ...overrides,
@@ -69,6 +69,14 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         slot: 'weapon',
         specialAbilityId: 'split-soul',
         effectRefs: ['weapon-special-access', 'weapon-special:split-soul'],
+      }),
+      'seren-godbow': createItem({
+        id: 'seren-godbow',
+        name: 'Seren godbow',
+        category: 'weapon',
+        slot: 'weapon',
+        specialAbilityId: 'seren-godbow-eof',
+        effectRefs: ['weapon-special-access', 'weapon-special:seren-godbow'],
       }),
       'masterwork-spear-of-annihilation': createItem({
         id: 'masterwork-spear-of-annihilation',
@@ -162,6 +170,22 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         hitSchedule: [],
         baseDamage: { min: 0, max: 0 },
         effectRefs: ['eof-eldritch-crossbow-spec', 'weapon-special:split-soul'],
+      }),
+      'seren-godbow-eof': createAbility({
+        id: 'seren-godbow-eof',
+        name: 'Seren godbow special',
+        style: 'ranged',
+        subtype: 'special',
+        cooldownTicks: 0,
+        adrenalineCost: 30,
+        adrenalineGain: 0,
+        hitSchedule: Array.from({ length: 5 }, (_, index) => ({
+          id: `seren-godbow-eof-hit-${index + 1}`,
+          tickOffset: 0,
+          damage: { min: 125, max: 155 },
+        })),
+        baseDamage: { min: 625, max: 775 },
+        effectRefs: ['eof-seren-godbow-spec'],
       }),
       shadowfall: createAbility({
         id: 'shadowfall',
@@ -385,6 +409,13 @@ function createConfig(overrides: Partial<SimulationConfig> = {}): SimulationConf
         weaponOrigin: 'eldritch-crossbow',
         abilityId: 'eldritch-crossbow-eof',
         effectRefs: ['eof-eldritch-crossbow-spec'],
+      } satisfies EofSpecDefinition,
+      'seren-godbow-eof': {
+        id: 'seren-godbow-eof',
+        name: 'Seren Godbow (EOF)',
+        weaponOrigin: 'seren-godbow',
+        abilityId: 'seren-godbow-eof',
+        effectRefs: ['eof-seren-godbow-spec'],
       } satisfies EofSpecDefinition,
     },
   };
@@ -755,6 +786,85 @@ describe('resolveEffectiveAbilityDefinition', () => {
     });
     expect(result?.hitSchedule).toEqual([]);
     expect(result?.effectRefs).toContain('weapon-special:split-soul');
+  });
+
+  it('scales Seren godbow EOF special hits from configured target size', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          amulet: {
+            instanceId: 'eof-sgb-1',
+            definitionId: 'essence-of-finality',
+            configValues: {
+              'stored-special': 'seren-godbow',
+            },
+          },
+        },
+      },
+      simulationSettings: {
+        criticalHitResolutionMode: 'deterministic-accumulator',
+        serenGodbowTargetSize: '3x3',
+      },
+    });
+    const action: RotationAction = {
+      id: 'eof-sgb-cast',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'essence-of-finality',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result).toMatchObject({
+      id: 'seren-godbow-eof',
+      name: 'Seren godbow special',
+      adrenalineCost: 30,
+      baseDamage: { min: 250, max: 310 },
+    });
+    expect(result?.hitSchedule).toHaveLength(2);
+    expect(result?.hitSchedule.map((hit) => hit.damage)).toEqual([
+      { min: 125, max: 155 },
+      { min: 125, max: 155 },
+    ]);
+    expect(result?.displayHints).toMatchObject({
+      hitCountLabel: '2 arrows',
+      damageRangeLabel: '250-310% ability damage',
+    });
+  });
+
+  it('defaults wielded Seren godbow special to five arrows', () => {
+    const config = createConfig({
+      gearSetup: {
+        equipment: {
+          weapon: {
+            instanceId: 'sgb-1',
+            definitionId: 'seren-godbow',
+          },
+        },
+      } as SimulationConfig['gearSetup'],
+    });
+    const action: RotationAction = {
+      id: 'sgb-spec-cast',
+      tick: 0,
+      lane: 'ability',
+      actionType: 'ability-use',
+      payload: {
+        abilityId: 'weapon-special-attack',
+      },
+    };
+
+    const result = resolveEffectiveAbilityDefinition(config, action);
+
+    expect(result).toMatchObject({
+      id: 'seren-godbow-eof',
+      adrenalineCost: 30,
+      baseDamage: { min: 625, max: 775 },
+    });
+    expect(result?.hitSchedule).toHaveLength(5);
+    expect(result?.hitSchedule.every((hit) => hit.tickOffset === 0)).toBe(true);
   });
 
   it('extends melee bleed hit counts with Masterwork Spear of Annihilation equipped', () => {

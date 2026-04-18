@@ -34,6 +34,9 @@ import {
 } from './simulation-hit-events';
 import { buildTickStates, mergeBuffTimelines } from './tick-state-builder';
 import { buildBaseTimeline } from '../timeline';
+import {
+  expandPreFightSimulationConfig,
+} from '../timeline/pre-fight';
 import { validateStrictRotationPlan } from '../validation/strict-rotation-plan';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
@@ -51,10 +54,28 @@ const SPLIT_SOUL_DAMAGE_CAP = 10000;
 const AMULET_OF_SOULS_SPLIT_SOUL_AVERAGE_MULTIPLIER = 1.1875;
 
 export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
+  const preFightExpansion = expandPreFightSimulationConfig(config);
+
+  if (preFightExpansion) {
+    return sliceExpandedSimulationResult(
+      simulateBaseDamageInternal(preFightExpansion.config, preFightExpansion.validationIssues),
+      preFightExpansion.offsetTicks,
+      preFightExpansion.publicTickCount,
+    );
+  }
+
+  return simulateBaseDamageInternal(config);
+}
+
+function simulateBaseDamageInternal(
+  config: SimulationConfig,
+  additionalValidationIssues: ValidationIssue[] = [],
+): SimulationResult {
   const timelineResult = buildBaseTimeline({ rotationPlan: config.rotationPlan });
   const strictIssues = validateStrictRotationPlan(config);
   const cooldownResult = resolveCooldownTimeline(config);
   const baseValidationIssues = [
+    ...additionalValidationIssues,
     ...timelineResult.validationIssues,
     ...strictIssues,
     ...cooldownResult.validationIssues,
@@ -130,31 +151,33 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
       deterministicMagicTimeline,
       event.derivedDamageParts,
     );
-    damageBreakdowns.push(breakdown);
-    addDamageSummary(damageByTick[event.tick], breakdown.finalDamage);
+    if (event.visibleDamage !== false) {
+      damageBreakdowns.push(breakdown);
+      addDamageSummary(damageByTick[event.tick], breakdown.finalDamage);
 
-    const abilitySummary = damageByAbilityMap.get(event.ability.id) ?? createZeroDamageSummary();
-    addDamageSummary(abilitySummary, breakdown.finalDamage);
-    damageByAbilityMap.set(event.ability.id, abilitySummary);
-    maybeAppendSplitSoulDamage(
-      damageBreakdowns,
-      damageByTick,
-      damageByAbilityMap,
-      config,
-      event,
-      breakdown,
-      mergedBuffTimeline,
-    );
-    maybeAppendLightningSurgeDamage(
-      damageBreakdowns,
-      damageByTick,
-      damageByAbilityMap,
-      config,
-      event,
-      actionAbilityDamage,
-      mergedBuffTimeline,
-      deterministicMagicTimeline,
-    );
+      const abilitySummary = damageByAbilityMap.get(event.ability.id) ?? createZeroDamageSummary();
+      addDamageSummary(abilitySummary, breakdown.finalDamage);
+      damageByAbilityMap.set(event.ability.id, abilitySummary);
+      maybeAppendSplitSoulDamage(
+        damageBreakdowns,
+        damageByTick,
+        damageByAbilityMap,
+        config,
+        event,
+        breakdown,
+        mergedBuffTimeline,
+      );
+      maybeAppendLightningSurgeDamage(
+        damageBreakdowns,
+        damageByTick,
+        damageByAbilityMap,
+        config,
+        event,
+        actionAbilityDamage,
+        mergedBuffTimeline,
+        deterministicMagicTimeline,
+      );
+    }
 
     if (shouldContributeToAftershock(event, projectedConfig)) {
       addDamageSummary(aftershockStoredDamage, breakdown.finalDamage);
@@ -307,10 +330,131 @@ export function simulateBaseDamage(config: SimulationConfig): SimulationResult {
   };
 }
 
+function sliceExpandedSimulationResult(
+  result: SimulationResult,
+  offsetTicks: number,
+  publicTickCount: number,
+): SimulationResult {
+  const damageBreakdowns = result.explainability.damageBreakdowns
+    .filter((entry) => entry.tick >= offsetTicks && entry.tick < offsetTicks + publicTickCount)
+    .map((entry) => ({
+      ...entry,
+      tick: entry.tick - offsetTicks,
+    }));
+  const totalDamage = damageBreakdowns.reduce<DamageSummary>((summary, breakdown) => {
+    addDamageSummary(summary, breakdown.finalDamage);
+    return summary;
+  }, createZeroDamageSummary());
+  const damageByAbilityMap = new Map<EntityId, DamageSummary>();
+
+  for (const breakdown of damageBreakdowns) {
+    const summary = damageByAbilityMap.get(breakdown.abilityId) ?? createZeroDamageSummary();
+    addDamageSummary(summary, breakdown.finalDamage);
+    damageByAbilityMap.set(breakdown.abilityId, summary);
+  }
+
+  for (const breakdown of damageBreakdowns) {
+    breakdown.percentageOfTotal = totalDamage.avg > 0 ? breakdown.finalDamage.avg / totalDamage.avg : 0;
+  }
+
+  return {
+    ...result,
+    isValid: !result.validationIssues.some((issue) => issue.severity === 'error'),
+    validationIssues: result.validationIssues.map((issue) => shiftValidationIssue(issue, -offsetTicks)),
+    totalDamage,
+    damageByAbility: [...damageByAbilityMap.entries()]
+      .map<AbilityDamageSummary>(([abilityId, summary]) => ({
+        abilityId,
+        min: summary.min,
+        avg: summary.avg,
+        max: summary.max,
+      }))
+      .sort((left, right) => right.avg - left.avg),
+    damageByTick: sliceDamageByTick(result.damageByTick, offsetTicks, publicTickCount),
+    adrenalineTimeline: result.adrenalineTimeline.slice(offsetTicks, offsetTicks + publicTickCount),
+    buffTimeline: sliceIndexedRecord(result.buffTimeline, offsetTicks, publicTickCount, (value) => [...value]),
+    cooldownTimeline: sliceIndexedRecord(
+      result.cooldownTimeline,
+      offsetTicks,
+      publicTickCount,
+      (value) => shiftCooldownMap(value, -offsetTicks),
+    ),
+    tickStates: result.tickStates
+      .filter((state) => state.tickIndex >= offsetTicks && state.tickIndex < offsetTicks + publicTickCount)
+      .map((state) => ({
+        ...state,
+        tickIndex: state.tickIndex - offsetTicks,
+        cooldowns: shiftCooldownMap(state.cooldowns, -offsetTicks),
+        validationIssues: state.validationIssues.map((issue) => shiftValidationIssue(issue, -offsetTicks)),
+        actionsStartingThisTick: state.actionsStartingThisTick.filter((label) => !label.includes('[stalled-cast]')),
+      })),
+    explainability: {
+      ...result.explainability,
+      damageBreakdowns,
+    },
+  };
+}
+
+function sliceDamageByTick(
+  damageByTick: Record<number, DamageSummary>,
+  offsetTicks: number,
+  publicTickCount: number,
+): Record<number, DamageSummary> {
+  const sliced = createEmptyDamageByTick(publicTickCount);
+
+  for (let tick = 0; tick < publicTickCount; tick += 1) {
+    const source = damageByTick[tick + offsetTicks];
+    if (source) {
+      sliced[tick] = { ...source };
+    }
+  }
+
+  return sliced;
+}
+
+function sliceIndexedRecord<T>(
+  record: Record<number, T>,
+  offsetTicks: number,
+  publicTickCount: number,
+  mapValue: (value: T) => T,
+): Record<number, T> {
+  const sliced: Record<number, T> = {};
+
+  for (let tick = 0; tick < publicTickCount; tick += 1) {
+    const value = record[tick + offsetTicks];
+    if (value !== undefined) {
+      sliced[tick] = mapValue(value);
+    }
+  }
+
+  return sliced;
+}
+
+function shiftCooldownMap(
+  cooldowns: Record<EntityId, number>,
+  tickDelta: number,
+): Record<EntityId, number> {
+  return Object.fromEntries(
+    Object.entries(cooldowns).map(([abilityId, readyTick]) => [abilityId, readyTick + tickDelta]),
+  );
+}
+
+function shiftValidationIssue(
+  issue: ValidationIssue,
+  tickDelta: number,
+): ValidationIssue {
+  return typeof issue.tick === 'number'
+    ? {
+        ...issue,
+        tick: issue.tick + tickDelta,
+      }
+    : issue;
+}
+
 function createDamageBreakdown(
   config: SimulationConfig,
   action: SimulationHitEvent['action'],
-  ability: { id: EntityId; style?: string; effectRefs?: string[] },
+  ability: { id: EntityId; style?: string; subtype?: string; effectRefs?: string[] },
   hit: SimulationHitEvent['hit'],
   hitTick: number,
   buffTimeline: Record<number, EntityId[]>,
@@ -494,6 +638,7 @@ function createCracklingHitEvent(
     },
     tick: sourceEvent.tick,
     contributesToPerfectEquilibrium: false,
+    visibleDamage: sourceEvent.visibleDamage,
   };
 }
 
@@ -543,6 +688,7 @@ function createAftershockHitEvent(
     },
     tick: sourceEvent.tick,
     contributesToPerfectEquilibrium: false,
+    visibleDamage: sourceEvent.visibleDamage,
   };
 }
 
@@ -743,5 +889,6 @@ function createLightningSurgeHitEvent(
     },
     tick: sourceEvent.tick + 1,
     contributesToPerfectEquilibrium: false,
+    visibleDamage: sourceEvent.visibleDamage,
   };
 }

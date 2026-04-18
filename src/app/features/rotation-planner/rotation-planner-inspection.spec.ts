@@ -37,6 +37,29 @@ const PIERCING_SHOT: AbilityDefinition = {
   },
 };
 
+const GALESHOT: AbilityDefinition = {
+  id: 'galeshot',
+  name: 'Galeshot',
+  style: 'ranged',
+  subtype: 'basic',
+  cooldownTicks: 10,
+  adrenalineGain: 9,
+  hitSchedule: [
+    {
+      id: 'galeshot-hit-1',
+      tickOffset: 0,
+      damage: {
+        min: 45,
+        max: 55,
+      },
+    },
+  ],
+  baseDamage: {
+    min: 90,
+    max: 110,
+  },
+};
+
 const BOLG: ItemDefinition = {
   id: 'bow-of-the-last-guardian',
   name: 'Bow of the Last Guardian',
@@ -186,6 +209,7 @@ const CATALOG: GameDataCatalog = {
   },
   abilities: {
     [PIERCING_SHOT.id]: PIERCING_SHOT,
+    [GALESHOT.id]: GALESHOT,
   },
   buffs: {
     [RIGOUR.id]: RIGOUR,
@@ -354,6 +378,91 @@ describe('rotation planner inspection', () => {
         maxFormula: 'Max: ((217 × 1) + 0) × 1.5 (crit) = 325.5',
       },
     ]);
+  });
+
+  it('inspects visible prebuild and ability stall ticks', () => {
+    const rotationPlan: RotationPlan = {
+      ...ROTATION_PLAN,
+      preFight: {
+        gapTicks: 5,
+        prebuildActions: [
+          {
+            id: 'prebuild-piercing',
+            abilityId: PIERCING_SHOT.id,
+          },
+        ],
+        prebuildNonGcdActions: [
+          {
+            id: 'prefight-vuln',
+            tick: -2,
+            lane: 'non-gcd',
+            actionType: 'vulnerability-bomb',
+            payload: {
+              label: 'Vulnerability Bomb',
+            },
+          },
+        ],
+        stalledAbility: {
+          id: 'stalled-galeshot',
+          abilityId: GALESHOT.id,
+        },
+      },
+    };
+    const baseInput = {
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan,
+    };
+
+    const prebuildInspection = inspectRotationPlannerTick({
+      ...baseInput,
+      tick: -6,
+    });
+    const stallInspection = inspectRotationPlannerTick({
+      ...baseInput,
+      tick: -3,
+    });
+    const stallNonGcdInspection = inspectRotationPlannerTick({
+      ...baseInput,
+      tick: -2,
+    });
+
+    expect(prebuildInspection.tick).toBe(-6);
+    expect(prebuildInspection.actionsStarting).toEqual(['Piercing Shot (prebuild)']);
+    expect(prebuildInspection.damageCalculations).toEqual([]);
+    expect(stallInspection.tick).toBe(-3);
+    expect(stallInspection.actionsStarting).toEqual(['Galeshot (stalled)']);
+    expect(stallNonGcdInspection.tick).toBe(-2);
+    expect(stallNonGcdInspection.actionsStarting).toEqual(['Vulnerability Bomb']);
+  });
+
+  it('keeps empty pre-fight ticks inspectable before actions are configured', () => {
+    const inspection = inspectRotationPlannerTick({
+      tick: -3,
+      catalog: CATALOG,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      gearState: GEAR_STATE,
+      buffState: {
+        activeBuffIds: [],
+        activeRelicIds: [],
+        activePocketItemIds: [],
+      },
+      rotationPlan: ROTATION_PLAN,
+    });
+
+    expect(inspection.tick).toBe(-3);
+    expect(inspection.actionsStarting).toEqual([]);
+    expect(inspection.hitsResolving).toEqual([]);
   });
 
   it('shows Instability Lightning Surge proc efficacy in tick inspection', () => {

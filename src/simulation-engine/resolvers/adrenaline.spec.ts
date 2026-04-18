@@ -1097,7 +1097,7 @@ describe('resolveAdrenalineTimeline', () => {
             channelDurationTicks: 9,
             hitSchedule: Array.from({ length: 8 }, (_, index) => ({
               id: `rapid-fire-hit-${index + 1}`,
-              tickOffset: index + 1,
+              tickOffset: index,
               damage: { min: 75, max: 85 },
             })),
             baseDamage: { min: 600, max: 680 },
@@ -1151,14 +1151,14 @@ describe('resolveAdrenalineTimeline', () => {
     expect(result.adrenalineTimeline[0]).toBe(60);
     expect(result.adrenalineTimeline[1]).toBe(60);
     expect(result.adrenalineTimeline[2]).toBe(60);
-    expect(result.adrenalineTimeline[3]).toBe(35);
-    expect(result.adrenalineTimeline[4]).toBe(40);
-    expect(result.adrenalineTimeline[5]).toBe(45);
-    expect(result.adrenalineTimeline[6]).toBe(50);
-    expect(result.adrenalineTimeline[7]).toBe(55);
-    expect(result.adrenalineTimeline[8]).toBe(60);
-    expect(result.adrenalineTimeline[9]).toBe(65);
-    expect(result.adrenalineTimeline[10]).toBe(70);
+    expect(result.adrenalineTimeline[3]).toBe(40);
+    expect(result.adrenalineTimeline[4]).toBe(45);
+    expect(result.adrenalineTimeline[5]).toBe(50);
+    expect(result.adrenalineTimeline[6]).toBe(55);
+    expect(result.adrenalineTimeline[7]).toBe(60);
+    expect(result.adrenalineTimeline[8]).toBe(65);
+    expect(result.adrenalineTimeline[9]).toBe(70);
+    expect(result.adrenalineTimeline[10]).toBe(80);
     expect(result.adrenalineTimeline[11]).toBe(80);
   });
 

@@ -11,6 +11,10 @@ import type {
   RotationAction,
 } from '../models';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import {
+  isWeaponChangingGearSwap,
+  resolveEffectiveChannelDurationTicks,
+} from './channel-interruptions';
 
 type TimelineAdrenalineState = Record<number, number> | number[];
 
@@ -52,7 +56,7 @@ export function applyAbilityTimelineEffects(input: ApplyAbilityTimelineEffectsIn
     }
 
     if (effect.kind === 'extend-buff') {
-      const extensionDuration = resolveExtendBuffDuration(ability, effect);
+      const extensionDuration = resolveExtendBuffDuration(config, action, ability, effect);
       if (extensionDuration <= 0) {
         continue;
       }
@@ -85,7 +89,9 @@ export function applyAbilityTimelineEffects(input: ApplyAbilityTimelineEffectsIn
 
     const startTick = action.tick + (effect.startTickOffset ?? 0);
     const durationTicks = effect.durationTicks ??
-      (effect.durationFromAbility === 'channel-duration' ? ability.channelDurationTicks ?? 0 : 0);
+      (effect.durationFromAbility === 'channel-duration'
+        ? resolveEffectiveChannelDurationTicks(config, action, ability)
+        : 0);
     if (durationTicks <= 0 || startTick >= config.rotationPlan.tickCount) {
       continue;
     }
@@ -136,20 +142,43 @@ function resolveApplyBuffDuration(
 }
 
 function resolveExtendBuffDuration(
+  config: SimulationConfig,
+  action: RotationAction,
   ability: AbilityDefinition,
   effect: AbilityExtendBuffTimelineEffect,
 ): number {
   const baseDuration = effect.durationTicks ?? (
     effect.durationFromAbility === 'hit-count'
-      ? ability.hitSchedule.length
+      ? resolveEffectiveHitCount(config, action, ability)
       : effect.durationFromAbility === 'channel-duration'
-        ? ability.channelDurationTicks ?? 0
+        ? resolveEffectiveChannelDurationTicks(config, action, ability)
         : effect.durationFromAbility === 'max-hit-count-or-channel-duration'
-          ? Math.max(ability.hitSchedule.length, ability.channelDurationTicks ?? 0)
+          ? Math.max(
+              resolveEffectiveHitCount(config, action, ability),
+              resolveEffectiveChannelDurationTicks(config, action, ability),
+            )
           : 0
   );
 
   return Math.max(0, baseDuration + (effect.bonusTicks ?? 0));
+}
+
+function resolveEffectiveHitCount(
+  config: SimulationConfig,
+  action: RotationAction,
+  ability: AbilityDefinition,
+): number {
+  if (!ability.isChanneled) {
+    return ability.hitSchedule.length;
+  }
+
+  const naturalEndTickExclusive = action.tick + Math.max(ability.channelDurationTicks ?? 0, 0);
+  const channelEndTickExclusive = action.tick + resolveEffectiveChannelDurationTicks(config, action, ability);
+  if (channelEndTickExclusive >= naturalEndTickExclusive) {
+    return ability.hitSchedule.length;
+  }
+
+  return ability.hitSchedule.filter((hit) => action.tick + hit.tickOffset < channelEndTickExclusive).length;
 }
 
 function resolveBuffEndTick(
@@ -172,12 +201,9 @@ function resolveBuffEndTick(
 
 function resolveFirstWeaponSwapTick(config: SimulationConfig, fromTick: number): number | null {
   const swapTick = [...config.rotationPlan.nonGcdActions]
-    .filter((action) => action.actionType === 'gear-swap' && action.tick >= fromTick)
-    .map((action) => ({
-      tick: action.tick,
-      slot: readStringPayload(action, 'slot'),
-    }))
-    .find((entry) => entry.slot === 'weapon')?.tick;
+    .filter((action) => isWeaponChangingGearSwap(config, action) && action.tick >= fromTick)
+    .map((action) => action.tick)
+    .sort((left, right) => left - right)[0];
 
   return typeof swapTick === 'number' ? swapTick : null;
 }
@@ -242,9 +268,4 @@ export function markBuffRange(
       buffTimeline[tick].push(buffId);
     }
   }
-}
-
-function readStringPayload(action: RotationAction, key: string): string | null {
-  const value = action.payload[key];
-  return typeof value === 'string' && value.length > 0 ? value : null;
 }

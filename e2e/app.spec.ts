@@ -43,6 +43,35 @@ test('covers the main happy path from setup through import/export restore', asyn
     await primaryNavLink(page, 'Rotation Planner').click();
     await expect(page.getByRole('heading', { name: 'Rotation Planner' })).toBeVisible();
 
+    await dragToTimelineCell(page, 'ability-palette-ranged', 'prebuild-empty-slot');
+    await expect(page.getByTestId('prebuild-token').first()).toBeVisible();
+    await expect(page.getByTestId('prebuild-empty-slot')).toBeVisible();
+    await expect(page.getByTestId('timeline-cell-ability--6')).toContainText('T-6');
+
+    await dragToTimelineCell(page, 'non-gcd-palette-vulnerability-bomb', 'timeline-cell-non-gcd--6');
+    await expect(page.getByTestId('prebuild-non-gcd-token')).toBeVisible();
+    await dragToTimelineCell(page, 'non-gcd-palette-vulnerability-bomb', 'timeline-cell-non-gcd--2');
+    await expect(page.getByTestId('prebuild-non-gcd-token')).toHaveCount(2);
+
+    await page.getByTestId('configuration-panel-toggle').click();
+    await page.getByTestId('prefight-gap-input').fill('5');
+    await expect(page.getByTestId('timeline-cell-ability--6')).toContainText('T-6');
+    await expect(page.getByTestId('timeline-cell-ability--11')).toHaveCount(0);
+    await page.getByTestId('timeline-cell-buff--6').click();
+    await expect(page.getByRole('heading', { name: 'Tick T-6' })).toBeVisible();
+    await page.getByTestId('timeline-cell-buff--2').click();
+    await expect(page.getByRole('heading', { name: 'Tick T-2' })).toBeVisible();
+
+    await page.getByTestId('prefight-visibility-toggle').click();
+    await expect(page.getByTestId('prebuild-token').first()).toBeHidden();
+    await page.getByTestId('prefight-visibility-toggle').click();
+    await expect(page.getByTestId('prebuild-token').first()).toBeVisible();
+
+    await dragToTimelineCell(page, 'ability-palette-rapid-fire', 'ability-stall-slot');
+    await expect(page.getByText(/Rapid Fire is channelled and cannot be ability stalled/)).toBeVisible();
+    await dragToTimelineCell(page, 'ability-palette-galeshot', 'ability-stall-slot');
+    await expect(page.getByTestId('ability-stall-slot')).toContainText('Galeshot');
+
     await dragToTimelineCell(page, 'ability-palette-piercing-shot', 'timeline-cell-ability-0');
     await dragToTimelineCell(page, 'ability-palette-ranged', 'timeline-cell-ability-3');
 
@@ -67,7 +96,12 @@ test('covers the main happy path from setup through import/export restore', asyn
     const exportJson = page.getByTestId('export-json');
     await expect(exportJson).not.toHaveValue('');
     exportedConfig = await exportJson.evaluate((element) => (element as HTMLTextAreaElement).value);
-    expect(exportedConfig).toContain('"schemaVersion": 2');
+    expect(exportedConfig).toContain('"schemaVersion": 3');
+    expect(exportedConfig).toContain('"preFight"');
+    expect(exportedConfig).toContain('"gapTicks": 5');
+    expect(exportedConfig).toContain('"prebuildNonGcdActions"');
+    expect(exportedConfig).toContain('"templateId": "vulnerability-bomb"');
+    expect(exportedConfig).toContain('"abilityId": "galeshot"');
     expect(exportedConfig).toContain('"abilityId": "piercing-shot"');
   });
 

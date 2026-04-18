@@ -19,8 +19,8 @@
           <span>Inspect</span>
           <input
             type="range"
-            min="0"
-            [max]="tickCount() - 1"
+            [min]="inspectMinTick()"
+            [max]="inspectMaxTick()"
             step="1"
             [ngModel]="selectedTick()"
             (ngModelChange)="updateSelectedTick($event)"
@@ -135,6 +135,7 @@
             <button
               type="button"
               class="ability-chip non-gcd-chip"
+              [attr.data-testid]="'non-gcd-palette-' + entry.id"
               [title]="entry.label"
               draggable="true"
               (dragstart)="onCatalogNonGcdDragStart(entry, $event)"
@@ -184,8 +185,9 @@
       <div class="timeline-scroll">
         <div
           class="timeline-grid"
-          [style.--tick-count]="tickCount()"
+          [style.--tick-count]="timelineColumnCount()"
           [style.--lane-count]="lanes().length"
+          [style.grid-template-columns]="timelineColumnTemplate()"
           [style.grid-template-rows]="timelineRowTemplate()"
         >
           <div
@@ -194,48 +196,220 @@
             [style.grid-row]="'1 / span ' + (lanes().length + 1)"
           ></div>
 
-          @for (tickIndex of tickIndexes(); track tickIndex) {
+          <button
+            type="button"
+            class="pre-fight-separator-overlay"
+            data-testid="prefight-visibility-toggle"
+            [style.left]="preFightSeparatorOverlayLeft()"
+            [attr.aria-label]="preFightVisibilityToggleLabel()"
+            [title]="preFightVisibilityToggleLabel()"
+            [attr.aria-expanded]="!prebuildCollapsed()"
+            (click)="togglePrebuildCollapsed()"
+          >
+            <span>Prebuild / Stall</span>
+          </button>
+
+          @for (column of timelineColumns(); track column.id) {
             <div
               class="tick-header"
-              [class.major-tick]="isMajorTick(tickIndex)"
-              [class.selected-tick-header]="selectedTick() === tickIndex"
+              [class.major-tick]="!isPreFightSeparatorColumn(column) && isMajorTick(column.tick)"
+              [class.selected-tick-header]="isSelectedTimelineColumn(column)"
+              [class.prefight-tick-header]="column.isPreFight"
+              [class.prebuild-tick-header]="isPrebuildSectionColumn(column)"
+              [class.stall-tick-header]="isStallSectionColumn(column)"
+              [class.prefight-gap-tick-header]="isPreFightGapColumn(column)"
+              [class.prefight-separator-header]="isPreFightSeparatorColumn(column)"
+              [class.setup-tick-header]="column.id === 'prefight-setup'"
             >
-              <button
-                type="button"
-                class="tick-select-button"
-                (click)="selectTick(tickIndex)"
-              >
-                <span class="tick-label">T{{ tickIndex }}</span>
-                <span class="tick-ruler-mark"></span>
-              </button>
+              @if (isPreFightSeparatorColumn(column)) {
+                <span class="pre-fight-separator-header-mark" aria-hidden="true"></span>
+              } @else {
+                <button
+                  type="button"
+                  class="tick-select-button"
+                  [disabled]="isPreFightSeparatorColumn(column)"
+                  (click)="!isPreFightSeparatorColumn(column) ? selectTick(column.tick) : null"
+                >
+                  <span class="tick-label">{{ column.label }}</span>
+                  <span class="tick-ruler-mark"></span>
+                </button>
+              }
             </div>
           }
 
           @for (lane of lanes(); track lane.key) {
-            @for (tickIndex of tickIndexes(); track tickIndex) {
+            @for (column of timelineColumns(); track column.id) {
               <div
                 class="timeline-cell"
-                [attr.data-testid]="'timeline-cell-' + lane.key + '-' + tickIndex"
+                [attr.data-testid]="timelineCellTestId(lane.key, column)"
+                [class.pre-fight-cell]="column.isPreFight"
+                [class.prebuild-section-cell]="isPrebuildSectionColumn(column)"
+                [class.stall-section-cell]="isStallSectionColumn(column)"
+                [class.prefight-gap-cell]="isPreFightGapColumn(column)"
+                [class.prefight-separator-cell]="isPreFightSeparatorColumn(column)"
                 [class.buff-cell]="lane.key === 'buff'"
                 [class.cooldown-cell]="lane.key === 'cooldown'"
                 [class.ability-cell]="lane.key === 'ability'"
                 [class.non-gcd-cell]="lane.key === 'non-gcd'"
-                [class.major-tick-cell]="lane.key === 'ability' && isMajorTick(tickIndex)"
-                [class.gcd-slot]="lane.key === 'ability' && isAbilityPlacementTick(tickIndex)"
-                [class.off-gcd-slot]="lane.key === 'ability' && !isAbilityPlacementTick(tickIndex)"
-                [class.drop-ready]="(lane.key === 'ability' && canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && canDropNonGcd(tickIndex))"
-                [class.drop-blocked]="(lane.key === 'ability' && draggedAbilityPayload && !canDropAbility(tickIndex)) || (lane.key === 'non-gcd' && draggedNonGcdPayload && !canDropNonGcd(tickIndex))"
-                [class.preview-drop-tick]="lane.key === 'ability' && isPreviewDropTick(tickIndex)"
-                [class.collapse-gap-tick]="lane.key === 'ability' && abilityGapControlAtTick(tickIndex)"
-                [class.occupied-window-cell]="lane.key === 'ability' && abilityOccupancyAtTick(tickIndex)"
-                [attr.data-drop-id]="lane.key === 'ability' ? abilityDropListId(tickIndex) : lane.key === 'non-gcd' ? nonGcdDropListId(tickIndex) : null"
-                (dragover)="lane.key === 'ability' ? allowAbilityDrop($event, tickIndex) : lane.key === 'non-gcd' ? allowNonGcdDrop($event, tickIndex) : null"
-                (drop)="lane.key === 'ability' ? dropAbilityOnTick(tickIndex, $event) : lane.key === 'non-gcd' ? dropNonGcdOnTick(tickIndex, $event) : null"
-                (click)="selectTick(tickIndex)"
+                [class.major-tick-cell]="column.isMain && lane.key === 'ability' && isMajorTick(column.tick)"
+                [class.gcd-slot]="column.isMain && lane.key === 'ability' && isAbilityPlacementTick(column.tick)"
+                [class.off-gcd-slot]="column.isMain && lane.key === 'ability' && !isAbilityPlacementTick(column.tick)"
+                [class.drop-ready]="timelineCellCanDrop(lane.key, column)"
+                [class.drop-blocked]="timelineCellDropBlocked(lane.key, column)"
+                [class.preview-drop-tick]="column.isMain && lane.key === 'ability' && isPreviewDropTick(column.tick)"
+                [class.collapse-gap-tick]="column.isMain && lane.key === 'ability' && abilityGapControlAtTick(column.tick)"
+                [class.occupied-window-cell]="(column.isMain && lane.key === 'ability' && abilityOccupancyAtTick(column.tick)) || prebuildEntryForCell(lane.key, column)"
+                [attr.data-drop-id]="column.isMain && lane.key === 'ability' ? abilityDropListId(column.tick) : column.isMain && lane.key === 'non-gcd' ? nonGcdDropListId(column.tick) : null"
+                (dragover)="onTimelineCellDragOver(lane.key, column, $event)"
+                (drop)="onTimelineCellDrop(lane.key, column, $event)"
+                (click)="isPreFightSeparatorColumn(column) ? togglePrebuildCollapsed() : selectTick(column.tick)"
               >
-                @if (lane.key === 'non-gcd' && nonGcdActionsAtTick(tickIndex).length) {
+                @if (isPreFightSeparatorColumn(column)) {
+                  <span class="pre-fight-separator-rail" aria-hidden="true"></span>
+                } @else if (lane.key === 'ability' && prebuildCollapsed() && isFirstPreFightColumn(column)) {
+                  <span class="prebuild-collapsed-note">Prebuild collapsed</span>
+                } @else if (prebuildEntryForCell(lane.key, column); as entry) {
+                  <div
+                    class="placed-ability prebuild-timeline-token prefight-ability-token"
+                    [class]="entry.ability ? 'placed-ability prebuild-timeline-token prefight-ability-token ' + placedAbilityThemeClass(entry.ability) : 'placed-ability prebuild-timeline-token prefight-ability-token'"
+                    [class.invalid-action]="actionValidationSummaryById(entry.action.id)"
+                    [style.--occupied-span]="entry.span"
+                    [title]="prebuildEntryTitle(entry)"
+                    data-testid="prebuild-token"
+                    draggable="true"
+                    (dragover)="allowPrebuildDrop($event); $event.stopPropagation()"
+                    (drop)="dropAbilityInPrebuildSlot(entry.index, $event, true); $event.stopPropagation()"
+                    (dragstart)="onPrebuildActionDragStart(entry.action)"
+                    (dragend)="onPrebuildDragEnd()"
+                  >
+                    @if (entry.ability; as ability) {
+                      @if (ability.iconPath) {
+                        <img
+                          class="placed-ability-icon"
+                          [src]="ability.iconPath"
+                          [alt]="ability.name"
+                        />
+                      } @else {
+                        <span class="placed-ability-fallback">
+                          {{ abilityShortLabel(ability) }}
+                        </span>
+                      }
+
+                      <span class="placed-ability-copy">
+                        <span class="placed-ability-name">{{ ability.name }}</span>
+                        <span class="placed-ability-meta">{{ entry.tickLabel }} · prebuild</span>
+                      </span>
+
+                      <button
+                        type="button"
+                        class="placed-ability-remove"
+                        (click)="removePrebuildAbility(entry.action.id, $event)"
+                        aria-label="Remove {{ ability.name }} from prebuild"
+                      >
+                        x
+                      </button>
+                    } @else {
+                      <span class="placed-ability-copy">
+                        <span class="placed-ability-name">Missing ability</span>
+                        <span class="placed-ability-meta">{{ entry.tickLabel }}</span>
+                      </span>
+                    }
+                  </div>
+                } @else if (lane.key === 'ability' && isPrebuildEmptySlotColumn(column)) {
+                  <button
+                    type="button"
+                    class="prebuild-empty-slot"
+                    data-testid="prebuild-empty-slot"
+                    [style.--occupied-span]="prebuildEmptySlotVisualSpan"
+                    [title]="prebuildEmptySlotTitle()"
+                    (dragover)="allowPrebuildDrop($event); $event.stopPropagation()"
+                    (drop)="dropAbilityInPrebuildSlot(0, $event, false); $event.stopPropagation()"
+                  >
+                    <span class="prebuild-slot-empty-copy">Drop</span>
+                  </button>
+                } @else if (lane.key === 'ability' && isStallSlotColumn(column)) {
+                  <div
+                    class="ability-stall-slot timeline-stall-slot"
+                    data-testid="ability-stall-slot"
+                    [class.empty-stall-slot]="!preFight().stalledAbility"
+                    [style.--occupied-span]="stallSlotVisualSpan"
+                    [title]="stalledAbilityCastTickLabel() + ' · ' + stalledAbilityReleaseLabel()"
+                    (dragover)="allowStalledAbilityDrop($event); $event.stopPropagation()"
+                    (drop)="dropStalledAbility($event); $event.stopPropagation()"
+                  >
+                    <div class="stall-slot-copy">
+                      <strong>Ability Stall</strong>
+                      <span>{{ stalledAbilityCastTickLabel() }} · {{ stalledAbilityReleaseLabel() }}</span>
+                    </div>
+
+                    @if (preFight().stalledAbility && stalledAbilityDefinition(); as stalledAbility) {
+                      <div
+                        class="placed-ability prefight-ability-token timeline-stall-token"
+                        [class]=" 'placed-ability prefight-ability-token timeline-stall-token ' + placedAbilityThemeClass(stalledAbility)"
+                        [class.invalid-action]="actionValidationSummaryById(preFight().stalledAbility?.id)"
+                        [style.--occupied-span]="stallSlotVisualSpan"
+                        [title]="stalledAbilityTitle(stalledAbility)"
+                      >
+                        @if (stalledAbility.iconPath) {
+                          <img
+                            class="placed-ability-icon"
+                            [src]="stalledAbility.iconPath"
+                            [alt]="stalledAbility.name"
+                          />
+                        } @else {
+                          <span class="placed-ability-fallback">{{ abilityShortLabel(stalledAbility) }}</span>
+                        }
+                        <span class="placed-ability-copy">
+                          <span class="placed-ability-name">{{ stalledAbility.name }}</span>
+                        </span>
+                        <button
+                          type="button"
+                          class="placed-ability-remove"
+                          (click)="removeStalledAbility($event)"
+                          aria-label="Remove stalled {{ stalledAbility.name }}"
+                        >
+                          x
+                        </button>
+                      </div>
+                    } @else {
+                      <span class="stall-empty-copy">Drop stall</span>
+                    }
+                  </div>
+                } @else if (column.isPreFight && lane.key === 'non-gcd' && nonGcdActionsAtTick(column.tick, true).length) {
+                  <div class="non-gcd-stack prebuild-non-gcd-stack">
+                    @for (action of nonGcdActionsAtTick(column.tick, true); track action.id) {
+                      <div
+                        class="non-gcd-entry"
+                        data-testid="prebuild-non-gcd-token"
+                        [class.invalid-action]="actionValidationSummary(action)"
+                        [title]="nonGcdLabel(action) + ' · T' + column.tick + ' pre-fight'"
+                        draggable="true"
+                        (click)="openNonGcdActionConfig(action, $event)"
+                        (dragstart)="onTimelineNonGcdDragStart(action, $event)"
+                        (dragend)="onNonGcdDragEnd()"
+                      >
+                        @if (nonGcdIconPath(action); as iconPath) {
+                          <img
+                            class="non-gcd-entry-icon"
+                            [src]="iconPath"
+                            [alt]="nonGcdLabel(action)"
+                          />
+                        }
+                        <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
+                        <button
+                          type="button"
+                          class="non-gcd-entry-remove"
+                          (click)="removePlacedNonGcdAction(action.id, $event)"
+                          aria-label="Remove {{ nonGcdLabel(action) }} from pre-fight tick {{ column.tick }}"
+                        >
+                          x
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else if (column.isMain && lane.key === 'non-gcd' && nonGcdActionsAtTick(column.tick).length) {
                   <div class="non-gcd-stack">
-                    @for (action of nonGcdActionsAtTick(tickIndex); track action.id) {
+                    @for (action of nonGcdActionsAtTick(column.tick); track action.id) {
                       <div
                         class="non-gcd-entry"
                         [class.invalid-action]="actionValidationSummary(action)"
@@ -244,29 +418,29 @@
                         (click)="openNonGcdActionConfig(action, $event)"
                         (dragstart)="onTimelineNonGcdDragStart(action, $event)"
                         (dragend)="onNonGcdDragEnd()"
-                        >
-                          @if (nonGcdIconPath(action); as iconPath) {
-                            <img
-                              class="non-gcd-entry-icon"
-                              [src]="iconPath"
+                      >
+                        @if (nonGcdIconPath(action); as iconPath) {
+                          <img
+                            class="non-gcd-entry-icon"
+                            [src]="iconPath"
                             [alt]="nonGcdLabel(action)"
                           />
-                          }
-                          <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
-                          <button
-                            type="button"
-                            class="non-gcd-entry-remove"
-                            (click)="removePlacedNonGcdAction(action.id, $event)"
-                            aria-label="Remove {{ nonGcdLabel(action) }} from tick {{ tickIndex }}"
-                          >
-                            x
-                          </button>
+                        }
+                        <span class="non-gcd-entry-label">{{ nonGcdShortLabel(action) }}</span>
+                        <button
+                          type="button"
+                          class="non-gcd-entry-remove"
+                          (click)="removePlacedNonGcdAction(action.id, $event)"
+                          aria-label="Remove {{ nonGcdLabel(action) }} from tick {{ column.tick }}"
+                        >
+                          x
+                        </button>
                         </div>
                       }
                     </div>
-                } @else if (lane.key === 'cooldown' && cooldownBarsStartingAtTick(tickIndex).length) {
+                } @else if (column.isMain && lane.key === 'cooldown' && cooldownBarsStartingAtTick(column.tick).length) {
                   <div class="cooldown-bar-stack">
-                    @for (bar of cooldownBarsStartingAtTick(tickIndex); track bar.abilityId + ':' + bar.startTick) {
+                    @for (bar of cooldownBarsStartingAtTick(column.tick); track bar.abilityId + ':' + bar.startTick) {
                       <div
                         class="cooldown-bar"
                         [style.--cooldown-span]="bar.span"
@@ -296,9 +470,9 @@
                       </div>
                     }
                   </div>
-                } @else if (lane.key === 'buff' && buffBarsStartingAtTick(tickIndex).length) {
+                } @else if (column.isMain && lane.key === 'buff' && buffBarsStartingAtTick(column.tick).length) {
                   <div class="buff-bar-stack">
-                    @for (bar of buffBarsStartingAtTick(tickIndex); track bar.buffId + ':' + bar.startTick) {
+                    @for (bar of buffBarsStartingAtTick(column.tick); track bar.buffId + ':' + bar.startTick) {
                       <div
                         class="buff-bar"
                         [class.warning-buff-bar]="bar.isWarning"
@@ -338,7 +512,7 @@
                       </div>
                     }
                   </div>
-                } @else if (lane.key === 'ability' && abilityOccupancyAtTick(tickIndex); as occupancy) {
+                } @else if (column.isMain && lane.key === 'ability' && abilityOccupancyAtTick(column.tick); as occupancy) {
                   @if (occupancy.segment === 'start' || occupancy.segment === 'single') {
                     <div
                       class="placed-ability"
@@ -434,29 +608,31 @@
                         type="button"
                         class="placed-ability-remove"
                         (click)="removePlacedAbility(occupancy.action.id, $event)"
-                        aria-label="Remove {{ occupancy.definition.name }} from tick {{ tickIndex }}"
+                        aria-label="Remove {{ occupancy.definition.name }} from tick {{ column.tick }}"
                       >
                         x
                       </button>
                     </div>
                   }
-                } @else if (laneCellLabel(lane.key, tickIndex)) {
-                  <span class="cell-entry">{{ laneCellLabel(lane.key, tickIndex) }}</span>
+                } @else if (laneCellLabel(lane.key, column)) {
+                  <span class="cell-entry">{{ laneCellLabel(lane.key, column) }}</span>
                 } @else if (lane.key === 'buff' || lane.key === 'cooldown') {
                   <span class="cell-placeholder muted-placeholder"></span>
-                } @else if (lane.key === 'ability' && abilityGapControlAtTick(tickIndex); as gapControl) {
+                } @else if (column.isMain && lane.key === 'ability' && abilityGapControlAtTick(column.tick); as gapControl) {
                   <button
                     type="button"
                     class="collapse-gap-button"
                     (click)="collapseAbilityGap(gapControl, $event)"
                     title="Collapse empty space and shift later abilities left"
-                    aria-label="Collapse empty space ending at tick {{ tickIndex }}"
+                    aria-label="Collapse empty space ending at tick {{ column.tick }}"
                   >
                     <<
                   </button>
-                } @else if (lane.key === 'ability' && isAbilityPlacementTick(tickIndex)) {
+                } @else if (column.isMain && lane.key === 'ability' && isAbilityPlacementTick(column.tick)) {
                   <span class="cell-placeholder">GCD</span>
                 } @else if (lane.key === 'ability') {
+                  <span class="cell-placeholder muted-placeholder"></span>
+                } @else if (!column.isMain) {
                   <span class="cell-placeholder muted-placeholder"></span>
                 } @else {
                   <span class="cell-placeholder">Tick</span>
@@ -551,6 +727,7 @@
       <button
         type="button"
         class="configuration-panel-toggle"
+        data-testid="configuration-panel-toggle"
         (click)="toggleConfigurationPanel()"
         [attr.aria-expanded]="configurationPanelExpanded()"
       >
@@ -670,6 +847,28 @@
             />
           </label>
 
+          <label class="control-field compact-field">
+            <span class="control-field-label">
+              <span>Gap to fight start</span>
+              <span
+                class="info-tooltip"
+                tabindex="0"
+                role="img"
+                aria-label="Gap to fight start help. This is the configurable time between stalling the ability and T0. It ages the stalled ability cooldown and any active pre-fight state, but it does not add visible prebuild tiles."
+                data-tooltip="Configurable time between stalling the ability and T0. This ages the stalled ability cooldown and active pre-fight state without adding visible prebuild tiles."
+              >i</span>
+            </span>
+            <input
+              data-testid="prefight-gap-input"
+              type="number"
+              min="0"
+              max="600"
+              step="1"
+              [ngModel]="preFight().gapTicks"
+              (ngModelChange)="updatePreFightGapTicks($event)"
+            />
+          </label>
+
           @if (startingStackControls().length) {
             <div class="configuration-group">
               <span class="configuration-group-title">Starting stacks</span>
@@ -723,6 +922,29 @@
                 <option value="expected-value">Expected value</option>
               </select>
             </label>
+
+            @if (usesSerenGodbowSpecial()) {
+              <label class="control-field compact-field critical-model-field seren-godbow-target-field">
+                <span class="control-field-label">
+                  <span>Seren godbow target</span>
+                  <span
+                    class="info-tooltip"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Seren godbow target size help. Crystal Rain fires five arrows, and target size controls how many arrows are counted as landing."
+                    data-tooltip="Crystal Rain fires five arrows. Target size controls how many arrows are counted as landing: 1x1 and 2x2 count 1, 3x3 counts 2, 4x4 counts 4, and 5x5 counts 5."
+                  >i</span>
+                </span>
+                <select
+                  [ngModel]="simulationSettings().serenGodbowTargetSize"
+                  (ngModelChange)="updateSerenGodbowTargetSize($event)"
+                >
+                  @for (option of serenGodbowTargetSizeOptions; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </label>
+            }
           </div>
 
           <label class="lane-toggle configuration-lane-toggle">

@@ -286,6 +286,8 @@ export const sampleGameDataManifest: SampleGameDataManifest = {
     '/game-data/buffs/channelled-might.sample.json',
     '/game-data/buffs/tsunami-buff.sample.json',
     '/game-data/buffs/glacial-embrace.sample.json',
+    '/game-data/buffs/icy-chill.sample.json',
+    '/game-data/buffs/icy-precision.sample.json',
     '/game-data/buffs/smoke-cloud.sample.json',
     '/game-data/buffs/temporal-anomaly.sample.json',
     '/game-data/buffs/blast-infused.sample.json',

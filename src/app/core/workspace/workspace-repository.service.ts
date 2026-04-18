@@ -3,6 +3,7 @@ import type { BuffDefinition } from '../../../game-data/types';
 import type { CombatChoices, ItemInstanceConfig, PlayerStats, SimulationSettings } from '../../../simulation-engine/models';
 import type { PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
+import { normalizePreFightPlan } from '../../../simulation-engine/timeline/pre-fight';
 import type { BuffSelectionState } from '../buffs/persistent-buff-config';
 import {
   buildBuffSelectionStateFromPersistentConfig,
@@ -109,6 +110,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
         startingStacks: plan.startingStacks ?? {},
         nonGcdActions: plan.nonGcdActions,
         abilityActions: plan.abilityActions,
+        preFight: normalizePreFightPlan(plan.preFight),
       };
     }
 
@@ -120,6 +122,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
       startingStacks: legacyPlannerState?.startingStacks ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.startingStacks ?? {},
       nonGcdActions: legacyPlannerState?.nonGcdActions ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.nonGcdActions,
       abilityActions: legacyPlannerState?.abilityActions ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.abilityActions,
+      preFight: normalizePreFightPlan(legacyPlannerState?.preFight ?? DEFAULT_WORKSPACE_DOCUMENT.portableConfig.rotationPlan.preFight),
     };
   }
 
@@ -215,6 +218,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
           startingStacks: state.startingStacks,
           nonGcdActions: state.nonGcdActions,
           abilityActions: state.abilityActions,
+          preFight: normalizePreFightPlan(state.preFight),
         },
       },
     }));
@@ -308,6 +312,7 @@ export class WorkspaceRepositoryService implements WorkspaceRepository {
           startingStacks: rotationPlanner.startingStacks,
           nonGcdActions: rotationPlanner.nonGcdActions,
           abilityActions: rotationPlanner.abilityActions,
+          preFight: normalizePreFightPlan(rotationPlanner.preFight),
         },
       },
       appState: {

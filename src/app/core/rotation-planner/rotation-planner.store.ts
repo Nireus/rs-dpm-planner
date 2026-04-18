@@ -1,13 +1,17 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { AbilityDefinition } from '../../../game-data/types';
-import type { RotationAction, RotationPlan } from '../../../simulation-engine/models';
+import type { PreFightAbilityAction, PreFightPlan, RotationAction, RotationPlan } from '../../../simulation-engine/models';
 import {
   normalizeStartingDeathsporeStacks,
   normalizeStartingPerfectEquilibriumStacks,
   type StartingStackState,
 } from '../../../simulation-engine/models/starting-stacks';
 import { MAX_ADRENALINE, resolveMaxAdrenaline } from '../../../simulation-engine/resolvers/adrenaline';
-import { buildBaseTimeline } from '../../../simulation-engine/timeline';
+import {
+  buildBaseTimeline,
+  clampPreFightGapTicks,
+  normalizePreFightPlan,
+} from '../../../simulation-engine/timeline';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
 import { GameDataStoreService } from '../game-data/game-data-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
@@ -44,6 +48,12 @@ const DEFAULT_ROTATION_PLANNER_STATE: RotationPlannerWorkspaceState = {
   startingStacks: {},
   nonGcdActions: [],
   abilityActions: [],
+  preFight: {
+    gapTicks: 0,
+    prebuildActions: [],
+    prebuildNonGcdActions: [],
+    stalledAbility: null,
+  },
 };
 
 @Injectable({
@@ -61,6 +71,7 @@ export class RotationPlannerStore {
   private readonly startingStacksValue = signal<StartingStackState>(this.initialState.startingStacks);
   private readonly nonGcdActionsValue = signal<RotationAction[]>(this.initialState.nonGcdActions);
   private readonly abilityActionsValue = signal<RotationAction[]>(this.initialState.abilityActions);
+  private readonly preFightValue = signal<PreFightPlan>(this.initialState.preFight);
 
   readonly startingAdrenaline = this.startingAdrenalineValue.asReadonly();
   readonly tickCount = this.tickCountValue.asReadonly();
@@ -68,6 +79,7 @@ export class RotationPlannerStore {
   readonly startingStacks = this.startingStacksValue.asReadonly();
   readonly nonGcdActions = this.nonGcdActionsValue.asReadonly();
   readonly abilityActions = this.abilityActionsValue.asReadonly();
+  readonly preFight = this.preFightValue.asReadonly();
   readonly visibleNonGcdActions = computed(() =>
     this.nonGcdActions().filter((action) => action.tick < this.tickCount()),
   );
@@ -117,6 +129,7 @@ export class RotationPlannerStore {
     startingStacks: this.startingStacks(),
     nonGcdActions: this.visibleNonGcdActions(),
     abilityActions: this.visibleAbilityActions(),
+    preFight: this.preFight(),
   }));
 
   readonly timelineResult = computed(() =>
@@ -144,6 +157,7 @@ export class RotationPlannerStore {
         startingStacks: this.startingStacks(),
         nonGcdActions: this.nonGcdActions(),
         abilityActions: this.abilityActions(),
+        preFight: this.preFight(),
       });
     });
   }
@@ -266,6 +280,27 @@ export class RotationPlannerStore {
 
     let nextActionId: string | null = null;
 
+    if (payload?.sourceType === 'timeline' && payload.actionId) {
+      const prebuildAction = this.preFight().prebuildNonGcdActions?.find((action) => action.id === payload.actionId) ?? null;
+      if (prebuildAction) {
+        this.preFightValue.update((current) => {
+          const preFight = normalizePreFightPlan(current);
+          return {
+            ...preFight,
+            prebuildNonGcdActions: removeNonGcdAction(preFight.prebuildNonGcdActions ?? [], payload.actionId!),
+          };
+        });
+        this.nonGcdActionsValue.update((actions) => [
+          ...actions,
+          {
+            ...prebuildAction,
+            tick,
+          },
+        ].sort(compareRotationActions));
+        return payload.actionId;
+      }
+    }
+
     this.nonGcdActionsValue.update((actions) => {
       const nextActions = upsertNonGcdAction(actions, template, tick, payload);
 
@@ -295,6 +330,27 @@ export class RotationPlannerStore {
 
     let nextActionId: string | null = null;
 
+    if (payload?.sourceType === 'timeline' && payload.actionId) {
+      const prebuildAction = this.preFight().prebuildNonGcdActions?.find((action) => action.id === payload.actionId) ?? null;
+      if (prebuildAction) {
+        this.preFightValue.update((current) => {
+          const preFight = normalizePreFightPlan(current);
+          return {
+            ...preFight,
+            prebuildNonGcdActions: removeNonGcdAction(preFight.prebuildNonGcdActions ?? [], payload.actionId!),
+          };
+        });
+        this.nonGcdActionsValue.update((actions) => [
+          ...actions,
+          {
+            ...prebuildAction,
+            tick,
+          },
+        ].sort(compareRotationActions));
+        return payload.actionId;
+      }
+    }
+
     this.nonGcdActionsValue.update((actions) => {
       const nextActions = upsertNonGcdAbilityAction(actions, definition, tick, payload);
 
@@ -319,6 +375,14 @@ export class RotationPlannerStore {
 
   updateNonGcdAction(actionId: string, payloadUpdate: Record<string, unknown>): void {
     this.nonGcdActionsValue.update((actions) => updateNonGcdActionPayload(actions, actionId, payloadUpdate));
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+
+      return {
+        ...preFight,
+        prebuildNonGcdActions: updateNonGcdActionPayload(preFight.prebuildNonGcdActions ?? [], actionId, payloadUpdate),
+      };
+    });
   }
 
   updateAbilityAction(actionId: string, payloadUpdate: Record<string, unknown>): void {
@@ -335,6 +399,260 @@ export class RotationPlannerStore {
 
   removeNonGcdAction(actionId: string): void {
     this.nonGcdActionsValue.update((actions) => removeNonGcdAction(actions, actionId));
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+
+      return {
+        ...preFight,
+        prebuildNonGcdActions: removeNonGcdAction(preFight.prebuildNonGcdActions ?? [], actionId),
+      };
+    });
+  }
+
+  placePrebuildAbility(definition: AbilityDefinition, slotIndex: number): string {
+    let placedActionId = '';
+
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+      const actions = [...preFight.prebuildActions];
+      const clampedIndex = Math.max(0, Math.min(Math.trunc(slotIndex), actions.length));
+      const existing = actions[clampedIndex];
+      const nextAction = existing
+        ? {
+            ...existing,
+            abilityId: definition.id,
+          }
+        : {
+            id: createPreFightActionId('prebuild', definition.id, actions),
+            abilityId: definition.id,
+          };
+
+      placedActionId = nextAction.id;
+
+      if (existing) {
+        actions[clampedIndex] = nextAction;
+      } else {
+        actions.splice(clampedIndex, 0, nextAction);
+      }
+
+      return {
+        ...preFight,
+        prebuildActions: actions,
+      };
+    });
+
+    return placedActionId;
+  }
+
+  insertPrebuildAbility(definition: AbilityDefinition, slotIndex: number): string {
+    let placedActionId = '';
+
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+      const actions = [...preFight.prebuildActions];
+      const clampedIndex = Math.max(0, Math.min(Math.trunc(slotIndex), actions.length));
+      const nextAction = {
+        id: createPreFightActionId('prebuild', definition.id, actions),
+        abilityId: definition.id,
+      };
+
+      placedActionId = nextAction.id;
+      actions.splice(clampedIndex, 0, nextAction);
+
+      return {
+        ...preFight,
+        prebuildActions: actions,
+      };
+    });
+
+    return placedActionId;
+  }
+
+  reorderPrebuildAbility(actionId: string, targetIndex: number): void {
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+      const currentIndex = preFight.prebuildActions.findIndex((action) => action.id === actionId);
+
+      if (currentIndex < 0) {
+        return preFight;
+      }
+
+      const actions = [...preFight.prebuildActions];
+      const [action] = actions.splice(currentIndex, 1);
+      if (!action) {
+        return preFight;
+      }
+
+      actions.splice(Math.max(0, Math.min(Math.trunc(targetIndex), actions.length)), 0, action);
+
+      return {
+        ...preFight,
+        prebuildActions: actions,
+      };
+    });
+  }
+
+  removePrebuildAbility(actionId: string): void {
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+
+      return {
+        ...preFight,
+        prebuildActions: preFight.prebuildActions.filter((action) => action.id !== actionId),
+      };
+    });
+  }
+
+  canPlacePrebuildNonGcdActionAtTick(tick: number): boolean {
+    return tick < 0;
+  }
+
+  placePrebuildNonGcdAction(
+    template: PlannerNonGcdTemplate,
+    tick: number,
+    payload?: PlannerNonGcdDropPayload,
+  ): string | null {
+    if (!this.canPlacePrebuildNonGcdActionAtTick(tick)) {
+      return null;
+    }
+
+    let nextActionId: string | null = null;
+
+    if (payload?.sourceType === 'timeline' && payload.actionId) {
+      const mainAction = this.nonGcdActions().find((action) => action.id === payload.actionId) ?? null;
+      if (mainAction) {
+        this.nonGcdActionsValue.update((actions) => removeNonGcdAction(actions, payload.actionId!));
+        this.preFightValue.update((current) => {
+          const preFight = normalizePreFightPlan(current);
+          return {
+            ...preFight,
+            prebuildNonGcdActions: [
+              ...(preFight.prebuildNonGcdActions ?? []),
+              {
+                ...mainAction,
+                tick,
+              },
+            ].sort(compareRotationActions),
+          };
+        });
+        return payload.actionId;
+      }
+    }
+
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+      const previousActions = preFight.prebuildNonGcdActions ?? [];
+      const nextActions = upsertNonGcdAction(previousActions, template, tick, payload);
+
+      if (payload?.sourceType === 'timeline' && payload.actionId) {
+        nextActionId = payload.actionId;
+      } else {
+        const previousIds = new Set(previousActions.map((action) => action.id));
+        nextActionId =
+          nextActions.find((action) => !previousIds.has(action.id) && action.tick === tick && action.actionType === template.actionType)?.id ??
+          null;
+      }
+
+      return {
+        ...preFight,
+        prebuildNonGcdActions: nextActions,
+      };
+    });
+
+    return nextActionId;
+  }
+
+  placePrebuildUtilityAbilityNonGcd(
+    definition: AbilityDefinition,
+    tick: number,
+    payload?: PlannerNonGcdDropPayload,
+  ): string | null {
+    if (!this.canPlacePrebuildNonGcdActionAtTick(tick)) {
+      return null;
+    }
+
+    let nextActionId: string | null = null;
+
+    if (payload?.sourceType === 'timeline' && payload.actionId) {
+      const mainAction = this.nonGcdActions().find((action) => action.id === payload.actionId) ?? null;
+      if (mainAction) {
+        this.nonGcdActionsValue.update((actions) => removeNonGcdAction(actions, payload.actionId!));
+        this.preFightValue.update((current) => {
+          const preFight = normalizePreFightPlan(current);
+          return {
+            ...preFight,
+            prebuildNonGcdActions: [
+              ...(preFight.prebuildNonGcdActions ?? []),
+              {
+                ...mainAction,
+                tick,
+              },
+            ].sort(compareRotationActions),
+          };
+        });
+        return payload.actionId;
+      }
+    }
+
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+      const previousActions = preFight.prebuildNonGcdActions ?? [];
+      const nextActions = upsertNonGcdAbilityAction(previousActions, definition, tick, payload);
+
+      if (payload?.sourceType === 'timeline' && payload.actionId) {
+        nextActionId = payload.actionId;
+      } else {
+        const previousIds = new Set(previousActions.map((action) => action.id));
+        nextActionId =
+          nextActions.find((action) =>
+            !previousIds.has(action.id) &&
+            action.tick === tick &&
+            action.actionType === 'ability-use' &&
+            action.payload['abilityId'] === definition.id,
+          )?.id ?? null;
+      }
+
+      return {
+        ...preFight,
+        prebuildNonGcdActions: nextActions,
+      };
+    });
+
+    return nextActionId;
+  }
+
+  setStalledAbility(definition: AbilityDefinition): boolean {
+    if (definition.isChanneled) {
+      return false;
+    }
+
+    this.preFightValue.update((current) => {
+      const preFight = normalizePreFightPlan(current);
+
+      return {
+        ...preFight,
+        stalledAbility: {
+          id: preFight.stalledAbility?.id ?? createPreFightActionId('stall', definition.id, preFight.prebuildActions),
+          abilityId: definition.id,
+        },
+      };
+    });
+
+    return true;
+  }
+
+  removeStalledAbility(): void {
+    this.preFightValue.update((current) => ({
+      ...normalizePreFightPlan(current),
+      stalledAbility: null,
+    }));
+  }
+
+  updatePreFightGapTicks(value: number | string | null): void {
+    this.preFightValue.update((current) => ({
+      ...normalizePreFightPlan(current),
+      gapTicks: clampPreFightGapTicks(value),
+    }));
   }
 
   reset(): void {
@@ -343,18 +661,26 @@ export class RotationPlannerStore {
     this.startingStacksValue.set(DEFAULT_ROTATION_PLANNER_STATE.startingStacks);
     this.nonGcdActionsValue.set(DEFAULT_ROTATION_PLANNER_STATE.nonGcdActions);
     this.abilityActionsValue.set(DEFAULT_ROTATION_PLANNER_STATE.abilityActions);
+    this.preFightValue.set(DEFAULT_ROTATION_PLANNER_STATE.preFight);
     this.workspaceRepository.updateRotationPlannerState(DEFAULT_ROTATION_PLANNER_STATE);
   }
 
   clearPlannedActions(): void {
     this.nonGcdActionsValue.set([]);
     this.abilityActionsValue.set([]);
+    this.preFightValue.update((current) => ({
+      ...normalizePreFightPlan(current),
+      prebuildActions: [],
+      prebuildNonGcdActions: [],
+      stalledAbility: null,
+    }));
     this.workspaceRepository.updateRotationPlannerState({
       startingAdrenaline: this.startingAdrenaline(),
       tickCount: this.tickCount(),
       startingStacks: this.startingStacks(),
       nonGcdActions: [],
       abilityActions: [],
+      preFight: this.preFight(),
     });
   }
 
@@ -368,6 +694,7 @@ export class RotationPlannerStore {
     this.startingStacksValue.set(normalizeStartingStacks(state.startingStacks));
     this.nonGcdActionsValue.set(sanitizeRotationActions(state.nonGcdActions, 'non-gcd'));
     this.abilityActionsValue.set(sanitizeRotationActions(state.abilityActions, 'ability'));
+    this.preFightValue.set(normalizePreFightPlan(state.preFight));
   }
 
   private loadInitialState(): RotationPlannerWorkspaceState {
@@ -389,6 +716,7 @@ export class RotationPlannerStore {
       startingStacks: normalizeStartingStacks(persisted.startingStacks),
       nonGcdActions: sanitizeRotationActions(persisted.nonGcdActions, 'non-gcd'),
       abilityActions: sanitizeRotationActions(persisted.abilityActions, 'ability'),
+      preFight: normalizePreFightPlan(persisted.preFight),
     };
   }
 }
@@ -482,4 +810,24 @@ function sanitizePayload(payload: Record<string, unknown>): Record<string, unkno
       typeof value === 'boolean',
     ),
   );
+}
+
+function createPreFightActionId(
+  prefix: 'prebuild' | 'stall',
+  abilityId: PreFightAbilityAction['abilityId'],
+  existingActions: PreFightAbilityAction[],
+): string {
+  let suffix = existingActions.filter((action) => action.abilityId === abilityId).length + 1;
+  let candidate = `pre-fight-${prefix}-${abilityId}-${suffix}`;
+
+  while (existingActions.some((action) => action.id === candidate)) {
+    suffix += 1;
+    candidate = `pre-fight-${prefix}-${abilityId}-${suffix}`;
+  }
+
+  return candidate;
+}
+
+function compareRotationActions(left: RotationAction, right: RotationAction): number {
+  return left.tick - right.tick || left.id.localeCompare(right.id);
 }

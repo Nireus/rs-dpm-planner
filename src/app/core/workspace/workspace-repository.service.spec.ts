@@ -96,6 +96,12 @@ describe('WorkspaceRepositoryService', () => {
       },
       nonGcdActions: [],
       abilityActions: [],
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
     });
   });
 
@@ -238,6 +244,7 @@ describe('WorkspaceRepositoryService', () => {
         },
         simulationSettings: {
           criticalHitResolutionMode: 'expected-value',
+          serenGodbowTargetSize: '3x3',
         },
       }),
     );
@@ -255,5 +262,6 @@ describe('WorkspaceRepositoryService', () => {
       deathsporeStacks: 7,
     });
     expect(repository.readSimulationSettings().criticalHitResolutionMode).toBe('expected-value');
+    expect(repository.readSimulationSettings().serenGodbowTargetSize).toBe('3x3');
   });
 });

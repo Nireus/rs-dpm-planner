@@ -1,6 +1,6 @@
 {
   "id": "seren-godbow-eof",
-  "name": "Seren Godbow (EOF)",
+  "name": "Seren godbow special",
   "style": "ranged",
   "subtype": "special",
   "cooldownTicks": 0,
@@ -11,26 +11,52 @@
       "id": "seren-godbow-eof-hit-1",
       "tickOffset": 0,
       "damage": {
-        "min": 100,
-        "max": 160
+        "min": 125,
+        "max": 155
       }
     },
     {
       "id": "seren-godbow-eof-hit-2",
-      "tickOffset": 2,
+      "tickOffset": 0,
       "damage": {
-        "min": 100,
-        "max": 160
+        "min": 125,
+        "max": 155
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-3",
+      "tickOffset": 0,
+      "damage": {
+        "min": 125,
+        "max": 155
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-4",
+      "tickOffset": 0,
+      "damage": {
+        "min": 125,
+        "max": 155
+      }
+    },
+    {
+      "id": "seren-godbow-eof-hit-5",
+      "tickOffset": 0,
+      "damage": {
+        "min": 125,
+        "max": 155
       }
     }
   ],
   "baseDamage": {
-    "min": 200,
-    "max": 320
+    "min": 625,
+    "max": 775
   },
   "effectRefs": ["eof-seren-godbow-spec"],
   "displayHints": {
+    "hitCountLabel": "5 arrows",
+    "damageRangeLabel": "625-775% ability damage",
     "hiddenFromUi": true
   },
-  "description": "Curated EOF special access entry for the Seren godbow special attack."
+  "description": "Crystal Rain special attack. Arrow count is adjusted by the configured target size."
 }

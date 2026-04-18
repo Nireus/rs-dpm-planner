@@ -6,7 +6,8 @@ import {
   filterAbilitiesByStyle,
   groupAbilitiesBySubtype,
 } from '../../core/abilities/ability-style-tabs';
-import { EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
+import { CONFIG_OPTION_IDS, EFFECT_REF_IDS } from '../../../game-data/conventions/mechanics';
+import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, CombatStyle, EquipmentSlot, SpellDefinition } from '../../../game-data/types';
 import { BuffConfigurationStoreService } from '../../core/buffs/buff-configuration-store.service';
 import { CombatChoicesStoreService } from '../../core/combat-choices/combat-choices-store.service';
@@ -19,7 +20,21 @@ import { GearBuilderStore } from '../gear/gear-builder.store';
 import { resolveEffectiveAmmoSelection } from '../../core/gear/effective-ammo-selection';
 import { projectGearStateAtTick } from '../../core/gear/project-gear-state';
 import { RotationPlannerStore } from './rotation-planner.store';
-import type { RotationAction } from '../../../simulation-engine/models';
+import {
+  SEREN_GODBOW_TARGET_ARROWS,
+  SEREN_GODBOW_TARGET_SIZE_VALUES,
+  type PreFightAbilityAction,
+  type RotationAction,
+  type SerenGodbowTargetSize,
+} from '../../../simulation-engine/models';
+import {
+  ESSENCE_OF_FINALITY_ABILITY_ID,
+  SEREN_GODBOW_ABILITY_ID,
+  SEREN_GODBOW_EFFECT_REF,
+  SEREN_GODBOW_WEAPON_ID,
+  WEAPON_SPECIAL_ATTACK_ABILITY_ID,
+} from '../../../simulation-engine/abilities/effective-ability.constants';
+import { buildPreFightSchedule, GCD_TICKS, getPreFightAbilityTimelineSpan } from '../../../simulation-engine/timeline';
 import {
   ADRENALINE_POTION_VARIANTS,
   getAdrenalinePotionVariant,
@@ -70,7 +85,6 @@ import {
   buildPlacedAbilityDisplayName,
   buildPlacedAbilityTitle,
   buildPlacedAbilityThemeClass,
-  buildSelectedTickOverlayLeft,
   buildTimelineRowTemplate,
   COOLDOWN_PLANNER_LANE,
   describeInvalidAbilityPlacement,
@@ -107,6 +121,7 @@ import {
   RotationPlannerCastSpellDialogComponent,
   type RotationPlannerCastSpellOption,
 } from './rotation-planner-cast-spell-dialog.component';
+import type { GearBuilderState } from '../../core/gear/gear-state';
 
 interface PlannerMagicSpellOption {
   spellId: string;
@@ -117,6 +132,40 @@ interface PlannerMagicSpellOption {
   optionLabel: string;
   iconPath?: string;
 }
+
+type PreFightTimelineSection = 'prebuild' | 'stall' | 'gap';
+
+interface PlannerTimelineColumn {
+  id: string;
+  tick: number;
+  label: string;
+  isMain: boolean;
+  isPreFight: boolean;
+  isSeparator?: boolean;
+  preFightSection?: PreFightTimelineSection;
+}
+
+interface PrebuildTimelineEntry {
+  index: number;
+  action: PreFightAbilityAction;
+  ability: AbilityDefinition | null;
+  startTick: number;
+  span: number;
+  tickLabel: string;
+}
+
+const PREFIGHT_SEPARATOR_COLUMN_ID = 'prefight-separator';
+const PREFIGHT_STALL_VISUAL_SPAN = GCD_TICKS;
+const PREFIGHT_VISUAL_STALL_START_TICK = -PREFIGHT_STALL_VISUAL_SPAN;
+const TIMELINE_TICK_COLUMN_WIDTH_REM = 2.18;
+const TIMELINE_SEPARATOR_COLUMN_WIDTH_REM = 1.38;
+const TIMELINE_COLUMN_GAP_REM = 0.42;
+const TICK_SELECTION_OVERHANG_REM = 0.16;
+const SEREN_GODBOW_TARGET_SIZE_OPTIONS: Array<{ value: SerenGodbowTargetSize; label: string }> =
+  SEREN_GODBOW_TARGET_SIZE_VALUES.map((value) => ({
+    value,
+    label: `${value} - ${SEREN_GODBOW_TARGET_ARROWS[value]} arrow${SEREN_GODBOW_TARGET_ARROWS[value] === 1 ? '' : 's'}`,
+  }));
 
 @Component({
   selector: 'app-rotation-planner-page',
@@ -157,6 +206,12 @@ export class RotationPlannerPageComponent {
   protected readonly tickIndexes = this.plannerStore.tickIndexes;
   protected readonly nonGcdActions = this.plannerStore.nonGcdActions;
   protected readonly abilityActions = this.plannerStore.abilityActions;
+  protected readonly preFight = this.plannerStore.preFight;
+  protected readonly prebuildNonGcdActions = computed(() => this.preFight().prebuildNonGcdActions ?? []);
+  protected readonly allNonGcdActions = computed(() => [
+    ...this.prebuildNonGcdActions(),
+    ...this.nonGcdActions(),
+  ]);
   protected readonly abilityCatalog = computed<Record<string, AbilityDefinition>>(() => {
     return this.gameDataStore.snapshot().catalog?.abilities ?? {};
   });
@@ -171,13 +226,19 @@ export class RotationPlannerPageComponent {
       abilityActions: this.abilityActions(),
       nonGcdActions: this.nonGcdActions(),
       abilityCatalog: this.abilityCatalog(),
+      preFight: this.preFight(),
     }),
   );
   protected readonly simulationResult = this.resultsSimulationService.simulationResult;
   protected readonly simulationSettings = this.simulationSettingsStore.settings;
+  protected readonly serenGodbowTargetSizeOptions = SEREN_GODBOW_TARGET_SIZE_OPTIONS;
+  protected readonly usesSerenGodbowSpecial = computed(() => this.hasSerenGodbowSpecialUsage());
   protected readonly selectedTick = signal(0);
   protected readonly showCooldownLane = signal(false);
   protected readonly configurationPanelExpanded = signal(false);
+  protected readonly prebuildCollapsed = signal(false);
+  protected readonly stallSlotVisualSpan = PREFIGHT_STALL_VISUAL_SPAN;
+  protected readonly prebuildEmptySlotVisualSpan = GCD_TICKS;
   protected readonly abilityPaletteStyleTabs = ABILITY_STYLE_TABS;
   protected readonly selectedAbilityPaletteStyle = signal<CombatStyle>('ranged');
   protected readonly hoveredAbilityDropTick = signal<number | null>(null);
@@ -200,7 +261,7 @@ export class RotationPlannerPageComponent {
       return null;
     }
 
-    return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+    return this.allNonGcdActions().find((action) => action.id === actionId) ?? null;
   });
   protected readonly activeAdrenalinePotionAction = computed(() => {
     const actionId = this.adrenalinePotionDialogActionId();
@@ -208,7 +269,7 @@ export class RotationPlannerPageComponent {
       return null;
     }
 
-    return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+    return this.allNonGcdActions().find((action) => action.id === actionId) ?? null;
   });
   protected readonly activeSpellSwapAction = computed(() => {
     const actionId = this.spellSwapDialogActionId();
@@ -216,7 +277,7 @@ export class RotationPlannerPageComponent {
       return null;
     }
 
-    return this.nonGcdActions().find((action) => action.id === actionId) ?? null;
+    return this.allNonGcdActions().find((action) => action.id === actionId) ?? null;
   });
   protected readonly activeCastSpellAction = computed(() => {
     const actionId = this.castSpellDialogActionId();
@@ -240,7 +301,7 @@ export class RotationPlannerPageComponent {
         ? projectGearStateAtTick(
             this.gearBuilderStore.snapshot(),
             catalog.items,
-            this.nonGcdActions(),
+            this.allNonGcdActions(),
             tick,
           )
         : this.gearBuilderStore.snapshot();
@@ -307,6 +368,14 @@ export class RotationPlannerPageComponent {
       simulationResult: this.simulationResult(),
     });
   });
+  protected readonly inspectMinTick = computed(() => {
+    if (this.prebuildCollapsed()) {
+      return 0;
+    }
+
+    return this.timelineColumns().find((column) => column.isPreFight)?.tick ?? 0;
+  });
+  protected readonly inspectMaxTick = computed(() => Math.max(this.inspectMinTick(), this.tickCount() - 1));
   protected readonly abilityOccupancy = computed<Record<number, AbilityOccupancyEntry>>(() => {
     const preview = this.previewAbilityPlacement();
 
@@ -350,6 +419,114 @@ export class RotationPlannerPageComponent {
       ),
     ),
   );
+  protected readonly preFightSchedule = computed(() =>
+    buildPreFightSchedule({
+      preFight: this.preFight(),
+      abilityDefinitions: this.abilityCatalog(),
+      mainAbilityActions: this.abilityActions(),
+    }),
+  );
+  protected readonly prebuildTimelineEntries = computed<PrebuildTimelineEntry[]>(() => {
+    const actionIndexById = new Map(
+      this.preFight().prebuildActions.map((action, index) => [action.id, index]),
+    );
+    const scheduledEntries: PrebuildTimelineEntry[] = [];
+    let cursorTick = PREFIGHT_VISUAL_STALL_START_TICK;
+
+    for (const action of [...this.preFight().prebuildActions].reverse()) {
+      const ability = this.abilityCatalog()[action.abilityId] ?? null;
+      const span = ability ? getPreFightAbilityTimelineSpan(ability) : GCD_TICKS;
+      const startTick = cursorTick - span;
+
+      scheduledEntries.push({
+        index: actionIndexById.get(action.id) ?? 0,
+        action,
+        ability,
+        startTick,
+        span,
+        tickLabel: `T${startTick}`,
+      });
+
+      cursorTick = startTick;
+    }
+
+    return scheduledEntries.reverse();
+  });
+  protected readonly prebuildEmptySlotTick = computed(() => {
+    const entries = this.prebuildTimelineEntries();
+    const earliestPrebuildStart = Math.min(
+      PREFIGHT_VISUAL_STALL_START_TICK,
+      ...entries.map((entry) => entry.startTick),
+      ...this.prebuildNonGcdActions().map((action) => action.tick),
+    );
+
+    return earliestPrebuildStart - GCD_TICKS;
+  });
+  protected readonly timelineColumns = computed<PlannerTimelineColumn[]>(() => {
+    const prebuildEntries = this.prebuildTimelineEntries();
+    const earliestPreFightTick = Math.min(
+      PREFIGHT_VISUAL_STALL_START_TICK,
+      this.prebuildEmptySlotTick(),
+      ...prebuildEntries.map((entry) => entry.startTick),
+      ...this.prebuildNonGcdActions().map((action) => action.tick),
+    );
+    const preFightColumns = !this.prebuildCollapsed() && earliestPreFightTick < 0
+      ? Array.from({ length: Math.abs(earliestPreFightTick) }, (_, index) => earliestPreFightTick + index)
+          .map<PlannerTimelineColumn>((tick) => ({
+            id: `prefight:${tick}`,
+            tick,
+            label: `T${tick}`,
+            isMain: false,
+            isPreFight: true,
+            preFightSection: preFightSectionForTick(tick),
+          }))
+      : [];
+    const separatorColumn: PlannerTimelineColumn = {
+      id: PREFIGHT_SEPARATOR_COLUMN_ID,
+      tick: 0,
+      label: '',
+      isMain: false,
+      isPreFight: false,
+      isSeparator: true,
+    };
+    const mainColumns = this.tickIndexes().map<PlannerTimelineColumn>((tick) => ({
+      id: `main:${tick}`,
+      tick,
+      label: `T${tick}`,
+      isMain: true,
+      isPreFight: false,
+    }));
+
+    return [...preFightColumns, separatorColumn, ...mainColumns];
+  });
+  protected readonly timelineColumnCount = computed(() => this.timelineColumns().length);
+  protected readonly timelineColumnTemplate = computed(() =>
+    this.timelineColumns()
+      .map((column) => {
+        const width = column.isSeparator ? TIMELINE_SEPARATOR_COLUMN_WIDTH_REM : TIMELINE_TICK_COLUMN_WIDTH_REM;
+        return `minmax(${width}rem, ${width}rem)`;
+      })
+      .join(' '),
+  );
+  protected readonly preFightSeparatorOverlayLeft = computed(() => {
+    const separatorIndex = this.timelineColumns().findIndex((column) => column.id === PREFIGHT_SEPARATOR_COLUMN_ID);
+    return `calc(${this.timelineColumnLeft(Math.max(0, separatorIndex))})`;
+  });
+  protected readonly stallColumnId = computed(() => {
+    return `prefight:${PREFIGHT_VISUAL_STALL_START_TICK}`;
+  });
+  protected readonly stalledAbilityDefinition = computed(() => {
+    const stalledAbility = this.preFight().stalledAbility;
+    return stalledAbility ? this.abilityCatalog()[stalledAbility.abilityId] ?? null : null;
+  });
+  protected readonly stalledAbilityCastTickLabel = computed(() => {
+    const gapTicks = this.preFight().gapTicks;
+    return `${gapTicks} tick${gapTicks === 1 ? '' : 's'} before T0`;
+  });
+  protected readonly stalledAbilityReleaseLabel = computed(() => {
+    const releaseTick = this.preFightSchedule().stalledAbility?.releaseTick;
+    return typeof releaseTick === 'number' ? `Releases T${releaseTick}` : 'No main ability yet';
+  });
   protected readonly buffLaneBars = computed<PlannerBuffLaneBar[]>(() => {
     const result = this.simulationResult();
     const catalog = this.gameDataStore.snapshot().catalog;
@@ -461,7 +638,7 @@ export class RotationPlannerPageComponent {
       : BASE_PLANNER_LANES,
   );
   protected readonly maxNonGcdStackSize = computed(() => {
-    const actions = this.nonGcdActions();
+    const actions = this.allNonGcdActions();
     if (!actions.length) {
       return 1;
     }
@@ -485,6 +662,7 @@ export class RotationPlannerPageComponent {
   protected draggedNonGcdAction: RotationAction | null = null;
   protected draggedAbilityPayload: PlannerAbilityDropPayload | null = null;
   protected draggedAbilityAction: RotationAction | null = null;
+  protected draggedPrebuildActionId: string | null = null;
 
   protected updateStartingAdrenaline(value: number | string | null): void {
     this.plannerStore.updateStartingAdrenaline(value);
@@ -500,7 +678,7 @@ export class RotationPlannerPageComponent {
 
   protected updateGcdCount(value: number | string | null): void {
     this.plannerStore.updateGcdCount(value);
-    this.selectedTick.update((current) => Math.max(0, Math.min(current, this.tickCount() - 1)));
+    this.selectedTick.update((current) => this.clampInspectableTick(current));
   }
 
   protected updateRangedLevel(value: number | string | null): void {
@@ -537,11 +715,11 @@ export class RotationPlannerPageComponent {
       return;
     }
 
-    this.selectedTick.set(Math.max(0, Math.min(Math.trunc(parsedValue), this.tickCount() - 1)));
+    this.selectedTick.set(this.clampInspectableTick(parsedValue));
   }
 
   protected selectTick(tickIndex: number): void {
-    this.selectedTick.set(Math.max(0, Math.min(tickIndex, this.tickCount() - 1)));
+    this.selectedTick.set(this.clampInspectableTick(tickIndex));
   }
 
   protected toggleCooldownLane(value: boolean | string | null): void {
@@ -552,16 +730,37 @@ export class RotationPlannerPageComponent {
     this.simulationSettingsStore.updateCriticalHitResolutionMode(value);
   }
 
+  protected updateSerenGodbowTargetSize(value: string | null): void {
+    this.simulationSettingsStore.updateSerenGodbowTargetSize(value);
+  }
+
   protected toggleConfigurationPanel(): void {
     this.configurationPanelExpanded.update((expanded) => !expanded);
+  }
+
+  protected togglePrebuildCollapsed(): void {
+    const nextCollapsed = !this.prebuildCollapsed();
+    this.prebuildCollapsed.set(nextCollapsed);
+
+    if (nextCollapsed && this.selectedTick() < 0) {
+      this.selectedTick.set(0);
+    }
+  }
+
+  protected updatePreFightGapTicks(value: number | string | null): void {
+    this.plannerStore.updatePreFightGapTicks(value);
   }
 
   protected selectAbilityPaletteStyle(style: CombatStyle): void {
     this.selectedAbilityPaletteStyle.set(style);
   }
 
-  protected laneCellLabel(laneKey: PlannerLaneViewModel['key'], tickIndex: number): string {
-    return laneCellLabel(laneKey, this.timelineResult().timeline.ticks[tickIndex]);
+  protected laneCellLabel(laneKey: PlannerLaneViewModel['key'], column: PlannerTimelineColumn): string {
+    if (!column.isMain) {
+      return '';
+    }
+
+    return laneCellLabel(laneKey, this.timelineResult().timeline.ticks[column.tick]);
   }
 
   protected isMajorTick(tickIndex: number): boolean {
@@ -589,6 +788,133 @@ export class RotationPlannerPageComponent {
     return `non-gcd-tick-${tickIndex}`;
   }
 
+  protected timelineCellTestId(laneKey: PlannerLaneViewModel['key'], column: PlannerTimelineColumn): string {
+    if (column.id === PREFIGHT_SEPARATOR_COLUMN_ID) {
+      return `timeline-cell-${laneKey}-prefight-toggle`;
+    }
+
+    return `timeline-cell-${laneKey}-${column.tick}`;
+  }
+
+  protected isSelectedTimelineColumn(column: PlannerTimelineColumn): boolean {
+    return !column.isSeparator && this.selectedTick() === column.tick;
+  }
+
+  protected isPrebuildDropColumn(column: PlannerTimelineColumn): boolean {
+    return column.isPreFight &&
+      !this.prebuildCollapsed() &&
+      (
+        column.tick === this.prebuildEmptySlotTick() ||
+        Boolean(this.prebuildEntryStartingAtTick(column.tick))
+      );
+  }
+
+  protected isPrebuildEmptySlotColumn(column: PlannerTimelineColumn): boolean {
+    return column.isPreFight && !this.prebuildCollapsed() && column.tick === this.prebuildEmptySlotTick();
+  }
+
+  protected isStallSlotColumn(column: PlannerTimelineColumn): boolean {
+    return column.isPreFight && column.id === this.stallColumnId();
+  }
+
+  protected isPrebuildSectionColumn(column: PlannerTimelineColumn): boolean {
+    return column.preFightSection === 'prebuild';
+  }
+
+  protected isStallSectionColumn(column: PlannerTimelineColumn): boolean {
+    return column.preFightSection === 'stall';
+  }
+
+  protected isPreFightNonGcdDropColumn(column: PlannerTimelineColumn): boolean {
+    return this.isPrebuildSectionColumn(column) || this.isStallSectionColumn(column);
+  }
+
+  protected isPreFightGapColumn(column: PlannerTimelineColumn): boolean {
+    return column.preFightSection === 'gap';
+  }
+
+  protected isPreFightSeparatorColumn(column: PlannerTimelineColumn): boolean {
+    return column.id === PREFIGHT_SEPARATOR_COLUMN_ID;
+  }
+
+  protected preFightVisibilityToggleLabel(): string {
+    return this.prebuildCollapsed()
+      ? 'Show prebuild and ability stall'
+      : 'Hide prebuild and ability stall';
+  }
+
+  protected isFirstPreFightColumn(column: PlannerTimelineColumn): boolean {
+    return this.timelineColumns().find((entry) => entry.isPreFight)?.id === column.id;
+  }
+
+  protected prebuildEntryStartingAtTick(tick: number): PrebuildTimelineEntry | null {
+    return this.prebuildTimelineEntries().find((entry) => entry.startTick === tick) ?? null;
+  }
+
+  protected prebuildEntryForCell(
+    laneKey: PlannerLaneViewModel['key'],
+    column: PlannerTimelineColumn,
+  ): PrebuildTimelineEntry | null {
+    if (laneKey !== 'ability' || this.prebuildCollapsed()) {
+      return null;
+    }
+
+    return this.prebuildEntryStartingAtTick(column.tick);
+  }
+
+  protected timelineCellCanDrop(laneKey: PlannerLaneViewModel['key'], column: PlannerTimelineColumn): boolean {
+    if (laneKey === 'ability') {
+      if (column.isPreFight) {
+        return (
+          this.isPrebuildDropColumn(column) &&
+          (Boolean(this.draggedAbilityPayload) || Boolean(this.draggedPrebuildActionId))
+        ) || (
+          this.isStallSlotColumn(column) &&
+          Boolean(this.draggedAbilityPayload)
+        );
+      }
+
+      if (!column.isMain) {
+        return false;
+      }
+
+      return this.canDropAbility(column.tick);
+    }
+
+    if (laneKey === 'non-gcd') {
+      if (column.isPreFight) {
+        return this.isPreFightNonGcdDropColumn(column) && this.canDropPrebuildNonGcd(column.tick);
+      }
+
+      if (!column.isMain) {
+        return false;
+      }
+
+      return this.canDropNonGcd(column.tick);
+    }
+
+    return false;
+  }
+
+  protected timelineCellDropBlocked(laneKey: PlannerLaneViewModel['key'], column: PlannerTimelineColumn): boolean {
+    if (!column.isMain) {
+      if (laneKey === 'ability') {
+        return column.isPreFight &&
+          Boolean(this.draggedAbilityPayload) &&
+          !this.isPrebuildDropColumn(column) &&
+          !this.isStallSlotColumn(column);
+      }
+
+      return laneKey === 'non-gcd' &&
+        column.isPreFight &&
+        (Boolean(this.draggedNonGcdPayload) || Boolean(this.draggedAbilityPayload)) &&
+        !this.isPreFightNonGcdDropColumn(column);
+    }
+
+    return (laneKey === 'ability' && Boolean(this.draggedAbilityPayload) && !this.canDropAbility(column.tick)) ||
+      (laneKey === 'non-gcd' && Boolean(this.draggedNonGcdPayload) && !this.canDropNonGcd(column.tick));
+  }
+
   protected canDropNonGcd(tickIndex: number): boolean {
     const draggedAbility = this.draggedAbilityPayload;
     if (draggedAbility) {
@@ -601,6 +927,16 @@ export class RotationPlannerPageComponent {
     }
 
     return Boolean(this.draggedNonGcdPayload) && this.plannerStore.canPlaceNonGcdActionAtTick(tickIndex);
+  }
+
+  protected canDropPrebuildNonGcd(tickIndex: number): boolean {
+    const draggedAbility = this.draggedAbilityPayload;
+    if (draggedAbility) {
+      const definition = this.abilityCatalog()[draggedAbility.abilityId];
+      return Boolean(definition && canPlaceAbilityOnPlannerLane(definition, 'non-gcd'));
+    }
+
+    return Boolean(this.draggedNonGcdPayload) && this.plannerStore.canPlacePrebuildNonGcdActionAtTick(tickIndex);
   }
 
   private canPlaceAbilityOnNonGcd(definition: AbilityDefinition, tickIndex: number): boolean {
@@ -673,8 +1009,11 @@ export class RotationPlannerPageComponent {
     return this.hoveredAbilityDropTick() === tickIndex && Boolean(this.previewAbilityPlacement());
   }
 
-  protected nonGcdActionsAtTick(tickIndex: number): RotationAction[] {
-    return getNonGcdActionsAtTick(this.nonGcdActions(), tickIndex);
+  protected nonGcdActionsAtTick(tickIndex: number, isPreFight = false): RotationAction[] {
+    return getNonGcdActionsAtTick(
+      isPreFight ? this.prebuildNonGcdActions() : this.nonGcdActions(),
+      tickIndex,
+    );
   }
 
   protected buffBarsStartingAtTick(tickIndex: number): PlannerBuffLaneBar[] {
@@ -719,7 +1058,140 @@ export class RotationPlannerPageComponent {
   }
 
   protected selectedTickOverlayLeft(): string {
-    return buildSelectedTickOverlayLeft(this.selectedTick());
+    const selectedColumnIndex = this.timelineColumns().findIndex(
+      (column) => !column.isSeparator && column.tick === this.selectedTick(),
+    );
+
+    return `calc(${this.timelineColumnLeft(Math.max(0, selectedColumnIndex))} - ${TICK_SELECTION_OVERHANG_REM}rem)`;
+  }
+
+  private clampInspectableTick(value: number): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+
+    return Math.max(this.inspectMinTick(), Math.min(Math.trunc(value), this.inspectMaxTick()));
+  }
+
+  private timelineColumnLeft(columnIndex: number): string {
+    const columnsBeforeTarget = this.timelineColumns().slice(0, columnIndex);
+    const separatorColumnCount = columnsBeforeTarget.filter((column) => column.isSeparator).length;
+    const fullColumnCount = columnsBeforeTarget.length - separatorColumnCount;
+
+    return `${fullColumnCount} * (${TIMELINE_TICK_COLUMN_WIDTH_REM}rem + ${TIMELINE_COLUMN_GAP_REM}rem) + ` +
+      `${separatorColumnCount} * (${TIMELINE_SEPARATOR_COLUMN_WIDTH_REM}rem + ${TIMELINE_COLUMN_GAP_REM}rem)`;
+  }
+
+  private hasSerenGodbowSpecialUsage(): boolean {
+    const catalog = this.gameDataStore.snapshot().catalog;
+    if (!catalog) {
+      return false;
+    }
+
+    const baseGearState = this.gearBuilderStore.snapshot();
+    const mainAbilityActions = [
+      ...this.abilityActions(),
+      ...this.nonGcdActions().filter((action) => action.actionType === 'ability-use'),
+    ];
+
+    for (const action of mainAbilityActions) {
+      const abilityId = this.readActionAbilityId(action);
+      if (!abilityId) {
+        continue;
+      }
+
+      const projectedGearState = projectGearStateAtTick(
+        baseGearState,
+        catalog.items,
+        this.allNonGcdActions(),
+        action.tick,
+      );
+
+      if (this.abilityIdUsesSerenGodbowSpecial(abilityId, catalog, projectedGearState)) {
+        return true;
+      }
+    }
+
+    for (const entry of this.prebuildTimelineEntries()) {
+      const projectedGearState = projectGearStateAtTick(
+        baseGearState,
+        catalog.items,
+        this.allNonGcdActions(),
+        entry.startTick,
+      );
+
+      if (this.abilityIdUsesSerenGodbowSpecial(entry.action.abilityId, catalog, projectedGearState)) {
+        return true;
+      }
+    }
+
+    const stalledAbilityId = this.preFight().stalledAbility?.abilityId;
+    if (!stalledAbilityId) {
+      return false;
+    }
+
+    const projectedGearState = projectGearStateAtTick(
+      baseGearState,
+      catalog.items,
+      this.allNonGcdActions(),
+      PREFIGHT_VISUAL_STALL_START_TICK,
+    );
+    return this.abilityIdUsesSerenGodbowSpecial(stalledAbilityId, catalog, projectedGearState);
+  }
+
+  private abilityIdUsesSerenGodbowSpecial(
+    abilityId: string,
+    catalog: GameDataCatalog,
+    gearState: GearBuilderState,
+  ): boolean {
+    const ability = catalog.abilities[abilityId];
+    if (abilityId === SEREN_GODBOW_ABILITY_ID || ability?.effectRefs?.includes(SEREN_GODBOW_EFFECT_REF)) {
+      return true;
+    }
+
+    if (abilityId === ESSENCE_OF_FINALITY_ABILITY_ID) {
+      return this.resolveStoredEofWeaponId(catalog, gearState) === SEREN_GODBOW_WEAPON_ID;
+    }
+
+    if (abilityId !== WEAPON_SPECIAL_ATTACK_ABILITY_ID) {
+      return false;
+    }
+
+    const weaponInstance = gearState.equipment.weapon;
+    const weapon = weaponInstance ? catalog.items[weaponInstance.definitionId] : null;
+    return Boolean(
+      weapon?.id === SEREN_GODBOW_WEAPON_ID ||
+      weapon?.specialAbilityId === SEREN_GODBOW_ABILITY_ID ||
+      weapon?.effectRefs?.includes(`weapon-special:${SEREN_GODBOW_WEAPON_ID}`),
+    );
+  }
+
+  private resolveStoredEofWeaponId(
+    catalog: GameDataCatalog,
+    gearState: GearBuilderState,
+  ): string | null {
+    const amuletInstance = gearState.equipment.amulet;
+    if (!amuletInstance || amuletInstance.definitionId !== ESSENCE_OF_FINALITY_ABILITY_ID) {
+      return null;
+    }
+
+    const amuletDefinition = catalog.items[amuletInstance.definitionId];
+    const explicitValue = amuletInstance.configValues?.[CONFIG_OPTION_IDS.storedSpecial];
+    if (typeof explicitValue === 'string' && explicitValue.length > 0) {
+      return explicitValue === 'none' ? null : explicitValue;
+    }
+
+    const defaultValue = amuletDefinition?.configOptions?.find(
+      (option) => option.id === CONFIG_OPTION_IDS.storedSpecial,
+    )?.defaultValue;
+    return typeof defaultValue === 'string' && defaultValue.length > 0 && defaultValue !== 'none'
+      ? defaultValue
+      : null;
+  }
+
+  private readActionAbilityId(action: RotationAction): string | null {
+    const abilityId = action.payload['abilityId'];
+    return typeof abilityId === 'string' && abilityId.length > 0 ? abilityId : null;
   }
 
   protected abilityDefinitionForAction(action: RotationAction | null): AbilityDefinition | null {
@@ -876,12 +1348,170 @@ export class RotationPlannerPageComponent {
     return this.actionValidationSummaryByAction()[action.id] ?? null;
   }
 
+  protected actionValidationSummaryById(actionId: string | null | undefined): PlannerActionValidationSummary | null {
+    if (!actionId) {
+      return null;
+    }
+
+    const summaries = [
+      this.actionValidationSummaryByAction()[actionId],
+      this.actionValidationSummaryByAction()[`${actionId}:release`],
+    ].filter((summary): summary is PlannerActionValidationSummary => Boolean(summary));
+
+    if (!summaries.length) {
+      return null;
+    }
+
+    return {
+      issues: summaries.flatMap((summary) => summary.issues),
+      highestSeverity: summaries.some((summary) => summary.highestSeverity === 'error')
+        ? 'error'
+        : summaries.some((summary) => summary.highestSeverity === 'warning')
+          ? 'warning'
+          : 'info',
+    };
+  }
+
   protected nonGcdIconPath(action: RotationAction): string | null {
     if (action.actionType === 'ability-use') {
       return this.abilityDefinitionForAction(action)?.iconPath ?? null;
     }
 
     return buildNonGcdIconPath(action);
+  }
+
+  protected prebuildEmptySlotTitle(): string {
+    return `Drop an ability to add prebuild setup at T${this.prebuildEmptySlotTick()}.`;
+  }
+
+  protected prebuildEntryTitle(entry: PrebuildTimelineEntry): string {
+    if (!entry.ability) {
+      return 'Missing prebuild ability.';
+    }
+
+    const lines = [
+      entry.ability.name,
+      `${entry.tickLabel} prebuild`,
+      'Drag to reorder or use remove to clear.',
+    ];
+    const summary = this.actionValidationSummaryById(entry.action.id);
+
+    if (summary?.issues.length) {
+      lines.push('', ...summary.issues.map((issue) => `Issue: ${issue.message}`));
+    }
+
+    return lines.join('\n');
+  }
+
+  protected stalledAbilityTitle(ability: AbilityDefinition): string {
+    const lines = [
+      ability.name,
+      `Stalled ${this.stalledAbilityCastTickLabel()}`,
+      this.stalledAbilityReleaseLabel(),
+      'Use remove to clear.',
+    ];
+    const summary = this.actionValidationSummaryById(this.preFight().stalledAbility?.id);
+
+    if (summary?.issues.length) {
+      lines.push('', ...summary.issues.map((issue) => `Issue: ${issue.message}`));
+    }
+
+    return lines.join('\n');
+  }
+
+  protected allowPrebuildDrop(event: DragEvent): void {
+    if (this.draggedAbilityPayload || this.draggedPrebuildActionId) {
+      event.preventDefault();
+    }
+  }
+
+  protected dropAbilityInPrebuildSlot(slotIndex: number, event: DragEvent, replaceExisting = false): void {
+    event.preventDefault();
+
+    if (this.draggedPrebuildActionId) {
+      this.plannerStore.reorderPrebuildAbility(this.draggedPrebuildActionId, slotIndex);
+      this.onPrebuildDragEnd();
+      this.clearPlannerWarning();
+      return;
+    }
+
+    const payload = this.draggedAbilityPayload;
+    if (!payload) {
+      return;
+    }
+
+    const definition = this.abilityCatalog()[payload.abilityId];
+    if (!definition) {
+      return;
+    }
+
+    if (definition.id === 'cast-spell') {
+      this.showPlannerWarning('Cast Spell needs spell selection on the main timeline for now.');
+      this.onAbilityDragEnd();
+      return;
+    }
+
+    if (replaceExisting) {
+      this.plannerStore.placePrebuildAbility(definition, slotIndex);
+    } else {
+      this.plannerStore.insertPrebuildAbility(definition, slotIndex);
+    }
+
+    this.clearPlannerWarning();
+    this.onAbilityDragEnd();
+  }
+
+  protected removePrebuildAbility(actionId: string, event: Event): void {
+    event.stopPropagation();
+    this.plannerStore.removePrebuildAbility(actionId);
+  }
+
+  protected onPrebuildActionDragStart(action: PreFightAbilityAction): void {
+    this.draggedPrebuildActionId = action.id;
+  }
+
+  protected onPrebuildDragEnd(): void {
+    this.draggedPrebuildActionId = null;
+  }
+
+  protected allowStalledAbilityDrop(event: DragEvent): void {
+    if (this.draggedAbilityPayload) {
+      event.preventDefault();
+    }
+  }
+
+  protected dropStalledAbility(event: DragEvent): void {
+    event.preventDefault();
+
+    const payload = this.draggedAbilityPayload;
+    if (!payload) {
+      return;
+    }
+
+    const definition = this.abilityCatalog()[payload.abilityId];
+    if (!definition) {
+      return;
+    }
+
+    if (definition.id === 'cast-spell') {
+      this.showPlannerWarning('Cast Spell cannot be ability stalled yet.');
+      this.onAbilityDragEnd();
+      return;
+    }
+
+    if (!this.plannerStore.setStalledAbility(definition)) {
+      this.showPlannerWarning(`${definition.name} is channelled and cannot be ability stalled.`);
+      this.onAbilityDragEnd();
+      return;
+    }
+
+    this.clearPlannerWarning();
+    this.onAbilityDragEnd();
+  }
+
+  protected removeStalledAbility(event: Event): void {
+    event.stopPropagation();
+    this.plannerStore.removeStalledAbility();
   }
 
   protected onCatalogAbilityDragStart(entry: PlannerAbilityPaletteEntry): void {
@@ -956,6 +1586,81 @@ export class RotationPlannerPageComponent {
   protected allowNonGcdDrop(event: DragEvent, tickIndex: number): void {
     if (this.canDropNonGcd(tickIndex)) {
       event.preventDefault();
+    }
+  }
+
+  protected onTimelineCellDragOver(
+    laneKey: PlannerLaneViewModel['key'],
+    column: PlannerTimelineColumn,
+    event: DragEvent,
+  ): void {
+    if (laneKey === 'ability' && column.isPreFight) {
+      if (this.isPrebuildDropColumn(column)) {
+        this.allowPrebuildDrop(event);
+        return;
+      }
+
+      if (this.isStallSlotColumn(column)) {
+        this.allowStalledAbilityDrop(event);
+      }
+
+      return;
+    }
+
+    if (laneKey === 'non-gcd' && column.isPreFight) {
+      if (this.isPreFightNonGcdDropColumn(column)) {
+        this.allowPrebuildNonGcdDrop(event, column.tick);
+      }
+
+      return;
+    }
+
+    if (!column.isMain) {
+      return;
+    }
+
+    if (laneKey === 'ability') {
+      this.allowAbilityDrop(event, column.tick);
+    } else if (laneKey === 'non-gcd') {
+      this.allowNonGcdDrop(event, column.tick);
+    }
+  }
+
+  protected onTimelineCellDrop(
+    laneKey: PlannerLaneViewModel['key'],
+    column: PlannerTimelineColumn,
+    event: DragEvent,
+  ): void {
+    if (laneKey === 'ability' && column.isPreFight) {
+      if (this.isPrebuildDropColumn(column)) {
+        const entry = this.prebuildEntryStartingAtTick(column.tick);
+        this.dropAbilityInPrebuildSlot(entry?.index ?? 0, event, Boolean(entry));
+        return;
+      }
+
+      if (this.isStallSlotColumn(column)) {
+        this.dropStalledAbility(event);
+      }
+
+      return;
+    }
+
+    if (laneKey === 'non-gcd' && column.isPreFight) {
+      if (this.isPreFightNonGcdDropColumn(column)) {
+        this.dropPrebuildNonGcdOnTick(column.tick, event);
+      }
+
+      return;
+    }
+
+    if (!column.isMain) {
+      return;
+    }
+
+    if (laneKey === 'ability') {
+      this.dropAbilityOnTick(column.tick, event);
+    } else if (laneKey === 'non-gcd') {
+      this.dropNonGcdOnTick(column.tick, event);
     }
   }
 
@@ -1052,6 +1757,76 @@ export class RotationPlannerPageComponent {
     }
 
     const actionId = this.plannerStore.placeNonGcdAction(template, tickIndex, payload);
+    if (!actionId) {
+      return;
+    }
+
+    if (template.id === 'gear-swap' && payload.sourceType === 'catalog') {
+      this.openGearSwapConfig(actionId, true);
+    } else if (template.id === 'adrenaline-potion' && payload.sourceType === 'catalog') {
+      this.openAdrenalinePotionConfig(actionId, true);
+    } else if (template.id === 'spell-swap' && payload.sourceType === 'catalog') {
+      this.openSpellSwapConfig(actionId, true);
+    } else {
+      this.clearPlannerWarning();
+    }
+
+    this.onNonGcdDragEnd();
+  }
+
+  protected allowPrebuildNonGcdDrop(event: DragEvent, tickIndex: number): void {
+    if (this.canDropPrebuildNonGcd(tickIndex)) {
+      event.preventDefault();
+    }
+  }
+
+  protected dropPrebuildNonGcdOnTick(tickIndex: number, event: DragEvent): void {
+    event.preventDefault();
+
+    const draggedAbility = this.draggedAbilityPayload;
+    if (draggedAbility) {
+      const definition = this.abilityCatalog()[draggedAbility.abilityId];
+      if (!definition || !canPlaceAbilityOnPlannerLane(definition, 'non-gcd')) {
+        return;
+      }
+
+      const actionId = this.plannerStore.placePrebuildUtilityAbilityNonGcd(definition, tickIndex, {
+        sourceType: draggedAbility.actionId ? 'timeline' : 'catalog',
+        templateId: 'ability-use',
+        actionId: draggedAbility.actionId,
+        abilityId: definition.id,
+      });
+
+      if (actionId) {
+        this.clearPlannerWarning();
+      }
+      this.onAbilityDragEnd();
+      return;
+    }
+
+    const payload = this.draggedNonGcdPayload;
+    if (!payload || !this.canDropPrebuildNonGcd(tickIndex)) {
+      return;
+    }
+
+    if (payload.templateId === 'ability-use' && payload.abilityId) {
+      const definition = this.abilityCatalog()[payload.abilityId];
+      if (!definition) {
+        return;
+      }
+
+      this.plannerStore.placePrebuildUtilityAbilityNonGcd(definition, tickIndex, payload);
+      this.clearPlannerWarning();
+      this.onNonGcdDragEnd();
+      return;
+    }
+
+    const template = this.nonGcdPaletteEntries.find((entry) => entry.id === payload.templateId);
+    if (!template) {
+      return;
+    }
+
+    const actionId = this.plannerStore.placePrebuildNonGcdAction(template, tickIndex, payload);
     if (!actionId) {
       return;
     }
@@ -1341,7 +2116,7 @@ export class RotationPlannerPageComponent {
   }
 
   private openGearSwapConfig(actionId: string, removesOnCancel: boolean): void {
-    const action = this.nonGcdActions().find((entry) => entry.id === actionId) ?? null;
+    const action = this.allNonGcdActions().find((entry) => entry.id === actionId) ?? null;
     const options = this.gearSwapOptions();
     const currentInstanceId = typeof action?.payload['instanceId'] === 'string' ? action.payload['instanceId'] : null;
     const defaultInstanceId = currentInstanceId ?? options[0]?.instanceId ?? null;
@@ -1363,7 +2138,7 @@ export class RotationPlannerPageComponent {
   }
 
   private openAdrenalinePotionConfig(actionId: string, removesOnCancel: boolean): void {
-    const action = this.nonGcdActions().find((entry) => entry.id === actionId) ?? null;
+    const action = this.allNonGcdActions().find((entry) => entry.id === actionId) ?? null;
     const currentVariantId = typeof action?.payload['variantId'] === 'string'
       ? action.payload['variantId'] as AdrenalinePotionVariantId
       : null;
@@ -1376,7 +2151,7 @@ export class RotationPlannerPageComponent {
   }
 
   private openSpellSwapConfig(actionId: string, removesOnCancel: boolean): void {
-    const action = this.nonGcdActions().find((entry) => entry.id === actionId) ?? null;
+    const action = this.allNonGcdActions().find((entry) => entry.id === actionId) ?? null;
     const options = buildPlannerSpellSwapOptions(
       this.gameDataStore.snapshot().catalog?.spells ?? {},
       this.playerStats().magicLevel ?? 0,
@@ -1505,6 +2280,18 @@ export class RotationPlannerPageComponent {
     dataTransfer.setDragImage(preview, 20, 20);
     setTimeout(() => preview.remove(), 0);
   }
+}
+
+function preFightSectionForTick(tick: number): PreFightTimelineSection {
+  if (tick < PREFIGHT_VISUAL_STALL_START_TICK) {
+    return 'prebuild';
+  }
+
+  if (tick < 0) {
+    return 'stall';
+  }
+
+  return 'gap';
 }
 
 function buildPlannerSpellSwapOptions(

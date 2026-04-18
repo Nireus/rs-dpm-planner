@@ -8,6 +8,7 @@ import {
   createScenarioConfig,
 } from '../../../simulation-engine/test/scenario-test-helpers';
 import {
+  buildPlannerValidationBannerEntries,
   buildBloodlustSpendMarkersByAction,
   buildInstabilityProcMarkersByAction,
   describeInvalidAbilityPlacement,
@@ -32,6 +33,61 @@ const MELEE_WEAPON: ItemDefinition = {
 describe('rotation planner page helpers', () => {
   it('uses the Perfect Equilibrium status artwork for proc markers', () => {
     expect(PERFECT_EQUILIBRIUM_ICON_PATH).toBe('/icons/wiki/perfect-equilibrium-self-status.png');
+  });
+
+  it('labels pre-fight validation warnings by visible tiles instead of hidden gap ticks', () => {
+    const entries = buildPlannerValidationBannerEntries({
+      issues: [
+        {
+          code: 'ability.unavailable',
+          severity: 'error',
+          tick: -21,
+          relatedActionId: 'prebuild-piercing',
+          message: 'Piercing Shot requires a ranged weapon.',
+        },
+        {
+          code: 'pre_fight.stall_channelled_ability',
+          severity: 'error',
+          tick: -12,
+          relatedActionId: 'stall-galeshot',
+          message: 'Galeshot cannot be stalled.',
+        },
+      ],
+      abilityActions: [],
+      nonGcdActions: [],
+      abilityCatalog: {
+        'piercing-shot': createAbilityDefinition({
+          id: 'piercing-shot',
+          name: 'Piercing Shot',
+          style: 'ranged',
+          subtype: 'basic',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'piercing-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+        galeshot: createAbilityDefinition({
+          id: 'galeshot',
+          name: 'Galeshot',
+          style: 'ranged',
+          subtype: 'basic',
+          cooldownTicks: 3,
+          adrenalineGain: 9,
+          hitSchedule: [{ id: 'galeshot-hit', tickOffset: 0, damage: { min: 100, max: 100 } }],
+          baseDamage: { min: 100, max: 100 },
+        }),
+      },
+      preFight: {
+        gapTicks: 12,
+        prebuildActions: [{ id: 'prebuild-piercing', abilityId: 'piercing-shot' }],
+        stalledAbility: { id: 'stall-galeshot', abilityId: 'galeshot' },
+      },
+    });
+
+    expect(entries.map((entry) => [entry.tickLabel, entry.actionLabel])).toEqual([
+      ['T-6', 'Prebuild: Piercing Shot'],
+      ['T-3', 'Ability Stall: Galeshot'],
+    ]);
   });
 
   it('centers placed ability markers on the tick tile axis', () => {
@@ -65,7 +121,7 @@ describe('rotation planner page helpers', () => {
       channelDurationTicks: 9,
       hitSchedule: Array.from({ length: 8 }, (_, index) => ({
         id: `rapid-fire-hit-${index + 1}`,
-        tickOffset: index + 1,
+        tickOffset: index,
         damage: { min: 75, max: 85 },
       })),
       baseDamage: { min: 600, max: 680 },
@@ -91,7 +147,7 @@ describe('rotation planner page helpers', () => {
             {
               abilityId: 'perfect-equilibrium',
               hitId: 'rapid-fire-action:perfect-equilibrium:rapid-fire-hit-8',
-              tick: 45,
+              tick: 44,
               baseDamage: { min: 0, avg: 0, max: 0 },
               additiveModifiers: [],
               multiplicativeModifiers: [],
@@ -110,7 +166,7 @@ describe('rotation planner page helpers', () => {
     expect(markersByAction).toEqual({
       'rapid-fire-action': [
         {
-          tickOffset: 8,
+          tickOffset: 7,
           indexAtTick: 0,
         },
       ],
@@ -121,7 +177,7 @@ describe('rotation planner page helpers', () => {
         markersByAction['rapid-fire-action'][0],
         rapidFire,
       ),
-    ).toBe('calc(8 * (2.18rem + 0.42rem) + 0.73rem + (0 * 0.52rem))');
+    ).toBe('calc(7 * (2.18rem + 0.42rem) + 0.73rem + (0 * 0.52rem))');
   });
 
   it('builds a Bloodlust spend marker when a spender consumes 4 stacks', () => {

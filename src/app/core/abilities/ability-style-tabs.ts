@@ -21,14 +21,19 @@ export interface GroupedAbilitySubtype<TAbility extends { subtype: AbilitySubtyp
 
 const ABILITY_SUBTYPE_ORDER: AbilitySubtype[] = ['basic', 'enhanced', 'ultimate', 'special', 'utility', 'other'];
 
+const ABILITY_STYLE_ICON_PATHS: Partial<Record<CombatStyle, string>> = {
+  ranged: '/icons/wiki/ranged-icon.png',
+  melee: '/icons/wiki/attack-icon.png',
+  magic: '/icons/wiki/magic-icon.png',
+  necromancy: '/icons/wiki/necromancy-icon.png',
+  constitution: '/icons/wiki/constitution-icon.png',
+};
+
 export const ABILITY_STYLE_TABS: AbilityStyleTabDefinition[] = COMBAT_STYLE_ORDER.map((style) => ({
   id: style,
   label: combatStyleLabel(style),
   themeClass: combatStyleThemeClass(style),
-  iconPath:
-    style === 'constitution'
-      ? '/icons/wiki/constitution-icon.png'
-      : undefined,
+  iconPath: ABILITY_STYLE_ICON_PATHS[style],
   iconTint: style === 'constitution' ? 'white' : 'default',
 }));
 

@@ -15,7 +15,7 @@ describe('resolveChannelTimeline', () => {
           channelDurationTicks: 9,
           hitSchedule: Array.from({ length: 8 }, (_, index) => ({
             id: `rapid-${index + 1}`,
-            tickOffset: index + 1,
+            tickOffset: index,
             damage: { min: 75, max: 85 },
           })),
           baseDamage: { min: 600, max: 680 },
@@ -72,6 +72,65 @@ describe('resolveChannelTimeline', () => {
     expect(result.tickStates[8].activeChannel).toBeUndefined();
   });
 
+  it('ends a channel when a weapon gear swap takes effect', () => {
+    const config = createConfig({
+      abilities: {
+        'rapid-fire': createAbilityDefinition({
+          id: 'rapid-fire',
+          name: 'Rapid Fire',
+          cooldownTicks: 34,
+          isChanneled: true,
+          channelDurationTicks: 9,
+          hitSchedule: Array.from({ length: 8 }, (_, index) => ({
+            id: `rapid-${index + 1}`,
+            tickOffset: index,
+            damage: { min: 75, max: 85 },
+          })),
+          baseDamage: { min: 600, max: 680 },
+        }),
+      },
+      abilityActions: [createAbilityAction('rapid-1', 3, 'rapid-fire')],
+      nonGcdActions: [
+        {
+          id: 'swap-weapon',
+          tick: 5,
+          lane: 'non-gcd',
+          actionType: 'gear-swap',
+          payload: {
+            instanceId: 'swap-bow-instance',
+            definitionId: 'swap-bow',
+            slot: 'weapon',
+          },
+        },
+      ],
+      items: {
+        'swap-bow': {
+          id: 'swap-bow',
+          name: 'Swap Bow',
+          category: 'weapon',
+          slot: 'weapon',
+          combatStyleTags: ['ranged'],
+        },
+      },
+      inventoryItems: [
+        {
+          instanceId: 'swap-bow-instance',
+          definitionId: 'swap-bow',
+        },
+      ],
+      tickCount: 20,
+    });
+
+    const result = resolveChannelTimeline(config);
+
+    expect(result.tickStates[5].activeChannel).toEqual({
+      sourceActionId: 'rapid-1',
+      abilityId: 'rapid-fire',
+      remainingTicks: 1,
+    });
+    expect(result.tickStates[6].activeChannel).toBeUndefined();
+  });
+
   it('skips blocked channel actions', () => {
     const config = createConfig({
       abilities: {
@@ -98,6 +157,9 @@ describe('resolveChannelTimeline', () => {
 function createConfig(input: {
   abilities: Record<string, AbilityDefinition>;
   abilityActions: SimulationConfig['rotationPlan']['abilityActions'];
+  nonGcdActions?: SimulationConfig['rotationPlan']['nonGcdActions'];
+  items?: SimulationConfig['gameData']['items'];
+  inventoryItems?: SimulationConfig['inventory']['items'];
   tickCount: number;
 }): SimulationConfig {
   return {
@@ -109,17 +171,17 @@ function createConfig(input: {
       equipment: {},
     },
     inventory: {
-      items: [],
+      items: input.inventoryItems ?? [],
     },
     persistentBuffConfig: {},
     rotationPlan: {
       startingAdrenaline: 100,
       tickCount: input.tickCount,
-      nonGcdActions: [],
+      nonGcdActions: input.nonGcdActions ?? [],
       abilityActions: input.abilityActions,
     },
     gameData: {
-      items: {},
+      items: input.items ?? {},
       ammo: {},
       abilities: input.abilities,
       buffs: {},

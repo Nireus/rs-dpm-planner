@@ -1,5 +1,5 @@
 import { createPortableConfigDocument, PORTABLE_CONFIG_SCHEMA_VERSION, type PortableConfigDocument } from '../../../simulation-engine/models/portable-config';
-import type { CombatChoices, PlayerStats, RotationAction, SimulationSettings } from '../../../simulation-engine/models';
+import type { CombatChoices, PlayerStats, PreFightPlan, RotationAction, SimulationSettings } from '../../../simulation-engine/models';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
 import type { StartingStackState } from '../../../simulation-engine/models/starting-stacks';
 import { buildBuffSelectionStateFromPersistentConfig, type BuffSelectionState } from '../buffs/persistent-buff-config';
@@ -18,6 +18,7 @@ export interface RotationPlannerWorkspaceState {
   startingStacks: StartingStackState;
   nonGcdActions: RotationAction[];
   abilityActions: RotationAction[];
+  preFight: PreFightPlan;
 }
 
 export interface SimulationSettingsWorkspaceState extends SimulationSettings {}
@@ -54,6 +55,7 @@ export const DEFAULT_WORKSPACE_DOCUMENT: WorkspaceDocument = {
     persistentBuffConfig: {},
     simulationSettings: {
       criticalHitResolutionMode: 'deterministic-accumulator',
+      serenGodbowTargetSize: '5x5',
     },
     rotationPlan: {
       startingAdrenaline: 100,
@@ -61,6 +63,12 @@ export const DEFAULT_WORKSPACE_DOCUMENT: WorkspaceDocument = {
       startingStacks: {},
       nonGcdActions: [],
       abilityActions: [],
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
     },
   }),
   appState: {

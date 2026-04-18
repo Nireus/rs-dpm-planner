@@ -7,6 +7,10 @@ import {
 } from '../models/starting-stacks';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import {
+  isPreFightSimulationAction,
+  skipsPreFightHits,
+} from '../timeline/pre-fight';
 
 const DEATHSPORE_EFFECT_REF = EFFECT_REF_IDS.deathsporeProgress;
 const FEASTING_SPORES_READY_BUFF_ID = 'feasting-spores-ready';
@@ -45,7 +49,7 @@ export function resolveDeathsporeTimeline(
 
   const hitOccurrences = buildRangedHitOccurrences(config, blockedActionIds, baseBuffTimeline);
   const abilityActions = [...config.rotationPlan.abilityActions]
-    .filter((action) => !blockedActionIds.has(action.id))
+    .filter((action) => !blockedActionIds.has(action.id) && !isPreFightSimulationAction(action))
     .sort((left, right) => left.tick - right.tick);
 
   let feastingSporesStacks = normalizeStartingDeathsporeStacks(config.rotationPlan.startingStacks?.deathsporeStacks);
@@ -180,7 +184,7 @@ function buildRangedHitOccurrences(
   const occurrences: RangedHitOccurrence[] = [];
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockedActionIds.has(action.id)) {
+    if (blockedActionIds.has(action.id) || skipsPreFightHits(action)) {
       continue;
     }
 

@@ -139,6 +139,12 @@ class MockWorkspaceRepositoryService {
     startingStacks: {},
     nonGcdActions: [],
     abilityActions: [],
+    preFight: {
+      gapTicks: 0,
+      prebuildActions: [],
+      prebuildNonGcdActions: [],
+      stalledAbility: null,
+    },
   };
 
   readRotationPlannerState(): RotationPlannerWorkspaceState {
@@ -205,6 +211,12 @@ describe('RotationPlannerStore', () => {
           },
         },
       ],
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
     });
 
     store.updateGcdCount(10);
@@ -230,6 +242,12 @@ describe('RotationPlannerStore', () => {
       },
       nonGcdActions: [],
       abilityActions: [],
+      preFight: {
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      },
     });
 
     expect(store.startingStacks()).toEqual({
@@ -266,6 +284,28 @@ describe('RotationPlannerStore', () => {
           },
         },
       ],
+      preFight: {
+        gapTicks: 12,
+        prebuildActions: [
+          {
+            id: 'prebuild-ranged-1',
+            abilityId: 'ranged',
+          },
+        ],
+        prebuildNonGcdActions: [
+          {
+            id: 'prebuild-gear-swap-1',
+            tick: -6,
+            lane: 'non-gcd',
+            actionType: 'gear-swap',
+            payload: {},
+          },
+        ],
+        stalledAbility: {
+          id: 'stall-ranged-1',
+          abilityId: 'ranged',
+        },
+      },
     });
 
     store.clearPlannedActions();
@@ -278,6 +318,71 @@ describe('RotationPlannerStore', () => {
     });
     expect(store.nonGcdActions()).toEqual([]);
     expect(store.abilityActions()).toEqual([]);
+    expect(store.preFight()).toEqual({
+      gapTicks: 12,
+      prebuildActions: [],
+      prebuildNonGcdActions: [],
+      stalledAbility: null,
+    });
+  });
+
+  it('places non-GCD actions in prebuild without moving the main timeline', () => {
+    const actionId = store.placePrebuildNonGcdAction({
+      id: 'gear-swap',
+      label: 'Gear Swap',
+      shortLabel: 'Gear',
+      iconPath: 'icons/actions/gear-swap.svg',
+      actionType: 'gear-swap',
+    }, -6);
+
+    expect(actionId).toBeTruthy();
+    expect(store.nonGcdActions()).toEqual([]);
+    expect(store.preFight().prebuildNonGcdActions).toEqual([
+      expect.objectContaining({
+        id: actionId,
+        tick: -6,
+        lane: 'non-gcd',
+        actionType: 'gear-swap',
+      }),
+    ]);
+    expect(store.rotationPlan().preFight?.prebuildNonGcdActions?.[0]?.tick).toBe(-6);
+  });
+
+  it('places non-GCD actions in the stall section', () => {
+    const actionId = store.placePrebuildNonGcdAction({
+      id: 'vulnerability-bomb',
+      label: 'Vulnerability Bomb',
+      shortLabel: 'Vuln',
+      iconPath: 'icons/actions/vulnerability-bomb.svg',
+      actionType: 'vulnerability-bomb',
+    }, -1);
+
+    expect(actionId).toBeTruthy();
+    expect(store.nonGcdActions()).toEqual([]);
+    expect(store.preFight().prebuildNonGcdActions).toEqual([
+      expect.objectContaining({
+        id: actionId,
+        tick: -1,
+        lane: 'non-gcd',
+        actionType: 'vulnerability-bomb',
+      }),
+    ]);
+  });
+
+  it('inserts prebuild abilities without replacing the existing setup action', () => {
+    const piercingShot: AbilityDefinition = {
+      ...RANGED_ABILITY,
+      id: 'piercing-shot',
+      name: 'Piercing Shot',
+    };
+
+    store.placePrebuildAbility(RANGED_ABILITY, 0);
+    store.insertPrebuildAbility(piercingShot, 0);
+
+    expect(store.preFight().prebuildActions.map((action) => action.abilityId)).toEqual([
+      'piercing-shot',
+      'ranged',
+    ]);
   });
 
   it('raises max starting adrenaline to 120 with full Vestments of Havoc and a melee weapon', () => {

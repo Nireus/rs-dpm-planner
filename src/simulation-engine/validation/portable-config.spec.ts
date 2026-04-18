@@ -36,6 +36,13 @@ describe('parsePortableConfigDocument', () => {
       expect(result.data.combatChoices.magic.spellbookId).toBe('standard');
       expect(result.data.combatChoices.magic.activeSpellId).toBe('fire-surge');
       expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('deterministic-accumulator');
+      expect(result.data.simulationSettings.serenGodbowTargetSize).toBe('5x5');
+      expect(result.data.rotationPlan.preFight).toEqual({
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      });
       expect(result.data.playerStats.attackLevel).toBe(99);
       expect(result.data.playerStats.strengthLevel).toBe(99);
       expect(result.data.playerStats.defenceLevel).toBe(99);
@@ -138,6 +145,59 @@ describe('parsePortableConfigDocument', () => {
       expect(result.data.combatChoices.magic.spellbookId).toBe('standard');
       expect(result.data.combatChoices.magic.activeSpellId).toBe('earth-wave');
       expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('deterministic-accumulator');
+      expect(result.data.simulationSettings.serenGodbowTargetSize).toBe('5x5');
+      expect(result.data.rotationPlan.preFight).toEqual({
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      });
+    }
+  });
+
+  it('migrates schemaVersion 2 documents with default pre-fight settings', () => {
+    const result = parsePortableConfigDocument({
+      schemaVersion: 2,
+      playerStats: {
+        rangedLevel: 99,
+      },
+      combatChoices: {
+        magic: {
+          spellbookId: 'standard',
+          activeSpellId: 'fire-surge',
+        },
+      },
+      gearSetup: {
+        equipment: {},
+      },
+      inventory: {
+        items: [],
+      },
+      persistentBuffConfig: {},
+      rotationPlan: {
+        startingAdrenaline: 0,
+        tickCount: 30,
+        nonGcdActions: [],
+        abilityActions: [],
+      },
+      simulationSettings: {
+        criticalHitResolutionMode: 'expected-value',
+        serenGodbowTargetSize: '5x5',
+      },
+    });
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.schemaVersion).toBe(PORTABLE_CONFIG_SCHEMA_VERSION);
+      expect(result.data.rotationPlan.preFight).toEqual({
+        gapTicks: 0,
+        prebuildActions: [],
+        prebuildNonGcdActions: [],
+        stalledAbility: null,
+      });
+      expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('expected-value');
+      expect(result.data.simulationSettings.serenGodbowTargetSize).toBe('5x5');
     }
   });
 
@@ -161,6 +221,7 @@ describe('parsePortableConfigDocument', () => {
       },
       simulationSettings: {
         criticalHitResolutionMode: 'expected-value',
+        serenGodbowTargetSize: '3x3',
       },
     });
 
@@ -170,6 +231,7 @@ describe('parsePortableConfigDocument', () => {
 
     if (result.success) {
       expect(result.data.simulationSettings.criticalHitResolutionMode).toBe('expected-value');
+      expect(result.data.simulationSettings.serenGodbowTargetSize).toBe('3x3');
     }
   });
 });

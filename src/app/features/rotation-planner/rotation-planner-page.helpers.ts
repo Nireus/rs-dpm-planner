@@ -2,7 +2,8 @@ import type { GameDataCatalog } from '../../../game-data/loaders';
 import type { AbilityDefinition, EquipmentSlot } from '../../../game-data/types';
 import { CONFIG_OPTION_IDS } from '../../../game-data/conventions/mechanics';
 import { displayAbilitySubtypeLabel, styleTabThemeClass } from '../../core/abilities/ability-style-tabs';
-import type { RotationAction, SimulationResult, ValidationIssue } from '../../../simulation-engine/models';
+import type { PreFightPlan, RotationAction, SimulationResult, ValidationIssue } from '../../../simulation-engine/models';
+import { GCD_TICKS, getPreFightAbilityTimelineSpan } from '../../../simulation-engine/timeline';
 import type { GearBuilderState } from '../../core/gear/gear-state';
 import { formatEquipmentSlot } from '../../core/gear/gear-builder.utils';
 import type { PlannerBuffLaneBar } from './rotation-planner-buff-lane';
@@ -549,8 +550,11 @@ export function buildPlannerValidationBannerEntries(input: {
   abilityActions: RotationAction[];
   nonGcdActions: RotationAction[];
   abilityCatalog: Record<string, AbilityDefinition>;
+  preFight?: PreFightPlan;
 }): PlannerValidationBannerEntry[] {
   const actionsById = new Map<string, RotationAction>();
+  const preFightActionLabels = new Map<string, string>();
+  const preFightTickLabels = buildPreFightValidationTickLabels(input.preFight, input.abilityCatalog);
 
   for (const action of input.nonGcdActions) {
     actionsById.set(action.id, action);
@@ -560,18 +564,83 @@ export function buildPlannerValidationBannerEntries(input: {
     actionsById.set(action.id, action);
   }
 
+  for (const action of input.preFight?.prebuildActions ?? []) {
+    preFightActionLabels.set(
+      action.id,
+      `Prebuild: ${input.abilityCatalog[action.abilityId]?.name ?? action.abilityId}`,
+    );
+  }
+
+  for (const action of input.preFight?.prebuildNonGcdActions ?? []) {
+    preFightActionLabels.set(action.id, `Pre-fight: ${resolvePlannerActionLabel(action, input.abilityCatalog)}`);
+  }
+
+  if (input.preFight?.stalledAbility) {
+    preFightActionLabels.set(
+      input.preFight.stalledAbility.id,
+      `Ability Stall: ${input.abilityCatalog[input.preFight.stalledAbility.abilityId]?.name ?? input.preFight.stalledAbility.abilityId}`,
+    );
+  }
+
   return input.issues.map((issue, index) => {
     const action = issue.relatedActionId ? actionsById.get(issue.relatedActionId) ?? null : null;
     const tick = typeof issue.tick === 'number' ? issue.tick : action?.tick;
+    const preFightActionLabel = issue.relatedActionId
+      ? resolvePreFightActionLabel(issue.relatedActionId, preFightActionLabels)
+      : null;
+    const preFightTickLabel = issue.relatedActionId
+      ? preFightTickLabels.get(issue.relatedActionId)
+      : null;
 
     return {
       issueKey: `${issue.relatedActionId ?? 'global'}:${issue.code}:${issue.message}:${index}`,
-      tickLabel: typeof tick === 'number' ? `T${tick}` : 'Timeline',
-      actionLabel: action ? resolvePlannerActionLabel(action, input.abilityCatalog) : 'Validation',
+      tickLabel: preFightTickLabel ?? (typeof tick === 'number' ? `T${tick}` : 'Timeline'),
+      actionLabel: action ? resolvePlannerActionLabel(action, input.abilityCatalog) : preFightActionLabel ?? 'Validation',
       message: issue.message,
       severity: issue.severity,
     };
   });
+}
+
+function buildPreFightValidationTickLabels(
+  preFight: PreFightPlan | undefined,
+  abilityCatalog: Record<string, AbilityDefinition>,
+): Map<string, string> {
+  const tickLabels = new Map<string, string>();
+  let cursorTick = -GCD_TICKS;
+
+  for (const action of [...(preFight?.prebuildActions ?? [])].reverse()) {
+    const ability = abilityCatalog[action.abilityId];
+    const span = ability ? getPreFightAbilityTimelineSpan(ability) : GCD_TICKS;
+    const startTick = cursorTick - span;
+
+    tickLabels.set(action.id, `T${startTick}`);
+    cursorTick = startTick;
+  }
+
+  for (const action of preFight?.prebuildNonGcdActions ?? []) {
+    tickLabels.set(action.id, `T${action.tick}`);
+  }
+
+  if (preFight?.stalledAbility) {
+    tickLabels.set(preFight.stalledAbility.id, `T${-GCD_TICKS}`);
+  }
+
+  return tickLabels;
+}
+
+function resolvePreFightActionLabel(
+  actionId: string,
+  preFightActionLabels: Map<string, string>,
+): string | null {
+  const directLabel = preFightActionLabels.get(actionId);
+  if (directLabel) {
+    return directLabel;
+  }
+
+  return actionId.endsWith(':release')
+    ? preFightActionLabels.get(actionId.slice(0, -':release'.length)) ?? null
+    : null;
 }
 
 export function buildNonGcdIconPath(action: RotationAction): string | null {

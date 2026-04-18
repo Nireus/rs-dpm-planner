@@ -3,6 +3,10 @@ import type { RotationAction, SimulationConfig, TimelineGeneratedBuffSource } fr
 import { clampBuffStacks, resolveBuffStackRuleState } from '../buffs/buff-stack-rules';
 import { resolveEffectiveAbilityDefinition } from '../abilities/effective-ability';
 import {
+  skipsPreFightAdrenaline,
+  skipsPreFightHits,
+} from '../timeline/pre-fight';
+import {
   applyAbilityTimelineEffects,
   createEmptyBuffTimeline,
 } from './ability-timeline-effects';
@@ -27,7 +31,7 @@ export function resolveDeterministicMeleeTimeline(
   const timelineGeneratedBuffSources: TimelineGeneratedBuffSource[] = [];
 
   for (const action of [...config.rotationPlan.abilityActions].sort((left, right) => left.tick - right.tick)) {
-    if (blockedActionIds.has(action.id)) {
+    if (blockedActionIds.has(action.id) || skipsPreFightHits(action)) {
       continue;
     }
 
@@ -41,7 +45,7 @@ export function resolveDeterministicMeleeTimeline(
       action,
       ability,
       buffTimeline,
-      adrenalineByTick,
+      adrenalineByTick: skipsPreFightAdrenaline(action) ? undefined : adrenalineByTick,
       timelineGeneratedBuffSources,
     });
   }
@@ -74,7 +78,7 @@ function applyStackEffects(
 ): void {
   const actionsByTick = groupAbilityActionsByTick(
     [...config.rotationPlan.abilityActions]
-      .filter((action) => !blockedActionIds.has(action.id))
+      .filter((action) => !blockedActionIds.has(action.id) && !skipsPreFightHits(action))
       .sort((left, right) => left.tick - right.tick),
   );
   const stackCounts = new Map<EntityId, number>();

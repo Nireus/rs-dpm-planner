@@ -143,6 +143,7 @@ describe('buildSimulationConfigFromAppState', () => {
       },
       simulationSettings: {
         criticalHitResolutionMode: 'expected-value',
+        serenGodbowTargetSize: '4x4',
       },
     });
 
@@ -161,6 +162,7 @@ describe('buildSimulationConfigFromAppState', () => {
     });
     expect(result.modeFlags.strictValidation).toBe(true);
     expect(result.simulationSettings?.criticalHitResolutionMode).toBe('expected-value');
+    expect(result.simulationSettings?.serenGodbowTargetSize).toBe('4x4');
   });
 
   it('projects bakriminel bolts from pernix quiver when a crossbow is equipped', () => {

@@ -8,6 +8,13 @@ import type {
 } from '../models';
 import { collectHighestEquippedPerkRank } from '../perks/equipped-perks';
 import { projectSimulationConfigAtTick } from '../state/projected-gear-state';
+import {
+  WEN_ARROWS_EFFECT_REF,
+  canWenPrecisionAffectAbility,
+  countIcyPrecisionStacksAtTick,
+  hasWenArrowsEquippedAtTick,
+  resolveWenIcyPrecisionDamagePercent,
+} from '../ranged/wen-arrows';
 
 export interface AdditiveDamageComputation {
   finalDamage: DamageSummary;
@@ -17,7 +24,7 @@ export interface AdditiveDamageComputation {
 export function applyAdditiveDamageModifiers(
   config: SimulationConfig,
   action: RotationAction,
-  ability: { id?: string; style?: string; effectRefs?: EffectRef[] },
+  ability: { id?: string; style?: string; subtype?: string; effectRefs?: EffectRef[] },
   baseDamage: DamageSummary,
   abilityDamage: number,
   hitTick: number,
@@ -25,7 +32,9 @@ export function applyAdditiveDamageModifiers(
 ): AdditiveDamageComputation {
   const isRangedHit = ability.style === 'ranged' && !ability.effectRefs?.includes(EFFECT_REF_IDS.damageOverTime);
   const isMagicHit = ability.style === 'magic';
-  if (!isRangedHit && !isMagicHit) {
+  const wenIcyPrecisionModifier = parseWenIcyPrecisionModifier(config, ability, abilityDamage, hitTick, timelineBuffs);
+
+  if (!isRangedHit && !isMagicHit && !wenIcyPrecisionModifier) {
     return {
       finalDamage: baseDamage,
       additiveModifiers: [],
@@ -52,6 +61,10 @@ export function applyAdditiveDamageModifiers(
     modifiers.push(songOfDestructionModifier);
   }
 
+  if (wenIcyPrecisionModifier) {
+    modifiers.push(wenIcyPrecisionModifier);
+  }
+
   if (!modifiers.length) {
     return {
       finalDamage: baseDamage,
@@ -71,6 +84,32 @@ export function applyAdditiveDamageModifiers(
       ...entry,
       value: bonusDamage,
     })),
+  };
+}
+
+function parseWenIcyPrecisionModifier(
+  config: SimulationConfig,
+  ability: { style?: string; subtype?: string },
+  abilityDamage: number,
+  hitTick: number,
+  timelineBuffs: Record<number, EntityId[]>,
+): (DamageModifierContribution & { bonusDamage: number }) | null {
+  if (!canWenPrecisionAffectAbility(ability) || !hasWenArrowsEquippedAtTick(config, hitTick)) {
+    return null;
+  }
+
+  const stacks = countIcyPrecisionStacksAtTick(timelineBuffs, hitTick);
+  const percent = resolveWenIcyPrecisionDamagePercent(stacks);
+  if (percent <= 0) {
+    return null;
+  }
+
+  const bonusDamage = roundDamageValue((abilityDamage * percent) / 100);
+  return {
+    sourceId: WEN_ARROWS_EFFECT_REF,
+    label: `Wen arrows Icy Precision +${percent}% ability damage`,
+    value: 0,
+    bonusDamage,
   };
 }
 

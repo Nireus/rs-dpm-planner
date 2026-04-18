@@ -27,7 +27,10 @@
 
 .inspector-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "actions buffs gear"
+    "damage damage cooldowns";
   gap: 0.75rem;
 }
 
@@ -43,6 +46,31 @@
 
 .inspector-card--wide {
   grid-column: span 2;
+}
+
+.inspector-card--actions {
+  grid-area: actions;
+  order: 1;
+}
+
+.inspector-card--buffs {
+  grid-area: buffs;
+  order: 2;
+}
+
+.inspector-card--gear {
+  grid-area: gear;
+  order: 3;
+}
+
+.inspector-card--damage {
+  grid-area: damage;
+  order: 4;
+}
+
+.inspector-card--cooldowns {
+  grid-area: cooldowns;
+  order: 5;
 }
 
 .inspector-card h3 {
@@ -110,6 +138,11 @@
 @media (max-width: 1100px) {
   .inspector-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "actions buffs"
+      "gear gear"
+      "damage damage"
+      "cooldowns cooldowns";
   }
 
   .inspector-card--wide {
@@ -120,6 +153,12 @@
 @media (max-width: 900px) {
   .inspector-grid {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "actions"
+      "buffs"
+      "gear"
+      "damage"
+      "cooldowns";
   }
 
   .inspector-card--wide {

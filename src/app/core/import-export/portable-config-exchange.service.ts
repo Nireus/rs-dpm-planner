@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import type { PortableConfigValidationError } from '../../../simulation-engine/validation/portable-config';
 import { parsePortableConfigDocument } from '../../../simulation-engine/validation/portable-config';
+import { normalizePreFightPlan } from '../../../simulation-engine/timeline/pre-fight';
 import { BuffConfigurationStoreService } from '../buffs/buff-configuration-store.service';
 import { CombatChoicesStoreService } from '../combat-choices/combat-choices-store.service';
 import { GearBuilderStore } from '../gear/gear-builder.store';
@@ -106,6 +107,7 @@ export class PortableConfigExchangeService {
       startingStacks: workspaceDocument.portableConfig.rotationPlan.startingStacks ?? {},
       nonGcdActions: workspaceDocument.portableConfig.rotationPlan.nonGcdActions,
       abilityActions: workspaceDocument.portableConfig.rotationPlan.abilityActions,
+      preFight: normalizePreFightPlan(workspaceDocument.portableConfig.rotationPlan.preFight),
     });
 
     return parseResult;
