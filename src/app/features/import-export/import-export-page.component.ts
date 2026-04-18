@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { PortableConfigExchangeService } from '../../core/import-export/portable-config-exchange.service';
+import { confirmPlannerStateOverwrite } from '../../shared/import-confirmation';
 
 @Component({
   selector: 'app-import-export-page',
@@ -12,6 +14,7 @@ import { PortableConfigExchangeService } from '../../core/import-export/portable
 })
 export class ImportExportPageComponent {
   private readonly exchangeService = inject(PortableConfigExchangeService);
+  private readonly router = inject(Router);
 
   protected readonly importText = signal('');
   protected readonly exportRevision = signal(0);
@@ -69,21 +72,40 @@ export class ImportExportPageComponent {
     this.importErrors.set(result.errors.map((error) => `${error.path}: ${error.message}`));
   }
 
-  protected importConfig(): void {
-    const result = this.exchangeService.applyPortableConfigText(this.importText());
+  protected async importConfig(): Promise<void> {
+    const parseResult = this.exchangeService.parsePortableConfigText(this.importText());
 
-    if (result.success) {
-      this.importText.set(result.documentText);
-      this.exportRevision.update((value) => value + 1);
-      this.importSuccess.set(true);
-      this.importMessage.set('Portable config imported successfully.');
+    if (!parseResult.success) {
+      this.importSuccess.set(false);
+      this.importMessage.set(parseResult.message);
+      this.importErrors.set(parseResult.errors.map((error) => `${error.path}: ${error.message}`));
+      return;
+    }
+
+    this.importText.set(parseResult.documentText);
+
+    if (!confirmPlannerStateOverwrite()) {
+      this.importSuccess.set(false);
+      this.importMessage.set('Import cancelled. Your current planner state was not changed.');
       this.importErrors.set([]);
       return;
     }
 
-    this.importSuccess.set(false);
-    this.importMessage.set(result.message);
-    this.importErrors.set(result.errors.map((error) => `${error.path}: ${error.message}`));
+    const result = this.exchangeService.applyPortableConfigText(parseResult.documentText);
+
+    if (!result.success) {
+      this.importSuccess.set(false);
+      this.importMessage.set(result.message);
+      this.importErrors.set(result.errors.map((error) => `${error.path}: ${error.message}`));
+      return;
+    }
+
+    this.importText.set(result.documentText);
+    this.exportRevision.update((value) => value + 1);
+    this.importSuccess.set(true);
+    this.importMessage.set('Portable config imported successfully.');
+    this.importErrors.set([]);
+    await this.router.navigate(['/rotation-planner']);
   }
 
   protected clearImportText(): void {

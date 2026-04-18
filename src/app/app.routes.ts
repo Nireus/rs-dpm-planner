@@ -36,6 +36,10 @@ export const routes: Routes = [
     component: PublicBuildsPageComponent,
   },
   {
+    path: 'public-builds/:buildId',
+    component: PublicBuildsPageComponent,
+  },
+  {
     path: 'my-builds',
     component: MyBuildsPageComponent,
   },

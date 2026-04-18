@@ -175,7 +175,7 @@ p {
 
 .build-table {
   width: 100%;
-  min-width: 64rem;
+  min-width: 68rem;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -192,12 +192,12 @@ p {
 
 .build-table th:nth-child(1),
 .build-table td:nth-child(1) {
-  width: 28%;
+  width: 27%;
 }
 
 .build-table th:nth-child(2),
 .build-table td:nth-child(2) {
-  width: 12%;
+  width: 11%;
 }
 
 .build-table th:nth-child(3),
@@ -224,7 +224,7 @@ p {
 
 .build-table th:nth-child(7),
 .build-table td:nth-child(7) {
-  width: 13%;
+  width: 16%;
 }
 
 .build-table th {
@@ -242,9 +242,19 @@ p {
     box-shadow 140ms ease;
 }
 
-.build-table tbody tr:hover {
+.build-table tbody tr.clickable-row {
+  cursor: pointer;
+}
+
+.build-table tbody tr:hover,
+.build-table tbody tr:focus-visible {
   background: rgba(19, 31, 9, 0.5);
   box-shadow: inset 3px 0 0 rgba(123, 144, 75, 0.55);
+}
+
+.build-table tbody tr:focus-visible {
+  outline: 2px solid rgba(220, 239, 192, 0.5);
+  outline-offset: -2px;
 }
 
 .build-table tbody tr:last-child td {
@@ -311,6 +321,19 @@ p {
 .table-actions {
   justify-content: flex-start;
   flex-wrap: nowrap;
+  gap: 0.45rem;
+  min-width: max-content;
+}
+
+.table-actions .primary-button,
+.table-actions .secondary-button {
+  min-height: 2.45rem;
+  padding-inline: 0.68rem;
+  white-space: nowrap;
+}
+
+.compact-button {
+  min-height: 2.3rem;
 }
 
 .social-row {
@@ -404,6 +427,34 @@ p {
   border: 1px solid rgba(166, 96, 83, 0.34);
   color: #f0c5ba;
   background: rgba(44, 20, 15, 0.82);
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 5, 2, 0.72);
+}
+
+.share-dialog {
+  display: grid;
+  gap: 0.9rem;
+  width: min(38rem, 100%);
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  background: var(--panel-surface);
+  box-shadow: var(--panel-shadow);
+}
+
+.share-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 @media (max-width: 1180px) {

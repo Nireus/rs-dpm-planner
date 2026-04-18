@@ -7,6 +7,11 @@ export const CHANGELOG_ENTRIES: readonly ChangelogEntry[] = [
   {
     date: '18.04.2026',
     change:
+      'Improved Public Builds sharing and importing. Public build rows can now be clicked to import after an overwrite confirmation, shared build URLs import directly by build id, all import paths warn before replacing the current planner state, successful imports redirect to Rotation Planner, and public build action buttons stay on one row.',
+  },
+  {
+    date: '18.04.2026',
+    change:
       'Added blocked-language checks for public-facing names. Profile display names and public build names are now checked in the app, and Supabase constraints enforce the same rule for new public writes.',
   },
   {

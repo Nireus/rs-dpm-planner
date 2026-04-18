@@ -74,7 +74,14 @@
         </thead>
         <tbody>
           @for (build of builds(); track build.id) {
-            <tr>
+            <tr
+              class="clickable-row"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Import ' + build.title"
+              (click)="importBuild(build)"
+              (keydown)="handleRowKeydown($event, build)"
+            >
               <td class="build-title-cell">
                 <strong>{{ build.title }}</strong>
                 <span>{{ build.description || 'No description provided.' }}</span>
@@ -113,6 +120,7 @@
                         rel="noopener noreferrer"
                         [title]="link.label"
                         [attr.aria-label]="link.label"
+                        (click)="$event.stopPropagation()"
                       >
                         @switch (link.kind) {
                           @case ('youtube') {
@@ -152,12 +160,13 @@
               <td>{{ formatDate(build.publishedAt) }}</td>
               <td>
                 <div class="actions table-actions">
-                  <button type="button" class="primary-button" (click)="importBuild(build)">Import</button>
+                  <button type="button" class="primary-button" (click)="$event.stopPropagation(); importBuild(build)">Import</button>
+                  <button type="button" class="secondary-button" (click)="$event.stopPropagation(); openShareDialog(build)">Share</button>
                   <button
                     type="button"
                     class="secondary-button"
                     [disabled]="!authStore.isAuthenticated()"
-                    (click)="toggleVote(build)"
+                    (click)="$event.stopPropagation(); toggleVote(build)"
                   >
                     {{ build.votedByMe ? 'Unlike' : 'Like' }}
                   </button>
@@ -173,5 +182,40 @@
       <h2>No public builds found</h2>
       <p>Try clearing filters, or publish the first build from My Builds.</p>
     </article>
+  }
+
+  @if (shareBuild(); as build) {
+    <div class="dialog-backdrop" (click)="closeShareDialog()">
+      <section
+        class="share-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-build-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="share-dialog-header">
+          <div>
+            <p class="eyebrow">Share build</p>
+            <h2 id="share-build-title">{{ build.title }}</h2>
+          </div>
+          <button type="button" class="secondary-button compact-button" (click)="closeShareDialog()">Close</button>
+        </div>
+
+        <p>Anyone with this link can import the public build into their planner.</p>
+
+        <label class="field">
+          <span>Share URL</span>
+          <input type="text" [value]="shareUrl(build)" readonly (focus)="$any($event.target).select()" />
+        </label>
+
+        @if (shareMessage()) {
+          <p class="status success">{{ shareMessage() }}</p>
+        }
+
+        <div class="actions">
+          <button type="button" class="primary-button" (click)="copyShareUrl(build)">Copy Link</button>
+        </div>
+      </section>
+    </div>
   }
 </section>

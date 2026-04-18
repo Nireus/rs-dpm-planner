@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { BUILD_STYLE_OPTIONS, type BuildMetadataInput, type BuildStyleTag, type BuildVisibility, type CloudBuildSummary } from '../../core/builds/build-sharing.models';
 import {
   getCreateBuildLimitMessage,
@@ -16,6 +17,7 @@ import {
   getBlockedLanguageMessage,
   PUBLIC_BUILD_NAME_BLOCKED_LANGUAGE_MESSAGE,
 } from '../../core/content-moderation/blocked-language';
+import { confirmPlannerStateOverwrite } from '../../shared/import-confirmation';
 
 @Component({
   selector: 'app-my-builds-page',
@@ -29,6 +31,7 @@ export class MyBuildsPageComponent implements OnInit {
   private readonly repository = inject(CloudBuildRepository);
   private readonly workspaceRepository = inject(WorkspaceRepositoryService);
   private readonly gameDataStore = inject(GameDataStoreService);
+  private readonly router = inject(Router);
   protected readonly authStore = inject(AuthStoreService);
 
   protected readonly builds = signal<CloudBuildSummary[]>([]);
@@ -200,6 +203,12 @@ export class MyBuildsPageComponent implements OnInit {
   }
 
   protected async importBuild(build: CloudBuildSummary): Promise<void> {
+    if (!confirmPlannerStateOverwrite()) {
+      this.message.set('Import cancelled. Your current planner state was not changed.');
+      this.error.set(null);
+      return;
+    }
+
     this.busy.set(true);
     const result = await this.repository.importBuild(build.id);
     this.busy.set(false);
@@ -211,6 +220,7 @@ export class MyBuildsPageComponent implements OnInit {
 
     this.message.set('Build imported into the local planner.');
     this.error.set(null);
+    await this.router.navigate(['/rotation-planner']);
   }
 
   protected async deleteBuild(build: CloudBuildSummary): Promise<void> {
